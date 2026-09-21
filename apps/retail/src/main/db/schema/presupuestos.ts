@@ -1,7 +1,6 @@
 import { sqliteTable, text, real, integer } from 'drizzle-orm/sqlite-core';
-import { cliente, usuario } from '@core/db';
+import { cliente, usuario, venta } from '@core/db';
 import { producto, producto_presentacion } from './catalog';
-import { venta } from './ventas';
 
 // ADR-046: Presupuesto = cotización previa a la venta. Entidad nueva.
 // Invariantes: montos en centavos (INTEGER); descuentos como % (REAL, igual que el
