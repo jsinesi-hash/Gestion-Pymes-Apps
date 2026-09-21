@@ -6,7 +6,8 @@
     "noEmit": true,
     "types": ["vitest/globals"],
     "paths": {
-      "@ferreteria/shared": ["../../packages/shared/src/index.ts"]
+      "@ferreteria/shared": ["../../packages/shared/src/index.ts"],
+      "@core/db": ["../../packages/core-db/src/index.ts"]
     }
   },
   "include": [

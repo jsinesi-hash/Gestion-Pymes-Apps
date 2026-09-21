@@ -1,13 +1,9 @@
-// packages/client/src/main/db/schema.ts
+// packages/client/src/main/db/schema.ts  (composición core + app)
+export * from '@core/db';               // seguridad, personas, geo, credito, config (universal)
 export * from './schema/catalog';
-export * from './schema/seguridad';
 export * from './schema/precios';
-export * from './schema/personas';
-export * from './schema/ventas';
-export * from './schema/config';
+export * from './schema/ventas';        // se parte en 1.3: por ahora entero (aún tiene tablas core)
 export * from './schema/compras';
-export * from './schema/credito';
-export * from './schema/geo';
 export * from './schema/remitos';
 export * from './schema/presupuestos';
 export * from './schema/agenda';

@@ -1,6 +1,6 @@
 import { sqliteTable, text, real, integer } from 'drizzle-orm/sqlite-core';
 import { producto, producto_presentacion } from './catalog';
-import { proveedor } from './personas';
+import { proveedor } from '@core/db';
 
 export const lista_precio = sqliteTable('lista_precio', {
   id:                text('id').primaryKey(),
