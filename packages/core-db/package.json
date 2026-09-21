@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "pnpm run typecheck && vitest run"
+    "test": "pnpm run typecheck && vitest run --passWithNoTests"
   },
   "dependencies": {
     "@ferreteria/shared": "workspace:*",

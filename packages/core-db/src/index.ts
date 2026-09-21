@@ -4,3 +4,4 @@
 // y drizzle explota al iterarlo (TypeError: reading 'constructor' of null). El que necesite
 // el namespace lo importa con `import * as coreSchema from '@core/db'`.
 export * from './schema';
+export { createDb, runMigrations } from './factory';
