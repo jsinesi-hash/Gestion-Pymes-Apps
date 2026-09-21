@@ -1,0 +1,296 @@
+<meta charset="utf-8">
+<title>Agenda — Guía</title>
+<style>
+  :root{
+    --bg:#f7f7f5; --surface:#ffffff; --ink:#1c1a17; --ink-2:#4b463f; --ink-3:#8a8279;
+    --line:#e7e3dc; --accent:#e8730a; --accent-soft:#fdefe1; --accent-strong:#b45309;
+    --ok:#2e7d52; --ok-soft:#e7f3ec; --warn:#b7791f; --warn-soft:#fbf3e0; --danger:#c0392b; --danger-soft:#fbeceb;
+    --blue:#2f6fb0; --blue-soft:#e9f1f9;
+    --radius:12px; --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+      --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+      --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+      --blue:#7fb0e0; --blue-soft:#182533;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+    --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+    --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+    --blue:#7fb0e0; --blue-soft:#182533;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 "Hanken Grotesk",-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 22px 80px}
+  header.hero{background:linear-gradient(135deg,#1c1a17,#3a332b);color:#fff;border-radius:18px;padding:34px 34px 30px;margin-bottom:28px}
+  header.hero .kicker{color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:12.5px}
+  header.hero h1{margin:.35em 0 .2em;font-size:30px;line-height:1.15}
+  header.hero p{margin:0;color:#d7d1c8;max-width:70ch}
+  h2{font-size:22px;margin:2.2em 0 .5em;padding-top:.5em;border-top:2px solid var(--line)}
+  h3{font-size:17px;margin:1.4em 0 .4em;color:var(--ink)}
+  p,li{color:var(--ink-2)}
+  code{font-family:var(--mono);font-size:.87em;background:var(--accent-soft);padding:.1em .38em;border-radius:5px;color:var(--accent-strong)}
+  a{color:var(--blue)}
+  .lead{font-size:16.5px}
+  .toc{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 20px;margin:0 0 8px}
+  .toc b{font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+  .toc ol{margin:.5em 0 0;padding-left:1.2em;columns:2;column-gap:32px}
+  .toc a{text-decoration:none}
+  table{width:100%;border-collapse:collapse;margin:1em 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px}
+  th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--accent-soft);font-size:12.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-3)}
+  tr:last-child td{border-bottom:none}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 22px 18px;margin:16px 0}
+  .fig{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin:20px 0;overflow-x:auto}
+  .fig figcaption{font-size:12.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;font-weight:700}
+  .shot{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px;margin:16px 0;text-align:center}
+  .shot img{max-width:100%;border-radius:8px;display:block;margin:0 auto;border:1px solid var(--line)}
+  .shot.small img{max-width:440px}
+  .shot figcaption{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+  .shot-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:640px){.shot-row{grid-template-columns:1fr}}
+  .callout{border-radius:var(--radius);padding:16px 20px;margin:18px 0;border:1px solid}
+  .callout.warn{background:var(--warn-soft);border-color:#ecd9a8}
+  .callout.info{background:var(--blue-soft);border-color:#cfe0ef}
+  .callout.danger{background:var(--danger-soft);border-color:#eec4bf}
+  .callout h3{margin-top:.2em}
+  .pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px}
+  .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .pill.err{background:var(--danger-soft);color:var(--danger)} .pill.mut{background:var(--accent-soft);color:var(--ink-3)}
+  .step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .step:last-child{border-bottom:none}
+  .step .dot{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent-strong);
+    font-weight:700;display:grid;place-items:center;font-size:.85rem}
+  .step .body{flex:1}
+  .step .body h4{margin:0 0 4px;font-size:1rem;color:var(--ink)}
+  details{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin:10px 0;overflow:hidden}
+  details summary{cursor:pointer;padding:14px 18px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;color:var(--ink)}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"+";color:var(--accent);font-size:1.3rem;font-weight:400}
+  details[open] summary::after{content:"–"}
+  details .ans{padding:0 18px 16px;color:var(--ink-2)}
+  svg{max-width:100%;height:auto;display:block}
+  .muted{color:var(--ink-3);font-size:13.5px}
+  .n-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+  .n-accent{fill:var(--accent-soft);stroke:#f0c79a}
+  .n-ok{fill:var(--ok-soft);stroke:#bfe0cd}
+  .n-warn{fill:var(--warn-soft);stroke:#ecd9a8}
+  .n-err{fill:var(--danger-soft);stroke:#eec4bf}
+  .n-dark{fill:#26221d;stroke:#26221d}
+  .t{font:600 13px "Hanken Grotesk",sans-serif;fill:var(--ink)}
+  .t-sm{font:500 11px "Hanken Grotesk",sans-serif;fill:var(--ink-2)}
+  .t-white{fill:#fff}
+  .edge{stroke:#b9b1a6;stroke-width:1.6;fill:none}
+  .edge-lbl{font:600 10.5px "Hanken Grotesk",sans-serif;fill:var(--ink-3)}
+  footer{color:var(--ink-3);font-size:13px;text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--line)}
+  .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink-3);text-decoration:none;margin-bottom:14px}
+  .back-link:hover{color:var(--accent)}
+
+  .page{display:flex;align-items:flex-start;}
+  nav.side{position:sticky;top:0;height:100vh;width:250px;flex:0 0 250px;
+    background:#201d18;color:#cdc4b8;overflow-y:auto;padding:26px 18px 32px;}
+  nav.side h1{font-size:14.5px;color:#fff;margin:0 0 4px;line-height:1.35;font-weight:700;}
+  nav.side .sub{font-size:11px;color:var(--accent);margin-bottom:20px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+  nav.side a{display:block;color:#cdc4b8;text-decoration:none;font-size:12.6px;padding:6px 9px;border-radius:6px;margin:1px 0;border-left:3px solid transparent;}
+  nav.side a:hover{background:#332d24;color:#fff;}
+  nav.side a.active{background:#332d24;color:#fff;border-left-color:var(--accent);font-weight:600;}
+  nav.side .foot{margin-top:22px;border-top:1px solid #423b30;padding-top:14px;}
+  nav.side .foot a{color:var(--accent);font-weight:700;padding-left:0;}
+  nav.side .foot a:hover{color:#fff;background:none;}
+  main{flex:1;min-width:0;}
+  @media print{ nav.side{display:none;} }
+  @media (max-width:900px){ nav.side{display:none;} }
+</style>
+
+<div class="page">
+<nav class="side">
+  <h1>Agenda</h1>
+  <div class="sub">Manual de Usuario</div>
+  <a href="#mapa">Cómo funciona</a>
+  <a href="#eventos">Eventos — las tres zonas</a>
+  <a href="#crear-evento">Crear un evento manual</a>
+  <a href="#acciones">Completar, posponer y descartar</a>
+  <a href="#rutinas">Rutinas — generadores recurrentes</a>
+  <a href="#crear-rutina">Crear una rutina</a>
+  <a href="#avisos">Avisos — la bandeja de notificaciones</a>
+  <a href="#faq">Dudas frecuentes</a>
+  <div class="foot"><a href="index.html">← Volver al índice</a></div>
+</nav>
+<main>
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Agenda — Guía paso a paso</h1>
+  <p>Cómo organizar tareas y recordatorios del local: crear eventos sueltos, armar rutinas que se repiten solas, y seguir los avisos que el sistema manda a quien corresponda.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="mapa">0 · Cómo funciona</h2>
+<p class="lead">La Agenda tiene tres pantallas que se alimentan una a la otra: una <b>Rutina</b> (opcional) genera <b>Eventos</b> automáticamente según una frecuencia; cada Evento, al enviarse, genera uno o más <b>Avisos</b> (en la app y/o por email) para el destinatario que corresponda. También podés saltear la Rutina y cargar un Evento suelto a mano.</p>
+
+<div class="fig">
+  <figcaption>Rutina → Evento → Aviso</figcaption>
+  <svg viewBox="0 0 860 160" xmlns="http://www.w3.org/2000/svg">
+    <rect class="n-box" x="250" y="6" width="180" height="52" rx="10"/>
+    <text class="t" x="340" y="28" text-anchor="middle">Evento manual</text>
+    <text class="t-sm" x="340" y="44" text-anchor="middle">cargado a mano</text>
+
+    <rect class="n-box" x="20" y="70" width="180" height="70" rx="10"/>
+    <text class="t" x="110" y="98" text-anchor="middle">Rutina</text>
+    <text class="t-sm" x="110" y="116" text-anchor="middle">frecuencia + destinatario</text>
+
+    <rect class="n-accent" x="340" y="70" width="180" height="70" rx="10"/>
+    <text class="t" x="430" y="98" text-anchor="middle">Agenda evento</text>
+    <text class="t-sm" x="430" y="116" text-anchor="middle">pendiente / completado / pospuesto / descartado</text>
+
+    <rect class="n-ok" x="620" y="70" width="200" height="70" rx="10"/>
+    <text class="t" x="720" y="98" text-anchor="middle">Aviso</text>
+    <text class="t-sm" x="720" y="116" text-anchor="middle">in-app y/o email</text>
+
+    <path class="edge" d="M200,105 L340,105" marker-end="url(#ah)"/>
+    <path class="edge" d="M340,58 L400,70" marker-end="url(#ah)"/>
+    <path class="edge" d="M520,105 L620,105" marker-end="url(#ah)"/>
+    <defs>
+      <marker id="ah" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#b9b1a6"/></marker>
+    </defs>
+  </svg>
+</div>
+
+<p>Módulo detrás de un interruptor de configuración (activado en esta instalación). No tiene permiso propio en el sistema de roles: cualquier usuario con sesión iniciada —Operador o Supervisor— puede usar las tres pantallas.</p>
+
+<!-- ============ 1. EVENTOS ============ -->
+<h2 id="eventos">1 · Eventos — las tres zonas</h2>
+<p>La pantalla principal (<code>Agenda → Eventos</code>) agrupa todo lo pendiente en tres zonas según la fecha: <b>Atrasadas</b> (venció y sigue sin resolver), <b>Hoy</b> y <b>Próximos</b>. Por defecto solo se listan los eventos activos; el check <b>"Incluir completadas/descartadas"</b> suma también el historial cerrado.</p>
+<div class="shot">
+  <img src="assets/agenda-eventos-overview.png" alt="Pantalla de Eventos de Agenda con la zona Atrasadas" loading="lazy">
+  <figcaption>Zona "Atrasadas" — cuatro instancias de una misma rutina que quedaron sin completar.</figcaption>
+</div>
+<p>Cada fila puede filtrarse por <b>origen</b>: <span class="pill mut">Manual</span> (cargado a mano) o <span class="pill mut">Rutina</span> (generado por una rutina) son los que vas a ver en el uso normal. El filtro también contempla orígenes reservados para integraciones futuras del propio sistema (orden de compra, recepción, stock bajo mínimo, cierre de caja) que hoy todavía no generan eventos automáticamente.</p>
+<p>Cuando un evento sí tiene un origen navegable (por ejemplo, quedó enlazado a una orden de compra o a un proveedor), aparece el botón <b>"Abrir origen"</b> que te lleva directo a esa pantalla.</p>
+
+<!-- ============ 2. CREAR EVENTO ============ -->
+<h2 id="crear-evento">2 · Crear un evento manual</h2>
+<div class="card">
+  <div class="step"><div class="dot">1</div><div class="body"><h4>"+ Nuevo evento"</h4><p>Arriba a la izquierda, en Eventos.</p></div></div>
+  <div class="step"><div class="dot">2</div><div class="body"><h4>Título y descripción opcional</h4><p>Lo que necesitás recordar — sin campos de destinatario ni canal: un evento manual queda visible en la bandeja de Eventos, no dispara un aviso aparte.</p></div></div>
+  <div class="step"><div class="dot">3</div><div class="body"><h4>Fecha</h4><p>Fecha y hora en que el evento debe aparecer como vencido si nadie lo resuelve antes.</p></div></div>
+</div>
+<div class="shot small">
+  <img src="assets/agenda-evento-nuevo.png" alt="Modal Nuevo evento con título, descripción y fecha" loading="lazy">
+  <figcaption>Nuevo evento — el formulario más simple de las tres pantallas.</figcaption>
+</div>
+
+<!-- ============ 3. ACCIONES ============ -->
+<h2 id="acciones">3 · Completar, posponer y descartar</h2>
+<p>Cada fila tiene tres acciones posibles, sin importar de dónde vino el evento:</p>
+<table>
+  <tr><th>Acción</th><th>Qué hace</th></tr>
+  <tr><td><b>Completar</b></td><td>Marca el evento como resuelto de inmediato — un solo clic, sin modal.</td></tr>
+  <tr><td><b>Posponer</b></td><td>Abre un modal para elegir una nueva fecha (y una nota opcional) sin cerrar el evento.</td></tr>
+  <tr><td><b>Descartar</b></td><td>Pide confirmación y saca el evento del listado activo sin marcarlo como completado.</td></tr>
+</table>
+<div class="shot-row">
+  <div class="shot small">
+    <img src="assets/agenda-posponer-modal.png" alt="Modal Posponer con campo de nueva fecha y nota" loading="lazy">
+    <figcaption>Posponer — nueva fecha + nota opcional.</figcaption>
+  </div>
+  <div class="shot small">
+    <img src="assets/agenda-descartar-confirm.png" alt="Confirmación antes de descartar un evento" loading="lazy">
+    <figcaption>Descartar pide confirmación explícita.</figcaption>
+  </div>
+</div>
+<div class="callout info">
+  <h3>Posponer no borra el vencimiento original</h3>
+  <p>El evento queda con estado <code>pospuesto</code> y una nueva fecha objetivo; si esa nueva fecha también se pasa sin resolverse, vuelve a aparecer en "Atrasadas" como cualquier otro pendiente.</p>
+</div>
+
+<!-- ============ 4. RUTINAS ============ -->
+<h2 id="rutinas">4 · Rutinas — generadores recurrentes</h2>
+<p>Una <b>Rutina</b> no es una tarea en sí: es una regla que genera Eventos solos, con la frecuencia y el destinatario que definiste. Sirve para lo que se repite siempre igual — un conteo físico semanal, un recordatorio mensual de pago, etc. — sin tener que cargarlo a mano cada vez.</p>
+<div class="shot">
+  <img src="assets/agenda-rutinas-overview.png" alt="Listado de Rutinas con frecuencia, próximo disparo y estado" loading="lazy">
+  <figcaption>Una rutina semanal, activa, con su próximo disparo calculado.</figcaption>
+</div>
+<p>Desde el listado podés <b>Editar</b>, <b>Pausar</b> (la deja de disparar sin borrarla — distinto de eliminarla) o <b>Eliminar</b> una rutina. Si el <b>próximo disparo</b> queda vacío, la rutina ya agotó su rango de fechas y no va a volver a generar eventos.</p>
+
+<!-- ============ 5. CREAR RUTINA ============ -->
+<h2 id="crear-rutina">5 · Crear una rutina</h2>
+<div class="card">
+  <div class="step"><div class="dot">1</div><div class="body"><h4>"+ Nueva rutina"</h4><p>Nombre y descripción opcional.</p></div></div>
+  <div class="step"><div class="dot">2</div><div class="body"><h4>Frecuencia</h4><p><b>Única</b> (una sola vez), <b>Diaria</b>, <b>Semanal</b>, <b>Mensual</b> o <b>Cada N días</b>. Semanal y Mensual también admiten un intervalo ("cada cuántas semanas/meses"), no solo "cada N días".</p></div></div>
+  <div class="step"><div class="dot">3</div><div class="body"><h4>Detalle según frecuencia</h4><p>Semanal pide el día de la semana; Mensual pide el día del mes (<b>31 se ajusta automáticamente al último día real de cada mes</b>); Cada N días pide el intervalo en días. Todas piden la hora del disparo.</p></div></div>
+  <div class="step"><div class="dot">4</div><div class="body"><h4>Desde / Hasta</h4><p>Rango de vigencia. "Hasta" es opcional: sin fecha de fin, la rutina se repite indefinidamente.</p></div></div>
+  <div class="step"><div class="dot">5</div><div class="body"><h4>Responsable</h4><p>Un usuario puntual o un rol completo (por ejemplo, "todos los Supervisores").</p></div></div>
+  <div class="step"><div class="dot">6</div><div class="body"><h4>Canales</h4><p>"En la app" y/o "Email" — al menos uno debe quedar tildado para que el aviso llegue a alguna parte. El canal Email depende de que el SMTP esté configurado (ver la guía de Configuración/Sistema).</p></div></div>
+</div>
+<div class="shot small">
+  <img src="assets/agenda-rutina-nueva.png" alt="Modal Nueva rutina con frecuencia semanal, día, intervalo, vigencia y responsable" loading="lazy">
+  <figcaption>Nueva rutina — frecuencia semanal, todos los lunes, responsable "Yo".</figcaption>
+</div>
+
+<!-- ============ 6. AVISOS ============ -->
+<h2 id="avisos">6 · Avisos — la bandeja de notificaciones</h2>
+<p><code>Agenda → Avisos</code> es la bandeja de salida: cada vez que un evento dispara una notificación, queda un registro acá por canal (in-app, email) y por destinatario, con su propio estado (<span class="pill warn">pendiente</span>, <span class="pill ok">enviado</span>, <span class="pill err">fallido</span>, <span class="pill mut">descartado</span>). Se puede filtrar por texto, canal y estado.</p>
+<div class="shot">
+  <img src="assets/agenda-avisos-overview.png" alt="Bandeja de avisos con filtros de canal y estado" loading="lazy">
+  <figcaption>Bandeja vacía en este entorno de datos de prueba — los filtros quedan igual de útiles cuando hay avisos reales.</figcaption>
+</div>
+<div class="callout warn">
+  <h3>Un aviso "fallido" reintenta solo</h3>
+  <p>Si el envío por email falla (por ejemplo, el SMTP está mal configurado), el sistema reintenta con backoff automático antes de dejarlo definitivamente en <code>fallido</code>. No hace falta reenviarlo a mano.</p>
+</div>
+
+<!-- ============ FAQ ============ -->
+<h2 id="faq">7 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Cuál es la diferencia entre "Descartar" y "Completar"?</summary>
+  <div class="ans"><b>Completar</b> dice que la tarea se hizo. <b>Descartar</b> dice que ya no aplica o no hace falta resolverla — en ambos casos el evento sale del listado activo, pero quedan como estados distintos en el historial (activá "Incluir completadas/descartadas" para verlos).</div>
+</details>
+
+<details>
+  <summary>Si pauso una rutina, ¿qué pasa con los eventos que ya generó?</summary>
+  <div class="ans">Nada — pausar solo detiene los <b>próximos</b> disparos. Los eventos ya generados siguen en la bandeja de Eventos con su estado actual, y se resuelven (completar/posponer/descartar) igual que cualquier otro.</div>
+</details>
+
+<details>
+  <summary>Puse "31" como día del mes, ¿se rompe en febrero?</summary>
+  <div class="ans">No: el sistema ajusta automáticamente al último día real de cada mes (28, 29, 30 o 31 según corresponda). No hace falta crear una rutina distinta para meses cortos.</div>
+</details>
+
+<details>
+  <summary>¿Un evento manual también genera un aviso por email?</summary>
+  <div class="ans">Un evento cargado a mano no tiene destinatario ni canal propios — queda como una tarea visible en la bandeja de Eventos para quien la vea, pero no dispara un aviso en la bandeja de Avisos. Los avisos por canal (in-app/email) están asociados al flujo de Rutinas, donde sí se define destinatario y canal.</div>
+</details>
+
+<details>
+  <summary>¿Por qué el filtro "Origen" tiene opciones que nunca veo en la lista (orden de compra, recepción, bajo mínimo, cierre de caja)?</summary>
+  <div class="ans">Son orígenes que el sistema ya contempla en su modelo de datos para integrar la Agenda con otros módulos (por ejemplo, avisar automáticamente cuando un producto cae bajo el stock mínimo) pero que todavía no están conectados. Hoy, en la práctica, todo evento que vas a ver tiene origen <b>Manual</b> o <b>Rutina</b>.</div>
+</details>
+
+<details>
+  <summary>No veo "Agenda" en el menú, ¿por qué?</summary>
+  <div class="ans">El módulo está detrás de un interruptor de configuración que puede estar apagado en tu instalación. Si lo esperás y no aparece, pedile a un Supervisor que lo revise en Configuración/Sistema.</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Agenda
+</footer>
+</div>
+</main>
+</div>
+
+<script>
+  (function(){
+    var links=[...document.querySelectorAll('nav.side a[href^="#"]')];
+    var map=new Map();
+    links.forEach(function(a){var id=a.getAttribute('href').slice(1);var el=document.getElementById(id);if(el)map.set(el,a);});
+    var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove('active');});var a=map.get(e.target);if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-10% 0px -80% 0px',threshold:0});
+    [...map.keys()].forEach(function(t){obs.observe(t);});
+  })();
+</script>
+

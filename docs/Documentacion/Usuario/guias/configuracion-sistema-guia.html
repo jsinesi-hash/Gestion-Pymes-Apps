@@ -1,0 +1,283 @@
+<meta charset="utf-8">
+<title>Configuración / Sistema — Guía</title>
+<style>
+  :root{
+    --bg:#f7f7f5; --surface:#ffffff; --ink:#1c1a17; --ink-2:#4b463f; --ink-3:#8a8279;
+    --line:#e7e3dc; --accent:#e8730a; --accent-soft:#fdefe1; --accent-strong:#b45309;
+    --ok:#2e7d52; --ok-soft:#e7f3ec; --warn:#b7791f; --warn-soft:#fbf3e0; --danger:#c0392b; --danger-soft:#fbeceb;
+    --blue:#2f6fb0; --blue-soft:#e9f1f9;
+    --radius:12px; --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+      --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+      --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+      --blue:#7fb0e0; --blue-soft:#182533;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+    --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+    --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+    --blue:#7fb0e0; --blue-soft:#182533;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 "Hanken Grotesk",-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 22px 80px}
+  header.hero{background:linear-gradient(135deg,#1c1a17,#3a332b);color:#fff;border-radius:18px;padding:34px 34px 30px;margin-bottom:28px}
+  header.hero .kicker{color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:12.5px}
+  header.hero h1{margin:.35em 0 .2em;font-size:30px;line-height:1.15}
+  header.hero p{margin:0;color:#d7d1c8;max-width:70ch}
+  h2{font-size:22px;margin:2.2em 0 .5em;padding-top:.5em;border-top:2px solid var(--line)}
+  h3{font-size:17px;margin:1.4em 0 .4em;color:var(--ink)}
+  p,li{color:var(--ink-2)}
+  code{font-family:var(--mono);font-size:.87em;background:var(--accent-soft);padding:.1em .38em;border-radius:5px;color:var(--accent-strong)}
+  a{color:var(--blue)}
+  .lead{font-size:16.5px}
+  .toc{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 20px;margin:0 0 8px}
+  .toc b{font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+  .toc ol{margin:.5em 0 0;padding-left:1.2em;columns:2;column-gap:32px}
+  .toc a{text-decoration:none}
+  table{width:100%;border-collapse:collapse;margin:1em 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px}
+  th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--accent-soft);font-size:12.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-3)}
+  tr:last-child td{border-bottom:none}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 22px 18px;margin:16px 0}
+  .fig{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin:20px 0;overflow-x:auto}
+  .fig figcaption{font-size:12.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;font-weight:700}
+  .shot{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px;margin:16px 0;text-align:center}
+  .shot img{max-width:100%;border-radius:8px;display:block;margin:0 auto;border:1px solid var(--line)}
+  .shot.small img{max-width:440px}
+  .shot figcaption{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+  .shot-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:640px){.shot-row{grid-template-columns:1fr}}
+  .callout{border-radius:var(--radius);padding:16px 20px;margin:18px 0;border:1px solid}
+  .callout.warn{background:var(--warn-soft);border-color:#ecd9a8}
+  .callout.info{background:var(--blue-soft);border-color:#cfe0ef}
+  .callout.danger{background:var(--danger-soft);border-color:#eec4bf}
+  .callout h3{margin-top:.2em}
+  .pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px}
+  .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .pill.err{background:var(--danger-soft);color:var(--danger)} .pill.mut{background:var(--accent-soft);color:var(--ink-3)}
+  .step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .step:last-child{border-bottom:none}
+  .step .dot{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent-strong);
+    font-weight:700;display:grid;place-items:center;font-size:.85rem}
+  .step .body{flex:1}
+  .step .body h4{margin:0 0 4px;font-size:1rem;color:var(--ink)}
+  details{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin:10px 0;overflow:hidden}
+  details summary{cursor:pointer;padding:14px 18px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;color:var(--ink)}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"+";color:var(--accent);font-size:1.3rem;font-weight:400}
+  details[open] summary::after{content:"–"}
+  details .ans{padding:0 18px 16px;color:var(--ink-2)}
+  svg{max-width:100%;height:auto;display:block}
+  .muted{color:var(--ink-3);font-size:13.5px}
+  .n-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+  .n-accent{fill:var(--accent-soft);stroke:#f0c79a}
+  .n-ok{fill:var(--ok-soft);stroke:#bfe0cd}
+  .n-warn{fill:var(--warn-soft);stroke:#ecd9a8}
+  .n-err{fill:var(--danger-soft);stroke:#eec4bf}
+  .n-dark{fill:#26221d;stroke:#26221d}
+  .t{font:600 13px "Hanken Grotesk",sans-serif;fill:var(--ink)}
+  .t-sm{font:500 11px "Hanken Grotesk",sans-serif;fill:var(--ink-2)}
+  .t-white{fill:#fff}
+  .edge{stroke:#b9b1a6;stroke-width:1.6;fill:none}
+  .edge-lbl{font:600 10.5px "Hanken Grotesk",sans-serif;fill:var(--ink-3)}
+  footer{color:var(--ink-3);font-size:13px;text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--line)}
+  .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink-3);text-decoration:none;margin-bottom:14px}
+  .back-link:hover{color:var(--accent)}
+
+  .page{display:flex;align-items:flex-start;}
+  nav.side{position:sticky;top:0;height:100vh;width:250px;flex:0 0 250px;
+    background:#201d18;color:#cdc4b8;overflow-y:auto;padding:26px 18px 32px;}
+  nav.side h1{font-size:14.5px;color:#fff;margin:0 0 4px;line-height:1.35;font-weight:700;}
+  nav.side .sub{font-size:11px;color:var(--accent);margin-bottom:20px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+  nav.side a{display:block;color:#cdc4b8;text-decoration:none;font-size:12.6px;padding:6px 9px;border-radius:6px;margin:1px 0;border-left:3px solid transparent;}
+  nav.side a:hover{background:#332d24;color:#fff;}
+  nav.side a.active{background:#332d24;color:#fff;border-left-color:var(--accent);font-weight:600;}
+  nav.side .foot{margin-top:22px;border-top:1px solid #423b30;padding-top:14px;}
+  nav.side .foot a{color:var(--accent);font-weight:700;padding-left:0;}
+  nav.side .foot a:hover{color:#fff;background:none;}
+  main{flex:1;min-width:0;}
+  @media print{ nav.side{display:none;} }
+  @media (max-width:900px){ nav.side{display:none;} }
+</style>
+
+<div class="page">
+<nav class="side">
+  <h1>Configuración / Sistema</h1>
+  <div class="sub">Manual de Usuario</div>
+  <a href="#mapa">Cómo funciona</a>
+  <a href="#mi-cuenta">Mi cuenta</a>
+  <a href="#usuarios">Usuarios</a>
+  <a href="#backup">Backups</a>
+  <a href="#restore">Restaurar desde un backup</a>
+  <a href="#smtp">Email / SMTP</a>
+  <a href="#demo">Datos demo</a>
+  <a href="#faq">Dudas frecuentes</a>
+  <div class="foot"><a href="index.html">← Volver al índice</a></div>
+</nav>
+<main>
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Configuración / Sistema — Guía paso a paso</h1>
+  <p>Cómo administrar tu cuenta, dar de alta y baja usuarios, configurar el envío de emails, programar backups y restaurar desde uno, y cargar/vaciar el catálogo de demostración.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="mapa">0 · Cómo funciona</h2>
+<p class="lead">El sidebar tiene dos grupos separados que a veces se confunden: <b>Configuración</b> (catálogo auxiliar — Etiquetas, Categorías, Marcas, Unidades, Ubicaciones, Sinónimos, Transportistas, Importar datos) y <b>Sistema</b> (administración de la instalación en sí). Esta guía cubre solo el grupo <b>Sistema</b>: Mi cuenta, Usuarios, Backup/Restore, Email/SMTP y Datos demo. El resto de Configuración ya está en la guía de Catálogo/Productos y en la de Precios/Costos.</p>
+<div class="shot small">
+  <img src="assets/config-sidebar-overview.png" alt="Sidebar mostrando los grupos Configuración y Sistema por separado" loading="lazy">
+  <figcaption>Dos grupos distintos en el sidebar — esta guía es sobre el de abajo, "Sistema".</figcaption>
+</div>
+<p>Casi todas las pantallas de Sistema requieren permisos de administración (en la práctica, rol <b>Supervisor</b>): Usuarios, Backup/Restore, Email/SMTP y Datos demo. La única excepción es <b>Mi cuenta</b>, disponible para cualquier usuario logueado — cada quien administra su propio perfil ahí, sin necesitar que un Supervisor lo edite.</p>
+
+<!-- ============ 1. MI CUENTA ============ -->
+<h2 id="mi-cuenta">1 · Mi cuenta</h2>
+<p>Dos bloques independientes: datos personales (nombre completo, email) y cambio de contraseña. Para cambiar tu propia contraseña necesitás escribir la <b>actual</b> — a diferencia de cuando un Supervisor le cambia la contraseña a otro usuario desde Usuarios, donde no hace falta saber la anterior.</p>
+<div class="shot">
+  <img src="assets/config-mi-cuenta.png" alt="Pantalla Mi cuenta con datos personales y cambio de contraseña" loading="lazy">
+  <figcaption>Mi cuenta — el único rincón de Sistema abierto a cualquier usuario.</figcaption>
+</div>
+
+<!-- ============ 2. USUARIOS ============ -->
+<h2 id="usuarios">2 · Usuarios</h2>
+<p>Alta, edición, cambio de contraseña y baja lógica (desactivar/reactivar) de usuarios — requiere el permiso de administración de usuarios.</p>
+<div class="shot">
+  <img src="assets/config-usuarios-lista.png" alt="Listado de usuarios con nombre, usuario, rol y estado" loading="lazy">
+  <figcaption>El usuario <code>admin</code> no tiene botones de editar/desactivar: es intocable desde esta pantalla.</figcaption>
+</div>
+<div class="shot small">
+  <img src="assets/config-usuario-nuevo.png" alt="Modal Nuevo usuario con nombre, usuario, email, contraseña y rol" loading="lazy">
+  <figcaption>Nuevo usuario — el nombre de usuario y la contraseña solo se piden al crear, no al editar.</figcaption>
+</div>
+<div class="callout warn">
+  <h3>No se puede desactivar al último Supervisor activo</h3>
+  <p>Es una regla dura del sistema, no solo una confirmación: si intentás desactivar al único Supervisor que queda activo, la acción se rechaza — así la instalación nunca se queda sin nadie que pueda administrarla.</p>
+</div>
+
+<!-- ============ 3. BACKUPS ============ -->
+<h2 id="backup">3 · Backups</h2>
+<p>Backup/Restore junta tres cosas: la <b>configuración</b> del backup automático, el botón para <b>crear uno manual</b>, y el <b>listado</b> de los que ya existen en la carpeta destino.</p>
+<div class="shot">
+  <img src="assets/config-backup-restore.png" alt="Pantalla de Backups con configuración, acciones y listado" loading="lazy">
+  <figcaption>Backups automáticos al cerrar caja, retención de 30 días, y cuatro backups guardados.</figcaption>
+</div>
+<table>
+  <tr><th>Campo</th><th>Qué controla</th></tr>
+  <tr><td>Carpeta destino</td><td>Podés apuntarla a una carpeta de Google Drive Desktop o OneDrive para tener copia fuera de la máquina, sin configurar nada extra.</td></tr>
+  <tr><td>Backup automático al cerrar caja</td><td>Dispara un backup solo cada vez que se cierra un turno de caja — no es un cronómetro fijo.</td></tr>
+  <tr><td>Retención (días)</td><td>Backups más viejos que este número se rotan (se eliminan) automáticamente.</td></tr>
+  <tr><td>Incluir certificados AFIP</td><td>Apagado por defecto. Si lo activás, el backup se cifra con contraseña porque va a contener credenciales fiscales.</td></tr>
+</table>
+<p>Cada fila del listado muestra fecha, si fue <span class="pill mut">manual</span> o <span class="pill mut">auto</span>, tamaño, si incluye certificados y si está cifrado — con acción para eliminarlo.</p>
+
+<!-- ============ 4. RESTORE ============ -->
+<h2 id="restore">4 · Restaurar desde un backup</h2>
+<p>El botón "Restaurar desde archivo…" abre un wizard de varios pasos, a propósito lento: restaurar <b>reemplaza toda la base de datos actual</b>, así que el flujo está diseñado para que sea difícil hacerlo por error.</p>
+<div class="shot">
+  <img src="assets/config-restore-paso1.png" alt="Paso 1 del wizard: ruta del archivo .fbk y contraseña opcional" loading="lazy">
+  <figcaption>Paso 1 — elegís el archivo <code>.fbk</code> (y su contraseña, solo si está cifrado).</figcaption>
+</div>
+<div class="shot">
+  <img src="assets/config-restore-paso2.png" alt="Paso 2 del wizard: comparación de compatibilidad y cantidad de filas por tabla" loading="lazy">
+  <figcaption>Paso 2 — compara compatibilidad de versión y cantidad de filas por tabla antes de tocar nada.</figcaption>
+</div>
+<div class="card">
+  <div class="step"><div class="dot">1</div><div class="body"><h4>Validar backup</h4><p>Se lee el archivo y se muestra si es compatible directamente o si necesita migraciones automáticas por ser de una versión anterior.</p></div></div>
+  <div class="step"><div class="dot">2</div><div class="body"><h4>Comparar</h4><p>Tabla por tabla: cuántas filas tiene la base actual contra cuántas trae el backup — para detectar a ojo si es el archivo que realmente querías.</p></div></div>
+  <div class="step"><div class="dot">3</div><div class="body"><h4>Confirmar</h4><p>Hay que escribir la palabra <code>RESTAURAR</code> a mano para habilitar el botón final. Antes de ejecutar, el sistema crea automáticamente un backup de seguridad de la base actual.</p></div></div>
+  <div class="step"><div class="dot">4</div><div class="body"><h4>Ejecutar</h4><p>La aplicación se reinicia sola al terminar. Al volver a abrir, ves un resumen de filas "antes" y "después" por tabla.</p></div></div>
+</div>
+<div class="callout danger">
+  <h3>Es una operación destructiva e irreversible en el momento</h3>
+  <p>Restaurar reemplaza <b>todos</b> los datos actuales por los del backup. El respaldo de seguridad automático te da una salida si te arrepentís después, pero mientras se ejecuta no hay vuelta atrás — por eso el wizard exige escribir <code>RESTAURAR</code> literal antes de dejarte avanzar.</p>
+</div>
+
+<!-- ============ 5. SMTP ============ -->
+<h2 id="smtp">5 · Email / SMTP</h2>
+<p>Acá se configura el servidor de correo saliente que usa toda la app para mandar emails — hoy, principalmente los avisos de Agenda (ver la guía de Agenda) y el aviso de cierre de caja.</p>
+<div class="shot small">
+  <img src="assets/config-smtp.png" alt="Formulario de configuración SMTP con host, puerto, remitente, usuario y contraseña" loading="lazy">
+  <figcaption>Puerto 587 sin conexión segura = STARTTLS, la combinación más común (Gmail, etc.).</figcaption>
+</div>
+<table>
+  <tr><th>Puerto</th><th>Conexión segura</th><th>Protocolo</th></tr>
+  <tr><td><code>587</code></td><td>Destildada</td><td>STARTTLS — el más habitual (Gmail, Outlook)</td></tr>
+  <tr><td><code>465</code></td><td>Tildada</td><td>TLS directa</td></tr>
+</table>
+<p>El formulario avisa solo si elegís una combinación de puerto/conexión que normalmente no funciona.</p>
+<div class="callout warn">
+  <h3>El campo "Usuario" se guarda sin cifrar</h3>
+  <p>A diferencia de la <b>contraseña</b> (cifrada con <code>safeStorage</code> del sistema operativo, fuera de la base y de los backups), el <b>Usuario</b> viaja en texto plano dentro de <code>parametros_sistema</code> — y por lo tanto entra en los backups <code>.fbk</code>. Si por error escribís tu contraseña ahí en vez del usuario, el sistema te lo advierte antes de guardar. Casi siempre el Usuario es tu dirección de correo completa, no solo el nombre.</p>
+</div>
+<p>Gmail, Outlook y proveedores similares no aceptan la contraseña normal de la cuenta: hace falta generar una <b>contraseña de aplicación</b> desde la configuración de seguridad de la cuenta, con la verificación en dos pasos activada.</p>
+<p>Al pie del formulario, el check <b>"Avisar los cierres de caja por email"</b> es lo que conecta esta pantalla con el aviso automático de cierre de caja: con el email apagado, el aviso igual queda en la bandeja in-app de Agenda, pero no se manda el correo.</p>
+
+<!-- ============ 6. DATOS DEMO ============ -->
+<h2 id="demo">6 · Datos demo</h2>
+<p>Carga (o vacía) un catálogo de 15 productos de muestra pensado para evaluar la app antes de operar en serio — con precio, stock y algún caso borde ya cargado.</p>
+<div class="shot">
+  <img src="assets/config-datos-demo.png" alt="Pantalla Datos demo con estado del catálogo y botones cargar/vaciar" loading="lazy">
+  <figcaption>Con 36 productos reales ya cargados, "Cargar catálogo demo" queda deshabilitado.</figcaption>
+</div>
+<div class="callout info">
+  <h3>Solo se carga sobre un catálogo vacío</h3>
+  <p>"Cargar catálogo demo" se deshabilita apenas hay al menos un producto real cargado — no existe un modo de "agregar demo encima" de tu catálogo. "Vaciar catálogo demo" solo borra los productos marcados como demo, nunca los que vos cargaste.</p>
+</div>
+
+<!-- ============ FAQ ============ -->
+<h2 id="faq">7 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Por qué no veo Usuarios, Backup/Restore, Email/SMTP o Datos demo en mi menú?</summary>
+  <div class="ans">Las cuatro requieren permisos de administración que en la práctica solo tiene el rol <b>Supervisor</b>. Un Operador ve "Mi cuenta" nada más.</div>
+</details>
+
+<details>
+  <summary>Cambié la contraseña de otro usuario desde Usuarios, ¿necesito saber la anterior?</summary>
+  <div class="ans">No — esa es la diferencia con "Mi cuenta". Cuando un Supervisor cambia la contraseña de otro usuario desde el listado de Usuarios, no hace falta la contraseña actual de esa persona. Para cambiar la <b>propia</b> desde "Mi cuenta", sí hay que escribirla.</div>
+</details>
+
+<details>
+  <summary>¿Puedo eliminar un usuario en vez de desactivarlo?</summary>
+  <div class="ans">No hay borrado físico de usuarios — solo baja lógica (Desactivar/Reactivar), como en el resto del sistema. Un usuario desactivado no puede iniciar sesión, pero su historial de auditoría (ventas, movimientos, autorizaciones) se conserva intacto.</div>
+</details>
+
+<details>
+  <summary>¿La carpeta de backups tiene que estar en esta PC?</summary>
+  <div class="ans">No necesariamente — podés apuntarla a una carpeta sincronizada por Google Drive Desktop o OneDrive para tener copia fuera de la máquina, sin ninguna configuración adicional del lado del sistema.</div>
+</details>
+
+<details>
+  <summary>¿Restaurar un backup toca los certificados AFIP?</summary>
+  <div class="ans">Solo si ese backup en particular se creó con "Incluir certificados AFIP" activado. Los backups sin esa opción no tocan certificados al restaurar.</div>
+</details>
+
+<details>
+  <summary>Configuré el email pero los avisos no llegan, ¿qué reviso primero?</summary>
+  <div class="ans">Usá el botón "Probar conexión" en Email/SMTP — te dice si el servidor rechaza la conexión. Las causas más comunes: puerto/conexión segura no coinciden (ver la tabla de esta guía), o el campo Contraseña tiene la contraseña normal de la cuenta en vez de una contraseña de aplicación (Gmail/Outlook la rechazan).</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Configuración / Sistema
+</footer>
+</div>
+</main>
+</div>
+
+<script>
+  (function(){
+    var links=[...document.querySelectorAll('nav.side a[href^="#"]')];
+    var map=new Map();
+    links.forEach(function(a){var id=a.getAttribute('href').slice(1);var el=document.getElementById(id);if(el)map.set(el,a);});
+    var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove('active');});var a=map.get(e.target);if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-10% 0px -80% 0px',threshold:0});
+    [...map.keys()].forEach(function(t){obs.observe(t);});
+  })();
+</script>
+

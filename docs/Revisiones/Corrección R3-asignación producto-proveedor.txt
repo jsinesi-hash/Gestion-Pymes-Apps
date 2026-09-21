@@ -1,0 +1,42 @@
+Corrección R3: asignación producto↔proveedor faltante en la UI.
+
+CONTEXTO
+En R3 está implementada la relación many-to-many producto↔proveedor (atributos
+costo_centavos, codigo_proveedor, preferido boolean) y el modo sugerido de
+Órdenes de Compra agrupa los faltantes por proveedor preferido. Pero la UI de
+alta/modificación de producto (pantalla Detalle de Producto, R1) NO expone la
+gestión de proveedores. Resultado: preferido nunca se puebla y la propuesta de
+OC sugerida lista los productos faltantes sin agruparlos por proveedor.
+
+PASO 0 — ADR (antes de tocar código)
+La pantalla Detalle de Producto es R1 aprobada. El ADR-021 ya está redactado y
+agregado a DECISIONES.md documentando la excepción a phase-gate (sección
+"Proveedores" en Detalle de Producto). Verificá que esté presente antes de
+implementar.
+
+ALCANCE DE LA CORRECCIÓN
+1. Tab/sección "Proveedores" en el Detalle de Producto. Lista los proveedores
+   asociados al producto, mostrando por fila: nombre de proveedor,
+   codigo_proveedor, costo_centavos (formateado a moneda SOLO en el display,
+   centavos hasta el borde), y un control para marcar preferido.
+2. Alta de asociación: seleccionar un proveedor EXISTENTE y cargar
+   codigo_proveedor y costo_centavos. No crear proveedores desde acá.
+3. Edición y baja de una asociación existente.
+4. Regla de exclusividad de preferido: un producto tiene a lo sumo UN proveedor
+   preferido. Al marcar uno como preferido, desmarcar atómicamente el anterior
+   (misma transacción).
+
+IPC
+Naming entity-namespaced: producto.proveedores.listar, .asociar, .actualizar,
+.desasociar, .marcarPreferido. No usar handler genérico.
+
+VERIFICACIÓN DE CIERRE
+Asociar dos proveedores a un producto faltante, marcar uno como preferido, y
+confirmar que la propuesta de OC en modo sugerido ahora AGRUPA ese producto bajo
+el proveedor preferido en lugar de listarlo suelto.
+
+RESTRICCIONES
+- No modificar el esquema de la tabla de relación si ya cubre los atributos
+  requeridos.
+- No tocar el módulo Compras ni el reporte de reabastecimiento.
+- Esperar confirmación antes de cualquier cambio de esquema o de .gitignore.

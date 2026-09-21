@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light" data-density="comfortable">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ferretería · Caja — Cierre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --accent:#E8730A; --accent-strong:#C85E00; --accent-soft:#FBE6D2;
+    --bg:#F4F2EE; --surface:#FFFFFF; --surface-2:#FAF8F4; --line:#E3DED5;
+    --ink:#1C1A17; --ink-2:#5C564D; --ink-3:#8A8479;
+    --ok:#2E7D52; --danger:#C0392B; --warn:#B4690E;
+    --shadow:0 1px 2px rgba(28,26,23,.06),0 8px 24px rgba(28,26,23,.06);
+    --ui-font:'Archivo'; --radius:14px; --pad:16px; --rowpad:12px;
+  }
+  [data-theme="dark"]{
+    --bg:#15140F; --surface:#1E1C16; --surface-2:#262319; --line:#322E24;
+    --ink:#F2EFE8; --ink-2:#B7B0A3; --ink-3:#7C766B;
+    --ok:#5FD699; --danger:#F0746A; --warn:#E0A23A;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+  }
+  [data-density="compact"]{--pad:10px;--rowpad:8px;--radius:11px}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--ui-font),sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;display:flex;height:100vh;transition:background .25s,color .25s}
+  .num{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+
+  /* sidebar */
+  .side{width:218px;flex:0 0 auto;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;transition:width .2s;z-index:6}
+  .side.collapsed{width:64px}
+  .side .top{display:flex;align-items:center;gap:11px;padding:16px}
+  .logo{width:32px;height:32px;border-radius:9px;background:var(--accent);position:relative;flex:0 0 auto}
+  .logo::before{content:"";position:absolute;inset:8px;border:2.5px solid #fff;border-radius:3px;transform:rotate(45deg)}
+  .side .nm{font-weight:800;letter-spacing:-.02em;font-size:16px;white-space:nowrap}
+  .side.collapsed .nm,.side.collapsed .navtxt,.side.collapsed .navsec{display:none}
+  .nav{flex:1;overflow:auto;padding:6px}
+  .navsec{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-3);font-weight:700;padding:14px 12px 6px}
+  .navitem{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:var(--ink-2);font-weight:600;font-size:14px;cursor:pointer;margin-bottom:2px}
+  .navitem:hover{background:var(--surface-2);color:var(--ink)}
+  .navitem.active{background:var(--accent-soft);color:var(--accent-strong)}
+  [data-theme="dark"] .navitem.active{color:var(--accent)}
+  .navitem ico{width:20px;height:20px;flex:0 0 auto;display:grid;place-items:center}
+  .navitem svg{width:19px;height:19px}
+  .collapse{margin:6px;padding:9px;border:none;background:var(--surface-2);border-radius:10px;color:var(--ink-2);cursor:pointer;font-size:15px}
+  .collapse:hover{color:var(--accent)}
+
+  /* shell */
+  .shell{flex:1;display:flex;flex-direction:column;min-width:0}
+  header{display:flex;align-items:center;gap:14px;padding:12px 18px;background:var(--surface);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+  .crumb{font-weight:700;font-size:16px}
+  .crumb small{font-weight:500;color:var(--ink-3);font-size:13px;margin-left:8px}
+  .sess{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .chip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2)}
+  .chip .dot{width:8px;height:8px;border-radius:50%}
+  .dot-ok{background:var(--ok)}
+  .dot-warn{background:var(--warn)}
+  .iconbtn{cursor:pointer;width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-size:16px;display:grid;place-items:center}
+  .iconbtn:hover{border-color:var(--accent);color:var(--accent)}
+
+  /* main */
+  main{flex:1;overflow:auto;padding:14px 18px;display:flex;flex-direction:column;gap:14px}
+
+  /* shift bar */
+  .shift-bar{display:flex;align-items:center;gap:16px;padding:14px var(--pad);background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);flex-wrap:wrap}
+  .shift-item{display:flex;flex-direction:column;gap:2px}
+  .shift-label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-weight:700}
+  .shift-val{font-size:14px;font-weight:600}
+  .shift-sep{width:1px;height:32px;background:var(--line)}
+  .shift-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;color:var(--warn);background:rgba(180,105,14,.1);border:1px solid rgba(180,105,14,.15)}
+  [data-theme="dark"] .shift-badge{background:rgba(224,162,58,.1);border-color:rgba(224,162,58,.15)}
+
+  /* two columns */
+  .cols{display:grid;grid-template-columns:1fr 420px;gap:14px;flex:1;min-height:0}
+  .col{display:flex;flex-direction:column;gap:14px;min-height:0}
+
+  /* cards */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .card-title{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-weight:700;padding:14px var(--pad) 10px}
+
+  /* summary rows */
+  .srow{display:flex;justify-content:space-between;align-items:center;padding:8px var(--pad);border-bottom:1px solid var(--line)}
+  .srow:last-child{border-bottom:none}
+  .srow .sl{font-size:14px;color:var(--ink-2)}
+  .srow .sv{font-size:14px;font-weight:600}
+  .srow.total{background:var(--surface-2);padding:12px var(--pad)}
+  .srow.total .sl{font-weight:700;color:var(--ink);font-size:14px}
+  .srow.total .sv{font-size:18px;font-weight:800;letter-spacing:-.01em}
+  .srow .neg{color:var(--danger)}
+  .srow .pos{color:var(--ok)}
+
+  /* payment table */
+  .pay-row{display:flex;align-items:center;gap:12px;padding:10px var(--pad);border-bottom:1px solid var(--line)}
+  .pay-row:last-child{border-bottom:none}
+  .pay-icon{width:32px;height:32px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;font-size:15px;flex:0 0 auto}
+  .pay-name{flex:1;font-size:14px;font-weight:600}
+  .pay-count{font-size:12px;color:var(--ink-3);margin-right:8px}
+  .pay-amt{font-size:14px;font-weight:700;min-width:110px;text-align:right}
+  .pay-pct{font-size:11px;color:var(--ink-3);min-width:40px;text-align:right}
+
+  /* arqueo */
+  .arqueo-row{display:flex;justify-content:space-between;align-items:center;padding:10px var(--pad);border-bottom:1px solid var(--line)}
+  .arqueo-row:last-child{border-bottom:none}
+  .arqueo-row .al{font-size:13px;color:var(--ink-2);display:flex;align-items:center;gap:6px}
+  .arqueo-row .al .sign{font-size:16px;font-weight:700;width:18px;text-align:center}
+  .arqueo-row .av{font-size:14px;font-weight:600}
+  .arqueo-row.result{background:var(--surface-2);padding:14px var(--pad)}
+  .arqueo-row.result .al{font-weight:700;color:var(--ink);font-size:14px}
+  .arqueo-row.result .av{font-size:18px;font-weight:800}
+
+  /* bill count */
+  .bills{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--line)}
+  .bill{display:flex;align-items:center;justify-content:space-between;padding:7px var(--pad);border-bottom:1px solid var(--line);font-size:13px}
+  .bill:nth-child(odd){border-right:1px solid var(--line)}
+  .bill .bd{color:var(--ink-3);font-weight:500}
+  .bill .bv{font-weight:600}
+  .bills-total{display:flex;justify-content:space-between;padding:10px var(--pad);background:var(--surface-2);border-top:1px solid var(--line);font-weight:700;font-size:14px}
+
+  /* declared input */
+  .declared{padding:var(--pad);border-top:1px solid var(--line)}
+  .declared label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-weight:700;display:block;margin-bottom:8px}
+  .declared-input{width:100%;border:2px solid var(--accent);border-radius:10px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--ink);background:var(--surface-2);text-align:right;outline:none}
+  .declared-input:focus{box-shadow:0 0 0 3px rgba(232,115,10,.15)}
+
+  /* difference */
+  .diff-box{margin:0 var(--pad) var(--pad);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center}
+  .diff-box.shortage{background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.15)}
+  [data-theme="dark"] .diff-box.shortage{background:rgba(240,116,106,.08);border-color:rgba(240,116,106,.15)}
+  .diff-box.surplus{background:rgba(46,125,82,.08);border:1px solid rgba(46,125,82,.12)}
+  .diff-box.exact{background:rgba(46,125,82,.08);border:1px solid rgba(46,125,82,.12)}
+  .diff-label{font-size:13px;font-weight:600}
+  .diff-label.shortage{color:var(--danger)}
+  .diff-label.surplus{color:var(--ok)}
+  .diff-val{font-size:20px;font-weight:800;letter-spacing:-.01em}
+  .diff-val.shortage{color:var(--danger)}
+  .diff-val.surplus{color:var(--ok)}
+
+  /* observations */
+  .obs{padding:0 var(--pad) var(--pad)}
+  .obs label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-weight:700;display:block;margin-bottom:8px}
+  .obs textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-family:inherit;font-size:13px;color:var(--ink);background:var(--surface-2);resize:vertical;min-height:60px;outline:none}
+  .obs textarea:focus{border-color:var(--accent)}
+
+  /* actions */
+  .caja-actions{display:flex;gap:8px;padding:var(--pad);border-top:1px solid var(--line)}
+  .btn-primary{border:none;border-radius:10px;background:var(--accent);color:#fff;font-family:inherit;font-weight:700;font-size:14px;padding:14px 20px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;flex:1;box-shadow:0 4px 12px rgba(232,115,10,.28)}
+  .btn-primary:hover{background:var(--accent-strong)}
+  .btn-primary kbd{background:rgba(255,255,255,.22);border-radius:6px;padding:2px 7px;font-size:12px;font-family:'JetBrains Mono',monospace}
+  .btn-secondary{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-family:inherit;font-weight:600;font-size:14px;padding:14px 20px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+
+  /* ---- appearance drawer ---- */
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.2s;z-index:20}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;right:0;height:100%;width:340px;background:var(--surface);border-left:1px solid var(--line);
+    box-shadow:-12px 0 40px rgba(0,0,0,.18);transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);z-index:21;display:flex;flex-direction:column}
+  .drawer.open{transform:none}
+  .drawer h3{padding:18px 20px;font-size:16px;font-weight:800;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+  .drawer h3 button{border:none;background:none;font-size:20px;color:var(--ink-3);cursor:pointer}
+  .dbody{padding:20px;overflow:auto;display:flex;flex-direction:column;gap:24px}
+  .field>label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-weight:700;display:block;margin-bottom:10px}
+  .seg{display:flex;gap:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:4px}
+  .seg button{flex:1;border:none;background:none;padding:9px;border-radius:8px;font-family:var(--ui-font);font-weight:600;font-size:13px;color:var(--ink-2);cursor:pointer;transition:.12s}
+  .seg button.on{background:var(--accent);color:#fff}
+  .swatches{display:flex;gap:10px}
+  .sw{width:38px;height:38px;border-radius:10px;cursor:pointer;border:3px solid transparent;transition:.12s;position:relative}
+  .sw.on{border-color:var(--ink)}
+  .sw.on::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}
+  .fontopts{display:flex;flex-direction:column;gap:8px}
+  .fontopt{border:1px solid var(--line);background:var(--surface-2);border-radius:11px;padding:12px 14px;cursor:pointer;text-align:left;transition:.12s}
+  .fontopt.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  .fontopt .fn{font-weight:700;font-size:15px;color:var(--ink)}
+  .fontopt .fs{font-size:12px;color:var(--ink-3);margin-top:2px}
+  .dnote{font-size:12px;color:var(--ink-3);line-height:1.5;border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+  <nav class="side" id="side">
+    <div class="top"><div class="logo"></div><span class="nm">Ferretería</span></div>
+    <div class="nav">
+      <div class="navsec">Operación</div>
+      <div class="navitem"><ico><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l2 13h11l2-9H6"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/></svg></ico><span class="navtxt">Punto de venta</span></div>
+      <div class="navitem active"><ico><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg></ico><span class="navtxt">Caja</span></div>
+      <div class="navsec">Catálogo</div>
+      <div class="navitem"><ico><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/></svg></ico><span class="navtxt">Productos</span></div>
+      <div class="navitem"><ico><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v6H4zM4 14h16v6H4z"/></svg></ico><span class="navtxt">Stock</span></div>
+      <div class="navsec">Sistema</div>
+      <div class="navitem"><ico><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></ico><span class="navtxt">Configuración</span></div>
+    </div>
+    <button class="collapse" id="collapseBtn" title="Ocultar / mostrar menú">⇆</button>
+  </nav>
+
+  <div class="shell">
+    <header>
+      <div class="crumb">Caja <small>Cierre de turno</small></div>
+      <div class="sess">
+        <span class="chip"><span class="dot dot-warn"></span>Cierre en proceso</span>
+        <span class="chip">J. Pérez · Cajero</span>
+        <button class="iconbtn" id="appearanceBtn" title="Apariencia">◐</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Shift info bar -->
+      <div class="shift-bar">
+        <div class="shift-item"><div class="shift-label">Terminal</div><div class="shift-val">Caja C1</div></div>
+        <div class="shift-sep"></div>
+        <div class="shift-item"><div class="shift-label">Cajero</div><div class="shift-val">Juan Pérez</div></div>
+        <div class="shift-sep"></div>
+        <div class="shift-item"><div class="shift-label">Apertura</div><div class="shift-val num">08/06/2026 · 08:00</div></div>
+        <div class="shift-sep"></div>
+        <div class="shift-item"><div class="shift-label">Duración</div><div class="shift-val num">10h 15min</div></div>
+        <div class="shift-sep"></div>
+        <span class="shift-badge">⏱ Cierre en proceso</span>
+      </div>
+
+      <!-- Two columns -->
+      <div class="cols">
+        <!-- LEFT: sales summary -->
+        <div class="col">
+
+          <!-- Resumen de ventas -->
+          <div class="card">
+            <div class="card-title">Resumen de ventas del turno</div>
+            <div class="srow"><span class="sl">Comprobantes emitidos</span><span class="sv num">47</span></div>
+            <div class="srow"><span class="sl" style="padding-left:16px;font-size:12.5px">Tickets internos</span><span class="sv num" style="font-size:13px;color:var(--ink-2)">38</span></div>
+            <div class="srow"><span class="sl" style="padding-left:16px;font-size:12.5px">Factura A</span><span class="sv num" style="font-size:13px;color:var(--ink-2)">5</span></div>
+            <div class="srow"><span class="sl" style="padding-left:16px;font-size:12.5px">Factura B</span><span class="sv num" style="font-size:13px;color:var(--ink-2)">4</span></div>
+            <div class="srow"><span class="sl">Ventas brutas</span><span class="sv num">$ 487.350,00</span></div>
+            <div class="srow"><span class="sl">Descuentos otorgados</span><span class="sv num neg">−$ 12.400,00</span></div>
+            <div class="srow"><span class="sl">Anulaciones (1 op.)</span><span class="sv num neg">−$ 8.900,00</span></div>
+            <div class="srow total"><span class="sl">Total ventas netas</span><span class="sv num">$ 466.050,00</span></div>
+          </div>
+
+          <!-- Desglose por medio de pago -->
+          <div class="card">
+            <div class="card-title">Desglose por medio de pago</div>
+            <div class="pay-row">
+              <div class="pay-icon">₿</div>
+              <div class="pay-name">Efectivo</div>
+              <div class="pay-count num">28 ops.</div>
+              <div class="pay-amt num">$ 285.200,00</div>
+              <div class="pay-pct num">61,2%</div>
+            </div>
+            <div class="pay-row">
+              <div class="pay-icon">↦</div>
+              <div class="pay-name">Transferencia</div>
+              <div class="pay-count num">8 ops.</div>
+              <div class="pay-amt num">$ 98.500,00</div>
+              <div class="pay-pct num">21,1%</div>
+            </div>
+            <div class="pay-row">
+              <div class="pay-icon">▭</div>
+              <div class="pay-name">Tarjeta débito</div>
+              <div class="pay-count num">7 ops.</div>
+              <div class="pay-amt num">$ 52.350,00</div>
+              <div class="pay-pct num">11,2%</div>
+            </div>
+            <div class="pay-row">
+              <div class="pay-icon">▭</div>
+              <div class="pay-name">Tarjeta crédito</div>
+              <div class="pay-count num">4 ops.</div>
+              <div class="pay-amt num">$ 30.000,00</div>
+              <div class="pay-pct num">6,4%</div>
+            </div>
+            <div class="pay-row" style="opacity:.45">
+              <div class="pay-icon">≣</div>
+              <div class="pay-name">Cuenta corriente</div>
+              <div class="pay-count num">0 ops.</div>
+              <div class="pay-amt num">$ 0,00</div>
+              <div class="pay-pct num">—</div>
+            </div>
+            <div class="srow total"><span class="sl">Total cobrado</span><span class="sv num">$ 466.050,00</span></div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT: cash count + reconciliation -->
+        <div class="col">
+
+          <!-- Arqueo de caja -->
+          <div class="card" style="flex:1;display:flex;flex-direction:column">
+            <div class="card-title">Arqueo de caja — Efectivo</div>
+            <div class="arqueo-row"><span class="al"><span class="sign">=</span>Fondo de apertura</span><span class="av num">$ 10.000,00</span></div>
+            <div class="arqueo-row"><span class="al"><span class="sign pos">+</span>Cobros en efectivo</span><span class="av num">$ 285.200,00</span></div>
+            <div class="arqueo-row"><span class="al"><span class="sign neg">−</span>Retiros a caja fuerte</span><span class="av num">$ 50.000,00</span></div>
+            <div class="arqueo-row"><span class="al"><span class="sign neg">−</span>Pagos en efectivo</span><span class="av num">$ 0,00</span></div>
+            <div class="arqueo-row result"><span class="al">Efectivo esperado</span><span class="av num">$ 245.200,00</span></div>
+
+            <!-- Bill count -->
+            <div class="card-title" style="border-top:1px solid var(--line);margin-top:4px">Conteo de billetes y monedas</div>
+            <div class="bills">
+              <div class="bill"><span class="bd num">$ 10.000 × 2</span><span class="bv num">$ 20.000</span></div>
+              <div class="bill"><span class="bd num">$ 5.000 × 15</span><span class="bv num">$ 75.000</span></div>
+              <div class="bill"><span class="bd num">$ 2.000 × 30</span><span class="bv num">$ 60.000</span></div>
+              <div class="bill"><span class="bd num">$ 1.000 × 50</span><span class="bv num">$ 50.000</span></div>
+              <div class="bill"><span class="bd num">$ 500 × 42</span><span class="bv num">$ 21.000</span></div>
+              <div class="bill"><span class="bd num">$ 200 × 40</span><span class="bv num">$ 8.000</span></div>
+              <div class="bill"><span class="bd num">$ 100 × 51</span><span class="bv num">$ 5.100</span></div>
+              <div class="bill"><span class="bd">Monedas</span><span class="bv num">$ 6.050</span></div>
+            </div>
+            <div class="bills-total"><span>Total contado</span><span class="num">$ 245.150,00</span></div>
+
+            <!-- Declared amount -->
+            <div class="declared">
+              <label>Efectivo declarado</label>
+              <input class="declared-input" type="text" value="$ 245.150,00" id="declaredInput">
+            </div>
+
+            <!-- Difference -->
+            <div class="diff-box shortage" id="diffBox">
+              <span class="diff-label shortage">⚠ Faltante</span>
+              <span class="diff-val shortage num" id="diffVal">−$ 50,00</span>
+            </div>
+
+            <!-- Observations -->
+            <div class="obs">
+              <label>Observaciones</label>
+              <textarea placeholder="Notas sobre el cierre, justificación de diferencias…">Diferencia menor, posible error de vuelto durante el turno.</textarea>
+            </div>
+
+            <!-- Actions -->
+            <div class="caja-actions">
+              <button class="btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                Imprimir resumen
+              </button>
+              <button class="btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
+                Cerrar caja <kbd>F10</kbd>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Appearance drawer -->
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer">
+    <h3>Apariencia <button id="closeDrawer">✕</button></h3>
+    <div class="dbody">
+      <div class="field"><label>Tema</label>
+        <div class="seg" id="segTheme"><button data-v="light" class="on">Claro</button><button data-v="dark">Oscuro</button></div>
+      </div>
+      <div class="field"><label>Color de acento</label>
+        <div class="swatches" id="swatches">
+          <div class="sw on" data-a="amber" style="background:#E8730A"></div>
+          <div class="sw" data-a="blue" style="background:#2563EB"></div>
+          <div class="sw" data-a="green" style="background:#1F9D55"></div>
+          <div class="sw" data-a="violet" style="background:#7C3AED"></div>
+          <div class="sw" data-a="brick" style="background:#B23A2E"></div>
+        </div>
+      </div>
+      <div class="field"><label>Tipografía de interfaz</label>
+        <div class="fontopts" id="fontopts">
+          <button class="fontopt on" data-f="Archivo" style="font-family:Archivo"><div class="fn">Archivo</div><div class="fs">Grotesca con carácter · por defecto</div></button>
+          <button class="fontopt" data-f="Hanken Grotesk" style="font-family:'Hanken Grotesk'"><div class="fn">Hanken Grotesk</div><div class="fs">Neutra y muy legible</div></button>
+          <button class="fontopt" data-f="Spline Sans" style="font-family:'Spline Sans'"><div class="fn">Spline Sans</div><div class="fs">Moderna, levemente redondeada</div></button>
+        </div>
+      </div>
+      <div class="field"><label>Densidad</label>
+        <div class="seg" id="segDensity"><button data-v="comfortable" class="on">Cómoda</button><button data-v="compact">Compacta</button></div>
+      </div>
+      <div class="dnote">Las preferencias de apariencia se guardan por usuario. Los números siempre usan una fuente monoespaciada para mantener los importes alineados.</div>
+    </div>
+  </aside>
+
+<script>
+  const root=document.documentElement;
+  const ACCENTS={
+    amber:{a:'#E8730A',s:'#C85E00',softL:'#FBE6D2',softD:'#3A2A17',glow:'232,115,10'},
+    blue:{a:'#2563EB',s:'#1D4FD7',softL:'#DBE5FF',softD:'#16233F',glow:'37,99,235'},
+    green:{a:'#1F9D55',s:'#178045',softL:'#D6F0DF',softD:'#16301F',glow:'31,157,85'},
+    violet:{a:'#7C3AED',s:'#6A2BD0',softL:'#EADDFD',softD:'#2A1B40',glow:'124,58,237'},
+    brick:{a:'#B23A2E',s:'#982F24',softL:'#F6DCD8',softD:'#3A1E1A',glow:'178,58,46'}
+  };
+  let curAccent='amber';
+  function applyAccent(name){const p=ACCENTS[name];curAccent=name;
+    root.style.setProperty('--accent',p.a);root.style.setProperty('--accent-strong',p.s);
+    const dark=root.getAttribute('data-theme')==='dark';
+    root.style.setProperty('--accent-soft',dark?p.softD:p.softL);
+    document.querySelectorAll('.btn-primary').forEach(b=>b.style.boxShadow=`0 4px 12px rgba(${p.glow},.28)`);}
+  // drawer
+  const drawer=document.getElementById('drawer'),scrim=document.getElementById('scrim');
+  const openD=()=>{drawer.classList.add('open');scrim.classList.add('open')};
+  const closeD=()=>{drawer.classList.remove('open');scrim.classList.remove('open')};
+  document.getElementById('appearanceBtn').onclick=openD;
+  document.getElementById('closeDrawer').onclick=closeD;scrim.onclick=closeD;
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeD();});
+  document.getElementById('segTheme').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    [...e.currentTarget.children].forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    root.setAttribute('data-theme',b.dataset.v);applyAccent(curAccent);});
+  document.getElementById('segDensity').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    [...e.currentTarget.children].forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    root.setAttribute('data-density',b.dataset.v);});
+  document.getElementById('swatches').addEventListener('click',e=>{const s=e.target.closest('.sw');if(!s)return;
+    document.querySelectorAll('.sw').forEach(x=>x.classList.remove('on'));s.classList.add('on');applyAccent(s.dataset.a);});
+  document.getElementById('fontopts').addEventListener('click',e=>{const f=e.target.closest('.fontopt');if(!f)return;
+    document.querySelectorAll('.fontopt').forEach(x=>x.classList.remove('on'));f.classList.add('on');
+    root.style.setProperty('--ui-font',`'${f.dataset.f}'`);});
+  document.getElementById('collapseBtn').onclick=()=>document.getElementById('side').classList.toggle('collapsed');
+  document.querySelector('.side .nav').addEventListener('click',e=>{const it=e.target.closest('.navitem');if(!it)return;
+    document.querySelectorAll('.navitem').forEach(x=>x.classList.remove('active'));it.classList.add('active');});
+</script>
+</body>
+</html>

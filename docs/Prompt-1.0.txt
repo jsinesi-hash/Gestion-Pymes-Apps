@@ -1,0 +1,24 @@
+### P1.0 — Bootstrap del proyecto
+
+```
+Objetivo: inicializar el monorepo y el esqueleto del cliente Electron + React + SQLite,
+con la convención de sincronización lista, sin lógica de negocio todavía.
+
+Tareas:
+- Crear el monorepo TypeScript con **pnpm workspaces** y configurar **Drizzle** como ORM
+  (SQLite local; preparado para PostgreSQL en R4). (ADR-016)
+- App Electron + React que abre una ventana vacía con navegación base.
+- Configurar SQLite local y el sistema de migraciones.
+- Definir un tipo/base común para entidades sincronizables (id UUID, version, origin_id,
+  sync_state, updated_at) y un helper para generar UUID en cliente.
+- Configurar el framework de testing y un test de humo que pase.
+- Definir el `origin_id` de la terminal (config local).
+
+Criterios de aceptación:
+- `npm test` y el build pasan en verde.
+- La app levanta y muestra la ventana base.
+- Existe una migración inicial vacía aplicable/reversible.
+- La convención de campos de sync está documentada y tipada.
+
+Restricciones: sin tablas de negocio aún; sin nube. Respetar Prompt 0.
+```

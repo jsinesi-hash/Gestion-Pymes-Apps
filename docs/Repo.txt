@@ -1,0 +1,159 @@
+CHECKLIST — Dejar el repo listo para compartir con otro desarrollador
+Estado base: rama master · 182 commits · remote: github.com/jsinesi-hash/ferreteria-app
+Fecha: 2026-06-16
+======================================================================
+
+PASO 1 — ACTUALIZAR .gitignore
+-----------------------------------------------------------------------
+El .gitignore actual solo cubre node_modules/, dist/, out/, .vite/ y mapas de TS.
+Agregar las siguientes entradas:
+
+  # Base de datos local (dato, no código)
+  *.db
+  *.sqlite
+  *.sqlite3
+
+  # Entornos y secretos
+  .env
+  .env.*
+
+  # Archivos de herramientas personales (no del proyecto)
+  .claude/
+  .superpowers/
+  .claude/scheduled_tasks.lock
+
+  # Temporales y artefactos de desarrollo personal
+  *.diff
+  errores.txt
+  *.log
+
+  # Credenciales fiscales AFIP/ARCA (R2 — irán a userData, nunca al repo)
+  *.p12
+  *.pfx
+  *.pem
+  afip_cert*
+
+Verificar que no hay .env ni *.db commiteado en historial:
+  git log --all --full-history -- "*.env" "*.db" "*.sqlite"
+Si aparece algo sensible, NO borrar por cuenta propia: requiere reescribir historial.
+
+
+PASO 2 — DECIDIR QUÉ HACER CON LOS 26 ARCHIVOS SIN COMMITEAR
+-----------------------------------------------------------------------
+El siguiente listado está sin versionar. Para cada grupo, decidir: commit, ignorar o borrar.
+
+  GRUPO A — Committer (son parte del proyecto):
+    - ARCHITECTURE.md          (diagrama de arquitectura)
+    - DIAGRAMAS.html           (diagramas visuales)
+    - docs/KPIs.txt            (métricas de negocio)
+    - docs/Mockups/*.html      (4 archivos: caja-cierre, productos-detalle,
+                                productos-listado v2, ubicaciones-qr)
+    - docs/Mockups/mockup-pos-ferreteria-v2.html
+    - packages/client/src/renderer/styles/   (estilos del renderer)
+    - packages/client/scripts/               (scripts de desarrollo)
+
+  GRUPO B — Ignorar o borrar (personales/temporales):
+    - .superpowers/            → agregar al .gitignore
+    - docs/Prompt-1.4.txt a 1.11.txt  → revisar si tienen valor para el dev entrante;
+                                         si no, borrar o agregar a .gitignore
+    - docs/Revisiones/Iteración 02.txt → idem
+    - docs/superpowers/plans/*.md      → planes internos de Claude Code; no útiles para
+                                         otro dev; ignorar o borrar
+    - packages/client/errores.txt      → temporal; borrar
+    - p1_0.diff (raíz)                 → diff de trabajo; borrar
+
+  GRUPO C — Modificados (staged o working tree):
+    - .claude/settings.local.json      → NO commitear (settings personales Claude Code)
+    - docs/Revisiones/PROMPT-revisor-Claude-Code.md  → decidir si es útil para el dev
+    - packages/client/package.json     → REVISAR qué cambió antes de commitear
+
+  GRUPO D — Eliminado:
+    - docs/mockup-pos-ferreteria-v2.html  → fue movido a docs/Mockups/; commitear la baja
+
+
+PASO 3 — ACTUALIZAR README.md
+-----------------------------------------------------------------------
+El README.md actual describe el repo como "paquete de documentación para arrancar
+con Claude Code". Un dev que clone el repo necesita instrucciones para CORRER el código.
+Agregar (o reemplazar) una sección "Cómo arrancar el proyecto":
+
+  ### Requisitos
+  - Node.js 22.x (ver .nvmrc — CREAR si no existe)
+  - pnpm 9.x: npm install -g pnpm
+  - Windows/macOS/Linux con soporte Electron
+
+  ### Instalación
+  1. git clone https://github.com/jsinesi-hash/ferreteria-app.git
+  2. cd ferreteria-app
+  3. pnpm install
+  4. pnpm --filter ferreteria-client rebuild:native
+     (reconstruye better-sqlite3 contra la versión de Electron del proyecto)
+
+  ### Levantar en dev
+  pnpm --filter ferreteria-client dev
+
+  ### Correr tests
+  pnpm --filter ferreteria-client test
+
+  ### Seed de datos de ejemplo
+  pnpm --filter ferreteria-client seed:dev
+  (carga 35 productos, 18 ubicaciones, 8 clientes, ventas y movimientos de caja)
+
+  ### Base de datos
+  La base SQLite se crea localmente en userData al arrancar.
+  NO se versiona. El seed es el mecanismo de datos iniciales.
+
+
+PASO 4 — CREAR .nvmrc
+-----------------------------------------------------------------------
+Fijar la versión de Node que usa el proyecto. Correr: node --version
+Crear archivo .nvmrc en la raíz con ese valor (ej: 22.14.0).
+Agregar campo "engines" en package.json raíz:
+  "engines": { "node": ">=22.0.0", "pnpm": ">=9.0.0" }
+
+
+PASO 5 — VERIFICAR QUE EL PROYECTO CONSTRUYE Y LOS TESTS PASAN
+-----------------------------------------------------------------------
+Antes de hacer push, confirmar que todo está verde:
+  pnpm install
+  pnpm --filter ferreteria-client test
+  (resultado esperado: ~350 tests verdes)
+
+Si algún test falla, corregirlo antes de compartir.
+
+
+PASO 6 — COMMIT DE CIERRE Y PUSH
+-----------------------------------------------------------------------
+Con todo lo anterior resuelto:
+  git add <archivos del Grupo A>
+  git add .gitignore
+  git add README.md .nvmrc package.json
+  git rm docs/mockup-pos-ferreteria-v2.html        (el eliminado del Grupo D)
+  git commit -m "chore: preparar repo para compartir — gitignore, README dev, .nvmrc"
+  git push origin master
+
+Confirmar que el remote es accesible y el otro dev tiene permisos de lectura en:
+  https://github.com/jsinesi-hash/ferreteria-app
+
+
+PASO 7 — VERIFICAR LO QUE VE EL OTRO DEV AL CLONAR
+-----------------------------------------------------------------------
+Desde un directorio limpio:
+  git clone https://github.com/jsinesi-hash/ferreteria-app.git ferreteria-test
+  cd ferreteria-test
+  pnpm install
+  pnpm --filter ferreteria-client dev
+
+Si levanta sin errores, el repo está listo.
+
+
+NOTAS IMPORTANTES
+-----------------------------------------------------------------------
+- La carpeta .claude/ contiene configuración personal de Claude Code (memoria,
+  settings, permisos). NO debe ir al repo. Está en .gitignore después del Paso 1.
+- El archivo .claude/settings.local.json tiene permisos del proyecto configurados.
+  El dev entrante generará el suyo al usar Claude Code en su máquina.
+- Credenciales AFIP/ARCA (R2): cuando llegue ese release, los certificados van en
+  userData de Electron (fuera del repo), nunca commiteados.
+- El seed:dev requiere correr desde electron main process en algunos entornos Windows
+  (ver nota en packages/client/scripts/ — workaround NMV pendiente de solución limpia).

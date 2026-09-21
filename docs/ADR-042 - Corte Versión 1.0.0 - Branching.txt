@@ -1,0 +1,238 @@
+CONTEXTO DE RAMAS (leer antes de cualquier acción)
+- v1.0.0 = último estable pre-ARCA (tag sobre main). NO se toca.
+- release/1.0.x = solo hotfixes de producción. Sin features.
+- main = desarrollo de R2 (fiscal), objetivo 1.1.0. Acá va todo el trabajo nuevo.
+
+REGLAS DE TRABAJO
+1. Confirmá SIEMPRE en qué rama estás antes de empezar. Feature/fiscal → main.
+   Hotfix de prod → release/1.0.x.
+2. Cherry-pick unidireccional: fixes van release/1.0.x → main. NUNCA main → release/1.0.x.
+3. No mezcles scope R1 estable con scope R2 en el mismo commit/PR.
+4. Features (incluye mejoras a módulos existentes como roles/permisos) → SIEMPRE main o
+   feature branch desde main, detrás de un flag en parametros_sistema (default false).
+   release/1.0.x recibe SOLO hotfixes: tocala únicamente si el prompt dice explícitamente
+   "hotfix de producción".
+
+GATES — PARÁ Y PEDÍ CONFIRMACIÓN ANTES DE:
+- Generar o aplicar cualquier migración de esquema (mostrá el output de
+  drizzle-kit generate antes de correr nada).
+- Toda migración debe ser ADITIVA/retrocompatible (la app funciona con el flag apagado);
+  una migración destructiva (drop, NOT NULL sin default, rename) frena sí o sí.
+- Escribir en parametros_sistema.
+- Instalar dependencias.
+- Tocar cualquier módulo R1/R2/R3 ya aprobado (requiere ADR nuevo; ver ADR-042).
+
+Trabajo permitido sin gate: código nuevo del módulo fiscal en main que no toque los
+puntos de arriba.
+
+---
+
+## Comandos de referencia (el corte, una sola vez)
+
+```bash
+# Parado en main, en el commit estable pre-ARCA:
+git tag -a v1.0.0 -m "Ultimo estable pre-ARCA (R1 + incrementales hasta ADR-41)"
+git push origin v1.0.0
+
+# Rama de mantenimiento desde el tag:
+git branch release/1.0.x v1.0.0
+git push -u origin release/1.0.x
+
+# main sigue con R2 normalmente.
+```
+
+Flujo de hotfix (cada vez que haya un fix de producción):
+
+```bash
+git switch release/1.0.x
+# ...fix + commit...
+git tag -a v1.0.1 -m "Hotfix: <descripcion>"
+git push origin release/1.0.x v1.0.1
+# Llevar el fix a main (unidireccional):
+git switch main
+git cherry-pick <hash-del-fix>
+```
+
+---
+
+## 4. Diagrama de ramas
+
+```mermaid
+gitGraph
+   commit id: "R1 + ADR-041"
+   commit id: "corte" tag: "v1.0.0"
+   branch release/1.0.x
+   checkout main
+   commit id: "R2 fiscal"
+   checkout release/1.0.x
+   commit id: "hotfix" tag: "v1.0.1"
+   checkout main
+   cherry-pick id: "hotfix"
+   commit id: "R2 fiscal (2)"
+```
+
+`main` avanza con R2 hacia 1.1.0; `release/1.0.x` sale del tag v1.0.0 y solo recibe
+hotfixes; el fix vuelve a `main` por cherry-pick (nunca al revés).
+
+---
+
+## 5. Ejemplo de hotfix concreto
+
+**Escenario.** En producción (v1.0.0) el arqueo de cierre de caja muestra mal el
+vuelto en pagos mixtos (ADR-032). Hay que corregirlo ya, sin arrastrar el módulo
+fiscal en curso que vive en `main`.
+
+```bash
+# 1. Rama estable (NO main)
+git switch release/1.0.x
+
+# 2. Fix acotado a ese bug
+git add packages/client/src/pos/cierreCaja.ts
+git commit -m "fix(caja): vuelto incorrecto en arqueo con pago mixto"
+
+# 3. Patch + push de la rama estable
+git tag -a v1.0.1 -m "Hotfix: vuelto en arqueo con pago mixto"
+git push origin release/1.0.x v1.0.1
+
+# 4. Mismo commit a main (unidireccional)
+git switch main
+git cherry-pick <hash-del-commit-del-fix>
+git push origin main
+```
+
+**Resultado.** v1.0.1 queda en la línea estable (lo que corre el cliente) y el mismo
+fix aparece en `main` sin tocar R2.
+
+**Casos borde.**
+- Si el bug está en código que **solo** existe en `main` (algo de R2), no es hotfix de
+  1.0: se arregla directo en `main`.
+- Si el fix toca una **migración de esquema**, frena el gate de Superpowers (ADR-042):
+  se evalúa a mano contra las migraciones de R2 antes de cherry-pickear, porque las
+  ramas ya divergen en el schema.
+
+---
+
+## 6. Sincronización con el repositorio remoto (GitHub o GitLab)
+
+Dos capas separadas:
+- **Rutina de git (6.2 y 6.3):** ramas, tags, cherry-pick, SemVer. Es **host-agnóstica** —
+  idéntica en GitHub y GitLab. Es la fuente de verdad del flujo.
+- **Config de plataforma (6.4 / 6.5):** default branch, protección de ramas, releases.
+  Cambia según el host (`gh` vs `glab`) y hay que **reaplicarla en cada plataforma**.
+
+### 6.1 Terminología (para no confundirse al cambiar de host)
+
+| Concepto | GitHub | GitLab |
+|----------|--------|--------|
+| Pedido de cambios | Pull Request (PR) | Merge Request (MR) |
+| CLI | `gh` | `glab` |
+| Path del repo en la API | `OWNER/REPO` | `OWNER%2FREPO` (URL-encoded) o ID numérico |
+| CI que corre SonarCloud | GitHub Actions | GitLab CI (`.gitlab-ci.yml`) |
+
+### 6.2 Rutina — trabajo R2 (siempre en main) · host-agnóstica
+
+```bash
+git switch main
+git pull --ff-only origin main    # traer lo remoto ANTES de laburar
+# ...commits de R2...
+git push origin main
+```
+
+### 6.3 Rutina — hotfix de producción (siempre en release/1.0.x) · host-agnóstica
+
+```bash
+# 1. Actualizar la rama estable y corregir
+git switch release/1.0.x
+git pull --ff-only origin release/1.0.x
+# ...fix + commit...
+
+# 2. Taggear el patch y publicar (tag SIEMPRE explícito)
+git tag -a v1.0.2 -m "Hotfix: <descripcion>"
+git push origin release/1.0.x
+git push origin v1.0.2
+
+# 3. Pasar el fix a main (unidireccional, nunca al revés)
+git switch main
+git pull --ff-only origin main
+git cherry-pick <hash-del-commit-del-fix>
+git push origin main
+```
+
+> El Release formal del tag (paso extra) va con el CLI del host activo — ver 6.4.
+
+### 6.4 Config de plataforma — una sola vez por host
+
+**GitHub (`gh`)** — `OWNER/REPO` lo sacás con
+`gh repo view --json nameWithOwner -q .nameWithOwner`:
+
+```bash
+# Publicar refs
+git push origin main && git push origin v1.0.0 && git push -u origin release/1.0.x
+
+# Default branch
+gh repo edit OWNER/REPO --default-branch main
+
+# Proteger release/1.0.x: sin force-push, sin borrado, historia lineal.
+# Permite push fast-forward directo (solo-dev), blinda contra desastres.
+gh api -X PUT "repos/OWNER/REPO/branches/release/1.0.x/protection" --input - <<'JSON'
+{ "required_status_checks": null, "enforce_admins": false,
+  "required_pull_request_reviews": null, "restrictions": null,
+  "allow_force_pushes": false, "allow_deletions": false,
+  "required_linear_history": true }
+JSON
+
+# Release formal del tag
+gh release create v1.0.0 --title "v1.0.0 — Estable pre-ARCA" --notes "Ultimo estable R1 (hasta ADR-035)."
+```
+
+**GitLab (`glab`)** — el path va URL-encoded (`OWNER%2FREPO`) o con el ID numérico del
+proyecto. Niveles de acceso: 40=Maintainer, 30=Developer, 0=Nadie:
+
+```bash
+# Publicar refs
+git push origin main && git push origin v1.0.0 && git push -u origin release/1.0.x
+
+# Default branch
+glab api --method PUT "projects/OWNER%2FREPO" -f "default_branch=main"
+
+# (Opcional) merge method = fast-forward → historia lineal
+glab api --method PUT "projects/OWNER%2FREPO" -f "merge_method=ff"
+
+# Proteger release/1.0.x. GitLab auto-protege la default; si ya estaba protegida,
+# primero borrar y recrear:
+glab api --method DELETE "projects/OWNER%2FREPO/protected_branches/release%2F1.0.x" || true
+glab api --method POST "projects/OWNER%2FREPO/protected_branches" \
+  -f "name=release/1.0.x" \
+  -f "push_access_level=40" \
+  -f "merge_access_level=40" \
+  -f "allow_force_push=false"
+
+# Release formal del tag
+glab release create v1.0.0 --name "v1.0.0 — Estable pre-ARCA" --notes "Ultimo estable R1 (hasta ADR-035)."
+```
+
+### 6.5 Cambiar de host o mantener los dos remotos
+
+Al hacer `push`, **viajan commits, ramas y tags**. NO viajan: protección de ramas,
+releases, default branch ni la config de CI — eso se reconfigura en cada plataforma (6.4).
+
+```bash
+git remote -v                                          # ver qué hay
+git remote add gitlab git@gitlab.com:OWNER/REPO.git    # o 'github', según cuál falte
+
+# Al activar un host, sincronizarle TODO:
+git push <remote> main release/1.0.x
+git push <remote> --tags
+```
+
+Recomendación: **un solo host como fuente de verdad por vez.** Si querés espejo real,
+empujá SIEMPRE a los dos después de cada cambio (rama + `--tags`), o vas a divergir.
+
+### 6.6 Reglas de push (invariantes, en cualquier host)
+
+- **Tags:** siempre `git push origin <tag>` explícito. `git push` de una rama NO sube tags.
+- **Dirección:** el fix pasa `release/1.0.x → main` por cherry-pick manual. Nunca un
+  merge/PR/MR cruza de una línea a la otra.
+- **`--ff-only` en cada pull:** si falla, hay divergencia → resolver a mano, nunca forzar.
+- **PRs/MRs de Superpowers:** los de R2 van contra `main`; los de hotfix contra
+  `release/1.0.x`. Nunca apuntan a la rama de la otra línea.

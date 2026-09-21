@@ -1,0 +1,319 @@
+<meta charset="utf-8">
+<title>Caja — Guía</title>
+<style>
+  :root{
+    --bg:#f7f7f5; --surface:#ffffff; --ink:#1c1a17; --ink-2:#4b463f; --ink-3:#8a8279;
+    --line:#e7e3dc; --accent:#e8730a; --accent-soft:#fdefe1; --accent-strong:#b45309;
+    --ok:#2e7d52; --ok-soft:#e7f3ec; --warn:#b7791f; --warn-soft:#fbf3e0; --danger:#c0392b; --danger-soft:#fbeceb;
+    --blue:#2f6fb0; --blue-soft:#e9f1f9;
+    --radius:12px; --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+      --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+      --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+      --blue:#7fb0e0; --blue-soft:#182533;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+    --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+    --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+    --blue:#7fb0e0; --blue-soft:#182533;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 "Hanken Grotesk",-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 22px 80px}
+  header.hero{background:linear-gradient(135deg,#1c1a17,#3a332b);color:#fff;border-radius:18px;padding:34px 34px 30px;margin-bottom:28px}
+  header.hero .kicker{color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:12.5px}
+  header.hero h1{margin:.35em 0 .2em;font-size:30px;line-height:1.15}
+  header.hero p{margin:0;color:#d7d1c8;max-width:70ch}
+  h2{font-size:22px;margin:2.2em 0 .5em;padding-top:.5em;border-top:2px solid var(--line)}
+  h3{font-size:17px;margin:1.4em 0 .4em;color:var(--ink)}
+  p,li{color:var(--ink-2)}
+  code{font-family:var(--mono);font-size:.87em;background:var(--accent-soft);padding:.1em .38em;border-radius:5px;color:var(--accent-strong)}
+  a{color:var(--blue)}
+  .lead{font-size:16.5px}
+  .toc{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 20px;margin:0 0 8px}
+  .toc b{font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+  .toc ol{margin:.5em 0 0;padding-left:1.2em;columns:2;column-gap:32px}
+  .toc a{text-decoration:none}
+  table{width:100%;border-collapse:collapse;margin:1em 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px}
+  th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--accent-soft);font-size:12.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-3)}
+  tr:last-child td{border-bottom:none}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 22px 18px;margin:16px 0}
+  .fig{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin:20px 0;overflow-x:auto}
+  .fig figcaption{font-size:12.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;font-weight:700}
+  .shot{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px;margin:16px 0;text-align:center}
+  .shot img{max-width:100%;border-radius:8px;display:block;margin:0 auto;border:1px solid var(--line)}
+  .shot.small img{max-width:460px}
+  .shot figcaption{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+  .shot-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:640px){.shot-row{grid-template-columns:1fr}}
+  .callout{border-radius:var(--radius);padding:16px 20px;margin:18px 0;border:1px solid}
+  .callout.warn{background:var(--warn-soft);border-color:#ecd9a8}
+  .callout.info{background:var(--blue-soft);border-color:#cfe0ef}
+  .callout.danger{background:var(--danger-soft);border-color:#eec4bf}
+  .callout h3{margin-top:.2em}
+  .pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px}
+  .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .pill.err{background:var(--danger-soft);color:var(--danger)} .pill.mut{background:var(--accent-soft);color:var(--ink-3)}
+  .step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .step:last-child{border-bottom:none}
+  .step .dot{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent-strong);
+    font-weight:700;display:grid;place-items:center;font-size:.85rem}
+  .step .body{flex:1}
+  .step .body h4{margin:0 0 4px;font-size:1rem;color:var(--ink)}
+  details{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin:10px 0;overflow:hidden}
+  details summary{cursor:pointer;padding:14px 18px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;color:var(--ink)}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"+";color:var(--accent);font-size:1.3rem;font-weight:400}
+  details[open] summary::after{content:"–"}
+  details .ans{padding:0 18px 16px;color:var(--ink-2)}
+  svg{max-width:100%;height:auto;display:block}
+  .muted{color:var(--ink-3);font-size:13.5px}
+  .n-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+  .n-accent{fill:var(--accent-soft);stroke:#f0c79a}
+  .n-ok{fill:var(--ok-soft);stroke:#bfe0cd}
+  .n-warn{fill:var(--warn-soft);stroke:#ecd9a8}
+  .n-err{fill:var(--danger-soft);stroke:#eec4bf}
+  .n-dark{fill:#26221d;stroke:#26221d}
+  .t{font:600 13px "Hanken Grotesk",sans-serif;fill:var(--ink)}
+  .t-sm{font:500 11px "Hanken Grotesk",sans-serif;fill:var(--ink-2)}
+  .t-white{fill:#fff}
+  .edge{stroke:#b9b1a6;stroke-width:1.6;fill:none}
+  .edge-lbl{font:600 10.5px "Hanken Grotesk",sans-serif;fill:var(--ink-3)}
+  footer{color:var(--ink-3);font-size:13px;text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--line)}
+  .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink-3);text-decoration:none;margin-bottom:14px}
+  .back-link:hover{color:var(--accent)}
+
+  .page{display:flex;align-items:flex-start;}
+  nav.side{position:sticky;top:0;height:100vh;width:250px;flex:0 0 250px;
+    background:#201d18;color:#cdc4b8;overflow-y:auto;padding:26px 18px 32px;}
+  nav.side h1{font-size:14.5px;color:#fff;margin:0 0 4px;line-height:1.35;font-weight:700;}
+  nav.side .sub{font-size:11px;color:var(--accent);margin-bottom:20px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+  nav.side a{display:block;color:#cdc4b8;text-decoration:none;font-size:12.6px;padding:6px 9px;border-radius:6px;margin:1px 0;border-left:3px solid transparent;}
+  nav.side a:hover{background:#332d24;color:#fff;}
+  nav.side a.active{background:#332d24;color:#fff;border-left-color:var(--accent);font-weight:600;}
+  nav.side .foot{margin-top:22px;border-top:1px solid #423b30;padding-top:14px;}
+  nav.side .foot a{color:var(--accent);font-weight:700;padding-left:0;}
+  nav.side .foot a:hover{color:#fff;background:none;}
+  main{flex:1;min-width:0;}
+  @media print{ nav.side{display:none;} }
+  @media (max-width:900px){ nav.side{display:none;} }
+</style>
+
+<div class="page">
+<nav class="side">
+  <h1>Caja</h1>
+  <div class="sub">Manual de Usuario</div>
+  <a href="#mapa">Cómo funciona (un turno = una caja)</a>
+  <a href="#abrir">Abrir la caja</a>
+  <a href="#durante">Durante el turno</a>
+  <a href="#movimiento">Registrar un movimiento</a>
+  <a href="#cerrar">Cerrar caja y hacer el arqueo</a>
+  <a href="#diferencia">Diferencias y autorización del Supervisor</a>
+  <a href="#flujo">Diagrama: ciclo de vida de un turno</a>
+  <a href="#faq">Dudas frecuentes</a>
+  <div class="foot"><a href="index.html">← Volver al índice</a></div>
+</nav>
+<main>
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Caja — Guía paso a paso</h1>
+  <p>Cómo abrir el turno, registrar ingresos y egresos que no son ventas, y cerrar la caja con el arqueo — incluida la autorización del Supervisor cuando la diferencia es grande.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="mapa">0 · Cómo funciona (un turno = una caja)</h2>
+<p class="lead">Cada vez que alguien empieza a trabajar, <b>abre una caja</b> con un fondo inicial en efectivo. Desde ese momento, todas las ventas del POS y los movimientos manuales (retiros, gastos, aportes) quedan asociados a esa caja, hasta que se <b>cierra</b> con un arqueo. <b>No se puede vender sin una caja abierta.</b></p>
+
+<div class="shot">
+  <img src="assets/caja-apertura.png" alt="Pantalla de Caja con un turno abierto" loading="lazy">
+  <figcaption>Caja abierta: fondo de apertura, duración del turno, y el resumen en vivo de ventas, ingresos y egresos.</figcaption>
+</div>
+
+<!-- ============ 1. ABRIR ============ -->
+<h2 id="abrir">1 · Abrir la caja</h2>
+<p>Si no hay una caja abierta para tu sesión, el sistema te pide abrirla antes de dejarte hacer cualquier otra cosa en el POS.</p>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Cargá el <b>monto inicial</b></h4><p>El efectivo con el que arrancás el turno (obligatorio, tiene que ser mayor a $0).</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Observaciones (opcional)</h4><p>Cualquier nota que quieras dejar sobre el inicio del turno.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Presioná <b>Abrir caja</b></h4><p>Desde ahí el sistema empieza a contar la duración del turno y a acumular ventas y movimientos.</p></div>
+  </div>
+</div>
+<p class="muted">Cada usuario abre su propia caja para su turno; un Supervisor puede cerrar la de cualquiera, un Operador solo la suya (ver <a href="#diferencia">autorización</a>).</p>
+
+<!-- ============ 2. DURANTE ============ -->
+<h2 id="durante">2 · Durante el turno</h2>
+<p>Mientras la caja está abierta, la pantalla <b>Caja</b> muestra en vivo: total de ventas, ventas anuladas, total de ingresos, total de egresos, y el detalle de cada venta del turno. Las ventas se registran automáticamente ahí a medida que se confirman en el <a href="pos-guia.html">POS</a> — no hace falta hacer nada manual por cada venta.</p>
+
+<!-- ============ 3. MOVIMIENTO ============ -->
+<h2 id="movimiento">3 · Registrar un movimiento</h2>
+<p>Para todo lo que <b>no es una venta</b> pero mueve el efectivo de la caja: un retiro, un gasto del local, o un aporte extra.</p>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Presioná <b>+ Movimiento</b></h4></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Elegí <b>Tipo</b> y <b>Motivo</b></h4>
+      <p><b>Tipo:</b> Ingreso o Egreso. <b>Motivo:</b> Retiro, Gasto o Aporte.</p>
+    </div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Cargá el monto, la forma de pago y confirmá</h4><p>Forma de pago: Efectivo, Transferencia o Tarjeta. Las observaciones son opcionales.</p></div>
+  </div>
+</div>
+
+<div class="shot small">
+  <img src="assets/caja-movimiento.png" alt="Modal Nuevo movimiento" loading="lazy">
+  <figcaption>Modal “Nuevo movimiento”.</figcaption>
+</div>
+
+<div class="callout info">
+  <h3>¿Por qué solo Retiro, Gasto y Aporte?</h3>
+  <p>Son los únicos motivos que carga una persona a mano. Los demás motivos que vas a ver en el historial de movimientos (<code>venta</code>, <code>cobro_cta_cte</code>, <code>pago_proveedor</code>) los genera el sistema solo, desde el POS, el cobro de cuenta corriente o el pago a un proveedor — no hace falta (ni se puede) cargarlos manualmente acá.</p>
+</div>
+
+<!-- ============ 4. CERRAR ============ -->
+<h2 id="cerrar">4 · Cerrar caja y hacer el arqueo</h2>
+<p>El <b>arqueo</b> compara el efectivo que el sistema espera encontrar contra el efectivo que contás a mano.</p>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Presioná <b>Cerrar caja</b></h4><p>Ves el resumen de ventas del turno y el desglose por medio de pago.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Contá el efectivo real</h4><p>Cargalo en <b>Efectivo declarado</b>. El <b>arqueo cuenta solo el efectivo</b> — tarjeta, transferencia y demás ya quedaron registrados en su medio, sin necesidad de contarlos a mano.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Revisá la diferencia y confirmá</h4><p>El sistema calcula el <b>Sobrante</b> o <b>Faltante</b> contra el efectivo esperado. Agregá observaciones si hace falta y confirmá el cierre.</p></div>
+  </div>
+</div>
+
+<div class="shot">
+  <img src="assets/caja-cierre-arqueo.png" alt="Pantalla de cierre de caja con el arqueo exacto" loading="lazy">
+  <figcaption>Cierre de caja — arqueo exacto (efectivo declarado = efectivo esperado).</figcaption>
+</div>
+
+<!-- ============ 5. DIFERENCIA ============ -->
+<h2 id="diferencia">5 · Diferencias y autorización del Supervisor</h2>
+<p>Si lo que declarás se aleja mucho de lo esperado (por encima de un <b>umbral configurable</b> del sistema), cerrar la caja deja de ser algo que un Operador pueda hacer solo.</p>
+
+<div class="shot">
+  <img src="assets/caja-diferencia.png" alt="Cierre de caja con una diferencia grande y aviso de autorización requerida" loading="lazy">
+  <figcaption>Diferencia grande ($115.930 de sobrante): aparece el aviso <b>“La diferencia supera el umbral. Se requiere autorización del Supervisor”</b>.</figcaption>
+</div>
+
+<div class="shot small">
+  <img src="assets/caja-autorizacion.png" alt="Modal de autorización del Supervisor" loading="lazy">
+  <figcaption>Al confirmar con la diferencia por encima del umbral, se pide usuario y contraseña de un Supervisor.</figcaption>
+</div>
+
+<div class="callout warn">
+  <h3>⚠️ Sin autorización, no se cierra</h3>
+  <p>Un Operador puede contar y declarar el efectivo, pero si la diferencia supera el umbral, necesita que un <b>Supervisor</b> escriba su usuario y contraseña en ese momento para que el cierre se registre. Queda guardado quién autorizó.</p>
+</div>
+
+<!-- ============ 6. FLUJO ============ -->
+<h2 id="flujo">6 · Diagrama: ciclo de vida de un turno de caja</h2>
+<figure class="fig">
+  <figcaption>Diagrama · De abrir la caja a cerrarla con el arqueo</figcaption>
+  <svg viewBox="0 0 1080 260" role="img" aria-label="Ciclo de vida de un turno de caja">
+    <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+
+    <rect class="n-box" x="10" y="90" width="160" height="60" rx="10"/>
+    <text class="t" x="90" y="115" text-anchor="middle">Abrir caja</text>
+    <text class="t-sm" x="90" y="133" text-anchor="middle">fondo inicial</text>
+    <path class="edge" marker-end="url(#ah)" d="M170,120 L206,120"/>
+
+    <rect class="n-ok" x="208" y="90" width="200" height="60" rx="10"/>
+    <text class="t" x="308" y="115" text-anchor="middle">Turno abierto</text>
+    <text class="t-sm" x="308" y="133" text-anchor="middle">ventas del POS + movimientos</text>
+    <path class="edge" marker-end="url(#ah)" d="M408,120 L444,120"/>
+
+    <rect class="n-box" x="446" y="90" width="160" height="60" rx="10"/>
+    <text class="t" x="526" y="115" text-anchor="middle">Cerrar caja</text>
+    <text class="t-sm" x="526" y="133" text-anchor="middle">contar efectivo</text>
+    <path class="edge" marker-end="url(#ah)" d="M606,120 L642,120"/>
+
+    <polygon class="n-accent" points="720,60 850,120 720,180 590,120"/>
+    <text class="t" x="720" y="116" text-anchor="middle">¿Diferencia</text>
+    <text class="t" x="720" y="132" text-anchor="middle">&gt; umbral?</text>
+
+    <path class="edge" marker-end="url(#ah)" d="M850,120 L900,120"/>
+    <text class="edge-lbl" x="875" y="112" text-anchor="middle">no</text>
+
+    <rect class="n-ok" x="900" y="90" width="150" height="60" rx="10"/>
+    <text class="t" x="975" y="115" text-anchor="middle">Caja cerrada</text>
+    <text class="t-sm" x="975" y="133" text-anchor="middle">turno finalizado</text>
+
+    <path class="edge" marker-end="url(#ah)" d="M720,180 L720,215"/>
+    <text class="edge-lbl" x="760" y="200" text-anchor="middle">sí</text>
+    <rect class="n-warn" x="580" y="217" width="280" height="40" rx="9"/>
+    <text class="t-sm" x="720" y="241" text-anchor="middle"><tspan class="t">Autorización del Supervisor</tspan> → recién ahí cierra</text>
+  </svg>
+</figure>
+
+<!-- ============ FAQ ============ -->
+<h2 id="faq">7 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Puedo vender si no abrí la caja?</summary>
+  <div class="ans">No. El sistema no permite confirmar una venta sin una caja abierta para tu turno. Ver <a href="pos-guia.html#confirmar">Confirmar venta y medio de pago</a> en la guía de POS.</div>
+</details>
+
+<details>
+  <summary>¿El arqueo cuenta las ventas con tarjeta o transferencia?</summary>
+  <div class="ans">No, el arqueo compara solo el <b>efectivo</b>. Las ventas con otros medios ya quedaron registradas por ese medio y se ven en el desglose, pero no forman parte del conteo físico de billetes.</div>
+</details>
+
+<details>
+  <summary>¿Qué pasa si la diferencia es chica?</summary>
+  <div class="ans">Si está por debajo del umbral configurado, el cierre se confirma directo, sin pedir autorización de nadie.</div>
+</details>
+
+<details>
+  <summary>¿Puedo cargar un movimiento con motivo “venta”?</summary>
+  <div class="ans">No. El modal “Nuevo movimiento” solo ofrece <b>Retiro</b>, <b>Gasto</b> y <b>Aporte</b> — los que carga una persona a mano. Los movimientos por venta, cobro de cuenta corriente o pago a proveedor los genera el sistema automáticamente desde esas pantallas.</div>
+</details>
+
+<details>
+  <summary>Un Operador, ¿puede cerrar la caja de otro empleado?</summary>
+  <div class="ans">Un Operador cierra su propia caja. Un Supervisor puede cerrar la caja de cualquiera.</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Caja
+</footer>
+</div>
+</main>
+</div>
+
+<script>
+  (function(){
+    var links=[...document.querySelectorAll('nav.side a[href^="#"]')];
+    var map=new Map();
+    links.forEach(function(a){var id=a.getAttribute('href').slice(1);var el=document.getElementById(id);if(el)map.set(el,a);});
+    var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove('active');});var a=map.get(e.target);if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-10% 0px -80% 0px',threshold:0});
+    [...map.keys()].forEach(function(t){obs.observe(t);});
+  })();
+</script>
+

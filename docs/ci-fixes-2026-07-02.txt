@@ -1,0 +1,153 @@
+CORRECCIONES CI/CD PIPELINE — 2026-07-02
+=========================================
+
+Contexto
+--------
+Se agregó CI/CD en GitLab con SonarCloud. El pipeline falló en tres etapas
+consecutivas. A continuación se detallan los errores encontrados y las
+correcciones aplicadas en cada caso.
+
+
+ETAPA 1 — PREPARACIÓN / CONFLICTO NMV NODE-ELECTRON
+=====================================================
+
+Síntoma
+  La app Electron daba error al abrirse luego de correr pnpm install.
+  El pipeline mostraba un WARN sobre el campo pnpm en package.json.
+
+Causa
+  El módulo nativo better-sqlite3 fue recompilado para Node 22 (NMV 127)
+  cuando debía estar compilado para Electron 32 (NMV 128). Electron no puede
+  cargar un .node compilado para un NMV diferente al suyo.
+
+  Adicionalmente, el campo "pnpm": { "onlyBuiltDependencies": [...] } en el
+  package.json raíz era ignorado en pnpm v11 (esa configuración se movió a
+  pnpm-workspace.yaml, donde ya estaba correctamente declarada), generando un
+  WARN en cada pnpm install.
+
+Correcciones
+  - Reconstrucción local: pnpm rebuild (ejecuta electron-rebuild -f -w better-sqlite3
+    desde packages/client, compilando para NMV 128).
+  - package.json raíz: se eliminó el bloque "pnpm": { "onlyBuiltDependencies": [...] }
+    que pnpm v11 ignora y genera WARN.
+  - .gitlab-ci.yml:
+      · NODE_VERSION cambiado de "22" a "22.22" para que la imagen node:22.22
+        cumpla el constraint engines.node >= 22.13.0 < 23 sin ambigüedad.
+      · Agregado ELECTRON_SKIP_BINARY_DOWNLOAD: "1" para que el postinstall de
+        Electron no descargue su binario (~150 MB) en el runner de Linux, donde
+        no se necesita para typecheck ni para tests de renderer.
+
+Archivos modificados
+  package.json (raíz)
+  .gitlab-ci.yml
+
+
+ETAPA 2 — BUILD: ERRORES DE TYPESCRIPT (tsc --noEmit)
+======================================================
+
+Síntoma
+  La etapa build falló con 17+ errores de TypeScript. Eran errores preexistentes
+  que nunca habían sido detectados porque la app no corría tsc --noEmit en
+  desarrollo local.
+
+Errores y correcciones (por categoría)
+
+  A. args unknown en handlers IPC (8 errores)
+     Archivo: src/main/auth/guard.ts
+     El tipo IpcHandler usaba ...args: unknown[] lo cual hacía que todos los
+     argumentos recibidos en los handlers fuesen unknown, incompatibles con los
+     tipos concretos esperados (string, OcCrearPayload, etc.).
+     Fix: cambiar ...args: unknown[] por ...args: any[] en IpcHandler.
+     Afectaba: ordenes-compra.ts, producto-proveedor.ts, proveedor.ts, recepcion.ts
+
+  B. Buffer incompatible ExcelJS v4 vs @types/node 22 (3 errores)
+     Archivos: src/main/export/xlsx-writer.ts y su test
+     En @types/node 22, Buffer pasó a ser genérico (Buffer<ArrayBufferLike>).
+     ExcelJS v4 usa la definición antigua (Buffer no genérico). Esto generó
+     incompatibilidades en la firma de writeBuffer() y en wb.xlsx.load().
+     Fix:
+       · xlsx-writer.ts: cast as unknown as Promise<Buffer> en writeBuffer().
+       · xlsx-writer.test.ts: cast as any en las dos llamadas a wb.xlsx.load().
+
+  C. null en campo Drizzle que espera undefined (1 error)
+     Archivo: src/main/ipc/recepcion.ts:110
+     costoReal era number | null pero Drizzle.set() solo acepta number | undefined.
+     Fix: costoReal ?? undefined
+
+  D. exactOptionalPropertyTypes violations (3 errores)
+     Archivos: src/main/ipc/importar.ts, src/main/ipc/__tests__/reabastecimiento.handlers.test.ts
+     Con exactOptionalPropertyTypes: true, pasar string | undefined a una propiedad
+     opcional string es un error (la propiedad debe estar ausente, no undefined).
+     Fix: reemplazar asignaciones directas por spreads condicionales:
+       ...(valor != null ? { campo: valor } : {})
+
+  E. editing posiblemente null en JSX (1 error)
+     Archivo: src/renderer/views/productos/PrecioPanel.tsx:99
+     TypeScript no estrecha editing a non-null dentro del ternario isEditing.
+     Fix: non-null assertion editing!.valor
+
+  F. session.rol no existe en SessionData (1 error)
+     Archivo: src/renderer/views/shell/AppShell.tsx:173
+     SessionData (renderer) tenía rolId (UUID) pero no el nombre del rol.
+     Fix: agregar campo rolNombre: string a SessionData en ambos lados
+     (main/auth/session.ts y renderer/context/AuthContext.tsx), popularlo en
+     auth.ts consultando schema.rol, y usar session.rolNombre en AppShell.
+     14 archivos de test actualizados para incluir rolNombre en sus fixtures.
+
+Archivos modificados (24)
+  src/main/auth/guard.ts
+  src/main/auth/session.ts
+  src/main/auth/__tests__/guard.test.ts
+  src/main/auth/__tests__/session.test.ts
+  src/main/export/xlsx-writer.ts
+  src/main/export/__tests__/xlsx-writer.test.ts
+  src/main/ipc/auth.ts
+  src/main/ipc/importar.ts
+  src/main/ipc/recepcion.ts
+  src/main/ipc/__tests__/dashboard.handlers.test.ts
+  src/main/ipc/__tests__/importar.handlers.test.ts
+  src/main/ipc/__tests__/proveedor.handlers.test.ts
+  src/main/ipc/__tests__/reabastecimiento.handlers.test.ts
+  src/renderer/context/AuthContext.tsx
+  src/renderer/views/shell/AppShell.tsx
+  src/renderer/views/productos/PrecioPanel.tsx
+  src/renderer/App.test.tsx
+  src/renderer/components/ProtectedRoute.test.tsx
+  src/renderer/views/config/__tests__/ConfigMiCuenta.test.tsx
+  src/renderer/views/config/__tests__/ListasPreciosView.test.tsx
+  src/renderer/views/dashboard/__tests__/DashboardView.test.tsx
+  src/renderer/views/importar/ImportarView.test.tsx
+  src/renderer/views/productos/__tests__/PrecioPanel.test.tsx
+  src/renderer/views/stock/__tests__/ReabastecimientoView.test.tsx
+
+
+ETAPA 3 — TEST: DEPENDENCIA DE COVERAGE FALTANTE
+=================================================
+
+Síntoma
+  vitest run --coverage falló con "MISSING DEPENDENCY: Cannot find dependency
+  '@vitest/coverage-v8'".
+
+Causa
+  El pipeline ejecuta vitest run --coverage pero @vitest/coverage-v8 no estaba
+  declarado como devDependency en ninguno de los dos paquetes.
+  Al intentar instalar la última versión disponible (4.1.9) hubo un nuevo error:
+  "The requested module 'vitest/node' does not provide an export named
+  'BaseCoverageProvider'" — incompatibilidad de major entre coverage-v8@4 y vitest@2.
+
+Fix
+  Instalar @vitest/coverage-v8@^2.1.0 (mismo rango que vitest) en:
+    · packages/client
+    · packages/shared
+
+Archivos modificados
+  packages/client/package.json
+  packages/shared/package.json
+  pnpm-lock.yaml
+
+
+ESTADO FINAL
+============
+  Build:   PASS (tsc --noEmit limpio)
+  Test:    PASS (211 tests renderer + shared con coverage)
+  Quality: pendiente de confirmación en próxima ejecución del pipeline

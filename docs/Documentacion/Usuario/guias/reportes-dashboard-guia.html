@@ -1,0 +1,241 @@
+<meta charset="utf-8">
+<title>Reportes y Dashboard — Guía</title>
+<style>
+  :root{
+    --bg:#f7f7f5; --surface:#ffffff; --ink:#1c1a17; --ink-2:#4b463f; --ink-3:#8a8279;
+    --line:#e7e3dc; --accent:#e8730a; --accent-soft:#fdefe1; --accent-strong:#b45309;
+    --ok:#2e7d52; --ok-soft:#e7f3ec; --warn:#b7791f; --warn-soft:#fbf3e0; --danger:#c0392b; --danger-soft:#fbeceb;
+    --blue:#2f6fb0; --blue-soft:#e9f1f9;
+    --radius:12px; --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+      --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+      --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+      --blue:#7fb0e0; --blue-soft:#182533;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+    --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+    --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+    --blue:#7fb0e0; --blue-soft:#182533;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 "Hanken Grotesk",-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 22px 80px}
+  header.hero{background:linear-gradient(135deg,#1c1a17,#3a332b);color:#fff;border-radius:18px;padding:34px 34px 30px;margin-bottom:28px}
+  header.hero .kicker{color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:12.5px}
+  header.hero h1{margin:.35em 0 .2em;font-size:30px;line-height:1.15}
+  header.hero p{margin:0;color:#d7d1c8;max-width:70ch}
+  h2{font-size:22px;margin:2.2em 0 .5em;padding-top:.5em;border-top:2px solid var(--line)}
+  h3{font-size:17px;margin:1.4em 0 .4em;color:var(--ink)}
+  p,li{color:var(--ink-2)}
+  code{font-family:var(--mono);font-size:.87em;background:var(--accent-soft);padding:.1em .38em;border-radius:5px;color:var(--accent-strong)}
+  a{color:var(--blue)}
+  .lead{font-size:16.5px}
+  .toc{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 20px;margin:0 0 8px}
+  .toc b{font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+  .toc ol{margin:.5em 0 0;padding-left:1.2em;columns:2;column-gap:32px}
+  .toc a{text-decoration:none}
+  table{width:100%;border-collapse:collapse;margin:1em 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px}
+  th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--accent-soft);font-size:12.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-3)}
+  tr:last-child td{border-bottom:none}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 22px 18px;margin:16px 0}
+  .fig{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin:20px 0;overflow-x:auto}
+  .fig figcaption{font-size:12.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;font-weight:700}
+  .shot{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px;margin:16px 0;text-align:center}
+  .shot img{max-width:100%;border-radius:8px;display:block;margin:0 auto;border:1px solid var(--line)}
+  .shot.small img{max-width:440px}
+  .shot figcaption{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+  .shot-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:640px){.shot-row{grid-template-columns:1fr}}
+  .callout{border-radius:var(--radius);padding:16px 20px;margin:18px 0;border:1px solid}
+  .callout.warn{background:var(--warn-soft);border-color:#ecd9a8}
+  .callout.info{background:var(--blue-soft);border-color:#cfe0ef}
+  .callout.danger{background:var(--danger-soft);border-color:#eec4bf}
+  .callout h3{margin-top:.2em}
+  .pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px}
+  .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .pill.err{background:var(--danger-soft);color:var(--danger)} .pill.mut{background:var(--accent-soft);color:var(--ink-3)}
+  .step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .step:last-child{border-bottom:none}
+  .step .dot{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent-strong);
+    font-weight:700;display:grid;place-items:center;font-size:.85rem}
+  .step .body{flex:1}
+  .step .body h4{margin:0 0 4px;font-size:1rem;color:var(--ink)}
+  details{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin:10px 0;overflow:hidden}
+  details summary{cursor:pointer;padding:14px 18px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;color:var(--ink)}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"+";color:var(--accent);font-size:1.3rem;font-weight:400}
+  details[open] summary::after{content:"–"}
+  details .ans{padding:0 18px 16px;color:var(--ink-2)}
+  svg{max-width:100%;height:auto;display:block}
+  .muted{color:var(--ink-3);font-size:13.5px}
+  .n-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+  .n-accent{fill:var(--accent-soft);stroke:#f0c79a}
+  .n-ok{fill:var(--ok-soft);stroke:#bfe0cd}
+  .n-warn{fill:var(--warn-soft);stroke:#ecd9a8}
+  .n-err{fill:var(--danger-soft);stroke:#eec4bf}
+  .n-dark{fill:#26221d;stroke:#26221d}
+  .t{font:600 13px "Hanken Grotesk",sans-serif;fill:var(--ink)}
+  .t-sm{font:500 11px "Hanken Grotesk",sans-serif;fill:var(--ink-2)}
+  .t-white{fill:#fff}
+  .edge{stroke:#b9b1a6;stroke-width:1.6;fill:none}
+  .edge-lbl{font:600 10.5px "Hanken Grotesk",sans-serif;fill:var(--ink-3)}
+  footer{color:var(--ink-3);font-size:13px;text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--line)}
+  .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink-3);text-decoration:none;margin-bottom:14px}
+  .back-link:hover{color:var(--accent)}
+
+  .page{display:flex;align-items:flex-start;}
+  nav.side{position:sticky;top:0;height:100vh;width:250px;flex:0 0 250px;
+    background:#201d18;color:#cdc4b8;overflow-y:auto;padding:26px 18px 32px;}
+  nav.side h1{font-size:14.5px;color:#fff;margin:0 0 4px;line-height:1.35;font-weight:700;}
+  nav.side .sub{font-size:11px;color:var(--accent);margin-bottom:20px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+  nav.side a{display:block;color:#cdc4b8;text-decoration:none;font-size:12.6px;padding:6px 9px;border-radius:6px;margin:1px 0;border-left:3px solid transparent;}
+  nav.side a:hover{background:#332d24;color:#fff;}
+  nav.side a.active{background:#332d24;color:#fff;border-left-color:var(--accent);font-weight:600;}
+  nav.side .foot{margin-top:22px;border-top:1px solid #423b30;padding-top:14px;}
+  nav.side .foot a{color:var(--accent);font-weight:700;padding-left:0;}
+  nav.side .foot a:hover{color:#fff;background:none;}
+  main{flex:1;min-width:0;}
+  @media print{ nav.side{display:none;} }
+  @media (max-width:900px){ nav.side{display:none;} }
+</style>
+
+<div class="page">
+<nav class="side">
+  <h1>Reportes y Dashboard</h1>
+  <div class="sub">Manual de Usuario</div>
+  <a href="#mapa">Cómo funciona</a>
+  <a href="#periodo">El selector de período</a>
+  <a href="#resumen">Resumen</a>
+  <a href="#ventas">Ventas</a>
+  <a href="#productos">Productos</a>
+  <a href="#caja">Caja</a>
+  <a href="#clientes">Clientes</a>
+  <a href="#proveedores">Proveedores</a>
+  <a href="#reporte">Reporte de Ventas (detalle exportable)</a>
+  <a href="#faq">Dudas frecuentes</a>
+  <div class="foot"><a href="index.html">← Volver al índice</a></div>
+</nav>
+<main>
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Reportes y Dashboard — Guía paso a paso</h1>
+  <p>Cómo leer el panorama del negocio por período — ventas, productos, caja, clientes y proveedores — y cómo exportar el detalle de ventas para análisis externo.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="mapa">0 · Cómo funciona</h2>
+<p class="lead">El <b>Dashboard</b> tiene 6 pestañas — cada una mira el negocio desde un ángulo distinto, pero todas comparten el mismo <b>selector de período</b> arriba. Es exclusivo del rol <b>Supervisor</b>. Aparte, en <b>Reportes → Ventas</b> hay una pantalla independiente para buscar y <b>exportar</b> el detalle fila por fila de cada venta — el Dashboard te da la foto general, esa pantalla te da el dato puntual.</p>
+
+<!-- ============ 1. PERIODO ============ -->
+<h2 id="periodo">1 · El selector de período</h2>
+<p>Compartido por las 6 pestañas: <b>Hoy</b>, <b>Semana</b>, <b>Mes</b>, <b>Trimestre</b> o <b>Personalizado</b> (rango de fechas a elección). Cambiarlo recalcula todos los números y gráficos de la pestaña activa.</p>
+
+<!-- ============ 2. RESUMEN ============ -->
+<h2 id="resumen">2 · Resumen</h2>
+<p>La foto del día: ventas de hoy (con atajo a semana/mes), alertas de stock (sin stock / bajo mínimo / sin movimiento), y el estado de la caja del turno con los últimos arqueos.</p>
+<div class="shot">
+  <img src="assets/dash-resumen.png" alt="Pestaña Resumen del Dashboard" loading="lazy">
+  <figcaption>Resumen — todo lo urgente en una sola pantalla al entrar.</figcaption>
+</div>
+
+<!-- ============ 3. VENTAS ============ -->
+<h2 id="ventas">3 · Ventas</h2>
+<p>Total, cantidad de ventas, ticket promedio e IVA del período, filtrable por rubro. Abajo: evolución día a día (comparada contra el período anterior), un mapa de calor de <b>ventas por hora y día</b> de la semana, ranking de vendedores y top de productos.</p>
+<div class="shot">
+  <img src="assets/dash-ventas.png" alt="Pestaña Ventas del Dashboard con gráficos de evolución y heatmap" loading="lazy">
+  <figcaption>Ventas — evolución, heatmap por hora/día, ranking de vendedores y top productos.</figcaption>
+</div>
+
+<!-- ============ 4. PRODUCTOS ============ -->
+<h2 id="productos">4 · Productos</h2>
+<p>Mismo bloque de alertas de stock, más dos herramientas de análisis: <b>curva ABC</b> (clasifica productos por cuánto explican del total facturado — A son los que más venden, C los que menos) y <b>margen por categoría</b>.</p>
+<div class="shot">
+  <img src="assets/dash-productos.png" alt="Pestaña Productos del Dashboard con curva ABC y margen por categoría" loading="lazy">
+  <figcaption>Curva ABC y margen por categoría — para saber en qué productos conviene enfocarse.</figcaption>
+</div>
+
+<!-- ============ 5. CAJA ============ -->
+<h2 id="caja">5 · Caja</h2>
+<p>Ingresos, egresos y recargos totales del período, movimientos agrupados por turno, y el desglose por medio de pago.</p>
+<div class="shot">
+  <img src="assets/dash-caja.png" alt="Pestaña Caja del Dashboard" loading="lazy">
+  <figcaption>Caja — cuánto entró, cuánto salió, y por qué medio.</figcaption>
+</div>
+
+<!-- ============ 6. CLIENTES ============ -->
+<h2 id="clientes">6 · Clientes</h2>
+<p>Deuda total y deuda vencida de todas las cuentas corrientes, clientes nuevos e inactivos del período, y un ranking de clientes por facturación.</p>
+<div class="shot">
+  <img src="assets/dash-clientes.png" alt="Pestaña Clientes del Dashboard" loading="lazy">
+  <figcaption>Clientes — deuda, actividad y ranking.</figcaption>
+</div>
+
+<!-- ============ 7. PROVEEDORES ============ -->
+<h2 id="proveedores">7 · Proveedores</h2>
+<p>Órdenes de compra pendientes de recepción, sugerencias de reposición sin resolver, y ranking de proveedores por gasto del período.</p>
+<div class="shot">
+  <img src="assets/dash-proveedores.png" alt="Pestaña Proveedores del Dashboard" loading="lazy">
+  <figcaption>Proveedores — a diferencia de Clientes, acá no hay columna de deuda: el sistema no lleva cuenta corriente de proveedores (ver la guía de Abastecimiento).</figcaption>
+</div>
+
+<!-- ============ 8. REPORTE ============ -->
+<h2 id="reporte">8 · Reporte de Ventas (detalle exportable)</h2>
+<p>Pantalla independiente en <code>Reportes → Ventas</code>, para cuando necesitás el <b>detalle</b> en vez del resumen: cada venta como una fila, filtrable por fecha, cliente, producto, categoría, vendedor y medio de pago, con botón <b>Exportar</b>.</p>
+<div class="shot">
+  <img src="assets/reporte-ventas.png" alt="Reporte de Ventas con el listado detallado y exportable" loading="lazy">
+  <figcaption>31 ventas en el rango elegido — cada una con su IVA discriminado, lista para exportar.</figcaption>
+</div>
+
+<!-- ============ FAQ ============ -->
+<h2 id="faq">9 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Por qué no veo el Dashboard en el menú?</summary>
+  <div class="ans">El Dashboard requiere el rol <b>Supervisor</b> — un Operador no lo ve ni puede acceder aunque escriba la URL directamente.</div>
+</details>
+
+<details>
+  <summary>¿Qué diferencia hay entre la pestaña "Ventas" del Dashboard y "Reportes → Ventas"?</summary>
+  <div class="ans">La pestaña del Dashboard muestra <b>resúmenes y gráficos</b> agregados por período. "Reportes → Ventas" es una grilla con <b>una fila por venta</b>, pensada para filtrar casos puntuales y exportar el detalle.</div>
+</details>
+
+<details>
+  <summary>¿Qué significa la curva ABC?</summary>
+  <div class="ans">Clasifica los productos según cuánto explican de la facturación total: los <b>A</b> son el núcleo de las ventas, los <b>C</b> son los de menor peso. Es una herramienta clásica para decidir en qué productos prestar más atención (stock, exhibición, negociación con proveedores).</div>
+</details>
+
+<details>
+  <summary>¿Por qué la pestaña Proveedores no muestra cuánto le debo a cada uno?</summary>
+  <div class="ans">Porque el sistema, a propósito, todavía no lleva cuenta corriente de proveedores — esa función quedó diferida. En su lugar, la pestaña te muestra OCs pendientes de recepción y el ranking de gasto.</div>
+</details>
+
+<details>
+  <summary>¿Los números cambian si cambio el período mientras estoy en otra pestaña?</summary>
+  <div class="ans">El período es compartido por las 6 pestañas del Dashboard, así que cambiarlo recalcula la pestaña en la que estés parado en ese momento — y se mantiene si cambiás de pestaña después.</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Reportes y Dashboard
+</footer>
+</div>
+</main>
+</div>
+
+<script>
+  (function(){
+    var links=[...document.querySelectorAll('nav.side a[href^="#"]')];
+    var map=new Map();
+    links.forEach(function(a){var id=a.getAttribute('href').slice(1);var el=document.getElementById(id);if(el)map.set(el,a);});
+    var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove('active');});var a=map.get(e.target);if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-10% 0px -80% 0px',threshold:0});
+    [...map.keys()].forEach(function(t){obs.observe(t);});
+  })();
+</script>
+

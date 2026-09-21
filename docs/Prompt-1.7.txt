@@ -1,0 +1,19 @@
+### P1.7 — Caja
+
+```
+Objetivo: apertura, cierre y arqueo de caja (Tech Spec 3.6).
+
+Tareas:
+- Apertura con monto_inicial; impedir abrir si el usuario ya tiene una caja abierta.
+- MovimientoCaja (ingreso/egreso) con motivo y forma_pago; retiros y gastos por el
+  Operador (auditados).
+- Cierre: calcular esperado POR FORMA DE PAGO; contar efectivo; diferencia SOLO sobre
+  efectivo; diferencia > umbral parametrizable exige autorización del Supervisor.
+- Reporte de cierre (Z) con desglose por forma de pago.
+
+Criterios de aceptación:
+- Esperado por forma de pago correcto; diferencia solo de efectivo.
+- Autorización del Supervisor requerida sobre el umbral (test).
+
+Restricciones: la caja registra TODOS los medios de pago.
+```

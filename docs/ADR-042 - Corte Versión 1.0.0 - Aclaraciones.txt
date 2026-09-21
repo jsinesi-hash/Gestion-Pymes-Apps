@@ -1,0 +1,37 @@
+TAREA: Unificar el repo en un solo trunk (`main`) y hacer el corte v1.0.0.
+
+CONTEXTO
+- El repo tiene DOS ramas tronco: `master` (R1 real, en el tip) y `main` (15 commits atrás).
+- Decisión: trunk único = `main` (convención + default de GitHub/GitLab + todo el ADR-036
+  está escrito sobre `main`). Se retira `master`.
+
+PASO 0 — VERIFICAR (no acciones destructivas todavía)
+  git rev-list --left-right --count main...master
+  git merge-base --is-ancestor main master && echo "OK: ff posible" || echo "STOP: divergen"
+
+  - Si el PRIMER número de rev-list es 0 (main no tiene commits propios) y da "OK: ff posible"
+    → seguí al PASO 1.
+  - Si el PRIMER número es > 0 (main tiene commits propios) → PARÁ. No borres ni mergees nada.
+    Mostrame esos commits (git log master..main --oneline) y esperá instrucciones.
+
+PASO 1 — Alinear main a master (fast-forward, sin merge commit)
+  git switch main
+  git merge --ff-only master
+  git push origin main
+
+PASO 2 — Corte v1.0.0 sobre el main YA alineado (nunca sobre el main viejo)
+  git tag -a v1.0.0 -m "Ultimo estable pre-ARCA"
+  git push origin v1.0.0
+  git branch release/1.0.x v1.0.0
+  git push -u origin release/1.0.x
+
+PASO 3 — Retirar master (elimina el doble tronco)
+  git push origin --delete master
+  git branch -d master
+
+PASO 4 — Confirmar
+  - Default branch del remoto = main (ver runbook §6.4).
+  - git branch -a  → deben quedar SOLO: main, release/1.0.x. Sin master.
+
+GATE: si el PASO 0 no da ff limpio, frenás y me consultás. No fuerces, no borres master
+si main tiene commits propios.

@@ -1,0 +1,14 @@
+KPIs propuestos
+Un detalle de fondo primero: el dashboard es offline-first. Varios de estos KPIs dependen de datos que pueden estar desincronizados (ventas de otra sucursal, por ejemplo). Conviene que cada widget indique de cuándo es el dato — "actualizado a la última sync" — para no mostrar números que parecen en vivo y no lo son.
+
+1. Ventas por período con comparativa
+Monto facturado del día/semana/mes con delta vs. período anterior (ej. "$ 1.234.567,89 · +12% vs. mes anterior"). Filtros por producto/categoría y por sucursal. Es el número que el supervisor mira primero.
+
+2. Productos top
+Pero separá dos rankings, porque miden cosas distintas: top por cantidad vendida (qué rota) y top por rentabilidad/margen (qué deja plata). Un producto puede liderar uno y no aparecer en el otro — esa discrepancia es justamente la información valiosa.
+
+3. Alertas de stock
+Productos bajo punto de reposición y sin stock, idealmente cruzado con velocidad de venta (un faltante de algo que rota rápido es más urgente que uno que no se mueve). Conecta directo con el flujo de compras de R3.
+
+4. Estado de caja / arqueos
+Resumen de aperturas/cierres del día, faltantes y sobrantes acumulados por caja o cajero. Es control operativo y de seguridad, no solo financiero.

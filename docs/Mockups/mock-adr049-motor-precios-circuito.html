@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADR-049 — Motor de Precios v2 · Circuito de pantallas</title>
+<style>
+:root{
+  --accent:#E8730A; --accent-strong:#C85E00; --accent-soft:#FBE6D2;
+  --bg:#F4F2EE; --surface:#FFFFFF; --surface-2:#FAF8F4; --line:#E3DED5;
+  --ink:#1C1A17; --ink-2:#5C564D; --ink-3:#8A8479;
+  --ok:#2E7D52; --danger:#C0392B; --warn:#B4690E;
+  --shadow:0 1px 2px rgba(28,26,23,.06),0 8px 24px rgba(28,26,23,.06);
+  --radius:14px; --pad:16px; --rowpad:12px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#15140F; --surface:#1E1C16; --surface-2:#262319; --line:#322E24;
+    --ink:#F2EFE8; --ink-2:#B7B0A3; --ink-3:#7C766B;
+    --ok:#5FD699; --danger:#F0746A; --warn:#E0A23A;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+  }
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:"Archivo","Hanken Grotesk",system-ui,sans-serif;
+  background:var(--bg); color:var(--ink);
+  -webkit-font-smoothing:antialiased; line-height:1.55;
+  padding:32px 20px 80px;
+}
+.wrap{max-width:1160px;margin:0 auto}
+.num{font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.87em;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+
+/* ---------- tipografía de documento ---------- */
+h1{font-size:30px;font-weight:800;letter-spacing:-.025em;line-height:1.2}
+.sub{color:var(--ink-3);font-size:15px;margin-top:6px}
+h2{font-size:20px;font-weight:800;letter-spacing:-.02em;margin:52px 0 6px;
+  padding-top:22px;border-top:2px solid var(--line)}
+h2 .n{color:var(--accent);margin-right:9px}
+h3{font-size:15px;font-weight:700;margin:26px 0 10px;letter-spacing:-.01em}
+p{color:var(--ink-2);font-size:14.5px;margin:9px 0}
+ul,ol{color:var(--ink-2);font-size:14.5px;margin:9px 0 9px 22px}
+li{margin:5px 0}
+strong{color:var(--ink);font-weight:700}
+.lead{font-size:15.5px;color:var(--ink-2);max-width:78ch}
+
+/* ---------- avisos ---------- */
+.note{border-radius:10px;padding:13px var(--pad);font-size:13.8px;margin:16px 0;
+  border:1px solid var(--line);background:var(--surface-2);color:var(--ink-2)}
+.note.warn{background:rgba(180,105,14,.08);border-color:rgba(180,105,14,.28);color:var(--ink-2)}
+.note.dang{background:rgba(192,57,43,.08);border-color:rgba(192,57,43,.25);color:var(--ink-2)}
+.note.ok{background:rgba(46,125,82,.08);border-color:rgba(46,125,82,.25);color:var(--ink-2)}
+.note b{color:var(--ink)}
+
+/* ---------- chrome de app ---------- */
+.app{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+  box-shadow:var(--shadow);background:var(--surface);display:flex;margin:14px 0 8px}
+.side{width:196px;flex:0 0 auto;background:var(--surface);border-right:1px solid var(--line);padding:8px 6px}
+.side-top{display:flex;align-items:center;gap:9px;padding:8px 8px 12px}
+.logo{width:26px;height:26px;border-radius:8px;background:var(--accent);position:relative;flex:0 0 auto}
+.logo::before{content:"";position:absolute;inset:7px;border:2.5px solid #fff;border-radius:2px;transform:rotate(45deg)}
+.side-name{font-weight:800;font-size:14px;letter-spacing:-.02em}
+.ng{display:flex;align-items:center;gap:10px;padding:7px 9px;border-radius:9px;
+  font-size:12.5px;font-weight:700;color:var(--ink)}
+.ng .chev{margin-left:auto;opacity:.45;font-size:10px}
+.ni{display:flex;align-items:center;gap:10px;padding:6px 9px;border-radius:9px;
+  font-size:12.5px;font-weight:500;color:var(--ink-2);margin-left:14px;
+  padding-left:11px;border-left:2px solid var(--line)}
+.ni.active{background:var(--accent-soft);color:var(--accent-strong);font-weight:700}
+.ni.nuevo{color:var(--accent);font-weight:700}
+.ni.nuevo::after{content:"NUEVO";margin-left:auto;font-size:8.5px;font-weight:800;
+  letter-spacing:.08em;background:var(--accent);color:#fff;padding:1px 5px;border-radius:4px}
+.ng.nuevo{color:var(--accent)}
+.dot{width:14px;height:14px;border-radius:4px;background:var(--line);flex:0 0 auto}
+.ni.active .dot,.ni.nuevo .dot,.ng.nuevo .dot{background:currentColor;opacity:.5}
+.pane{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg)}
+.topbar{display:flex;align-items:center;gap:12px;padding:11px 15px;background:var(--surface);
+  border-bottom:1px solid var(--line)}
+.crumb{font-weight:700;font-size:15px;letter-spacing:-.01em}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+  font-size:11.5px;font-weight:600;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2)}
+.chip .d{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.body{padding:14px;display:flex;flex-direction:column;gap:12px}
+
+/* ---------- panels ---------- */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.ptitle{font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);
+  font-weight:700;padding:12px var(--pad) 9px}
+.toolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:12px var(--pad);
+  border-bottom:1px solid var(--line)}
+.ml-auto{margin-left:auto}
+
+/* ---------- controles ---------- */
+.btn{border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);
+  font-family:inherit;font-weight:600;font-size:12.5px;padding:7px 13px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn.pri{border:none;background:var(--accent);color:#fff;font-weight:700;box-shadow:0 3px 10px rgba(232,115,10,.28)}
+.btn.dang{color:var(--danger);border-color:var(--line)}
+.btn.off{opacity:.42}
+.input{border:1px solid var(--line);border-radius:9px;background:var(--surface-2);
+  color:var(--ink);font-size:12.5px;padding:7px 11px;display:block;width:100%}
+.input.ph{color:var(--ink-3)}
+.field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0}
+.field>label{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-weight:700}
+.frow{display:flex;gap:12px;padding:0 var(--pad) 13px;align-items:flex-start}
+
+/* ---------- tablas ---------- */
+table{width:100%;border-collapse:collapse}
+thead th{text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--ink-3);font-weight:700;padding:9px var(--pad);border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface)}
+tbody td{padding:9px var(--pad);border-bottom:1px solid var(--line);font-size:12.5px;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+th.r,td.r{text-align:right} th.c,td.c{text-align:center}
+.pn{font-weight:600}
+.mut{color:var(--ink-3)}
+.pos{color:var(--ok)} .neg{color:var(--danger)}
+
+/* ---------- badges de estado ---------- */
+.b{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;
+  font-size:10.5px;font-weight:700;white-space:nowrap;border:1px solid}
+.b-draft{color:var(--ink-3);background:var(--surface-2);border-color:var(--line)}
+.b-val{color:var(--ok);background:rgba(46,125,82,.1);border-color:rgba(46,125,82,.22)}
+.b-pend{color:var(--warn);background:rgba(180,105,14,.1);border-color:rgba(180,105,14,.22)}
+.b-appr{color:var(--accent-strong);background:var(--accent-soft);border-color:rgba(232,115,10,.3)}
+.b-pub{color:#fff;background:var(--ok);border-color:var(--ok)}
+.b-fail{color:var(--danger);background:rgba(192,57,43,.1);border-color:rgba(192,57,43,.25)}
+.b-rev{color:var(--ink-3);background:var(--surface-2);border-color:var(--line);text-decoration:line-through}
+.tag{display:inline-block;padding:1px 8px;border-radius:999px;font-size:10.5px;font-weight:600;
+  background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2)}
+
+/* ---------- KPI ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:10px;padding:var(--pad)}
+.kpi{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.kpi .l{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-weight:700}
+.kpi .v{font-family:"JetBrains Mono",monospace;font-size:20px;font-weight:700;letter-spacing:-.02em;margin-top:3px}
+.kpi .v.w{color:var(--warn)} .kpi .v.d{color:var(--danger)} .kpi .v.o{color:var(--ok)}
+.kpi .s{font-size:10.5px;color:var(--ink-3);margin-top:1px}
+
+/* ---------- stepper ---------- */
+.steps{display:flex;align-items:center;padding:var(--pad)}
+.stp{display:flex;align-items:center;flex:1}
+.stp .c{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;
+  font-size:11px;font-weight:800;flex:0 0 auto;background:var(--surface-2);color:var(--ink-3);border:1.5px solid var(--line)}
+.stp.done .c{background:var(--ok);color:#fff;border:none}
+.stp.now .c{background:var(--accent);color:#fff;border:none}
+.stp .t{font-size:11.5px;font-weight:600;color:var(--ink-3);margin-left:8px;white-space:nowrap}
+.stp.done .t{color:var(--ok)} .stp.now .t{color:var(--ink)}
+.stp .bar{flex:1;height:1.5px;background:var(--line);margin:0 9px}
+.stp.done .bar{background:var(--ok)}
+
+/* ---------- diagrama de circuito ---------- */
+.flow{display:flex;flex-direction:column;gap:0;margin:16px 0}
+.fstep{display:flex;gap:14px;align-items:flex-start}
+.frail{display:flex;flex-direction:column;align-items:center;flex:0 0 auto;width:30px}
+.fdot{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;
+  font-size:12px;font-weight:800;background:var(--surface-2);border:1.5px solid var(--line);color:var(--ink-3)}
+.fdot.act{background:var(--accent);border-color:var(--accent);color:#fff}
+.fdot.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.fdot.sys{background:var(--surface);border-style:dashed;color:var(--ink-3)}
+.fline{width:2px;flex:1;min-height:22px;background:var(--line)}
+.fbody{padding-bottom:16px;flex:1;min-width:0}
+.ftitle{font-weight:700;font-size:14px;letter-spacing:-.01em}
+.fwhere{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.fwhere code{font-size:11px}
+.fdesc{font-size:13px;color:var(--ink-2);margin-top:5px}
+
+/* ---------- tabla de checklist ---------- */
+.chk{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;
+  border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.chk th{background:var(--surface-2);text-align:left;font-size:10px;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--ink-3);font-weight:700;padding:9px 11px;border-bottom:1px solid var(--line)}
+.chk td{padding:9px 11px;border-bottom:1px solid var(--line);color:var(--ink-2);vertical-align:top}
+.chk tr:last-child td{border-bottom:none}
+.chk td:first-child{color:var(--ink);font-weight:600}
+.y{color:var(--ok);font-weight:800} .n{color:var(--ink-3)}
+
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll>table{min-width:660px}
+.cap{font-size:11.5px;color:var(--ink-3);margin:6px 0 26px;font-style:italic}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:840px){.two{grid-template-columns:1fr}.side{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Motor de Precios v2 — Circuito de pantallas</h1>
+<p class="sub">ADR-049 · Mockup de navegación y flujo · complemento del plan de implementación</p>
+
+<div class="note dang">
+  <b>Corrección de numeración.</b> El plan original decía «ADR-047». Ese número ya está tomado por
+  <b>Agenda y avisos</b>, y el 048 por <b>Email/SMTP</b>. Este trabajo es <b>ADR-049</b>.
+</div>
+
+<p class="lead">
+  Este documento existe para que <b>nada quede descuadrado</b>: define dónde vive cada pantalla nueva
+  en el sidebar, cómo se encadenan entre sí, y qué hay que tocar exactamente para que cada una sea
+  alcanzable por el usuario. En este proyecto una pantalla necesita <b>tres</b> registros
+  (<code>routes/index.tsx</code>, <code>NAV_GROUPS</code> y <code>CRUMBS</code>), no uno — y los tests
+  del componente pasan en verde igual si falta alguno.
+</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2><span class="n">1</span>Dónde viven las pantallas nuevas</h2>
+
+<p>
+  Hoy las pantallas de precios están repartidas: <b>Listas de precios</b>, <b>Importar costos</b> y
+  <b>Cola de revisión</b> cuelgan del grupo <b>Configuración</b>, mezcladas con Categorías, Marcas,
+  Unidades y Etiquetas. Sumarle tres pantallas más a ese grupo lo vuelve un cajón de sastre.
+</p>
+<p>
+  <b>Propuesta:</b> crear un grupo <b>Precios</b> que junte las pantallas del dominio (4 ítems de nav +
+  Reglas como tab de Listas). Configuración queda con lo que realmente es catálogo auxiliar.
+</p>
+
+<div class="two">
+  <div>
+    <h3>Antes</h3>
+    <div class="app" style="min-height:330px">
+      <div class="side" style="width:100%;border-right:none">
+        <div class="side-top"><div class="logo"></div><span class="side-name">Ferretería</span></div>
+        <div class="ng"><span class="dot"></span>Punto de venta<span class="chev">▾</span></div>
+        <div class="ng"><span class="dot"></span>Catálogo<span class="chev">▾</span></div>
+        <div class="ng"><span class="dot"></span>Abastecimiento<span class="chev">▾</span></div>
+        <div class="ng"><span class="dot"></span>Configuración<span class="chev">▾</span></div>
+        <div class="ni"><span class="dot"></span>Categorías</div>
+        <div class="ni"><span class="dot"></span>Marcas</div>
+        <div class="ni"><span class="dot"></span>Unidades</div>
+        <div class="ni"><span class="dot"></span>Listas de precios</div>
+        <div class="ni"><span class="dot"></span>Importar costos</div>
+        <div class="ni"><span class="dot"></span>Cola revisión costos</div>
+        <div class="ni"><span class="dot"></span>Etiquetas</div>
+        <div class="ng"><span class="dot"></span>Sistema<span class="chev">▾</span></div>
+      </div>
+    </div>
+    <p class="cap">7 ítems en Configuración, 3 de ellos de precios.</p>
+  </div>
+
+  <div>
+    <h3>Después</h3>
+    <div class="app" style="min-height:330px">
+      <div class="side" style="width:100%;border-right:none">
+        <div class="side-top"><div class="logo"></div><span class="side-name">Ferretería</span></div>
+        <div class="ng"><span class="dot"></span>Punto de venta<span class="chev">▾</span></div>
+        <div class="ng"><span class="dot"></span>Catálogo<span class="chev">▾</span></div>
+        <div class="ng"><span class="dot"></span>Abastecimiento<span class="chev">▾</span></div>
+        <div class="ng nuevo"><span class="dot"></span>Precios<span class="chev">▾</span></div>
+        <div class="ni"><span class="dot"></span>Listas de precios <span style="font-size:9px;color:var(--ink-3);font-weight:600">· +tab Reglas</span></div>
+        <div class="ni nuevo"><span class="dot"></span>Lotes</div>
+        <div class="ni"><span class="dot"></span>Importar costos</div>
+        <div class="ni"><span class="dot"></span>Cola de revisión</div>
+        <div class="ng"><span class="dot"></span>Configuración<span class="chev">▾</span></div>
+        <div class="ni"><span class="dot"></span>Categorías · Marcas · Unidades · Etiquetas</div>
+        <div class="ng"><span class="dot"></span>Sistema<span class="chev">▾</span></div>
+      </div>
+    </div>
+    <p class="cap">Grupo Precios con 4 ítems. <b>Reglas</b> no es ítem propio: es un tab dentro de Listas de precios (ver §5). Permiso del grupo: <code>config.fiscal</code>.</p>
+  </div>
+</div>
+
+<div class="note warn">
+  <b>Dos cosas a decidir antes de codear.</b><br>
+  <b>(a) El alta de grupo de nav debe autorizarse en el ADR.</b> Es el precedente de ADR-047, que dejó
+  escrito en el código «grupo Agenda (alta de nav autorizada por el ADR)». ADR-049 tiene que decir lo mismo
+  del grupo Precios.<br>
+  <b>(b) Las rutas no se mueven.</b> <code>/config/listas-de-precios</code> queda donde está aunque el ítem
+  pase al grupo Precios: la app usa <code>createMemoryRouter</code> y no hay barra de direcciones, así que el
+  path es invisible para el usuario. Moverlo obligaría a tocar rutas, CRUMBS y tests a cambio de cero
+  beneficio visible. Las dos pantallas nuevas (Lotes y su detalle) sí nacen bajo <code>/precios/*</code>.
+</div>
+
+<h3>Rutas nuevas</h3>
+<div class="scroll">
+<table class="chk">
+  <thead><tr><th>Pantalla</th><th>Ruta</th><th>Ítem en NAV</th><th>Permiso</th></tr></thead>
+  <tbody>
+    <tr><td>Lotes de precios</td><td><code>/precios/lotes</code></td><td class="y">Sí — «Lotes»</td><td><code>config.fiscal</code></td></tr>
+    <tr><td>Detalle de lote</td><td><code>/precios/lotes/:id</code></td><td class="n">No — se llega desde el listado</td><td><code>config.fiscal</code></td></tr>
+    <tr><td>Reglas de precio</td><td>— <b>tab en Listas</b></td><td class="n">No — tab del detalle de lista</td><td><code>config.fiscal</code></td></tr>
+  </tbody>
+</table>
+</div>
+<div class="note ok">
+  <b>Por qué Reglas es un tab y no una pantalla.</b> Las reglas son siempre por-lista
+  (<code>regla_precio.lista_precio_id</code>), y la pantalla <b>Listas de precios</b> ya despliega tabs
+  al seleccionar una lista (hoy: Precios vigentes · Cambios programados · Ajustes por producto). Reglas
+  <b>reemplaza a «Ajustes por producto»</b> —que lee <code>lista_precio_detalle</code>, tabla muerta según
+  CLAUDE.md— y <b>«Cambios programados» se elimina</b>, así que quedan dos tabs: Precios vigentes · Reglas.
+  Se evita duplicar el selector de lista y el grupo Precios queda en 4 ítems. Ver §5.
+</div>
+
+<div class="note dang">
+  <b>Trampa del breadcrumb — afecta al detalle de lote.</b>
+  <code>CRUMBS</code> es un <code>Record&lt;string,string&gt;</code> indexado por <code>location.pathname</code>
+  exacto: <code>const crumb = CRUMBS[location.pathname] ?? ''</code>. <b>No soporta rutas con parámetros</b>,
+  así que <code>/precios/lotes/abc-123</code> va a mostrar el breadcrumb <b>vacío</b>. No es un bug nuevo —
+  <code>/productos/:id</code> y <code>/compras/ordenes/:id</code> ya se comportan así.<br>
+  <b>Qué hacer:</b> seguir el patrón existente y que la vista de detalle renderice su propio título con
+  <code>.detail-head h1</code> (como <code>ProductoDetalle</code>), más un enlace «← Lotes» con la clase
+  <code>.back</code>. No inventar un CRUMBS con matcher de parámetros solo para esta pantalla.
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2><span class="n">2</span>El circuito completo</h2>
+
+<p class="lead">
+  Hay <b>una sola salida</b> a precio publicado: el lote. Todo lo que hoy escribe directo pasa a producir
+  un lote en borrador. Eso es lo que hace el circuito auditable y reversible.
+</p>
+
+<h3>Circuito A — Aumento de proveedor (el caso masivo)</h3>
+<div class="flow">
+  <div class="fstep">
+    <div class="frail"><div class="fdot act">1</div><div class="fline"></div></div>
+    <div class="fbody">
+      <div class="ftitle">Importar costos</div>
+      <div class="fwhere">Precios › Importar costos · <code>/precios/importar-costos</code></div>
+      <div class="fdesc">Los 4 pasos actuales no cambian: proveedor + archivo → mapeo de columnas → preview de matcheo → confirmar.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="frail"><div class="fdot sys">⚙</div><div class="fline"></div></div>
+    <div class="fbody">
+      <div class="ftitle">Se actualizan los costos <span class="tag">automático</span></div>
+      <div class="fwhere">Misma transacción que hoy, en <code>importacionCostoConfirmarHandler</code></div>
+      <div class="fdesc"><b>Novedad:</b> además crea un lote en <b>borrador</b> con origen <code>PROVIDER_COST_UPDATE</code>. Nunca publica solo.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="frail"><div class="fdot act">2</div><div class="fline"></div></div>
+    <div class="fbody">
+      <div class="ftitle">Paso final avisa y ofrece el salto</div>
+      <div class="fwhere">Pantalla «Importación aplicada» + botón <b>Ver lote de precios →</b></div>
+      <div class="fdesc">Es el enlace que cierra el circuito. Sin él, el lote queda huérfano y el usuario nunca se entera.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="frail"><div class="fdot act">3</div><div class="fline"></div></div>
+    <div class="fbody">
+      <div class="ftitle">Detalle del lote — revisar impacto</div>
+      <div class="fwhere">Precios › Lotes › detalle · <code>/precios/lotes/:id</code></div>
+      <div class="fdesc">KPIs de impacto, filas con precio anterior/nuevo y margen, errores y advertencias. Acá se decide.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="frail"><div class="fdot act">4</div><div class="fline"></div></div>
+    <div class="fbody">
+      <div class="ftitle">Excluir errores → Aprobar → Publicar</div>
+      <div class="fwhere">Supervisor con permiso <code>precio.aprobar</code></div>
+      <div class="fdesc">
+        Los errores <b>no obligan a cancelar todo el lote</b>: se <b>excluyen</b> (una fila o todas de un
+        saque) y con eso el botón Aprobar se habilita. Las filas excluidas quedan en un <b>listado de
+        rechazados</b> exportable, separado de los <b>aprobados</b>. Publicar corre en una transacción.
+      </div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="frail"><div class="fdot ok">✓</div></div>
+    <div class="fbody">
+      <div class="ftitle">Precio vigente en el POS</div>
+      <div class="fwhere">Se escribe <code>lista_precio_valor</code>; el POS lo lee sin saber que existió un lote</div>
+      <div class="fdesc">El historial anterior queda cerrado con <code>fecha_hasta</code>, nunca borrado.</div>
+    </div>
+  </div>
+</div>
+
+<h3>Circuitos B a E — mismo tramo final</h3>
+<p>
+  Los otros cuatro disparadores entran al circuito en <b>distintos puntos</b>, pero desde «Detalle del lote»
+  en adelante recorren exactamente el mismo camino. Esa convergencia es la que evita tener cuatro flujos
+  de aprobación distintos que mantener.
+</p>
+<div class="scroll">
+<table class="chk">
+  <thead><tr><th>Circuito</th><th>Arranca en</th><th>Origen del lote</th><th>Entra al circuito</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>B · Cambio de margen</td>
+      <td>Precios › Reglas → editar → <b>Recalcular con esta regla</b></td>
+      <td><code>MARGIN_UPDATE</code></td>
+      <td>Paso 3 (detalle)</td>
+    </tr>
+    <tr>
+      <td>C · Recálculo manual</td>
+      <td>Precios › Listas → <b>Recalcular</b> → modal</td>
+      <td><code>MANUAL_RECALCULATION</code></td>
+      <td>Paso 3 (detalle)</td>
+    </tr>
+    <tr>
+      <td>D · Cambio de proveedor preferido</td>
+      <td>Producto › panel Proveedores → marcar preferido</td>
+      <td><code>SUPPLIER_CHANGE</code></td>
+      <td>Paso 3, acotado a ese producto</td>
+    </tr>
+    <tr>
+      <td>E · Rollback</td>
+      <td>Lotes → detalle de un lote <b>publicado</b> → <b>Revertir</b></td>
+      <td><code>ROLLBACK</code></td>
+      <td>Paso 3 — el lote inverso se aprueba y publica igual que cualquier otro</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note ok">
+  <b>La simulación sale gratis.</b> El «¿qué pasa si Bosch aumenta 8%?» del documento original no necesita
+  pantalla propia: es crear un lote, mirar el reporte de impacto y <b>cancelarlo</b>. Un lote en borrador no
+  toca ningún precio publicado.
+</div>
+
+<h3>Listas de proveedor parciales — es lo normal, no un error</h3>
+<div class="note warn">
+  <b>Una lista de proveedor puede traer distinta cantidad de artículos cada vez.</b> Bosch puede mandar hoy
+  solo <b>Pintura</b> y la semana que viene solo <b>Herramientas</b>. Eso obliga a dos reglas de diseño:
+  <ul style="margin:8px 0 0 20px">
+    <li><b>No hay «cantidad esperada» que bloquee.</b> El documento original proponía validar «archivo trae
+      10.000 → cálculo procesó 9.950 → falla». <b>Se descarta como bloqueante:</b> procesar menos filas que
+      la vez anterior es legítimo. A lo sumo es un dato informativo en el reporte, nunca un error.</li>
+    <li><b>Reimportar solo los faltantes es un caso de primera clase.</b> Los rechazados del lote (por causa
+      corregible: sin proveedor preferido, sin match) se pueden <b>exportar</b>, corregir en el listado del
+      proveedor, y volver a importar <b>solo esos</b> — sin re-tocar lo que ya quedó bien.</li>
+  </ul>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2><span class="n">3</span>Pantalla nueva — Lotes de precios</h2>
+<p>Listado de entrada al dominio. Se llega desde el sidebar o desde el paso final de una importación.</p>
+
+<div class="app">
+  <div class="side">
+    <div class="side-top"><div class="logo"></div><span class="side-name">Ferretería</span></div>
+    <div class="ng"><span class="dot"></span>Punto de venta<span class="chev">▸</span></div>
+    <div class="ng"><span class="dot"></span>Catálogo<span class="chev">▸</span></div>
+    <div class="ng nuevo"><span class="dot"></span>Precios<span class="chev">▾</span></div>
+    <div class="ni"><span class="dot"></span>Listas de precios</div>
+    <div class="ni active"><span class="dot"></span>Lotes</div>
+    <div class="ni"><span class="dot"></span>Importar costos</div>
+    <div class="ni"><span class="dot"></span>Cola de revisión</div>
+    <div class="ng"><span class="dot"></span>Configuración<span class="chev">▸</span></div>
+  </div>
+  <div class="pane">
+    <div class="topbar">
+      <div class="crumb">Lotes de precios</div>
+      <div class="ml-auto"></div>
+      <span class="chip"><span class="d"></span>Caja activa</span>
+      <span class="chip">J. Sinesi · Supervisor</span>
+    </div>
+    <div class="body">
+      <div class="panel">
+        <div class="toolbar">
+          <input class="input ph" style="flex:1;min-width:180px" value="Buscar por lista, origen o usuario…" readonly>
+          <span class="btn">Estado: <b style="margin-left:4px">Activos</b> ▾</span>
+          <span class="btn">Lista: <b style="margin-left:4px">Todas</b> ▾</span>
+          <div class="ml-auto"><span class="btn pri">+ Nuevo lote</span></div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Lote</th><th>Lista</th><th>Origen</th><th>Proveedor</th><th class="r">Productos</th>
+              <th class="r">Var. prom.</th><th>Estado</th><th>Creado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="pn num">#000128</td><td>General</td>
+              <td><span class="tag">Costo proveedor</span></td>
+              <td class="pn">Bosch Argentina SA</td>
+              <td class="r num">8.500</td><td class="r num neg">+7,8%</td>
+              <td><span class="b b-pend">⚠ Pendiente aprobación</span></td>
+              <td class="mut num">24/07 09:14</td>
+            </tr>
+            <tr>
+              <td class="pn num">#000127</td><td>Mayorista</td>
+              <td><span class="tag">Cambio de margen</span></td>
+              <td class="mut">—</td>
+              <td class="r num">1.240</td><td class="r num neg">+4,0%</td>
+              <td><span class="b b-fail">✕ Validación fallida</span></td>
+              <td class="mut num">24/07 08:02</td>
+            </tr>
+            <tr>
+              <td class="pn num">#000126</td><td>General</td>
+              <td><span class="tag">Manual</span></td>
+              <td class="mut">—</td>
+              <td class="r num">312</td><td class="r num neg">+12,0%</td>
+              <td><span class="b b-draft">Borrador</span></td>
+              <td class="mut num">23/07 17:40</td>
+            </tr>
+            <tr>
+              <td class="pn num">#000125</td><td>General</td>
+              <td><span class="tag">Costo proveedor</span></td>
+              <td class="pn">Bosch Argentina SA</td>
+              <td class="r num">8.470</td><td class="r num neg">+6,2%</td>
+              <td><span class="b b-pub">✓ Publicado</span></td>
+              <td class="mut num">15/07 11:20</td>
+            </tr>
+            <tr>
+              <td class="pn num">#000124</td><td>General</td>
+              <td><span class="tag">Rollback de #000123</span></td>
+              <td class="mut">—</td>
+              <td class="r num">450</td><td class="r num pos">−9,0%</td>
+              <td><span class="b b-pub">✓ Publicado</span></td>
+              <td class="mut num">14/07 16:05</td>
+            </tr>
+            <tr>
+              <td class="pn num mut">#000123</td><td class="mut">General</td>
+              <td><span class="tag">Manual</span></td>
+              <td class="mut">—</td>
+              <td class="r num mut">450</td><td class="r num mut">+9,0%</td>
+              <td><span class="b b-rev">Revertido</span></td>
+              <td class="mut num">14/07 15:31</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="cap">
+  El filtro de estado arranca en «Activos» (borrador + validado + pendiente + aprobado) para que lo accionable
+  quede arriba — mismo criterio que Presupuestos, cuyo default es Borrador + Emitido.
+</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2><span class="n">4</span>Pantalla nueva — Detalle del lote</h2>
+<p>
+  Es <b>la pantalla central del ADR</b>: donde el Supervisor ve el impacto económico antes de tocar un solo
+  precio. Todo lo demás es plomería alrededor de esta decisión.
+</p>
+
+<div class="app">
+  <div class="side">
+    <div class="side-top"><div class="logo"></div><span class="side-name">Ferretería</span></div>
+    <div class="ng"><span class="dot"></span>Punto de venta<span class="chev">▸</span></div>
+    <div class="ng"><span class="dot"></span>Catálogo<span class="chev">▸</span></div>
+    <div class="ng nuevo"><span class="dot"></span>Precios<span class="chev">▾</span></div>
+    <div class="ni"><span class="dot"></span>Listas de precios</div>
+    <div class="ni active"><span class="dot"></span>Lotes</div>
+    <div class="ni"><span class="dot"></span>Importar costos</div>
+    <div class="ni"><span class="dot"></span>Cola de revisión</div>
+    <div class="ng"><span class="dot"></span>Configuración<span class="chev">▸</span></div>
+  </div>
+  <div class="pane">
+    <div class="topbar">
+      <div class="crumb" style="color:var(--ink-3);font-weight:500;font-size:13px">
+        (breadcrumb vacío — el título lo pone la vista)
+      </div>
+      <div class="ml-auto"></div>
+      <span class="chip">J. Sinesi · Supervisor</span>
+    </div>
+    <div class="body">
+
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:11.5px;color:var(--ink-3);font-weight:600">← Lotes de precios</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:3px">
+            <h1 style="font-size:21px">Lote #000128</h1>
+            <span class="b b-pend">⚠ Pendiente aprobación</span>
+          </div>
+          <div style="font-size:12px;color:var(--ink-3);margin-top:2px">
+            Lista General · origen Costo de proveedor · <b style="color:var(--ink-2)">Proveedor Bosch Argentina SA</b>
+            · creado por M. Pérez el 24/07 09:14
+            · desde <span style="color:var(--accent);font-weight:600">importación ferreteria-bosch-julio.csv</span>
+          </div>
+        </div>
+        <div class="ml-auto" style="display:flex;gap:8px">
+          <span class="btn dang">Cancelar lote</span>
+          <span class="btn">Exportar XLSX</span>
+          <span class="btn pri">✓ Aprobar y publicar</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ptitle">Reporte de impacto</div>
+        <div class="kpis">
+          <div class="kpi"><div class="l">Productos</div><div class="v">8.500</div><div class="s">de 8.512 en alcance</div></div>
+          <div class="kpi"><div class="l">Aumento prom.</div><div class="v w">+7,8%</div><div class="s">mediana +6,9%</div></div>
+          <div class="kpi"><div class="l">Margen antes</div><div class="v">38,0%</div><div class="s">promedio ponderado</div></div>
+          <div class="kpi"><div class="l">Margen después</div><div class="v o">39,5%</div><div class="s">+1,5 pts</div></div>
+          <div class="kpi"><div class="l">Suben &gt; 30%</div><div class="v w">120</div><div class="s">advertencia</div></div>
+          <div class="kpi"><div class="l">Margen crítico</div><div class="v d">15</div><div class="s">bloquean aprobación</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="toolbar">
+          <input class="input ph" style="flex:1;min-width:160px" value="Buscar por producto o SKU…" readonly>
+          <span class="btn">Validación: <b style="margin-left:4px">Todas</b> ▾</span>
+          <span class="btn">Regla: <b style="margin-left:4px">Todas</b> ▾</span>
+          <div class="ml-auto" style="display:flex;gap:8px">
+            <span class="btn dang">Excluir las 15 con error</span>
+          </div>
+        </div>
+        <div class="toolbar" style="padding-top:0;border-bottom:1px solid var(--line)">
+          <span class="b b-fail">✕ 15 con error</span>
+          <span class="b b-pend">⚠ 120 advertencias</span>
+          <span class="b b-val">✓ 8.365 sin observaciones</span>
+          <span class="b b-rev">⊘ 0 excluidas</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th><th class="r">Costo neto</th><th class="r">Precio actual</th>
+              <th class="r">Precio nuevo</th><th class="r">Var.</th>
+              <th class="r">Margen</th><th>Regla</th><th>Validación</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="pn">Amoladora Bosch GWS 700</div><div class="mut" style="font-size:10.5px">P-0001042-7</div></td>
+              <td class="r num">74.827</td><td class="r num">118.900</td>
+              <td class="r num" style="font-weight:700">128.900</td>
+              <td class="r num neg">+8,4%</td>
+              <td class="r num pos">41,9%</td>
+              <td><span class="tag">Marca Bosch 40%</span></td>
+              <td><span class="b b-val">✓ OK</span></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><div class="pn">Taladro percutor Bosch GSB 550</div><div class="mut" style="font-size:10.5px">P-0001108-2</div></td>
+              <td class="r num">62.100</td><td class="r num">94.900</td>
+              <td class="r num" style="font-weight:700">102.900</td>
+              <td class="r num neg">+8,4%</td>
+              <td class="r num pos">39,6%</td>
+              <td><span class="tag">Marca Bosch 40%</span></td>
+              <td><span class="b b-val">✓ OK</span></td>
+              <td></td>
+            </tr>
+            <tr style="background:rgba(180,105,14,.05)">
+              <td><div class="pn">Set puntas atornillar x32</div><div class="mut" style="font-size:10.5px">P-0002215-9</div></td>
+              <td class="r num">8.900</td><td class="r num">9.900</td>
+              <td class="r num" style="font-weight:700">14.900</td>
+              <td class="r num neg" style="font-weight:700">+50,5%</td>
+              <td class="r num pos">40,3%</td>
+              <td><span class="tag">Rubro Herram. 40%</span></td>
+              <td><span class="b b-pend">⚠ Var. &gt; 30%</span></td>
+              <td class="c mut" style="font-size:10.5px">advertencia<br>no bloquea</td>
+            </tr>
+            <tr style="background:rgba(192,57,43,.06)">
+              <td><div class="pn">Disco corte 4½" (promo activa)</div><div class="mut" style="font-size:10.5px">P-0003390-1</div></td>
+              <td class="r num">3.480</td><td class="r num">3.200</td>
+              <td class="r num neg" style="font-weight:700">3.200</td>
+              <td class="r num">0,0%</td>
+              <td class="r num neg" style="font-weight:700">−8,0%</td>
+              <td><span class="tag">Rubro Abrasivos 35%</span></td>
+              <td><span class="b b-fail">✕ Precio &lt; costo</span></td>
+              <td class="c"><span class="btn dang" style="font-size:10.5px;padding:3px 8px">Excluir</span></td>
+            </tr>
+            <tr style="background:rgba(192,57,43,.06)">
+              <td><div class="pn">Guantes anticorte T9</div><div class="mut" style="font-size:10.5px">P-0004501-3</div></td>
+              <td class="r num mut">—</td><td class="r num">7.400</td>
+              <td class="r num mut">—</td><td class="r num mut">—</td>
+              <td class="r num mut">—</td>
+              <td class="mut">—</td>
+              <td><span class="b b-fail">✕ Sin proveedor preferido</span></td>
+              <td class="c"><span class="btn dang" style="font-size:10.5px;padding:3px 8px">Excluir</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="note dang">
+  <b>Regla de bloqueo, visible en pantalla.</b> Con 15 filas en error el botón «Aprobar y publicar» está
+  <b>deshabilitado</b>, con el motivo al lado: <i>«15 productos con error — excluilos o corregilos para poder
+  aprobar»</i>. Dos caminos para destrabar: <b>Excluir</b> fila por fila, o <b>«Excluir las 15 con error»</b>
+  de un saque. Al excluir todos los errores, el contador pasa a <span class="b b-rev">⊘ 15 excluidas</span>,
+  el botón se habilita y esas filas quedan en el <b>listado de rechazados</b> (aparte de los aprobados,
+  exportable). Las <b>advertencias no bloquean</b>: se aprueban explícitamente.
+</div>
+
+<div class="note">
+  <b>Aprobados vs. rechazados — qué pasa con cada grupo al publicar.</b>
+  <ul style="margin:8px 0 0 20px">
+    <li><b>Aprobados</b> (8.485): se escriben en <code>lista_precio_valor</code>. Son precio vigente.</li>
+    <li><b>Rechazados</b> (15): <b>no</b> se publican. Se separan por causa —
+      <span class="tag">Sin proveedor preferido</span> y <span class="tag">Precio &lt; costo</span> son
+      corregibles en origen. El listado de rechazados se exporta, se corrige (asignar preferido, ajustar
+      regla o costo) y se <b>reimporta solo esa tanda</b> como un lote nuevo. No se re-toca lo que ya quedó bien.</li>
+  </ul>
+</div>
+
+<h3>Los 8 estados y qué se puede hacer en cada uno</h3>
+<div class="scroll">
+<table class="chk">
+  <thead><tr><th>Estado</th><th>Cómo llegó</th><th>Acciones disponibles</th></tr></thead>
+  <tbody>
+    <tr><td><span class="b b-draft">Borrador</span></td><td>Recién creado (manual o por evento de costo)</td><td>Calcular · Editar alcance · Cancelar</td></tr>
+    <tr><td><span class="b b-val">Validado</span></td><td>Calculado sin errores</td><td>Enviar a aprobación · Cancelar</td></tr>
+    <tr><td><span class="b b-fail">Validación fallida</span></td><td>Calculado con ≥1 error</td><td>Recalcular · Excluir filas · Cancelar. <b>No se puede aprobar.</b></td></tr>
+    <tr><td><span class="b b-pend">Pendiente aprobación</span></td><td>Enviado por quien lo creó</td><td>Aprobar / Rechazar (solo <code>precio.aprobar</code>)</td></tr>
+    <tr><td><span class="b b-appr">Aprobado</span></td><td>Supervisor aprobó</td><td>Publicar · Cancelar</td></tr>
+    <tr><td><span class="b b-pub">Publicado</span></td><td>Escrito en <code>lista_precio_valor</code></td><td><b>Revertir</b> (genera lote inverso). Nada más — es historia.</td></tr>
+    <tr><td><span class="b b-rev">Revertido</span></td><td>Otro lote lo dio vuelta</td><td>Solo lectura. Enlace al lote que lo revirtió.</td></tr>
+    <tr><td><span class="b b-draft">Cancelado</span></td><td>Descartado antes de publicar</td><td>Solo lectura</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2><span class="n">5</span>Pantalla que cambia — Listas de precios</h2>
+<p class="lead">
+  Esta pantalla <b>sí necesita cambios</b> (no la había analizado el mockup anterior). Tres cosas: la lista
+  gana un <b>modo de cálculo</b>, el botón «Recalcular» pasa a crear un lote, y el tab muerto «Ajustes por
+  producto» se reemplaza por <b>Reglas</b>.
+</p>
+
+<h3>Qué cambia en el maestro y el alta/edición</h3>
+<div class="scroll">
+<table class="chk">
+  <thead><tr><th>Elemento</th><th>Hoy</th><th>Con v2</th></tr></thead>
+  <tbody>
+    <tr><td>Columna «Modo»</td><td class="n">No existe</td><td class="y">Nueva: <b>Margen sobre costo</b> / <b>% sobre otra lista</b> / <b>Manual</b></td></tr>
+    <tr><td>Alta/edición de lista</td><td>Nombre · Tipo · Ajuste % · Predeterminada</td><td class="y">+ selector de <b>Modo de cálculo</b>. El «Ajuste %» solo aplica en modo «% sobre lista»</td></tr>
+    <tr><td>Botón «Recalcular masivo»</td><td>Aplica directo sobre los precios</td><td class="y"><b>Crea un lote</b> (ver §6.1)</td></tr>
+    <tr><td>Tab «Ajustes por producto»</td><td>Lee <code>lista_precio_detalle</code> (tabla muerta)</td><td class="y"><b>Se reemplaza</b> por el tab Reglas</td></tr>
+    <tr><td>Tab «Precios vigentes»</td><td>Igual</td><td class="n">Sin cambios</td></tr>
+    <tr><td>Tab «Cambios programados»</td><td>Programa recálculos a fecha futura</td><td class="y"><b>Se elimina</b> — sin fecha en el recálculo, no hay nada que programar</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note ok">
+  <b>Default que preserva el comportamiento actual.</b> Toda lista existente arranca en modo
+  <b>«% sobre otra lista»</b> — que es exactamente lo que hacen hoy. Nadie ve un cambio hasta que
+  deliberadamente pasa una lista a «Margen sobre costo». Esto es lo que permite mergear la Fase 2 sin tocar
+  runtime.
+</div>
+
+<h3>El tab Reglas (reemplaza a «Ajustes por producto»)</h3>
+<p>
+  ABM de márgenes con prioridad. Es lo que reemplaza al «porcentaje suelto»: en vez de aplicar +15% sobre una
+  base, se declara <b>qué margen debe tener</b> cada familia de productos. Como las reglas son por-lista, viven
+  <b>dentro</b> del detalle de la lista seleccionada — no necesitan pantalla ni selector propios.
+</p>
+
+<div class="app">
+  <div class="side">
+    <div class="side-top"><div class="logo"></div><span class="side-name">Ferretería</span></div>
+    <div class="ng"><span class="dot"></span>Punto de venta<span class="chev">▸</span></div>
+    <div class="ng"><span class="dot"></span>Catálogo<span class="chev">▸</span></div>
+    <div class="ng nuevo"><span class="dot"></span>Precios<span class="chev">▾</span></div>
+    <div class="ni active"><span class="dot"></span>Listas de precios</div>
+    <div class="ni"><span class="dot"></span>Lotes</div>
+    <div class="ni"><span class="dot"></span>Importar costos</div>
+    <div class="ni"><span class="dot"></span>Cola de revisión</div>
+    <div class="ng"><span class="dot"></span>Configuración<span class="chev">▸</span></div>
+  </div>
+  <div class="pane">
+    <div class="topbar"><div class="crumb">Listas de precios</div><div class="ml-auto"></div><span class="chip">J. Sinesi · Supervisor</span></div>
+    <div class="body">
+
+      <!-- maestro con columna Modo -->
+      <div class="panel">
+        <table>
+          <thead><tr><th>Nombre</th><th>Tipo</th><th>Modo de cálculo</th><th class="r">Ajuste</th><th>Estado</th></tr></thead>
+          <tbody>
+            <tr style="background:var(--accent-soft)">
+              <td class="pn">General <span class="tag" style="margin-left:6px">Predeterminada</span></td>
+              <td class="mut">general</td><td><span class="tag">Margen sobre costo</span></td>
+              <td class="r num mut">—</td><td><span class="b b-val">Activa</span></td>
+            </tr>
+            <tr>
+              <td class="pn">Mayorista</td><td class="mut">especial</td>
+              <td><span class="tag">Margen sobre costo</span></td>
+              <td class="r num mut">—</td><td><span class="b b-val">Activa</span></td>
+            </tr>
+            <tr>
+              <td class="pn">Web</td><td class="mut">especial</td>
+              <td><span class="tag">% sobre otra lista</span></td>
+              <td class="r num">+8,0%</td><td><span class="b b-val">Activa</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- detalle de la lista seleccionada con tabs -->
+      <div class="panel">
+        <div style="display:flex;gap:2px;padding:10px var(--pad) 0;border-bottom:1px solid var(--line)">
+          <span style="font-weight:700;font-size:13px;align-self:center;margin-right:10px">General</span>
+          <span style="padding:6px 13px;font-size:12.5px;color:var(--ink-3);border-bottom:2px solid transparent">Precios vigentes</span>
+          <span style="padding:6px 13px;font-size:12.5px;font-weight:700;color:var(--accent-strong);border-bottom:2px solid var(--accent)">Reglas</span>
+        </div>
+        <div class="toolbar">
+          <span style="font-size:12px;color:var(--ink-3)">Modo: <b style="color:var(--ink)">Margen sobre costo</b></span>
+          <div class="ml-auto" style="display:flex;gap:8px">
+            <span class="btn">Recalcular con estas reglas</span>
+            <span class="btn pri">+ Nueva regla</span>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th class="c">Prior.</th><th>Tipo</th><th>Objetivo</th>
+              <th class="r">Margen</th><th class="r">Mín / Máx</th>
+              <th>Redondeo</th><th class="c">Alcanza</th><th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="c num">10</td><td><span class="tag">Producto</span></td><td class="pn">Amoladora Bosch GWS 700</td>
+              <td class="r num">45,0%</td><td class="r num mut">40 / 60</td><td>Termina en 90</td><td class="c num">1</td>
+              <td><span class="b b-val">Activa</span></td></tr>
+            <tr><td class="c num">20</td><td><span class="tag">Marca</span></td><td class="pn">Bosch</td>
+              <td class="r num">40,0%</td><td class="r num mut">35 / 55</td><td>Termina en 90</td><td class="c num">312</td>
+              <td><span class="b b-val">Activa</span></td></tr>
+            <tr><td class="c num">30</td><td><span class="tag">Rubro</span></td><td class="pn">Herramientas eléctricas</td>
+              <td class="r num">40,0%</td><td class="r num mut">30 / —</td><td>Termina en 90</td><td class="c num">1.204</td>
+              <td><span class="b b-val">Activa</span></td></tr>
+            <tr><td class="c num">40</td><td><span class="tag">Proveedor</span></td><td class="pn">Distribuidora Sur SA</td>
+              <td class="r num">32,0%</td><td class="r num mut">25 / —</td><td>Múltiplo de 100</td><td class="c num">2.890</td>
+              <td><span class="b b-val">Activa</span></td></tr>
+            <tr><td class="c num">99</td><td><span class="tag">Lista</span></td><td class="pn">— base de la lista —</td>
+              <td class="r num">35,0%</td><td class="r num mut">20 / —</td><td>Ninguno</td><td class="c num">8.512</td>
+              <td><span class="b b-val">Activa</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note" style="margin:0">
+        <b>Se aplica una sola regla por producto</b>, la de menor prioridad que coincida — nunca se combinan.
+        Una amoladora Bosch cae en cuatro reglas; gana la de prioridad 10. La fila de prioridad 99 es la
+        red de seguridad: alcanza a todo el catálogo.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2><span class="n">6</span>Pantallas que cambian</h2>
+
+<h3>6.1 · RecalcularModal — deja de aplicar, pasa a proponer (y pierde la fecha)</h3>
+<p>
+  Hoy el botón dice «Aplicar ahora» y escribe directo sobre los precios. Pasa a decir <b>«Crear lote»</b>.
+  Y se le <b>quita el campo de fecha / «Programar para fecha futura»</b>: no tiene sentido programar una
+  aplicación automática cuando el precio ahora <b>debe pasar sí o sí por revisión y aprobación humana</b>.
+  Un auto-aplicado a las 3 AM contradice todo el circuito.
+</p>
+
+<div style="display:flex;justify-content:center;padding:8px 0 4px">
+  <div class="panel" style="width:440px;max-width:100%">
+    <div class="ptitle">Crear lote — Lista General</div>
+    <div class="frow" style="flex-direction:column;gap:11px">
+      <div class="field"><label>Base de cálculo</label>
+        <div class="input">Margen sobre costo neto (según reglas) ▾</div></div>
+      <div class="field"><label>Alcance</label>
+        <div class="input">Marca ▾</div></div>
+      <div class="field"><label>Marca</label>
+        <div class="input">Bosch ▾</div></div>
+      <div class="field"><label>Excluir precios manuales de los últimos N días</label>
+        <div class="input ph">Ej: 30</div></div>
+      <div style="background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:12.5px;color:var(--ink-2)">
+        Alcanza a <b style="color:var(--ink)">312 productos</b>.
+        No se modifica ningún precio todavía: se crea un lote para revisar y aprobar.
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;padding:0 var(--pad) var(--pad)">
+      <span class="btn">Cancelar</span>
+      <span class="btn pri">Crear lote →</span>
+    </div>
+  </div>
+</div>
+<p class="cap">
+  Antes: 6 campos incluido «Modo: ahora/programado» + fecha. Ahora: 4 campos, sin fecha.
+  «Calcular productos afectados» sigue siendo obligatorio antes de habilitar el botón — ese gate ya existe
+  hoy (<code>disabled={conteo === null}</code>) y no se toca.
+</p>
+
+<div class="note dang">
+  <b>Se retira el recálculo programado (decisión tomada).</b> Al sacar la fecha de acá, el mecanismo
+  <code>cambio_programado</code> + <code>scheduler/precios.ts</code> + el tab «Cambios programados» quedan
+  sin razón de ser: nada crea cambios futuros. <b>Se elimina el tab y se deja de registrar el job del
+  scheduler.</b> La tabla <code>cambio_programado</code> se marca deprecada (como
+  <code>lista_precio_detalle</code>) — sin migración destructiva; cualquier fila pendiente en instalaciones
+  viejas simplemente no dispara.
+</div>
+
+<h3>6.2 · Importar costos — el paso final gana la salida al lote</h3>
+<div class="app" style="min-height:0">
+  <div class="pane">
+    <div class="topbar"><div class="crumb">Importar costos de proveedor</div></div>
+    <div class="body">
+      <div class="panel">
+        <div class="steps">
+          <div class="stp done"><div class="c">✓</div><div class="t">Archivo y proveedor</div><div class="bar"></div></div>
+          <div class="stp done"><div class="c">✓</div><div class="t">Previsualizar</div><div class="bar"></div></div>
+          <div class="stp now"><div class="c">3</div><div class="t">Aplicado</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:34px var(--pad)">
+          <div style="width:46px;height:46px;border-radius:50%;background:var(--ok);display:grid;place-items:center;color:#fff;font-size:22px;font-weight:800">✓</div>
+          <div style="font-weight:800;font-size:18px;letter-spacing:-.01em">Costos actualizados</div>
+          <p style="font-size:13.5px;color:var(--ink-2);text-align:center;max-width:430px">
+            Se actualizaron <b>8.500 costos</b> del proveedor Bosch.
+            Hay <b>12 filas</b> sin identificar en la cola de revisión.
+          </p>
+          <div style="background:var(--accent-soft);border:1px solid rgba(232,115,10,.3);border-radius:10px;padding:13px 15px;max-width:470px;text-align:center">
+            <div style="font-size:13.5px;color:var(--ink);font-weight:600;margin-bottom:9px">
+              Se generó el <b>lote #000128</b> con los precios propuestos.<br>
+              <span style="font-weight:500;color:var(--ink-2)">Los precios de venta no cambiaron todavía.</span>
+            </div>
+            <span class="btn pri">Revisar lote #000128 →</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            <span class="btn">Importar faltantes</span>
+            <span class="btn">Nueva importación</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="cap">
+  Sin el botón «Revisar lote» el circuito se corta: el usuario cree que terminó y el lote queda esperando en
+  una pantalla que no sabe que existe. <b>«Importar faltantes»</b> reabre el flujo con el mismo proveedor
+  precargado, para la tanda que quedó sin match o rechazada — sin re-subir el archivo entero.
+</p>
+
+<h3>6.3 · Producto › panel Proveedores — costo neto desglosado</h3>
+<div class="app" style="min-height:0">
+  <div class="pane">
+    <div class="topbar"><div class="crumb">Amoladora Bosch GWS 700 <span style="font-weight:500;color:var(--ink-3);font-size:12.5px;margin-left:6px">P-0001042-7</span></div></div>
+    <div class="body">
+      <div class="panel">
+        <div class="ptitle">Proveedores</div>
+        <table>
+          <thead>
+            <tr>
+              <th class="c">Pref.</th><th>Proveedor</th><th>Cód. prov.</th>
+              <th class="r">Costo bruto</th><th class="r">Bonif.</th><th class="r">Flete</th>
+              <th class="r">Cost. Finan.</th><th class="r">Costo neto</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background:var(--accent-soft)">
+              <td class="c" style="color:var(--accent);font-weight:800">●</td>
+              <td class="pn">Bosch Argentina SA</td><td class="mut num">BSH-7700</td>
+              <td class="r num">82.000</td><td class="r num">−12,0%</td><td class="r num">1.200</td>
+              <td class="r num">+2,0%</td>
+              <td class="r num" style="font-weight:700">74.827</td>
+            </tr>
+            <tr>
+              <td class="c mut">○</td>
+              <td class="pn">Distribuidora Sur SA</td><td class="mut num">DS-4412</td>
+              <td class="r num">79.500</td><td class="r num">−5,0%</td><td class="r num">2.800</td>
+              <td class="r num">0,0%</td>
+              <td class="r num">78.325</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="padding:11px var(--pad);border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-2)">
+          Bonif. y Cost. Finan. se <b>heredan del proveedor</b> (se editan una vez en su ficha); acá solo se
+          sobrescriben por excepción. El <b>costo neto</b> del preferido alimenta las reglas de margen;
+          cambiar el preferido genera un lote para este producto.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="cap">
+  Acá se ve el punto del costo neto: <b>Bosch tiene el costo bruto más alto</b> (82.000 vs 79.500) pero, con
+  su bonificación del 12%, queda <b>más barato neto</b> (74.827 vs 78.325). Comparar por bruto llevaría a
+  elegir mal el preferido.
+</p>
+
+<h3>¿De dónde salen Bonif., Flete y Costo Financiero? (punto 6)</h3>
+<p>
+  Primero la aclaración: <b>«Cost. Finan.» = Costo Financiero</b> — el recargo por pagarle al proveedor a
+  plazo (30/60 días) en vez de contado. En las pantallas la columna se rotula <b>«Cost. Finan.»</b>.
+</p>
+<div class="note ok">
+  <b>Decidido — no se cargan por producto.</b> Bonificación, Costo Financiero y Flete se negocian por
+  <b>proveedor</b>, no por artículo. Cargar 3 campos por producto era inmanejable. Por eso viven como
+  <b>default en el proveedor</b> y se heredan; <code>producto_proveedor</code> solo guarda <b>overrides
+  nullable</b> para excepciones (<code>null</code> = usa el default del proveedor).
+</div>
+<div class="scroll">
+<table class="chk">
+  <thead><tr><th>Componente</th><th>Nivel primario</th><th>Cómo se carga</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Costo bruto</td>
+      <td>producto-proveedor</td>
+      <td>Ya existe. Importación de costos o manual. Sin cambios.</td>
+    </tr>
+    <tr>
+      <td>Bonificación %</td>
+      <td><b>default del proveedor</b></td>
+      <td>Se carga <b>una vez</b> en <code>ProveedorForm</code>. Override por producto solo para excepciones. Cambiar Bosch al 12% = un campo → dispara un lote que recalcula sus 300 productos.</td>
+    </tr>
+    <tr>
+      <td>Costo Financiero %</td>
+      <td><b>default del proveedor</b></td>
+      <td>Condición de pago del proveedor. Ídem: default + override opcional.</td>
+    </tr>
+    <tr>
+      <td>Flete</td>
+      <td><b>% default del proveedor</b></td>
+      <td><b>Prorrateo</b> (% sobre el bruto), manejable como la bonificación. Override <b>absoluto</b> por producto solo para el caso peso/volumen real.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<div class="note">
+  <b>Resolución de cada componente:</b> <code>override_producto ?? default_proveedor ?? 0</code>.
+  <b>Fórmula</b> (función pura en <code>packages/shared</code>):<br>
+  <code>flete = flete_abs_override ?? round(bruto × flete_pct/100)</code> · el absoluto pisa al %.<br>
+  <code>costoNeto = round( (bruto × (1 − bonif%) + flete + otros) × (1 + cFin%) )</code><br>
+  Verificación con Bosch (flete 1.200 como override absoluto): <span class="num">(82.000 × 0,88 + 1.200) × 1,02 = 74.827</span>.
+</div>
+<div class="note ok">
+  <b>Vía secundaria — Importar Costos.</b> Se puede extender el mapeo de columnas para que, si el archivo del
+  proveedor trae una columna de bonificación, entre en la importación como override. No es el mecanismo
+  principal (la mayoría de los archivos solo traen costo) → <b>candidata a fase posterior</b>, no bloquea.
+</div>
+<div class="note ok">
+  <b>Semántica de margen — decidido: markup sobre costo.</b> <code>precio = costoNeto × (1 + margen/100)</code>.
+  Con costo $100 y margen 40% → precio $140. Elegido por intuición de mostrador y continuidad con el
+  recálculo actual. La UI <b>muestra al lado el margen real sobre precio</b> (28,6% en el ejemplo) como
+  dato derivado de solo lectura, para ver la rentabilidad efectiva sin confundir las dos convenciones.
+</div>
+
+<h3>6.4 · POS — sin pantalla nueva, dos cambios de comportamiento</h3>
+<ul>
+  <li><b>Toma la lista del cliente.</b> Si el cliente tiene <code>lista_precio_id</code>, se usa esa; si no, la predeterminada. Hoy siempre se usa la predeterminada, aunque el campo exista.</li>
+  <li><b>Repregunta al cambiar de cliente</b> con el carrito armado. Hoy quedan los precios de la lista anterior.</li>
+  <li><b>El servidor re-resuelve el precio al confirmar.</b> Si difiere, error <code>PRECIO_DESACTUALIZADO</code>, salvo override de Supervisor. El POS ya sabe traducir códigos de error a mensajes (se arregló en ADR-046), así que el mensaje entra sin trabajo extra.</li>
+</ul>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2><span class="n">7</span>Checklist anti-descuadre</h2>
+<p class="lead">
+  Diez registros por pantalla. La columna que más se olvida es CRUMBS, porque su ausencia no rompe nada:
+  simplemente deja el encabezado vacío y nadie lo nota hasta producción.
+</p>
+
+<div class="scroll">
+<table class="chk">
+  <thead>
+    <tr><th>#</th><th>Registro</th><th>Archivo</th><th>Si falta…</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>Ruta</td><td><code>renderer/routes/index.tsx</code></td><td>Pantalla en blanco al navegar</td></tr>
+    <tr><td>2</td><td>Ítem en <code>NAV_GROUPS</code></td><td><code>views/shell/AppShell.tsx</code></td><td><b>Inalcanzable</b> — existe pero nadie llega</td></tr>
+    <tr><td>3</td><td>Entrada en <code>CRUMBS</code></td><td><code>views/shell/AppShell.tsx</code></td><td>Encabezado vacío</td></tr>
+    <tr><td>4</td><td>Handler + <code>register*Handlers</code></td><td><code>main/ipc/&lt;dominio&gt;.ts</code></td><td>Canal inexistente</td></tr>
+    <tr><td>5</td><td>Registro del handler</td><td><code>main/index.ts</code></td><td>El canal existe pero nunca se ata</td></tr>
+    <tr><td>6</td><td>Namespace</td><td><code>preload/index.ts</code></td><td><code>window.ferreteria.precios.batch</code> undefined</td></tr>
+    <tr><td>7</td><td>Hook</td><td><code>renderer/hooks/use*.ts</code></td><td>Llamadas IPC sueltas en el componente</td></tr>
+    <tr><td>8</td><td>Permiso</td><td><code>main/auth/seed.ts</code></td><td>FORBIDDEN, o peor: visible para Operador</td></tr>
+    <tr><td>9</td><td>Conteos de permisos</td><td>2 archivos de test</td><td><b>Tests en rojo</b> — afirman el número exacto</td></tr>
+    <tr><td>10</td><td>Feature flag</td><td><code>parametros_sistema</code></td><td>La feature se enciende sin querer</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Aplicado a las pantallas nuevas y modificadas</h3>
+<div class="scroll">
+<table class="chk">
+  <thead><tr><th>Pantalla</th><th>Ruta</th><th>NAV</th><th>CRUMBS</th><th>Canal IPC</th><th>Permiso</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Lotes de precios <span class="tag">nueva</span></td>
+      <td><code>/precios/lotes</code></td>
+      <td class="y">✓ grupo Precios</td>
+      <td class="y">✓ «Lotes de precios»</td>
+      <td><code>priceBatch:listar</code></td>
+      <td><code>config.fiscal</code></td>
+    </tr>
+    <tr>
+      <td>Detalle de lote <span class="tag">nueva</span></td>
+      <td><code>/precios/lotes/:id</code></td>
+      <td class="n">— (se llega del listado)</td>
+      <td class="n">— <b>título propio en la vista</b></td>
+      <td><code>priceBatch:obtener|excluirFila|aprobar|publicar|revertir</code></td>
+      <td><code>config.fiscal</code> + <code>precio.aprobar</code></td>
+    </tr>
+    <tr>
+      <td>Reglas <span class="tag">tab</span></td>
+      <td class="n">— tab en <code>/config/listas-de-precios</code></td>
+      <td class="n">— (tab, no ítem)</td>
+      <td class="n">— (hereda de Listas)</td>
+      <td><code>reglaPrecio:*</code></td>
+      <td><code>config.fiscal</code></td>
+    </tr>
+    <tr>
+      <td>Listas de precios <span class="tag">cambia</span></td>
+      <td class="n">— ya existe, no se mueve</td>
+      <td class="n">— ya en grupo Precios</td>
+      <td class="n">— ya existe</td>
+      <td><code>listaPrecio:*</code> + modo_calculo</td>
+      <td><code>config.fiscal</code></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note dang">
+  <b>Dos trampas ya documentadas en CLAUDE.md, que aplican de lleno acá.</b><br>
+  <b>(1) <code>views/config/ConfigShell.tsx</code> es código muerto.</b> Parece el menú de Configuración pero
+  no lo importa nadie: las rutas <code>config/*</code> son planas. Agregar los ítems de Precios ahí no cambia
+  nada de lo que ve el usuario. Ya pasó en ADR-048 con «Email / SMTP».<br>
+  <b>(2) La suite en verde no prueba que la pantalla sea alcanzable.</b> Un componente huérfano tiene tests
+  verdes y cero efecto. Cada pantalla se cierra abriendo <code>pnpm dev</code> y llegando <b>navegando</b>,
+  con un usuario del rol correcto.
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2><span class="n">8</span>Orden de construcción</h2>
+<p class="lead">
+  Las pantallas se construyen <b>después</b> de su backend, y el circuito se cierra de atrás para adelante:
+  primero se puede publicar un lote, después se lo puede crear automáticamente. Así cada fase queda
+  desplegable y verificable sola.
+</p>
+
+<div class="flow">
+  <div class="fstep">
+    <div class="frail"><div class="fdot">1</div><div class="fline"></div></div>
+    <div class="fbody">
+      <div class="ftitle">Costo neto — sin UI propia</div>
+      <div class="fwhere">Fase 1 · toca solo el panel Proveedores de <code>ProductoDetalle</code></div>
+      <div class="fdesc">4 columnas y una función pura. Ninguna pantalla nueva, ningún registro de navegación. <b>Verificable:</b> el costo neto aparece en el panel.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="frail"><div class="fdot">2</div><div class="fline"></div></div>
+    <div class="fbody">
+      <div class="ftitle">Reglas + regrupamiento de nav</div>
+      <div class="fwhere">Fase 2 · tab Reglas dentro de Listas · <b>acá nace el grupo Precios</b></div>
+      <div class="fdesc">Mejor momento para el regrupamiento: mover los ítems de precios a un grupo nuevo, agregar el modo_calculo a Listas y reemplazar el tab muerto «Ajustes por producto» por «Reglas» — todo revisable junto. <b>Verificable:</b> se crea una regla y se ve en el tab.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="frail"><div class="fdot">3</div><div class="fline"></div></div>
+    <div class="fbody">
+      <div class="ftitle">Lotes: backend completo, sin pantalla</div>
+      <div class="fwhere">Fase 3 · motor, validación, publicación, rollback + permiso <code>precio.aprobar</code></div>
+      <div class="fdesc"><b>Verificable solo por tests</b> — es la única fase sin cierre visual, y la que más tests concentra. Acá se actualizan los conteos de permisos.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="frail"><div class="fdot act">4</div><div class="fline"></div></div>
+    <div class="fbody">
+      <div class="ftitle">Lotes: listado y detalle</div>
+      <div class="fwhere">Fase 4 · las dos pantallas centrales + <code>RecalcularModal</code> pasa a crear lote</div>
+      <div class="fdesc"><b>Acá el circuito se puede recorrer entero a mano</b> por primera vez: crear lote manual → revisar → aprobar → publicar → revertir.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="frail"><div class="fdot act">5</div><div class="fline"></div></div>
+    <div class="fbody">
+      <div class="ftitle">Disparo automático desde costos</div>
+      <div class="fwhere">Fase 5 · importación, proveedor preferido, recepción + el botón «Revisar lote →»</div>
+      <div class="fdesc"><b>Cierra el circuito A.</b> Sin la Fase 4 no habría dónde aterrizar, por eso va después.</div>
+    </div>
+  </div>
+  <div class="fstep">
+    <div class="frail"><div class="fdot ok">6</div></div>
+    <div class="fbody">
+      <div class="ftitle">POS</div>
+      <div class="fwhere">Fase 6 · lista por cliente, re-resolución en servidor, costo en el movimiento de stock</div>
+      <div class="fdesc">Última porque toca el camino crítico de venta. Sin pantallas nuevas: solo comportamiento.</div>
+    </div>
+  </div>
+</div>
+
+<div class="note ok">
+  <b>Punto de corte útil.</b> Las fases 1 a 4 dejan un motor de precios completo y usable manualmente.
+  Si hay que frenar por prioridad de ARCA, ese es el lugar: el sistema queda mejor que hoy y sin nada a medio
+  hacer. Las fases 5 y 6 son las que agregan automatismo y cierran el agujero del POS.
+</div>
+
+<hr style="border:none;border-top:1px solid var(--line);margin:44px 0 18px">
+<p style="font-size:12px;color:var(--ink-3)">
+  Mockup de navegación y flujo · ADR-049 Motor de Precios v2 · complementa el plan de implementación.
+  Los datos mostrados son ilustrativos.
+</p>
+
+</div>
+</body>
+</html>

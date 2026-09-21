@@ -1,0 +1,52 @@
+ADR-038 — Dashboard, fase 2 (Caja, Clientes y Proveedores)
+
+Contexto: implementamos la fase 2 del Dashboard (ADR-038), tabs Caja, Clientes
+y Proveedores, dentro de /dashboard (ya existe la estructura de tabs y el
+selector de rango de fecha de la fase 1, ADR-036). NO tocar POS, ni la lógica
+existente de Caja, Cuenta Corriente u Órdenes de Compra — este dashboard es de
+solo lectura y solo agrega vistas nuevas sobre datos existentes.
+
+Alcance de esta fase:
+1. Habilitar los tabs Caja, Clientes y Proveedores (hoy son placeholders
+   "próximamente" de la fase 1).
+2. Tab Caja:
+   - Mantener KPIs existentes (estado, $ inicial, ingresos, egresos, arqueos).
+   - Agregar tendencia de ingresos/egresos por turno (últimos N turnos).
+   - Agregar breakdown por medio de pago desde `venta_pago` (efectivo,
+     tarjeta neto de recargo, cta. cte., cheque).
+   - Agregar KPI de recargo de tarjeta cobrado en el período, separado del
+     monto de tarjeta.
+   - Resaltar en la lista de arqueos las filas con diferencia ≠ 0.
+3. Tab Clientes:
+   - Ranking de clientes por facturación neta del período.
+   - Deuda total (suma de saldo_cc de clientes activos) y deuda vencida
+     (saldo de ventas a crédito con más de `cc_dias_vencimiento` días desde
+     la fecha de venta).
+   - Clientes nuevos del período y clientes inactivos (sin compra en
+     `cliente_dias_inactividad` días).
+   - Click en un cliente navega a la pantalla de Cuenta Corriente existente
+     (no duplicar el detalle transaccional).
+4. Tab Proveedores:
+   - Ranking de gasto por proveedor en el período (OCs recibidas × costo).
+   - OCs pendientes de recepción y OCs sugeridas sin resolver (ADR-017).
+   - NO incluir ningún KPI de deuda con proveedor (cta. cte. de proveedores
+     está diferida, ADR-019) — el panel no menciona deuda en absoluto.
+
+Antes de escribir queries: inspeccionar el schema real de `venta_pago`,
+`cliente`, `cuenta_corriente` (o la tabla equivalente de movimientos),
+`orden_compra` y `producto_proveedor`, y proponer las vistas SQL de
+agregación antes de implementar (no asumir columnas — confirmar contra
+schema real).
+
+Gates obligatorios — parar y avisar antes de:
+- Crear los parámetros nuevos en `parametros_sistema`
+  (`cc_dias_vencimiento` = 30, `cliente_dias_inactividad` = 60): mostrar el
+  valor propuesto y esperar confirmación antes de insertar.
+- Cualquier migración de schema.
+- Instalar cualquier dependencia nueva (no debería hacer falta — Recharts ya
+  se instaló en la fase 1).
+- Tocar cualquier pantalla o lógica fuera de /dashboard (Cuenta Corriente,
+  Caja, Compras/OC se leen, nunca se modifican).
+
+Al terminar: actualizar ESTADO.md (bitácora + inventario de pantallas) según
+la plantilla del proyecto.

@@ -1,0 +1,60 @@
+appId: com.ferreteria.app
+productName: Ferretería
+# El exe real lo nombra electron-forge vía packagerConfig.executableName = 'ferreteria'
+# (ASCII). Sin este executableName acá, electron-builder asume ${productName}.exe
+# ("Ferretería.exe") para el acceso directo y el "ejecutar al finalizar" → apuntan a
+# un archivo inexistente ("Windows está buscando Ferretería.exe" + instalador colgado).
+# Debe coincidir con forge.config.ts.
+executableName: ferreteria
+copyright: "Copyright © 2026"
+
+# Toma la app ya empaquetada por electron-forge (--prepackaged)
+# No re-bundlea — forge+vite ya generó el asar
+directories:
+  output: dist
+
+win:
+  icon: assets/icon.ico
+  target:
+    - target: nsis
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: false
+  # ASCII sin espacios ni acentos: evita que el nombre del asset (y su URL en
+  # latest.yml) se codifique distinto en GitHub y rompa la descarga del auto-update.
+  artifactName: "Ferreteria-Setup-${version}.${ext}"
+  shortcutName: "${productName}"
+  uninstallDisplayName: "${productName}"
+  createDesktopShortcut: always
+  deleteAppDataOnUninstall: true
+  # Macros customInit/customUnInstall para cerrar la app antes de instalar/desinstalar
+  include: scripts/nsis/custom.nsh
+
+# Geo cache bundled en extraResources para primer arranque offline
+extraResources:
+  - from: geo-cache/
+    to: geo-cache/
+# NOTA: app-update.yml (feed de electron-updater) NO se inyecta acá. Con el flujo
+# --prepackaged, dist.cjs lo copia a resources/ del paquete de forge antes de
+# empaquetar (ver scripts/dist.cjs) — así es verificable y garantizado.
+
+# Excluir archivos de DB y WAL — viven en userData, nunca se distribuyen
+files:
+  - "!**/*.db"
+  - "!**/*.db-wal"
+  - "!**/*.db-shm"
+
+# Módulo nativo fuera del asar (ya viene de forge, pero por si acaso)
+asarUnpack:
+  - "**/*.node"
+
+# Publicar en un repo PÚBLICO de releases (solo assets) para que el auto-update
+# descargue anónimo. El código sigue en el repo privado Ferreteria-app.
+publish:
+  provider: github
+  owner: jsinesi-hash
+  repo: Ferreteria-releases
+
+# Sin firma de código en esta etapa (ver docs/README-BUILD.md)

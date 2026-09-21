@@ -1,0 +1,19 @@
+### P1.6 — Listas de precios y resolución de precio
+
+```
+Objetivo: listas de precios por porcentaje y el motor de resolución de precio.
+
+Tareas:
+- ABM de ListaPrecio (ajuste_porcentual con signo, predeterminada) y ListaPrecioDetalle
+  (% por producto que reemplaza al general).
+- Motor de precio (Tech Spec 3.4): base → % de lista (detalle pisa general) → descuento
+  de línea → descuento global; IVA incluido (discriminable); función pura y testeable.
+- Redondeo a $1 sobre el total con cálculo del ajuste_redondeo.
+
+Criterios de aceptación:
+- Casos de prueba de la cadena de precio (con/sin lista, con/sin % por producto, con
+  descuentos) dan el resultado esperado.
+- El redondeo produce total entero y ajuste_redondeo entre -0,99 y +0,99.
+
+Restricciones: el override de precio es solo Supervisor; el Operador solo descuenta.
+```

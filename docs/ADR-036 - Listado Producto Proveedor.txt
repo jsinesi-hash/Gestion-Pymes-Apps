@@ -1,0 +1,43 @@
+Contexto: ADR-036 en DECISIONES.md ya aprobado. No modifiques módulos fuera de
+lo listado abajo sin ADR nuevo.
+
+GATES — parar y esperar confirmación antes de:
+- correr `drizzle-kit generate` / aplicar la migración
+- instalar cualquier dependencia
+- tocar código de Compras, Catálogo o cualquier módulo fuera de esta lista
+
+Alcance:
+
+1. Migración: índice único parcial en `producto_proveedor`:
+   CREATE UNIQUE INDEX ux_producto_proveedor_preferido
+     ON producto_proveedor(producto_id)
+     WHERE preferido = 1 AND deleted_at IS NULL;
+   Verificar el SQL generado por drizzle-kit antes de aplicar (no debe re-declarar
+   la tabla entera). Mostrame el diff y esperá OK.
+
+2. IPC namespaced por entidad:
+   - `proveedor.productos.listar(proveedorId)` → productos asociados + costo_centavos,
+     codigo_proveedor, preferido
+   - `proveedor.productos.asociar(proveedorId, productoId, costo_centavos, codigo_proveedor?)`
+   - `proveedor.productos.desasociar(id)` → soft-delete (deleted_at), nunca físico
+   - `proveedor.productos.actualizar(id, { costo_centavos?, codigo_proveedor?, preferido? })`
+     → si preferido=true, desmarcar el preferido anterior del mismo producto en la
+     misma transacción atómica
+   - `producto.proveedores.listar(productoId)` → solo lectura, mismo shape
+
+3. UI — detalle de Proveedor, nueva pestaña "Productos":
+   - Tabla densa (design-system.md): producto, costo (tabular, formateo ARS en
+     render, no en storage), código proveedor, preferido (toggle), acciones
+     (editar, quitar con confirmación)
+   - Alta: buscador de producto + costo + código opcional
+   - Reusar componentes base (Tabla de datos, Modal, Toast)
+
+4. UI — detalle de Producto, nueva sección "Proveedores" (solo lectura):
+   - Lista: proveedor, costo, badge "preferido" si aplica
+   - Cada fila navega al detalle del proveedor
+   - Estado vacío: "Sin proveedores asociados" (sin acción primaria — el alta
+     vive en Proveedor)
+
+No toques `parametros_sistema`. No hay UI de configuración nueva en este alcance.
+Al terminar: actualizame ESTADO.md moviendo estos 4 ítems de "en curso" a "hecho"
+y agregá la línea de bitácora.

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light" data-density="comfortable">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ferretería · POS — Ejemplo 2 (navegación + apariencia)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Spline+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --accent:#E8730A; --accent-strong:#C85E00; --accent-soft:#FBE6D2;
+    --bg:#F4F2EE; --surface:#FFFFFF; --surface-2:#FAF8F4; --line:#E3DED5;
+    --ink:#1C1A17; --ink-2:#5C564D; --ink-3:#8A8479;
+    --ok:#2E7D52; --danger:#C0392B;
+    --shadow:0 1px 2px rgba(28,26,23,.06),0 8px 24px rgba(28,26,23,.06);
+    --ui-font:'Archivo'; --radius:14px; --pad:16px; --rowpad:13px;
+  }
+  [data-theme="dark"]{
+    --bg:#15140F; --surface:#1E1C16; --surface-2:#262319; --line:#322E24;
+    --ink:#F2EFE8; --ink-2:#B7B0A3; --ink-3:#7C766B;
+    --ok:#5FD699; --danger:#F0746A;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+  }
+  [data-density="compact"]{--pad:10px;--rowpad:8px;--radius:11px}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--ui-font),sans-serif;background:var(--bg);color:var(--ink);
+    -webkit-font-smoothing:antialiased;display:flex;height:100vh;transition:background .25s,color .25s}
+  .num{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+
+  /* ---- sidebar ---- */
+  .side{width:218px;flex:0 0 auto;background:var(--surface);border-right:1px solid var(--line);
+    display:flex;flex-direction:column;transition:width .2s;z-index:6}
+  .side.collapsed{width:64px}
+  .side .top{display:flex;align-items:center;gap:11px;padding:16px 16px 14px}
+  .logo{width:32px;height:32px;border-radius:9px;background:var(--accent);position:relative;flex:0 0 auto}
+  .logo::before{content:"";position:absolute;inset:8px;border:2.5px solid #fff;border-radius:3px;transform:rotate(45deg)}
+  .side .top .nm{font-weight:800;letter-spacing:-.02em;font-size:16px;white-space:nowrap}
+  .side.collapsed .nm,.side.collapsed .navtxt,.side.collapsed .navsec{display:none}
+  .nav{flex:1;overflow:auto;padding:6px}
+  .navsec{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-3);font-weight:700;padding:14px 12px 6px}
+  .navitem{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;color:var(--ink-2);
+    font-weight:600;font-size:14px;cursor:pointer;text-decoration:none;margin-bottom:2px;transition:.12s}
+  .navitem:hover{background:var(--surface-2);color:var(--ink)}
+  .navitem.active{background:var(--accent-soft);color:var(--accent-strong)}
+  [data-theme="dark"] .navitem.active{color:var(--accent)}
+  .navitem ico{width:20px;height:20px;flex:0 0 auto;display:grid;place-items:center}
+  .navitem svg{width:19px;height:19px}
+  .collapse{margin:6px;padding:9px;border:none;background:var(--surface-2);border-radius:10px;color:var(--ink-2);cursor:pointer;font-size:15px}
+
+  /* ---- shell ---- */
+  .shell{flex:1;display:flex;flex-direction:column;min-width:0}
+  header{display:flex;align-items:center;gap:14px;padding:12px 18px;background:var(--surface);border-bottom:1px solid var(--line);box-shadow:var(--shadow);z-index:5}
+  .crumb{font-weight:700;font-size:16px;letter-spacing:-.01em}
+  .crumb small{font-weight:500;color:var(--ink-3);font-size:13px;margin-left:8px}
+  .gsearch{flex:1;max-width:420px;margin:0 auto;display:flex;align-items:center;gap:9px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:8px 13px;color:var(--ink-3)}
+  .gsearch input{border:none;background:none;outline:none;flex:1;color:var(--ink);font-family:var(--ui-font);font-size:13.5px}
+  .sess{display:flex;align-items:center;gap:10px}
+  .chip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2)}
+  .chip .dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+  .iconbtn{cursor:pointer;width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-size:16px;display:grid;place-items:center;transition:.15s}
+  .iconbtn:hover{border-color:var(--accent);color:var(--accent)}
+
+  /* ---- POS body (reused) ---- */
+  main{flex:1;display:grid;grid-template-columns:1fr 360px;gap:14px;padding:14px 18px;min-height:0}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:0}
+  .scanwrap{padding:var(--pad);border-bottom:1px solid var(--line)}
+  .scanlabel{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-weight:600;margin-bottom:8px}
+  .scanbox{display:flex;align-items:center;gap:12px;border:2px solid var(--accent);border-radius:12px;padding:12px 15px;background:var(--surface-2)}
+  .scanbox svg{flex:0 0 auto;color:var(--accent)}
+  .scanbox input{flex:1;border:none;background:none;outline:none;font-size:17px;font-weight:600;color:var(--ink);font-family:'JetBrains Mono',monospace}
+  .scanbox input::placeholder{color:var(--ink-3);font-weight:400}
+  .blink{width:2px;height:21px;background:var(--accent);animation:bk 1.1s steps(1) infinite}
+  @keyframes bk{50%{opacity:0}}
+  .tablewrap{flex:1;overflow:auto}
+  table{width:100%;border-collapse:collapse}
+  thead th{position:sticky;top:0;background:var(--surface);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:600;padding:11px var(--pad);border-bottom:1px solid var(--line)}
+  th.r,td.r{text-align:right}
+  tbody td{padding:var(--rowpad) var(--pad);border-bottom:1px solid var(--line);font-size:14px}
+  tbody tr:hover{background:var(--surface-2)}
+  tbody tr.new{animation:flash .9s ease}
+  @keyframes flash{0%{background:var(--accent-soft)}100%{background:transparent}}
+  .pcode{font-size:11px;color:var(--ink-3)}
+  .pname{font-weight:600}
+  .qtybox{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:3px 9px}
+  .rm{color:var(--ink-3);cursor:pointer;border:none;background:none;font-size:15px;padding:4px;border-radius:6px}
+  .rm:hover{color:var(--danger);background:var(--surface-2)}
+  .rightcol{display:flex;flex-direction:column;gap:14px;min-height:0}
+  .cust{padding:13px var(--pad)}
+  .cust .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-weight:600;margin-bottom:6px}
+  .cust .row{display:flex;align-items:center;justify-content:space-between}
+  .cust .name{font-weight:700;font-size:15px}
+  .cust .cond{font-size:12px;color:var(--ink-2)}
+  .linkbtn{font-size:12.5px;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer}
+  .totals{flex:1;display:flex;flex-direction:column;padding:var(--pad)}
+  .trow{display:flex;justify-content:space-between;padding:6px 0;font-size:13.5px;color:var(--ink-2)}
+  .trow.disc{color:var(--ok)}
+  .trow .num{color:var(--ink);font-weight:500}
+  .sep{height:1px;background:var(--line);margin:8px 0}
+  .grand{margin-top:auto;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:15px;display:flex;justify-content:space-between;align-items:flex-end}
+  .grand .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-weight:600}
+  .grand .amt{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:32px;letter-spacing:-.02em;line-height:1}
+  .grand .cur{font-size:14px;color:var(--ink-3)}
+  .pay{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:14px}
+  .pm{border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:9px 4px;font-size:11px;font-weight:600;color:var(--ink-2);cursor:pointer;text-align:center;transition:.12s}
+  .pm:hover{border-color:var(--accent);color:var(--ink)}
+  .pm.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .pm span{display:block;font-size:17px;margin-bottom:2px}
+  .cobrar{border:none;border-radius:12px;background:var(--accent);color:#fff;font-family:var(--ui-font);font-weight:700;font-size:16px;padding:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:.15s;box-shadow:0 6px 16px rgba(232,115,10,.3)}
+  .cobrar:hover{background:var(--accent-strong)}
+  .cobrar kbd{background:rgba(255,255,255,.22);border-radius:6px;padding:2px 7px;font-size:12px;font-family:'JetBrains Mono',monospace}
+
+  /* ---- appearance drawer ---- */
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.2s;z-index:20}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;right:0;height:100%;width:340px;background:var(--surface);border-left:1px solid var(--line);
+    box-shadow:-12px 0 40px rgba(0,0,0,.18);transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);z-index:21;display:flex;flex-direction:column}
+  .drawer.open{transform:none}
+  .drawer h3{padding:18px 20px;font-size:16px;font-weight:800;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+  .drawer h3 button{border:none;background:none;font-size:20px;color:var(--ink-3);cursor:pointer}
+  .dbody{padding:20px;overflow:auto;display:flex;flex-direction:column;gap:24px}
+  .field>label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-weight:700;display:block;margin-bottom:10px}
+  .seg{display:flex;gap:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:4px}
+  .seg button{flex:1;border:none;background:none;padding:9px;border-radius:8px;font-family:var(--ui-font);font-weight:600;font-size:13px;color:var(--ink-2);cursor:pointer;transition:.12s}
+  .seg button.on{background:var(--accent);color:#fff}
+  .swatches{display:flex;gap:10px}
+  .sw{width:38px;height:38px;border-radius:10px;cursor:pointer;border:3px solid transparent;transition:.12s;position:relative}
+  .sw.on{border-color:var(--ink)}
+  .sw.on::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}
+  .fontopts{display:flex;flex-direction:column;gap:8px}
+  .fontopt{border:1px solid var(--line);background:var(--surface-2);border-radius:11px;padding:12px 14px;cursor:pointer;text-align:left;transition:.12s}
+  .fontopt.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  .fontopt .fn{font-weight:700;font-size:15px;color:var(--ink)}
+  .fontopt .fs{font-size:12px;color:var(--ink-3);margin-top:2px}
+  .dnote{font-size:12px;color:var(--ink-3);line-height:1.5;border-top:1px solid var(--line);padding-top:16px}
+
+  @media(max-width:900px){main{grid-template-columns:1fr}.rightcol{order:-1}.side{position:fixed;height:100%}}
+</style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <nav class="side" id="side">
+    <div class="top"><div class="logo"></div><span class="nm">Ferretería</span></div>
+    <div class="nav">
+      <div class="navsec">Operación</div>
+      <a class="navitem active"><ico><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l2 13h11l2-9H6"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/></svg></ico><span class="navtxt">Punto de venta</span></a>
+      <a class="navitem"><ico><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg></ico><span class="navtxt">Caja</span></a>
+      <div class="navsec">Catálogo</div>
+      <a class="navitem"><ico><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/></svg></ico><span class="navtxt">Productos</span></a>
+      <a class="navitem"><ico><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v6H4zM4 14h16v6H4z"/></svg></ico><span class="navtxt">Stock</span></a>
+      <div class="navsec">Comercial</div>
+      <a class="navitem"><ico><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></ico><span class="navtxt">Compras</span></a>
+      <a class="navitem"><ico><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></ico><span class="navtxt">Clientes</span></a>
+      <a class="navitem"><ico><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 7-7"/><path d="M14 8h6v6"/></svg></ico><span class="navtxt">Reportes</span></a>
+      <div class="navsec">Sistema</div>
+      <a class="navitem"><ico><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></ico><span class="navtxt">Configuración</span></a>
+    </div>
+    <button class="collapse" id="collapseBtn">⇆</button>
+  </nav>
+
+  <!-- Shell -->
+  <div class="shell">
+    <header>
+      <div class="crumb">Punto de venta <small>Terminal C1</small></div>
+      <div class="gsearch">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+        <input placeholder="Buscar producto, cliente, comprobante…">
+      </div>
+      <div class="sess">
+        <span class="chip"><span class="dot"></span>Caja abierta</span>
+        <span class="chip">J. Pérez · Operador</span>
+        <button class="iconbtn" id="appearanceBtn" title="Apariencia">◐</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel">
+        <div class="scanwrap">
+          <div class="scanlabel">Escanear / buscar producto · lector 1D/2D · F2</div>
+          <div class="scanbox">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5v14M7 5v14M11 5v14M14 5v14M18 5v14M21 5v14"/></svg>
+            <input id="scan" placeholder="Código QR o EAN, o escribí para buscar…" autocomplete="off">
+            <span class="blink"></span>
+          </div>
+        </div>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Producto</th><th style="width:110px">Cant.</th><th class="r" style="width:110px">P. unit.</th><th class="r" style="width:110px">Subtotal</th><th style="width:38px"></th></tr></thead>
+            <tbody id="items">
+              <tr><td><div class="pname">Tornillo autoperforante 8x1"</div><div class="pcode num">QR·000142 · x100</div></td><td><span class="qtybox num">3</span></td><td class="r num">2.450</td><td class="r num">7.350</td><td><button class="rm">✕</button></td></tr>
+              <tr><td><div class="pname">Disco de corte 4½" metal</div><div class="pcode num">QR·000087</div></td><td><span class="qtybox num">5</span></td><td class="r num">1.180</td><td class="r num">5.900</td><td><button class="rm">✕</button></td></tr>
+              <tr><td><div class="pname">Cinta métrica 5 m Stanley</div><div class="pcode num">EAN·779…0143</div></td><td><span class="qtybox num">1</span></td><td class="r num">8.900</td><td class="r num">8.900</td><td><button class="rm">✕</button></td></tr>
+              <tr><td><div class="pname">Cable unipolar 2.5 mm² (por metro)</div><div class="pcode num">QR·000231 · granel</div></td><td><span class="qtybox num">12,5</span></td><td class="r num">920</td><td class="r num">11.500</td><td><button class="rm">✕</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside class="rightcol">
+        <div class="panel cust">
+          <div class="lbl">Cliente</div>
+          <div class="row"><div><div class="name">Consumidor Final</div><div class="cond">Sin identificar · Ticket interno</div></div><button class="linkbtn">Cambiar · F4</button></div>
+        </div>
+        <div class="panel totals">
+          <div class="trow"><span>Subtotal</span><span class="num">33.650,00</span></div>
+          <div class="trow"><span>IVA (incluido)</span><span class="num">5.838,84</span></div>
+          <div class="trow disc"><span>Descuento global</span><span class="num">−650,00</span></div>
+          <div class="trow"><span>Ajuste por redondeo</span><span class="num">+0,00</span></div>
+          <div class="sep"></div>
+          <div class="grand"><div><div class="lbl">Total a cobrar</div><div class="cur">ARS</div></div><div class="amt">33.000</div></div>
+          <div class="pay">
+            <button class="pm active"><span>₿</span>Efectivo</button>
+            <button class="pm"><span>↦</span>Transf.</button>
+            <button class="pm"><span>▭</span>Tarjeta</button>
+            <button class="pm"><span>≣</span>Cta.Cte.</button>
+          </div>
+        </div>
+        <button class="cobrar">Cobrar e imprimir <kbd>F9</kbd></button>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Appearance drawer -->
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer">
+    <h3>Apariencia <button id="closeDrawer">✕</button></h3>
+    <div class="dbody">
+      <div class="field"><label>Tema</label>
+        <div class="seg" id="segTheme"><button data-v="light" class="on">Claro</button><button data-v="dark">Oscuro</button></div>
+      </div>
+      <div class="field"><label>Color de acento</label>
+        <div class="swatches" id="swatches">
+          <div class="sw on" data-a="amber" style="background:#E8730A"></div>
+          <div class="sw" data-a="blue" style="background:#2563EB"></div>
+          <div class="sw" data-a="green" style="background:#1F9D55"></div>
+          <div class="sw" data-a="violet" style="background:#7C3AED"></div>
+          <div class="sw" data-a="brick" style="background:#B23A2E"></div>
+        </div>
+      </div>
+      <div class="field"><label>Tipografía de interfaz</label>
+        <div class="fontopts" id="fontopts">
+          <button class="fontopt on" data-f="Archivo" style="font-family:Archivo"><div class="fn">Archivo</div><div class="fs">Grotesca con carácter · por defecto</div></button>
+          <button class="fontopt" data-f="Hanken Grotesk" style="font-family:'Hanken Grotesk'"><div class="fn">Hanken Grotesk</div><div class="fs">Neutra y muy legible</div></button>
+          <button class="fontopt" data-f="Spline Sans" style="font-family:'Spline Sans'"><div class="fn">Spline Sans</div><div class="fs">Moderna, levemente redondeada</div></button>
+        </div>
+      </div>
+      <div class="field"><label>Densidad</label>
+        <div class="seg" id="segDensity"><button data-v="comfortable" class="on">Cómoda</button><button data-v="compact">Compacta</button></div>
+      </div>
+      <div class="dnote">Las preferencias de apariencia se guardan por usuario. Los números siempre usan una fuente monoespaciada para mantener los importes alineados.</div>
+    </div>
+  </aside>
+
+<script>
+  const root=document.documentElement;
+  // accent palettes
+  const ACCENTS={
+    amber:{a:'#E8730A',s:'#C85E00',softL:'#FBE6D2',softD:'#3A2A17',glow:'232,115,10'},
+    blue:{a:'#2563EB',s:'#1D4FD7',softL:'#DBE5FF',softD:'#16233F',glow:'37,99,235'},
+    green:{a:'#1F9D55',s:'#178045',softL:'#D6F0DF',softD:'#16301F',glow:'31,157,85'},
+    violet:{a:'#7C3AED',s:'#6A2BD0',softL:'#EADDFD',softD:'#2A1B40',glow:'124,58,237'},
+    brick:{a:'#B23A2E',s:'#982F24',softL:'#F6DCD8',softD:'#3A1E1A',glow:'178,58,46'}
+  };
+  let curAccent='amber';
+  function applyAccent(name){const p=ACCENTS[name];curAccent=name;
+    root.style.setProperty('--accent',p.a);root.style.setProperty('--accent-strong',p.s);
+    const dark=root.getAttribute('data-theme')==='dark';
+    root.style.setProperty('--accent-soft',dark?p.softD:p.softL);
+    document.querySelectorAll('.cobrar').forEach(b=>b.style.boxShadow=`0 6px 16px rgba(${p.glow},.3)`);}
+  // drawer
+  const drawer=document.getElementById('drawer'),scrim=document.getElementById('scrim');
+  const open=()=>{drawer.classList.add('open');scrim.classList.add('open')};
+  const close=()=>{drawer.classList.remove('open');scrim.classList.remove('open')};
+  document.getElementById('appearanceBtn').onclick=open;
+  document.getElementById('closeDrawer').onclick=close;scrim.onclick=close;
+  // theme
+  document.getElementById('segTheme').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    [...e.currentTarget.children].forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    root.setAttribute('data-theme',b.dataset.v);applyAccent(curAccent);});
+  // density
+  document.getElementById('segDensity').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    [...e.currentTarget.children].forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    root.setAttribute('data-density',b.dataset.v);});
+  // accent
+  document.getElementById('swatches').addEventListener('click',e=>{const s=e.target.closest('.sw');if(!s)return;
+    document.querySelectorAll('.sw').forEach(x=>x.classList.remove('on'));s.classList.add('on');applyAccent(s.dataset.a);});
+  // font
+  document.getElementById('fontopts').addEventListener('click',e=>{const f=e.target.closest('.fontopt');if(!f)return;
+    document.querySelectorAll('.fontopt').forEach(x=>x.classList.remove('on'));f.classList.add('on');
+    root.style.setProperty('--ui-font',`'${f.dataset.f}'`);});
+  // sidebar collapse
+  document.getElementById('collapseBtn').onclick=()=>document.getElementById('side').classList.toggle('collapsed');
+  // sidebar active
+  document.querySelector('.nav').addEventListener('click',e=>{const it=e.target.closest('.navitem');if(!it)return;
+    document.querySelectorAll('.navitem').forEach(x=>x.classList.remove('active'));it.classList.add('active');});
+  // demo scan
+  const demo=[['Candado bronce 40mm','QR·000310','6.300'],['Silicona acética','EAN·779…2210','3.750'],['Llave combinada 13mm','QR·000455','4.100']];
+  let i=0;const scan=document.getElementById('scan'),tb=document.getElementById('items');
+  scan.addEventListener('keydown',e=>{if(e.key==='Enter'){const d=demo[i%demo.length];i++;
+    const tr=document.createElement('tr');tr.className='new';
+    tr.innerHTML=`<td><div class="pname">${d[0]}</div><div class="pcode num">${d[1]}</div></td><td><span class="qtybox num">1</span></td><td class="r num">${d[2]}</td><td class="r num">${d[2]}</td><td><button class="rm">✕</button></td>`;
+    tb.appendChild(tr);scan.value='';tr.scrollIntoView({behavior:'smooth',block:'nearest'});}});
+  document.addEventListener('click',e=>{
+    if(e.target.closest('.pm')){document.querySelectorAll('.pm').forEach(p=>p.classList.remove('active'));e.target.closest('.pm').classList.add('active');}
+    if(e.target.classList.contains('rm'))e.target.closest('tr').remove();});
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+Punto de venta
+- Al comenzar a escribir el producto, te saca el cursor de la búsqueda. Si bien te trae el listado, la idea es poder seguir escribiendo y que vaya filtrando.
+- En la parte superior mostrar el Total Neto: Ingresos (ventas) - Egresos.
+Producto
+- En Kardex del producto en el listado se está sumando (positivo +) en una venta. Si bien el stock restó bien, en el listado aparece con signo positivo. Ej. Martillo 500g - SKU P-001
+- Kardex: En la parte superior debería aparecer el Nombre del producto del que se están visualizando los movimientos.
+
+Stock
+- quita el filtro superior por nombre, sku, etc. Agrega el filtro en las columnas existentes (sku, nombre), también que puedan ser ascendente/descendente los campos (sku, nombre, stock y mínimo) y el campo estado sea una lista para filtrar
+- Sigue sin funcionar el paginado, siempre muestra la primer página.
+- Botón Bajo mínimo: siguen apareciendo solo los de la página actual, pero cuando se selecciona trae todos correctamente.
+- Botón Sin Stock: Sigue sin realizar el filtro en una nueva página. Al clickarlo, aparece una leyenda que habría que quitar "Filtro activo x".
+- Botón "Con Stock Ok": Sigue sin realizar el filtro en una nueva página. Al clickarlo, aparece una leyenda que habría que quitar "Filtro activo x".
+
+Configuración
+- Las contraseñas deben poder tener opción de visualizar en todas las opciones donde aparezca.
+- Nuevo usuario, solicitar confirmación de contraseña.
+- En la opción Editar usuario mostrar la opción de desactivar usuario.
+- No se debe permitir deshabilitar o modificar al usuario administrador. Solo cambiar contraseña.

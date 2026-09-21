@@ -1,0 +1,21 @@
+### P1.9 — Importación masiva (Excel/CSV)
+
+```
+Objetivo: alta/actualización masiva por planilla (Tech Spec 3.10), solo Supervisor.
+
+Tareas:
+- Plantillas por entidad: Producto, Cliente, Proveedor, Ubicacion, stock inicial, Lista
+  de precios (detalle). Columnas fijas con obligatorias marcadas.
+- Flujo: subir → validar fila por fila (tipos, obligatorios, duplicados, referencias
+  existentes) → previsualización (OK / error con motivo / actualización) → confirmar →
+  resumen descargable.
+- Crear + actualizar (match por SKU/EAN en productos; por documento en personas).
+- Productos importados autogeneran QR y SKU y nacen con Existencias 0; el stock inicial
+  entra por su propia planilla generando MovimientoStock.
+
+Criterios de aceptación:
+- Importa las filas válidas aunque otras fallen; resumen correcto.
+- Actualización por match funciona; productos generan QR/SKU/Existencias.
+
+Restricciones: solo Supervisor; auditada.
+```

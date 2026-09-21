@@ -1,0 +1,429 @@
+<meta charset="utf-8">
+<title>Punto de Venta (POS) — Guía</title>
+<style>
+  :root{
+    --bg:#f7f7f5; --surface:#ffffff; --ink:#1c1a17; --ink-2:#4b463f; --ink-3:#8a8279;
+    --line:#e7e3dc; --accent:#e8730a; --accent-soft:#fdefe1; --accent-strong:#b45309;
+    --ok:#2e7d52; --ok-soft:#e7f3ec; --warn:#b7791f; --warn-soft:#fbf3e0; --danger:#c0392b; --danger-soft:#fbeceb;
+    --blue:#2f6fb0; --blue-soft:#e9f1f9;
+    --radius:12px; --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+      --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+      --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+      --blue:#7fb0e0; --blue-soft:#182533;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+    --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+    --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+    --blue:#7fb0e0; --blue-soft:#182533;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 "Hanken Grotesk",-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 22px 80px}
+  header.hero{background:linear-gradient(135deg,#1c1a17,#3a332b);color:#fff;border-radius:18px;padding:34px 34px 30px;margin-bottom:28px}
+  header.hero .kicker{color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:12.5px}
+  header.hero h1{margin:.35em 0 .2em;font-size:30px;line-height:1.15}
+  header.hero p{margin:0;color:#d7d1c8;max-width:70ch}
+  h2{font-size:22px;margin:2.2em 0 .5em;padding-top:.5em;border-top:2px solid var(--line)}
+  h3{font-size:17px;margin:1.4em 0 .4em;color:var(--ink)}
+  p,li{color:var(--ink-2)}
+  code{font-family:var(--mono);font-size:.87em;background:var(--accent-soft);padding:.1em .38em;border-radius:5px;color:var(--accent-strong)}
+  a{color:var(--blue)}
+  .lead{font-size:16.5px}
+  .toc{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 20px;margin:0 0 8px}
+  .toc b{font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+  .toc ol{margin:.5em 0 0;padding-left:1.2em;columns:2;column-gap:32px}
+  .toc a{text-decoration:none}
+  table{width:100%;border-collapse:collapse;margin:1em 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px}
+  th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--accent-soft);font-size:12.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-3)}
+  tr:last-child td{border-bottom:none}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 22px 18px;margin:16px 0}
+  .fig{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin:20px 0;overflow-x:auto}
+  .fig figcaption{font-size:12.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;font-weight:700}
+  .shot{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px;margin:16px 0;text-align:center}
+  .shot img{max-width:100%;border-radius:8px;display:block;margin:0 auto;border:1px solid var(--line)}
+  .shot.small img{max-width:460px}
+  .shot figcaption{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+  .shot-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:640px){.shot-row{grid-template-columns:1fr}}
+  .callout{border-radius:var(--radius);padding:16px 20px;margin:18px 0;border:1px solid}
+  .callout.warn{background:var(--warn-soft);border-color:#ecd9a8}
+  .callout.info{background:var(--blue-soft);border-color:#cfe0ef}
+  .callout.danger{background:var(--danger-soft);border-color:#eec4bf}
+  .callout h3{margin-top:.2em}
+  .pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px}
+  .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .pill.err{background:var(--danger-soft);color:var(--danger)} .pill.mut{background:var(--accent-soft);color:var(--ink-3)}
+  .step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .step:last-child{border-bottom:none}
+  .step .dot{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent-strong);
+    font-weight:700;display:grid;place-items:center;font-size:.85rem}
+  .step .body{flex:1}
+  .step .body h4{margin:0 0 4px;font-size:1rem;color:var(--ink)}
+  details{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin:10px 0;overflow:hidden}
+  details summary{cursor:pointer;padding:14px 18px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;color:var(--ink)}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"+";color:var(--accent);font-size:1.3rem;font-weight:400}
+  details[open] summary::after{content:"–"}
+  details .ans{padding:0 18px 16px;color:var(--ink-2)}
+  svg{max-width:100%;height:auto;display:block}
+  .muted{color:var(--ink-3);font-size:13.5px}
+  .n-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+  .n-accent{fill:var(--accent-soft);stroke:#f0c79a}
+  .n-ok{fill:var(--ok-soft);stroke:#bfe0cd}
+  .n-warn{fill:var(--warn-soft);stroke:#ecd9a8}
+  .n-err{fill:var(--danger-soft);stroke:#eec4bf}
+  .n-dark{fill:#26221d;stroke:#26221d}
+  .t{font:600 13px "Hanken Grotesk",sans-serif;fill:var(--ink)}
+  .t-sm{font:500 11px "Hanken Grotesk",sans-serif;fill:var(--ink-2)}
+  .t-white{fill:#fff}
+  .edge{stroke:#b9b1a6;stroke-width:1.6;fill:none}
+  .edge-lbl{font:600 10.5px "Hanken Grotesk",sans-serif;fill:var(--ink-3)}
+  footer{color:var(--ink-3);font-size:13px;text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--line)}
+  .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink-3);text-decoration:none;margin-bottom:14px}
+  .back-link:hover{color:var(--accent)}
+
+  .page{display:flex;align-items:flex-start;}
+  nav.side{position:sticky;top:0;height:100vh;width:250px;flex:0 0 250px;
+    background:#201d18;color:#cdc4b8;overflow-y:auto;padding:26px 18px 32px;}
+  nav.side h1{font-size:14.5px;color:#fff;margin:0 0 4px;line-height:1.35;font-weight:700;}
+  nav.side .sub{font-size:11px;color:var(--accent);margin-bottom:20px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+  nav.side a{display:block;color:#cdc4b8;text-decoration:none;font-size:12.6px;padding:6px 9px;border-radius:6px;margin:1px 0;border-left:3px solid transparent;}
+  nav.side a:hover{background:#332d24;color:#fff;}
+  nav.side a.active{background:#332d24;color:#fff;border-left-color:var(--accent);font-weight:600;}
+  nav.side .foot{margin-top:22px;border-top:1px solid #423b30;padding-top:14px;}
+  nav.side .foot a{color:var(--accent);font-weight:700;padding-left:0;}
+  nav.side .foot a:hover{color:#fff;background:none;}
+  main{flex:1;min-width:0;}
+  @media print{ nav.side{display:none;} }
+  @media (max-width:900px){ nav.side{display:none;} }
+</style>
+
+<div class="page">
+<nav class="side">
+  <h1>Punto de Venta (POS)</h1>
+  <div class="sub">Manual de Usuario</div>
+  <a href="#mapa">Cómo funciona (las 3 zonas)</a>
+  <a href="#buscar">Buscar y agregar productos</a>
+  <a href="#cantidades">Cantidades y descuentos de línea</a>
+  <a href="#global">Descuento global</a>
+  <a href="#confirmar">Confirmar venta y medio de pago</a>
+  <a href="#mixto">Pagos combinados (mixtos)</a>
+  <a href="#vuelto">Vuelto y redondeo</a>
+  <a href="#espera">Ventas en espera</a>
+  <a href="#cancelar">Cancelar una venta en curso</a>
+  <a href="#flujo">Diagrama: flujo completo</a>
+  <a href="#faq">Dudas frecuentes</a>
+  <div class="foot"><a href="index.html">← Volver al índice</a></div>
+</nav>
+<main>
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Punto de Venta (<b>POS</b>) — Guía paso a paso</h1>
+  <p>Cómo armar una venta, cobrarla con uno o varios medios de pago, dejarla en espera para más tarde, y qué hacer si te equivocás — con diagramas de flujo y capturas reales de la pantalla.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="mapa">0 · Cómo funciona (las 3 zonas)</h2>
+<p class="lead">La pantalla de venta tiene <b>tres zonas</b>: búsqueda/carga de productos arriba, el detalle de la venta en curso en el medio, y los totales y acciones abajo. <b>Nada se guarda hasta que confirmás la venta</b> en el modal final — podés armar y deshacer sin miedo.</p>
+
+<div class="shot">
+  <img src="assets/pos-overview.png" alt="Pantalla completa del POS con una venta en curso" loading="lazy">
+  <figcaption>La app completa: sidebar de navegación a la izquierda, POS con una venta armada a la derecha.</figcaption>
+</div>
+
+<div class="shot">
+  <img src="assets/pos-tres-zonas.png" alt="Las tres zonas del POS: búsqueda, detalle de la venta y totales" loading="lazy">
+  <figcaption>Solo el contenido del POS. De arriba a abajo: buscador + cliente + medio de pago rápido → líneas de la venta → totales y acciones.</figcaption>
+</div>
+
+<!-- ============ 1. BUSCAR ============ -->
+<h2 id="buscar">1 · Buscar y agregar productos</h2>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body">
+      <h4>Escaneá o escribí</h4>
+      <p>Con el lector QR/EAN escaneá el producto, o escribí su nombre o SKU en el buscador (<code>Escanear QR / EAN o buscar por nombre...</code>).</p>
+    </div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body">
+      <h4>Elegí el resultado</h4>
+      <p>Aparece un desplegable con las coincidencias. Al hacer clic en una, se agrega como línea nueva con cantidad 1.</p>
+    </div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body">
+      <h4>Repetí para cada ítem</h4>
+      <p>Si volvés a buscar el mismo producto, se suma a la línea existente en vez de duplicarla.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 2. CANTIDADES ============ -->
+<h2 id="cantidades">2 · Cantidades, unidades y descuentos de línea</h2>
+<table>
+  <tr><th>Campo</th><th>Qué hace</th></tr>
+  <tr><td><b>Cant.</b></td><td>Cantidad de la línea. Los botones <code>−</code> / <code>+</code> suman o restan de a uno; si el producto <b>permite fracción</b>, también podés escribir un decimal (ej. 2,5).</td></tr>
+  <tr><td><b>Selector de unidad</b></td><td>Si el producto tiene más de una <b>presentación</b> cargada (ej. metro y rollo), un desplegable debajo del nombre te deja elegir con cuál vender esa línea. El precio y el descuento de stock se recalculan solos según la presentación elegida.</td></tr>
+  <tr><td><b>Desc. %</b></td><td>Descuento manual sobre esa línea puntual, en porcentaje.</td></tr>
+  <tr><td><b>×</b></td><td>Saca la línea completa de la venta.</td></tr>
+</table>
+
+<!-- ============ 3. DESC GLOBAL ============ -->
+<h2 id="global">3 · Descuento global</h2>
+<p>El campo <code>Desc. global %</code>, abajo a la izquierda, aplica un descuento adicional sobre el <b>total</b> de la venta — se suma al de cada línea, no lo reemplaza.</p>
+
+<!-- ============ 4. CONFIRMAR ============ -->
+<h2 id="confirmar">4 · Confirmar la venta y elegir medio de pago</h2>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Presioná <b>Confirmar</b></h4><p>Se abre el modal <b>Confirmar venta</b> con el total de productos.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Elegí el medio de pago</h4><p>Desplegable con: <b>Efectivo</b>, <b>Tarjeta</b>, <b>Transferencia</b>, <b>Cuenta corriente</b> y <b>Cheque</b>.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Cargá el monto y confirmá</h4><p>Ingresá cuánto cubre ese medio y presioná <b>Confirmar</b>. Recién ahí la venta queda registrada y se descuenta el stock.</p></div>
+  </div>
+</div>
+
+<div class="shot small">
+  <img src="assets/pos-modal-confirmar.png" alt="Modal Confirmar venta con un solo medio de pago" loading="lazy">
+  <figcaption>Modal “Confirmar venta” — un solo medio de pago (Efectivo).</figcaption>
+</div>
+
+<div class="callout warn">
+  <h3>⚠️ Se necesita la caja abierta</h3>
+  <p>Si no hay una caja abierta para tu turno, el sistema no deja confirmar la venta. Abrí la caja primero desde <code>Caja</code>.</p>
+</div>
+
+<div class="callout info">
+  <h3>Cliente “Consumidor Final” por defecto</h3>
+  <p>Toda venta arranca con el cliente <b>Consumidor Final</b>. Si necesitás asociarla a un cliente puntual (por ejemplo para cobrar en cuenta corriente), usá el botón <b>Cambiar</b> junto al nombre del cliente, antes de confirmar.</p>
+</div>
+
+<!-- ============ 5. MIXTO ============ -->
+<h2 id="mixto">5 · Pagos combinados (mixtos)</h2>
+<p>Podés cobrar una misma venta con <b>varios medios de pago</b> — por ejemplo, una parte en efectivo y otra con tarjeta.</p>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Agregá una línea por cada medio</h4><p>En el modal, usá <b>+ Agregar medio de pago</b> tantas veces como medios necesites.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Cargá el monto de cada una</h4><p>La suma de todas las líneas tiene que cubrir el total de la venta.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Recargo de tarjeta (opcional)</h4><p>Si el medio es <b>Tarjeta</b>, aparece un campo extra de <b>% de recargo</b>. El sistema muestra cuánto es ese recargo en pesos al costado de la línea.</p></div>
+  </div>
+</div>
+
+<div class="shot small">
+  <img src="assets/pos-pago-mixto.png" alt="Modal Confirmar venta con pago mixto: efectivo + tarjeta con recargo" loading="lazy">
+  <figcaption>Ejemplo real: $2.000 en efectivo + $2.659 con tarjeta al 5% de recargo (+$132,95).</figcaption>
+</div>
+
+<div class="callout danger">
+  <h3>⛔ El recargo NO se suma al total de la venta</h3>
+  <p>Es <b>informativo</b>: te dice cuánto cobrarle de más al cliente por pagar con esa tarjeta, pero <b>el total registrado de la venta no cambia</b> por el recargo. Es una decisión de diseño del sistema, no un error.</p>
+</div>
+
+<!-- ============ 6. VUELTO ============ -->
+<h2 id="vuelto">6 · Vuelto y redondeo</h2>
+<p>El <b>total de la venta</b> se redondea siempre al <b>peso entero más cercano</b> (la diferencia queda registrada como ajuste de redondeo; las líneas conservan sus centavos exactos). Por eso vas a ver un renglón <code>Redondeo: ±$0,XX</code> junto al total.</p>
+<p>Si pagás una parte con <b>efectivo</b> y el monto ingresado supera lo que falta cubrir, el sistema calcula el <b>vuelto</b> automáticamente (también redondeado al peso).</p>
+
+<!-- ============ 7. ESPERA ============ -->
+<h2 id="espera">7 · Ventas en espera</h2>
+<p>Si un cliente deja la compra para más tarde:</p>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Presioná <b>Espera</b></h4><p>Con la venta armada, podés ponerle un <b>alias</b> opcional (ej. nombre del cliente o número de mesa) para reconocerla después.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Queda guardada, sin tocar nada</h4><p>No afecta el stock ni la caja hasta que se confirme de verdad.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Retomala o descartala</h4><p>Abrí el panel con el botón <b>Ventas en espera</b> (muestra un contador). Ahí podés <b>Retomar</b> (vuelve al carrito para seguir o confirmar) o <b>Descartar</b> (se pierde, no registra nada).</p></div>
+  </div>
+</div>
+
+<div class="shot small">
+  <img src="assets/pos-ventas-espera.png" alt="Panel de ventas en espera con una venta marcada como Vencida" loading="lazy">
+  <figcaption>Panel “Ventas en espera”. La etiqueta <b>Vencida</b> es solo un aviso — la venta se puede retomar igual.</figcaption>
+</div>
+
+<div class="callout info">
+  <h3>¿Qué significa “Vencida”?</h3>
+  <p>Pasadas <b>24 horas</b> sin retomarla (valor configurable por parámetro del sistema), la venta en espera se marca como <b>Vencida</b>. Es solo una alerta visual para que el equipo la revise — <b>no se borra ni se cancela sola</b>, sigue disponible para retomar o descartar.</p>
+</div>
+
+<!-- ============ 8. CANCELAR ============ -->
+<h2 id="cancelar">8 · Cancelar una venta en curso</h2>
+<p>Si te equivocaste armando la venta y querés empezar de nuevo (distinto de “Espera”, que la guarda):</p>
+<div class="shot small">
+  <img src="assets/pos-cancelar.png" alt="Confirmación al cancelar la venta en curso" loading="lazy">
+  <figcaption>Confirmación al presionar “Cancelar”. Vacía el carrito por completo y no registra nada.</figcaption>
+</div>
+
+<!-- ============ 9. FLUJO ============ -->
+<h2 id="flujo">9 · Diagrama: flujo completo de una venta</h2>
+<figure class="fig">
+  <figcaption>Diagrama 1 · De buscar el producto a que se descuente el stock</figcaption>
+  <svg viewBox="0 0 960 260" role="img" aria-label="Flujo completo de una venta en el POS">
+    <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+
+    <rect class="n-box" x="10" y="90" width="150" height="60" rx="10"/>
+    <text class="t" x="85" y="115" text-anchor="middle">Buscar / escanear</text>
+    <text class="t-sm" x="85" y="133" text-anchor="middle">y agregar producto</text>
+    <path class="edge" marker-end="url(#ah)" d="M160,120 L196,120"/>
+
+    <rect class="n-box" x="198" y="90" width="150" height="60" rx="10"/>
+    <text class="t" x="273" y="115" text-anchor="middle">Repetir por</text>
+    <text class="t-sm" x="273" y="133" text-anchor="middle">cada ítem</text>
+    <path class="edge" marker-end="url(#ah)" d="M348,120 L384,120"/>
+
+    <!-- decision -->
+    <polygon class="n-accent" points="460,60 590,120 460,180 330,120"/>
+    <text class="t" x="460" y="116" text-anchor="middle">¿Confirmar</text>
+    <text class="t" x="460" y="132" text-anchor="middle">ahora?</text>
+
+    <!-- yes path -->
+    <path class="edge" marker-end="url(#ah)" d="M590,120 L640,120"/>
+    <text class="edge-lbl" x="612" y="112" text-anchor="middle">sí</text>
+    <rect class="n-accent" x="642" y="90" width="150" height="60" rx="10"/>
+    <text class="t" x="717" y="115" text-anchor="middle">Confirmar</text>
+    <text class="t-sm" x="717" y="133" text-anchor="middle">elegir medio(s) de pago</text>
+    <path class="edge" marker-end="url(#ah)" d="M792,120 L828,120"/>
+
+    <rect class="n-ok" x="830" y="90" width="120" height="60" rx="10"/>
+    <text class="t" x="890" y="112" text-anchor="middle">Stock</text>
+    <text class="t" x="890" y="128" text-anchor="middle">descontado</text>
+    <text class="t-sm" x="890" y="143" text-anchor="middle">venta en caja</text>
+
+    <!-- no path -->
+    <path class="edge" marker-end="url(#ah)" d="M460,180 L460,215"/>
+    <text class="edge-lbl" x="480" y="200" text-anchor="middle">no, más tarde</text>
+    <rect class="n-warn" x="330" y="217" width="260" height="40" rx="9"/>
+    <text class="t-sm" x="460" y="241" text-anchor="middle"><tspan class="t">Espera</tspan> → guarda el carrito, sin tocar stock ni caja</text>
+
+    <path class="edge" marker-end="url(#ah)" d="M330,237 L200,237 L200,150"/>
+    <text class="edge-lbl" x="230" y="230" text-anchor="middle">Retomar</text>
+  </svg>
+</figure>
+
+<figure class="fig">
+  <figcaption>Diagrama 2 · Ciclo de vida de una venta en espera</figcaption>
+  <svg viewBox="0 0 1020 170" role="img" aria-label="Ciclo de vida de una venta en espera">
+    <defs><marker id="ah2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+    <rect class="n-box" x="10" y="55" width="170" height="56" rx="10"/>
+    <text class="t" x="95" y="80" text-anchor="middle">En espera</text>
+    <text class="t-sm" x="95" y="97" text-anchor="middle">alias opcional</text>
+    <path class="edge" marker-end="url(#ah2)" d="M180,83 L216,83"/>
+
+    <rect class="n-warn" x="218" y="55" width="180" height="56" rx="10"/>
+    <text class="t" x="308" y="80" text-anchor="middle">+ 24 horas</text>
+    <text class="t-sm" x="308" y="97" text-anchor="middle">se marca “Vencida” (aviso visual)</text>
+    <path class="edge" marker-end="url(#ah2)" d="M398,83 L434,83"/>
+
+    <rect class="n-box" x="436" y="55" width="170" height="56" rx="10"/>
+    <text class="t" x="521" y="80" text-anchor="middle">Sigue disponible</text>
+    <text class="t-sm" x="521" y="97" text-anchor="middle">no se borra sola</text>
+    <path class="edge" marker-end="url(#ah2)" d="M606,83 L642,83"/>
+
+    <polygon class="n-accent" points="720,40 830,83 720,126 610,83" transform="translate(0,0)"/>
+    <text class="t" x="720" y="79" text-anchor="middle">Retomar o</text>
+    <text class="t" x="720" y="94" text-anchor="middle">descartar</text>
+
+    <path class="edge" marker-end="url(#ah2)" d="M830,74 L850,42"/>
+    <text class="edge-lbl" x="840" y="60" text-anchor="middle">retomar</text>
+    <rect class="n-ok" x="850" y="8" width="150" height="34" rx="8"/>
+    <text class="t-sm" x="925" y="29" text-anchor="middle"><tspan class="t">Vuelve al POS</tspan></text>
+
+    <path class="edge" marker-end="url(#ah2)" d="M830,92 L850,128"/>
+    <text class="edge-lbl" x="840" y="110" text-anchor="middle">descartar</text>
+    <rect class="n-err" x="850" y="128" width="150" height="34" rx="8"/>
+    <text class="t-sm" x="925" y="149" text-anchor="middle"><tspan class="t">Se pierde</tspan> (nada registrado)</text>
+  </svg>
+</figure>
+
+<!-- ============ FAQ ============ -->
+<h2 id="faq">10 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿El recargo de tarjeta se suma al total de la venta?</summary>
+  <div class="ans">No. Es un dato informativo para saber cuánto cobrarle de más al cliente por ese medio; <b>el total registrado de la venta no cambia</b>. Ver <a href="#mixto">Pagos combinados</a>.</div>
+</details>
+
+<details>
+  <summary>Una venta en espera quedó marcada “Vencida”. ¿Se cancela sola?</summary>
+  <div class="ans">No. Sigue disponible en el listado tal cual — “Vencida” es solo un aviso de que pasaron más de 24 horas sin retomarla. La podés <b>Retomar</b> o <b>Descartar</b> igual que cualquier otra.</div>
+</details>
+
+<details>
+  <summary>¿Puedo vender un producto sin stock disponible?</summary>
+  <div class="ans">No, es una regla del sistema sin excepción. Si el producto no tiene stock suficiente, no se puede completar la venta con esa cantidad.</div>
+</details>
+
+<details>
+  <summary>Cancelé una venta en curso por error. ¿Se guardó algo?</summary>
+  <div class="ans">No. <b>Cancelar</b> vacía el carrito completo — líneas, cliente y descuentos — sin registrar nada. Es distinto de <b>Espera</b>, que sí guarda el carrito para retomarlo después.</div>
+</details>
+
+<details>
+  <summary>¿Necesito la caja abierta para vender?</summary>
+  <div class="ans">Sí. Si no hay una caja abierta, el sistema no permite confirmar la venta. Abrila primero desde la pantalla <b>Caja</b>.</div>
+</details>
+
+<details>
+  <summary>¿Puedo cambiar el cliente durante la venta?</summary>
+  <div class="ans">Sí, con el botón <b>Cambiar</b> junto a “Consumidor Final”, antes de confirmar. Es necesario, por ejemplo, para cobrar en <b>cuenta corriente</b> — ese medio de pago requiere un cliente real con cuenta habilitada, no “Consumidor Final”.</div>
+</details>
+
+<details>
+  <summary>¿Por qué el total termina en $0 o $50 y no coincide con la suma de las líneas?</summary>
+  <div class="ans">Porque el total se redondea al peso entero más cercano (ver <a href="#vuelto">Vuelto y redondeo</a>). La diferencia entre el total exacto y el redondeado queda guardada como ajuste; las líneas individuales conservan sus centavos reales.</div>
+</details>
+
+<details>
+  <summary>¿El producto se puede vender por metro y también por rollo (o caja, etc.)?</summary>
+  <div class="ans">Sí, si tiene más de una <b>presentación</b> cargada en su ficha. En la línea de la venta aparece un selector de unidad para elegir con cuál vender ese ítem puntual.</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Punto de Venta (POS)
+</footer>
+</div>
+</main>
+</div>
+
+<script>
+  (function(){
+    var links=[...document.querySelectorAll('nav.side a[href^="#"]')];
+    var map=new Map();
+    links.forEach(function(a){var id=a.getAttribute('href').slice(1);var el=document.getElementById(id);if(el)map.set(el,a);});
+    var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove('active');});var a=map.get(e.target);if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-10% 0px -80% 0px',threshold:0});
+    [...map.keys()].forEach(function(t){obs.observe(t);});
+  })();
+</script>
+

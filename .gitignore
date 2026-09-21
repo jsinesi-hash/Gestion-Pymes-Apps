@@ -1,0 +1,50 @@
+node_modules/
+dist/
+out/
+.vite/
+*.tsbuildinfo
+*.js.map
+*.d.ts.map
+
+# Base de datos local (dato, no código)
+*.db
+*.sqlite
+*.sqlite3
+
+# Entornos y secretos
+.env
+.env.*
+
+# Herramientas personales del entorno de desarrollo
+.claude/
+.superpowers/
+
+# Temporales y artefactos de desarrollo
+*.diff
+errores.txt
+*.log
+.DS_Store
+
+# Planes internos de Claude Code (workflow, no código del proyecto)
+docs/superpowers/
+
+# Backups de BD generados por la app (dato binario, no código)
+docs/Backups/
+*.fbk
+
+# Artefactos de test y build
+packages/client/coverage/
+package-lock.json
+
+# Capturas de pantalla de soporte
+docs/*.PNG
+docs/*.png
+
+# Credenciales fiscales AFIP/ARCA (R2 — irán a userData, nunca al repo)
+*.p12
+*.pfx
+*.pem
+afip_cert*
+
+# Binario de build descargado (70MB) — no es fuente, no versionar
+docs/*.tgz

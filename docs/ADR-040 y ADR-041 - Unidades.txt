@@ -1,0 +1,55 @@
+# Contexto
+Leé en orden: prompt-maestro.md (PROMPT 0) → DECISIONES.md (ADR-014, ADR-034, ADR-040, ADR-041)
+→ design-system.md → ESTADO.md. Trabajás en `main`. Castellano rioplatense.
+
+# GATES (parar y esperar confirmación explícita ANTES de ejecutar)
+- Cualquier migración de schema: mostrá el `drizzle-kit generate` y esperá OK.
+- Escrituras a `parametros_sistema`.
+- Instalación de dependencias.
+- Cualquier toque a módulos aprobados R1/R2/R3 fuera de lo listado abajo.
+- ANTES de migrar: confirmá con qué escala se persiste la cantidad de stock, para alinear la
+  escala de `factor_a_stock` (propuesto: entero en milésimas, default 1000). No migres sin esto.
+
+# LOTE 1 — ADR-041 (ABM de Unidades)  [hacer primero]
+- Pantalla /config/unidades: alta/edición/baja lógica sobre tabla `unidad` (nombre, abreviatura, activo).
+- Baja lógica bloqueada si hay productos o presentaciones activas referenciando la unidad
+  (mensaje con cantidad). Mismo patrón que ADR-029/ADR-030.
+- Alta rápida inline en selectores de unidad existentes.
+- IPC namespaced (`unidad.*`). Tests Vitest del bloqueo de baja.
+- PARAR al terminar el lote y reportar.
+
+# LOTE 2 — ADR-040 (Multi-presentación)  [tras aprobar Lote 1]
+Schema + migración (GATE de migración aplica):
+- Tabla nueva `producto_presentacion`: id UUID, producto_id FK, unidad_id FK,
+  factor_a_stock INTEGER (milésimas, default 1000), gtin_barcode TEXT null (único si no-null),
+  es_default bool, activo bool, timestamps.
+  Índice único parcial: un solo es_default=1 por producto_id.
+- `lista_precio_valor`: agregar `presentacion_id` NOT NULL (FK).
+- `venta_detalle`: agregar `presentacion_id` FK + `factor_a_stock_aplicado` (snapshot).
+- Migración no destructiva: por cada producto, 1 presentación default
+  (unidad_id = unidad_venta actual, factor 1000, es_default=true, gtin NULL) y reasignar las
+  filas de `lista_precio_valor` existentes a esa default.
+- UNA sola función de creación de default, compartida por alta manual y masiva.
+
+Backend/motor:
+- Resolución de precio de ADR-034 pasa a clave (presentacion_id, lista_id). El renderer no recalcula base.
+- Auto-seed de presentación nueva: precio_default × factor, marcado fallback "sin confirmar".
+- Recálculo masivo: por presentación; no-default con precio manual → exclusión de manuales existente.
+
+POS:
+- Resolución de scan: producto.gtin_barcode → default; producto_presentacion.gtin_barcode → esa presentación.
+- Selector de presentación en la línea si no se escaneó una específica.
+- Descuento de stock = cantidad × factor_a_stock_aplicado / 1000, dentro de la transacción atómica de venta.
+
+ProductoDetalle:
+- Sub-sección "Presentaciones" (agregar/editar/baja: unidad, factor, gtin opcional). Precio se
+  edita por PrecioPanel (por lista), no en esta sub-sección.
+- Alta y alta masiva de producto: crear siempre la default vía la función compartida. Sin cambio
+  de formato de import.
+
+Reglas duras:
+- Nunca dejar un producto sin default activa. No borrar la última presentación.
+- Un SKU = una sola naturaleza de stock (no mezclar conteo y peso como fuentes de verdad).
+- Tests Vitest: invariante de default único, descuento de stock por factor, resolución de scan,
+  exclusión de manuales en recálculo.
+- PARAR al terminar el schema+migración y reportar antes de seguir con POS/UI.

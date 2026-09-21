@@ -1,0 +1,20 @@
+### P1.4 — Stock y movimientos
+
+```
+Objetivo: gestión de existencias con libro de movimientos inmutable y costo promedio.
+
+Tareas:
+- Entrada de stock (Tech Spec 3.2): genera MovimientoStock (entrada), incrementa
+  Existencias, recalcula costo promedio ponderado (fórmula del Prompt 0).
+- Ajuste de inventario (motivo ajuste_conteo) con stock_resultante.
+- Merma/rotura (salida) registrada.
+- Todo cambio de stock pasa por un MovimientoStock con su *_resultante.
+- Consulta de existencias y de kardex (historial) por producto.
+
+Criterios de aceptación:
+- Nunca hay stock sin movimiento que lo justifique (test).
+- Costo promedio ponderado correcto ante múltiples entradas (test con casos).
+- stock_resultante coincide con el saldo recomputado.
+
+Restricciones: la recepción contra OC es R3; acá la entrada es manual/carga.
+```

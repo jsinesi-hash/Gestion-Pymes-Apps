@@ -1,0 +1,16 @@
+Q1 — Destino de lista_precio_detalle: confirmado, vamos con Opción A (DROP + migrar, corte limpio).
+
+Antes de correr la migración:
+1. Backup del .sqlite (o snapshot vía el sistema .fbk existente) inmediatamente antes de la corrida.
+2. Mostrame una muestra de 5-10 productos con el valor viejo (ajuste_porcentual) y el nuevo valor
+   calculado (centavos) en lista_precio_valor, para que confirme la fórmula de conversión antes
+   de que apliques el DROP.
+
+La app no está en producción, así que no hace falta mantener lista_precio_detalle como legacy
+después de migrar y verificar — se dropea en el mismo script una vez que confirme la muestra.
+
+Pendiente antes de generar IDs para lista_precio_valor: ¿qué convención de PK usan las demás
+tablas del schema? TEXT/UUID generado con hex(randomblob(16)) en SQL, o INTEGER PRIMARY KEY
+AUTOINCREMENT? Si ya hay tablas con UUID generado en SQL de migración, generalo igual ahí. Si el
+resto usa autoincrement y esta sería la primera con UUID, decímelo antes de decidir — no lo
+resuelvas por tu cuenta.

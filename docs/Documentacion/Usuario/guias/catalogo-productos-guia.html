@@ -1,0 +1,435 @@
+<meta charset="utf-8">
+<title>Catálogo de Productos — Guía</title>
+<style>
+  :root{
+    --bg:#f7f7f5; --surface:#ffffff; --ink:#1c1a17; --ink-2:#4b463f; --ink-3:#8a8279;
+    --line:#e7e3dc; --accent:#e8730a; --accent-soft:#fdefe1; --accent-strong:#b45309;
+    --ok:#2e7d52; --ok-soft:#e7f3ec; --warn:#b7791f; --warn-soft:#fbf3e0; --danger:#c0392b; --danger-soft:#fbeceb;
+    --blue:#2f6fb0; --blue-soft:#e9f1f9;
+    --radius:12px; --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+      --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+      --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+      --blue:#7fb0e0; --blue-soft:#182533;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+    --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+    --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+    --blue:#7fb0e0; --blue-soft:#182533;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 "Hanken Grotesk",-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 22px 80px}
+  header.hero{background:linear-gradient(135deg,#1c1a17,#3a332b);color:#fff;border-radius:18px;padding:34px 34px 30px;margin-bottom:28px}
+  header.hero .kicker{color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:12.5px}
+  header.hero h1{margin:.35em 0 .2em;font-size:30px;line-height:1.15}
+  header.hero p{margin:0;color:#d7d1c8;max-width:70ch}
+  h2{font-size:22px;margin:2.2em 0 .5em;padding-top:.5em;border-top:2px solid var(--line)}
+  h3{font-size:17px;margin:1.4em 0 .4em;color:var(--ink)}
+  p,li{color:var(--ink-2)}
+  code{font-family:var(--mono);font-size:.87em;background:var(--accent-soft);padding:.1em .38em;border-radius:5px;color:var(--accent-strong)}
+  a{color:var(--blue)}
+  .lead{font-size:16.5px}
+  .toc{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 20px;margin:0 0 8px}
+  .toc b{font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+  .toc ol{margin:.5em 0 0;padding-left:1.2em;columns:2;column-gap:32px}
+  .toc a{text-decoration:none}
+  table{width:100%;border-collapse:collapse;margin:1em 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px}
+  th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--accent-soft);font-size:12.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-3)}
+  tr:last-child td{border-bottom:none}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 22px 18px;margin:16px 0}
+  .fig{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin:20px 0;overflow-x:auto}
+  .fig figcaption{font-size:12.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;font-weight:700}
+  .shot{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px;margin:16px 0;text-align:center}
+  .shot img{max-width:100%;border-radius:8px;display:block;margin:0 auto;border:1px solid var(--line)}
+  .shot.small img{max-width:440px}
+  .shot figcaption{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+  .shot-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:640px){.shot-row{grid-template-columns:1fr}}
+  .callout{border-radius:var(--radius);padding:16px 20px;margin:18px 0;border:1px solid}
+  .callout.warn{background:var(--warn-soft);border-color:#ecd9a8}
+  .callout.info{background:var(--blue-soft);border-color:#cfe0ef}
+  .callout.danger{background:var(--danger-soft);border-color:#eec4bf}
+  .callout h3{margin-top:.2em}
+  .pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px}
+  .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .pill.err{background:var(--danger-soft);color:var(--danger)} .pill.mut{background:var(--accent-soft);color:var(--ink-3)}
+  .step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .step:last-child{border-bottom:none}
+  .step .dot{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent-strong);
+    font-weight:700;display:grid;place-items:center;font-size:.85rem}
+  .step .body{flex:1}
+  .step .body h4{margin:0 0 4px;font-size:1rem;color:var(--ink)}
+  details{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin:10px 0;overflow:hidden}
+  details summary{cursor:pointer;padding:14px 18px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;color:var(--ink)}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"+";color:var(--accent);font-size:1.3rem;font-weight:400}
+  details[open] summary::after{content:"–"}
+  details .ans{padding:0 18px 16px;color:var(--ink-2)}
+  svg{max-width:100%;height:auto;display:block}
+  .muted{color:var(--ink-3);font-size:13.5px}
+  .n-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+  .n-accent{fill:var(--accent-soft);stroke:#f0c79a}
+  .n-ok{fill:var(--ok-soft);stroke:#bfe0cd}
+  .n-warn{fill:var(--warn-soft);stroke:#ecd9a8}
+  .n-err{fill:var(--danger-soft);stroke:#eec4bf}
+  .n-dark{fill:#26221d;stroke:#26221d}
+  .t{font:600 13px "Hanken Grotesk",sans-serif;fill:var(--ink)}
+  .t-sm{font:500 11px "Hanken Grotesk",sans-serif;fill:var(--ink-2)}
+  .t-white{fill:#fff}
+  .edge{stroke:#b9b1a6;stroke-width:1.6;fill:none}
+  .edge-lbl{font:600 10.5px "Hanken Grotesk",sans-serif;fill:var(--ink-3)}
+  footer{color:var(--ink-3);font-size:13px;text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--line)}
+  .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink-3);text-decoration:none;margin-bottom:14px}
+  .back-link:hover{color:var(--accent)}
+  img.zoomable{cursor:zoom-in}
+  .lightbox-overlay{display:none;position:fixed;inset:0;background:rgba(10,9,7,.82);z-index:999;
+    align-items:center;justify-content:center;padding:5vh 5vw;cursor:zoom-out}
+  .lightbox-overlay.open{display:flex}
+  .lightbox-overlay img{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.5);display:block}
+
+  .page{display:flex;align-items:flex-start;}
+  nav.side{position:sticky;top:0;height:100vh;width:250px;flex:0 0 250px;
+    background:#201d18;color:#cdc4b8;overflow-y:auto;padding:26px 18px 32px;}
+  nav.side h1{font-size:14.5px;color:#fff;margin:0 0 4px;line-height:1.35;font-weight:700;}
+  nav.side .sub{font-size:11px;color:var(--accent);margin-bottom:20px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+  nav.side a{display:block;color:#cdc4b8;text-decoration:none;font-size:12.6px;padding:6px 9px;border-radius:6px;margin:1px 0;border-left:3px solid transparent;}
+  nav.side a:hover{background:#332d24;color:#fff;}
+  nav.side a.active{background:#332d24;color:#fff;border-left-color:var(--accent);font-weight:600;}
+  nav.side .foot{margin-top:22px;border-top:1px solid #423b30;padding-top:14px;}
+  nav.side .foot a{color:var(--accent);font-weight:700;padding-left:0;}
+  nav.side .foot a:hover{color:#fff;background:none;}
+  main{flex:1;min-width:0;}
+  @media print{ nav.side{display:none;} }
+  @media (max-width:900px){ nav.side{display:none;} }
+</style>
+
+<div class="page">
+<nav class="side">
+  <h1>Catálogo de Productos</h1>
+  <div class="sub">Manual de Usuario</div>
+  <a href="#mapa">Cómo funciona</a>
+  <a href="#listado">Listado y búsqueda</a>
+  <a href="#alta">Dar de alta un producto</a>
+  <a href="#prereq">Categoría, marca y unidad</a>
+  <a href="#ficha">La ficha del producto</a>
+  <a href="#presentaciones">Vender en más de una presentación</a>
+  <a href="#precios">Precios por lista</a>
+  <a href="#etiquetas">Imprimir etiquetas</a>
+  <a href="#ubicaciones">Ubicaciones</a>
+  <a href="#sinonimos">Sinónimos de búsqueda</a>
+  <a href="#importar">Importar datos en masa</a>
+  <a href="#flujo">Diagrama: de la ficha a la venta</a>
+  <a href="#faq">Dudas frecuentes</a>
+  <div class="foot"><a href="index.html">← Volver al índice</a></div>
+</nav>
+<main>
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Catálogo de Productos — Guía paso a paso</h1>
+  <p>Cómo dar de alta un producto, entender su ficha, venderlo en más de una presentación (metro/rollo, unidad/caja, etc.) e imprimirle la etiqueta — con diagramas y capturas reales.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="mapa">0 · Cómo funciona</h2>
+<p class="lead">Cada producto tiene un <b>SKU único</b> que el sistema asigna solo (formato <code>P-NNNNNNN-D</code>) — es la identidad interna, no lo elegís vos. Además puede tener un <b>código de barras (EAN/GTIN)</b> del fabricante, opcional. El QR y el código de barras que salen impresos en la etiqueta <b>se generan a partir del SKU</b> en el momento de imprimir — no son datos separados que haya que cargar.</p>
+<div class="callout info">
+  <h3>Reglas que no cambian</h3>
+  <ul style="margin:.3em 0">
+    <li>Un producto <b>siempre</b> pertenece a una <b>categoría</b> (obligatoria). La <b>marca</b> es opcional.</li>
+    <li>El stock <b>nunca</b> se edita directamente: todo cambio queda registrado como un movimiento (entrada, ajuste, merma).</li>
+    <li>Un producto no se borra: se <b>desactiva</b>, para no perder el historial de ventas y stock que ya tiene.</li>
+  </ul>
+</div>
+
+<!-- ============ 1. LISTADO ============ -->
+<h2 id="listado">1 · Listado y búsqueda</h2>
+<p>Desde <code>Catálogo → Productos</code> podés buscar por nombre, SKU o EAN, filtrar por ubicación, categoría, marca o estado, y exportar el listado.</p>
+<div class="shot">
+  <img src="assets/catalogo-listado.png" alt="Listado de productos con filtros" loading="lazy">
+  <figcaption>Listado de productos — columnas de sector/estante/posición incluidas para ubicar mercadería sin abrir cada ficha.</figcaption>
+</div>
+
+<!-- ============ 2. ALTA ============ -->
+<h2 id="alta">2 · Dar de alta un producto</h2>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Datos básicos</h4><p>Nombre corto (obligatorio), nombre largo, descripción técnica, categoría (obligatoria) y marca (opcional).</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Precio y unidades</h4><p>Precio de venta de lista (<b>IVA incluido</b>), impuesto, unidad de venta (obligatoria — es la unidad en la que se lleva el <b>stock</b>), unidad de compra y factor de conversión entre ambas.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Stock y ubicación</h4><p>Stock mínimo/máximo, ubicación en depósito, código EAN/barcode (opcional), si <b>permite fracción</b> (para vender cantidades con decimales) y si queda activo.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">4</span>
+    <div class="body"><h4><b>Crear producto</b></h4><p>El sistema le asigna el SKU automáticamente.</p></div>
+  </div>
+</div>
+
+<div class="shot">
+  <img src="assets/producto-form-1.png" alt="Formulario de alta de producto — datos básicos" loading="lazy">
+  <figcaption>Datos básicos, categoría y marca.</figcaption>
+</div>
+<div class="shot">
+  <img src="assets/producto-form-2.png" alt="Formulario de alta de producto — precio, unidades, stock y ubicación" loading="lazy">
+  <figcaption>Precio y unidades, stock y ubicación.</figcaption>
+</div>
+
+<div class="callout warn">
+  <h3>⚠️ No confundas “Unidad de compra” con “Presentaciones”</h3>
+  <p>El campo <b>Unidad de compra + Factor conversión</b> del alta es para el caso simple: comprás en una unidad distinta a la que vendés (ej. comprás por caja, vendés por unidad), con un solo factor fijo. Si necesitás que el <b>mostrador</b> pueda vender el mismo producto de <b>varias formas distintas</b> (por ejemplo metro <i>y</i> rollo, ambas elegibles en el POS), esa es otra herramienta — ver <a href="#presentaciones">Vender en más de una presentación</a>.</p>
+</div>
+
+<!-- ============ 3. PREREQ ============ -->
+<h2 id="prereq">3 · Categoría, marca y unidad</h2>
+<p>Se administran desde <code>Configuración</code>, como catálogos simples reutilizables por todos los productos.</p>
+<div class="shot-row">
+  <div class="shot small">
+    <img class="zoomable" src="assets/catalogo-categorias.png" alt="Pantalla de Categorías" loading="lazy">
+    <figcaption>Categorías (con jerarquía padre/hijo). Clic para ampliar.</figcaption>
+  </div>
+  <div class="shot small">
+    <img class="zoomable" src="assets/catalogo-marcas.png" alt="Pantalla de Marcas" loading="lazy">
+    <figcaption>Marcas. Clic para ampliar.</figcaption>
+  </div>
+</div>
+<div class="shot small">
+  <img class="zoomable" src="assets/catalogo-unidades.png" alt="Pantalla de Unidades" loading="lazy">
+  <figcaption>Unidades (nombre + abreviatura), la base de la que eligen tanto el alta como las presentaciones. Clic para ampliar.</figcaption>
+</div>
+<p class="muted">Una categoría o marca con productos activos asociados no se puede desactivar.</p>
+
+<!-- ============ 4. FICHA ============ -->
+<h2 id="ficha">4 · La ficha del producto</h2>
+<p>Al abrir un producto desde el listado, ves toda su información en un solo lugar, con acciones rápidas arriba: <b>Editar</b>, <b>Imprimir etiqueta</b>, <b>Kardex</b> (historial de movimientos de stock), <b>Entrada</b>, <b>Ajuste</b> y <b>Merma</b>.</p>
+<div class="shot">
+  <img src="assets/producto-ficha-1.png" alt="Ficha de producto — identificación, precio y unidades, ubicación, stock" loading="lazy">
+  <figcaption>Identificación, precio y unidades, ubicación en depósito y stock actual.</figcaption>
+</div>
+<div class="shot">
+  <img src="assets/producto-ficha-2.png" alt="Ficha de producto — proveedores, presentaciones y precios por lista" loading="lazy">
+  <figcaption>Proveedores asociados, presentaciones, y precio vigente en cada lista de precios.</figcaption>
+</div>
+
+<!-- ============ 5. PRESENTACIONES ============ -->
+<h2 id="presentaciones">5 · Vender en más de una presentación</h2>
+<p>Un mismo producto puede tener <b>varias presentaciones de venta</b> (ej. metro y rollo; unidad y caja de 10) — todas comparten el mismo stock, precio base y ficha. En el POS, el vendedor elige con cuál vender cada línea.</p>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>En la ficha, sección <b>Presentaciones → + Agregar</b></h4></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Elegí la <b>unidad</b> y el <b>factor a stock</b></h4><p>El factor dice cuánto vale <i>una</i> unidad de esa presentación, medido en la unidad de stock del producto (ej. si el stock es en metros y la presentación es “rollo de 100 m”, el factor es <code>100</code>).</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>GTIN/EAN opcional</h4><p>Si esa presentación tiene su propio código de barras (ej. el de la caja o el bulto), lo cargás acá para escanearla directo en el POS.</p></div>
+  </div>
+</div>
+
+<div class="shot small">
+  <img src="assets/producto-nueva-presentacion.png" alt="Formulario Nueva presentación" loading="lazy">
+  <figcaption>Formulario “Nueva presentación”.</figcaption>
+</div>
+
+<div class="callout info">
+  <h3>¿Vender por metro y por rollo? Hay una guía dedicada</h3>
+  <p>Si tu caso es justamente ese — un producto que se compra por rollo/caja/paquete y se vende tanto por unidad suelta como por el paquete entero — existe una guía específica con el ejemplo completo (cable de 100 m) y el error más común (dejar el factor en 1).</p>
+</div>
+
+<!-- ============ 6. PRECIOS ============ -->
+<h2 id="precios">6 · Precios por lista</h2>
+<p>La ficha muestra, de un vistazo, el precio vigente del producto en cada <b>lista de precios</b> (Minorista, Mayorista, etc.), de dónde salió ese precio, y desde cuándo. La lógica completa de listas, márgenes y lotes de precios está en la guía dedicada al módulo <b>Precios / Costos</b>.</p>
+
+<!-- ============ 7. ETIQUETAS ============ -->
+<h2 id="etiquetas">7 · Imprimir etiquetas</h2>
+<p>Desde <code>Configuración → Etiquetas</code>: elegís el formato de hoja y el tipo de código (QR o código de barras), marcás los productos con el checkbox de cada fila, y usás <b>Vista previa</b>, <b>Exportar PDF</b> o <b>Imprimir</b>.</p>
+<div class="shot">
+  <img src="assets/catalogo-etiquetas.png" alt="Pantalla de impresión de etiquetas" loading="lazy">
+  <figcaption>Selección de productos para imprimir etiquetas, con filtro por categoría, ubicación y stock.</figcaption>
+</div>
+
+<!-- ============ 8. UBICACIONES ============ -->
+<h2 id="ubicaciones">8 · Ubicaciones</h2>
+<p>Desde <code>Configuración → Ubicaciones</code>: el catálogo de posiciones físicas del depósito, con un código canónico armado a partir de <b>sector + estante + posición</b> (los tres obligatorios). El código se calcula solo — recorta ceros a la izquierda en los segmentos numéricos y pasa todo a mayúsculas, así que <code>b, 03, 05</code> se guarda como <code>B-3-5</code>.</p>
+<div class="shot">
+  <img src="assets/catalogo-ubicaciones.png" alt="Listado de ubicaciones con sector, estante, posición y cantidad de productos" loading="lazy">
+  <figcaption>Cada fila muestra cuántos productos tiene asignados esa ubicación.</figcaption>
+</div>
+<div class="shot small">
+  <img src="assets/catalogo-ubicacion-nueva.png" alt="Modal Nueva ubicación con vista previa del código canónico" loading="lazy">
+  <figcaption>El formulario muestra el código final antes de guardar.</figcaption>
+</div>
+<div class="callout info">
+  <h3>Eliminar una ubicación con productos</h3>
+  <p>Si la ubicación tiene productos asignados, borrarla exige elegir a dónde reasignarlos primero (a otra ubicación, o dejarlos sin ubicación) — no se puede eliminar "en el aire".</p>
+</div>
+<p class="muted">El botón <b>"Detectar duplicados"</b> encuentra ubicaciones que canonicalizan al mismo código (por ejemplo, cargadas antes de que existiera la regla de canonicalización) y las fusiona de un clic, reasignando los productos de las duplicadas a la que se conserva.</p>
+
+<!-- ============ 9. SINONIMOS ============ -->
+<h2 id="sinonimos">9 · Sinónimos de búsqueda</h2>
+<p>Desde <code>Configuración → Sinónimos</code>: grupos de términos equivalentes para que el buscador del POS y del catálogo encuentre un producto sin importar qué palabra usó el cliente o el vendedor.</p>
+<div class="shot">
+  <img src="assets/catalogo-sinonimos.png" alt="Listado de grupos de sinónimos con término canónico, sinónimos, abreviaturas y rubro" loading="lazy">
+  <figcaption>Ejemplo: buscar "brida", "zuncho" o "clamp" encuentra los mismos productos que "abrazadera".</figcaption>
+</div>
+<div class="shot small">
+  <img src="assets/catalogo-sinonimo-nuevo.png" alt="Modal Nuevo grupo de sinónimos" loading="lazy">
+  <figcaption>Nuevo grupo — un término canónico, sus sinónimos y, opcionalmente, abreviaturas.</figcaption>
+</div>
+<table>
+  <tr><th>Campo</th><th>Qué hace</th></tr>
+  <tr><td>Sinónimos</td><td>Términos completos que <b>también se pueden usar como texto a buscar</b> — equivalentes reales del canónico.</td></tr>
+  <tr><td>Abreviaturas</td><td><b>Disparan</b> la búsqueda pero no aparecen como resultado de texto — evita falsos positivos con abreviaturas muy cortas o ambiguas.</td></tr>
+</table>
+<div class="callout warn">
+  <h3>Los grupos existen aunque la búsqueda por sinónimos esté apagada</h3>
+  <p>El interruptor de arriba de la pantalla ("Activada"/"Desactivada") controla si el buscador <b>usa</b> los grupos o no — pero podés seguir dándolos de alta, editarlos e importarlos por CSV con el interruptor apagado; simplemente no van a afectar los resultados de búsqueda hasta que lo actives.</p>
+</div>
+
+<!-- ============ 10. IMPORTAR ============ -->
+<h2 id="importar">10 · Importar datos en masa</h2>
+<p>En <code>Configuración → Importar datos</code> (requiere permiso de administración), un asistente de tres pasos para cargar por CSV en lote: <b>Productos</b>, <b>Clientes</b>, <b>Proveedores</b>, <b>Ubicaciones</b> o <b>Stock inicial</b> — una entidad a la vez.</p>
+<div class="shot">
+  <img src="assets/importar-productos.png" alt="Paso 1 de Importar datos: columnas esperadas y selector de archivo CSV" loading="lazy">
+  <figcaption>Cada entidad muestra sus propias columnas esperadas, cuáles son obligatorias, y un botón para descargar la plantilla ya armada.</figcaption>
+</div>
+<div class="card">
+  <div class="step"><div class="dot">1</div><div class="body"><h4>Subir archivo</h4><p>Descargás la plantilla de la entidad elegida (ya trae las columnas correctas) o subís tu propio CSV.</p></div></div>
+  <div class="step"><div class="dot">2</div><div class="body"><h4>Previsualizar</h4><p>Cada fila queda clasificada como <span class="pill ok">✓ Nuevo</span>, <span class="pill warn">↻ Actualiza</span> (ya existe y se va a pisar) o <span class="pill err">✕ Error</span>, filtrable por estado. Se puede corregir una fila puntual antes de confirmar.</p></div></div>
+  <div class="step"><div class="dot">3</div><div class="body"><h4>Resultado</h4><p>Resumen de cuántas filas se crearon, actualizaron u omitieron.</p></div></div>
+</div>
+<p class="muted">Las filas con error se omiten automáticamente — no frenan la importación del resto. Si falta una columna obligatoria completa (no una celda puntual), el asistente avisa antes de procesar en vez de repetir el mismo error fila por fila.</p>
+
+<!-- ============ 11. FLUJO ============ -->
+<h2 id="flujo">11 · Diagrama: de la ficha a la venta</h2>
+<figure class="fig">
+  <figcaption>Diagrama · Cómo un producto llega al mostrador</figcaption>
+  <svg viewBox="0 0 960 220" role="img" aria-label="Flujo desde el alta del producto hasta la venta">
+    <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+
+    <rect class="n-box" x="10" y="80" width="160" height="60" rx="10"/>
+    <text class="t" x="90" y="105" text-anchor="middle">Alta del producto</text>
+    <text class="t-sm" x="90" y="123" text-anchor="middle">SKU asignado solo</text>
+    <path class="edge" marker-end="url(#ah)" d="M170,110 L206,110"/>
+
+    <rect class="n-box" x="208" y="80" width="170" height="60" rx="10"/>
+    <text class="t" x="293" y="105" text-anchor="middle">+ Presentaciones</text>
+    <text class="t-sm" x="293" y="123" text-anchor="middle">(opcional)</text>
+    <path class="edge" marker-end="url(#ah)" d="M378,110 L414,110"/>
+
+    <rect class="n-accent" x="416" y="80" width="160" height="60" rx="10"/>
+    <text class="t" x="496" y="105" text-anchor="middle">Imprimir etiqueta</text>
+    <text class="t-sm" x="496" y="123" text-anchor="middle">QR/code128 desde el SKU</text>
+    <path class="edge" marker-end="url(#ah)" d="M576,110 L612,110"/>
+
+    <rect class="n-accent" x="614" y="80" width="160" height="60" rx="10"/>
+    <text class="t" x="694" y="105" text-anchor="middle">Entrada de stock</text>
+    <text class="t-sm" x="694" y="123" text-anchor="middle">compra o carga inicial</text>
+    <path class="edge" marker-end="url(#ah)" d="M774,110 L810,110"/>
+
+    <rect class="n-ok" x="812" y="80" width="140" height="60" rx="10"/>
+    <text class="t" x="882" y="105" text-anchor="middle">Disponible</text>
+    <text class="t-sm" x="882" y="123" text-anchor="middle">en el POS</text>
+  </svg>
+</figure>
+
+<!-- ============ FAQ ============ -->
+<h2 id="faq">12 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Puedo elegir yo el SKU de un producto?</summary>
+  <div class="ans">No, el sistema lo asigna automáticamente (formato <code>P-NNNNNNN-D</code>) para garantizar que sea único. Es un código interno, opaco — no codifica categoría, proveedor ni marca.</div>
+</details>
+
+<details>
+  <summary>¿Qué diferencia hay entre el SKU y el código QR de la etiqueta?</summary>
+  <div class="ans">Ninguna en el fondo: el QR (y el código de barras) que se imprimen <b>se generan a partir del SKU</b> en el momento de imprimir. No existe un “código QR” guardado por separado.</div>
+</details>
+
+<details>
+  <summary>¿Se puede borrar un producto?</summary>
+  <div class="ans">No se elimina físicamente: se <b>desactiva</b>. Así no se pierde el historial de ventas, compras y movimientos de stock que ya generó.</div>
+</details>
+
+<details>
+  <summary>¿Puedo dejar un producto sin categoría?</summary>
+  <div class="ans">No, la categoría es obligatoria. La marca sí es opcional.</div>
+</details>
+
+<details>
+  <summary>Agregué una presentación pero en el POS sigue vendiendo como antes. ¿Por qué?</summary>
+  <div class="ans">Revisá cuál presentación quedó marcada como <b>Default</b> — es la que aparece seleccionada de entrada en el POS. Las demás siguen disponibles por el selector de unidad de la línea, ver la guía de <a href="pos-guia.html#cantidades">Cantidades y unidades</a> en POS.</div>
+</details>
+
+<details>
+  <summary>¿El código de barras del producto y el de una presentación pueden ser distintos?</summary>
+  <div class="ans">Sí. El producto tiene su propio EAN/GTIN opcional (el del fabricante, para identificarlo en la entrada de mercadería), y cada presentación puede tener el suyo propio (por ejemplo el código de la caja o el bulto), para escanearlos directo en el POS.</div>
+</details>
+
+<details>
+  <summary>¿Importar un CSV de productos puede pisar precios o stock por error?</summary>
+  <div class="ans">La importación de <b>Productos</b> actualiza la ficha (nombre, precio, categoría, etc.) de los productos que ya existen — por eso el paso de Previsualizar marca cada fila como Nuevo o Actualiza antes de confirmar nada, para que puedas revisar qué se va a pisar. El <b>stock</b> no se toca desde ahí: para eso está la entidad separada "Stock inicial".</div>
+</details>
+
+<details>
+  <summary>¿Tengo que activar la búsqueda por sinónimos para poder cargar los grupos?</summary>
+  <div class="ans">No — podés dar de alta, editar e importar grupos de sinónimos con el interruptor apagado. Mientras esté desactivado, simplemente no se usan para expandir las búsquedas del POS y el catálogo.</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Catálogo de Productos
+</footer>
+
+<script>
+  (function(){
+    if (window.__lightboxInit) return;
+    window.__lightboxInit = true;
+    var overlay = document.createElement('div');
+    overlay.className = 'lightbox-overlay';
+    var img = document.createElement('img');
+    overlay.appendChild(img);
+    document.body.appendChild(overlay);
+    document.addEventListener('click', function(e){
+      var el = e.target.closest && e.target.closest('img.zoomable');
+      if (el) {
+        img.src = el.src;
+        img.alt = el.alt;
+        overlay.classList.add('open');
+      }
+    });
+    overlay.addEventListener('click', function(){ overlay.classList.remove('open'); });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') overlay.classList.remove('open');
+    });
+  })();
+</script>
+</div>
+</main>
+</div>
+
+<script>
+  (function(){
+    var links=[...document.querySelectorAll('nav.side a[href^="#"]')];
+    var map=new Map();
+    links.forEach(function(a){var id=a.getAttribute('href').slice(1);var el=document.getElementById(id);if(el)map.set(el,a);});
+    var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove('active');});var a=map.get(e.target);if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-10% 0px -80% 0px',threshold:0});
+    [...map.keys()].forEach(function(t){obs.observe(t);});
+  })();
+</script>
+

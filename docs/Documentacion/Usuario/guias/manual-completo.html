@@ -1,0 +1,2560 @@
+<meta charset="utf-8">
+<title>Manual de Usuario Completo — Sistema de Gestión de Ferretería</title>
+<style>
+  :root{
+    --bg:#f7f7f5; --surface:#ffffff; --ink:#1c1a17; --ink-2:#4b463f; --ink-3:#8a8279;
+    --line:#e7e3dc; --accent:#e8730a; --accent-soft:#fdefe1; --accent-strong:#b45309;
+    --ok:#2e7d52; --ok-soft:#e7f3ec; --warn:#b7791f; --warn-soft:#fbf3e0; --danger:#c0392b; --danger-soft:#fbeceb;
+    --blue:#2f6fb0; --blue-soft:#e9f1f9;
+    --radius:12px; --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+      --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+      --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+      --blue:#7fb0e0; --blue-soft:#182533;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+    --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+    --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+    --blue:#7fb0e0; --blue-soft:#182533;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 "Hanken Grotesk",-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 22px 80px}
+  header.hero{background:linear-gradient(135deg,#1c1a17,#3a332b);color:#fff;border-radius:18px;padding:34px 34px 30px;margin-bottom:28px}
+  header.hero .kicker{color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:12.5px}
+  header.hero h1{margin:.35em 0 .2em;font-size:30px;line-height:1.15}
+  header.hero p{margin:0;color:#d7d1c8;max-width:70ch}
+  h2{font-size:22px;margin:2.2em 0 .5em;padding-top:.5em;border-top:2px solid var(--line)}
+  h3{font-size:17px;margin:1.4em 0 .4em;color:var(--ink)}
+  p,li{color:var(--ink-2)}
+  code{font-family:var(--mono);font-size:.87em;background:var(--accent-soft);padding:.1em .38em;border-radius:5px;color:var(--accent-strong)}
+  a{color:var(--blue)}
+  .lead{font-size:16.5px}
+  table{width:100%;border-collapse:collapse;margin:1em 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px}
+  th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--accent-soft);font-size:12.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-3)}
+  tr:last-child td{border-bottom:none}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 22px 18px;margin:16px 0}
+  .fig{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin:20px 0;overflow-x:auto}
+  .fig figcaption{font-size:12.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;font-weight:700}
+  .shot{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px;margin:16px 0;text-align:center}
+  .shot img{max-width:100%;border-radius:8px;display:block;margin:0 auto;border:1px solid var(--line)}
+  .shot.small img{max-width:440px}
+  .shot figcaption{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+  .shot-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:640px){.shot-row{grid-template-columns:1fr}}
+  .callout{border-radius:var(--radius);padding:16px 20px;margin:18px 0;border:1px solid}
+  .callout.warn{background:var(--warn-soft);border-color:#ecd9a8}
+  .callout.info{background:var(--blue-soft);border-color:#cfe0ef}
+  .callout.danger{background:var(--danger-soft);border-color:#eec4bf}
+  .callout h3{margin-top:.2em}
+  .pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px}
+  .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .pill.err{background:var(--danger-soft);color:var(--danger)} .pill.mut{background:var(--accent-soft);color:var(--ink-3)}
+  .cascade{font-family:var(--mono);background:#1c1a17;color:#f3ede3;padding:12px 16px;border-radius:10px;font-size:14px;overflow-x:auto}
+  .cascade b{color:var(--accent)}
+  .formula{background:var(--surface);border:1px dashed var(--accent);border-radius:12px;padding:18px;text-align:center;margin:14px 0}
+  .formula .eq{font-size:1.02rem;font-weight:600;font-family:var(--mono)}
+  .formula .eq .hl{color:var(--accent-strong)}
+  .step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .step:last-child{border-bottom:none}
+  .step .dot{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent-strong);
+    font-weight:700;display:grid;place-items:center;font-size:.85rem}
+  .step .body{flex:1}
+  .step .body h4{margin:0 0 4px;font-size:1rem;color:var(--ink)}
+  details{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin:10px 0;overflow:hidden}
+  details summary{cursor:pointer;padding:14px 18px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;color:var(--ink)}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"+";color:var(--accent);font-size:1.3rem;font-weight:400}
+  details[open] summary::after{content:"–"}
+  details .ans{padding:0 18px 16px;color:var(--ink-2)}
+  svg{max-width:100%;height:auto;display:block}
+  .muted{color:var(--ink-3);font-size:13.5px}
+  .n-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+  .n-accent{fill:var(--accent-soft);stroke:#f0c79a}
+  .n-ok{fill:var(--ok-soft);stroke:#bfe0cd}
+  .n-warn{fill:var(--warn-soft);stroke:#ecd9a8}
+  .n-err{fill:var(--danger-soft);stroke:#eec4bf}
+  .n-blue{fill:var(--blue-soft);stroke:#cfe0ef}
+  .n-dark{fill:#26221d;stroke:#26221d}
+  .t{font:600 13px "Hanken Grotesk",sans-serif;fill:var(--ink)}
+  .t-sm{font:500 11px "Hanken Grotesk",sans-serif;fill:var(--ink-2)}
+  .t-white{fill:#fff}
+  .edge{stroke:#b9b1a6;stroke-width:1.6;fill:none}
+  .edge-lbl{font:600 10.5px "Hanken Grotesk",sans-serif;fill:var(--ink-3)}
+  footer{color:var(--ink-3);font-size:13px;text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--line)}
+  img.zoomable{cursor:zoom-in}
+  .lightbox-overlay{display:none;position:fixed;inset:0;background:rgba(10,9,7,.82);z-index:999;
+    align-items:center;justify-content:center;padding:5vh 5vw;cursor:zoom-out}
+  .lightbox-overlay.open{display:flex}
+  .lightbox-overlay img{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.5);display:block}
+  .mod-section{margin-top:56px;padding-top:32px;border-top:4px solid var(--line)}
+
+  .page{display:flex;align-items:flex-start;}
+  nav.side{position:sticky;top:0;height:100vh;width:270px;flex:0 0 270px;
+    background:#201d18;color:#cdc4b8;overflow-y:auto;padding:26px 16px 32px;}
+  nav.side h1{font-size:14.5px;color:#fff;margin:0 0 4px;line-height:1.35;font-weight:700;}
+  nav.side .sub{font-size:11px;color:var(--accent);margin-bottom:18px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+  nav.side a{display:block;color:#cdc4b8;text-decoration:none;font-size:12.6px;padding:6px 9px;border-radius:6px;margin:1px 0;border-left:3px solid transparent;}
+  nav.side a:hover{background:#332d24;color:#fff;}
+  nav.side a.active{background:#332d24;color:#fff;border-left-color:var(--accent);font-weight:600;}
+  nav.side a.side-mod{font-weight:700;color:#fff;margin-top:12px;font-size:12.3px;}
+  nav.side a.side-mod:first-child{margin-top:0;}
+  nav.side a.side-sub{padding-left:19px;font-size:11.6px;color:#b3a99a;}
+  nav.side .foot{margin-top:20px;border-top:1px solid #423b30;padding-top:14px;}
+  nav.side .foot a{color:var(--accent);font-weight:700;padding-left:0;}
+  nav.side .foot a:hover{color:#fff;background:none;}
+  main{flex:1;min-width:0;}
+  @media print{ nav.side{display:none;} }
+  @media (max-width:900px){ nav.side{display:none;} }
+</style>
+
+<div class="page">
+<nav class="side">
+  <h1>Manual de Usuario Completo</h1>
+  <div class="sub">Sistema de Gestión de Ferretería</div>
+  <a class="side-mod" href="#mod-pos">1 · Punto de Venta (POS)</a>
+  <a class="side-sub" href="#pos-mapa">Cómo funciona (las 3 zonas)</a>
+  <a class="side-sub" href="#pos-buscar">Buscar y agregar productos</a>
+  <a class="side-sub" href="#pos-cantidades">Cantidades y descuentos de línea</a>
+  <a class="side-sub" href="#pos-global">Descuento global</a>
+  <a class="side-sub" href="#pos-confirmar">Confirmar venta y medio de pago</a>
+  <a class="side-sub" href="#pos-mixto">Pagos combinados (mixtos)</a>
+  <a class="side-sub" href="#pos-vuelto">Vuelto y redondeo</a>
+  <a class="side-sub" href="#pos-espera">Ventas en espera</a>
+  <a class="side-sub" href="#pos-cancelar">Cancelar una venta en curso</a>
+  <a class="side-sub" href="#pos-flujo">Diagrama: flujo completo</a>
+  <a class="side-sub" href="#pos-faq">Dudas frecuentes</a>
+  <a class="side-mod" href="#mod-caja">2 · Caja</a>
+  <a class="side-sub" href="#caja-mapa">Cómo funciona (un turno = una caja)</a>
+  <a class="side-sub" href="#caja-abrir">Abrir la caja</a>
+  <a class="side-sub" href="#caja-durante">Durante el turno</a>
+  <a class="side-sub" href="#caja-movimiento">Registrar un movimiento</a>
+  <a class="side-sub" href="#caja-cerrar">Cerrar caja y hacer el arqueo</a>
+  <a class="side-sub" href="#caja-diferencia">Diferencias y autorización del Supervisor</a>
+  <a class="side-sub" href="#caja-flujo">Diagrama: ciclo de vida de un turno</a>
+  <a class="side-sub" href="#caja-faq">Dudas frecuentes</a>
+  <a class="side-mod" href="#mod-presupuestos-remitos">3 · Presupuestos y Remitos</a>
+  <a class="side-sub" href="#presupuestos-remitos-mapa">Cómo funciona</a>
+  <a class="side-sub" href="#presupuestos-remitos-crear-presu">Crear un presupuesto</a>
+  <a class="side-sub" href="#presupuestos-remitos-emitir-presu">Emitir el presupuesto</a>
+  <a class="side-sub" href="#presupuestos-remitos-convertir">Convertir a venta</a>
+  <a class="side-sub" href="#presupuestos-remitos-generar-remito">Generar un remito</a>
+  <a class="side-sub" href="#presupuestos-remitos-conformar">Conformar la entrega</a>
+  <a class="side-sub" href="#presupuestos-remitos-transportistas">Transportistas</a>
+  <a class="side-sub" href="#presupuestos-remitos-flujo">Diagramas: ciclo de vida</a>
+  <a class="side-sub" href="#presupuestos-remitos-faq">Dudas frecuentes</a>
+  <a class="side-mod" href="#mod-clientes-cuenta-corriente">4 · Clientes y Cuenta Corriente</a>
+  <a class="side-sub" href="#clientes-cuenta-corriente-mapa">Cómo funciona</a>
+  <a class="side-sub" href="#clientes-cuenta-corriente-alta">Dar de alta un cliente</a>
+  <a class="side-sub" href="#clientes-cuenta-corriente-ficha">La ficha del cliente</a>
+  <a class="side-sub" href="#clientes-cuenta-corriente-listado-ctacte">Listado de cuentas corrientes</a>
+  <a class="side-sub" href="#clientes-cuenta-corriente-detalle-ctacte">Ver una cuenta: saldo, límite y movimientos</a>
+  <a class="side-sub" href="#clientes-cuenta-corriente-cobro">Registrar un cobro</a>
+  <a class="side-sub" href="#clientes-cuenta-corriente-flujo">Diagrama: ciclo de la cuenta corriente</a>
+  <a class="side-sub" href="#clientes-cuenta-corriente-faq">Dudas frecuentes</a>
+  <a class="side-mod" href="#mod-catalogo-productos">5 · Catálogo de Productos</a>
+  <a class="side-sub" href="#catalogo-productos-mapa">Cómo funciona</a>
+  <a class="side-sub" href="#catalogo-productos-listado">Listado y búsqueda</a>
+  <a class="side-sub" href="#catalogo-productos-alta">Dar de alta un producto</a>
+  <a class="side-sub" href="#catalogo-productos-prereq">Categoría, marca y unidad</a>
+  <a class="side-sub" href="#catalogo-productos-ficha">La ficha del producto</a>
+  <a class="side-sub" href="#catalogo-productos-presentaciones">Vender en más de una presentación</a>
+  <a class="side-sub" href="#catalogo-productos-precios">Precios por lista</a>
+  <a class="side-sub" href="#catalogo-productos-etiquetas">Imprimir etiquetas</a>
+  <a class="side-sub" href="#catalogo-productos-ubicaciones">Ubicaciones</a>
+  <a class="side-sub" href="#catalogo-productos-sinonimos">Sinónimos de búsqueda</a>
+  <a class="side-sub" href="#catalogo-productos-importar">Importar datos en masa</a>
+  <a class="side-sub" href="#catalogo-productos-flujo">Diagrama: de la ficha a la venta</a>
+  <a class="side-sub" href="#catalogo-productos-faq">Dudas frecuentes</a>
+  <a class="side-mod" href="#mod-stock">6 · Stock</a>
+  <a class="side-sub" href="#stock-mapa">Cómo funciona (todo cambio es un movimiento)</a>
+  <a class="side-sub" href="#stock-vista">Vista general de Stock</a>
+  <a class="side-sub" href="#stock-entrada">Entrada de stock</a>
+  <a class="side-sub" href="#stock-ajuste">Ajuste (conteo físico)</a>
+  <a class="side-sub" href="#stock-merma">Merma / rotura</a>
+  <a class="side-sub" href="#stock-kardex">Kardex — historial completo</a>
+  <a class="side-sub" href="#stock-cpp">Costo promedio ponderado</a>
+  <a class="side-sub" href="#stock-flujo">Diagrama: tipos y motivos de movimiento</a>
+  <a class="side-sub" href="#stock-faq">Dudas frecuentes</a>
+  <a class="side-mod" href="#mod-abastecimiento">7 · Abastecimiento</a>
+  <a class="side-sub" href="#abastecimiento-mapa">Cómo funciona</a>
+  <a class="side-sub" href="#abastecimiento-proveedores">Proveedores</a>
+  <a class="side-sub" href="#abastecimiento-preferido">El proveedor "preferido"</a>
+  <a class="side-sub" href="#abastecimiento-nueva-oc">Crear una orden de compra</a>
+  <a class="side-sub" href="#abastecimiento-emitir">Emitir la OC</a>
+  <a class="side-sub" href="#abastecimiento-recibir">Recibir mercadería</a>
+  <a class="side-sub" href="#abastecimiento-sugerida">OC Sugerida — reposición automática</a>
+  <a class="side-sub" href="#abastecimiento-flujo">Diagrama: ciclo de vida de una OC</a>
+  <a class="side-sub" href="#abastecimiento-faq">Dudas frecuentes</a>
+  <a class="side-mod" href="#mod-precios-costos">8 · Precios / Costos</a>
+  <a class="side-sub" href="#precios-costos-mapa">Cómo funciona (de dónde sale un precio)</a>
+  <a class="side-sub" href="#precios-costos-costos">Importar costos</a>
+  <a class="side-sub" href="#precios-costos-catalogo">Importar Catálogo del Proveedor</a>
+  <a class="side-sub" href="#precios-costos-revision">Revisión de Costos y Catálogo</a>
+  <a class="side-sub" href="#precios-costos-listas">Listas de precios (proceso completo)</a>
+  <a class="side-sub" href="#precios-costos-nota">Nota: "publiqué un lote y el precio no cambió"</a>
+  <a class="side-sub" href="#precios-costos-faq">Dudas frecuentes</a>
+  <a class="side-mod" href="#mod-reportes-dashboard">9 · Reportes y Dashboard</a>
+  <a class="side-sub" href="#reportes-dashboard-mapa">Cómo funciona</a>
+  <a class="side-sub" href="#reportes-dashboard-periodo">El selector de período</a>
+  <a class="side-sub" href="#reportes-dashboard-resumen">Resumen</a>
+  <a class="side-sub" href="#reportes-dashboard-ventas">Ventas</a>
+  <a class="side-sub" href="#reportes-dashboard-productos">Productos</a>
+  <a class="side-sub" href="#reportes-dashboard-caja">Caja</a>
+  <a class="side-sub" href="#reportes-dashboard-clientes">Clientes</a>
+  <a class="side-sub" href="#reportes-dashboard-proveedores">Proveedores</a>
+  <a class="side-sub" href="#reportes-dashboard-reporte">Reporte de Ventas (detalle exportable)</a>
+  <a class="side-sub" href="#reportes-dashboard-faq">Dudas frecuentes</a>
+  <a class="side-mod" href="#mod-agenda">10 · Agenda</a>
+  <a class="side-sub" href="#agenda-mapa">Cómo funciona</a>
+  <a class="side-sub" href="#agenda-eventos">Eventos — las tres zonas</a>
+  <a class="side-sub" href="#agenda-crear-evento">Crear un evento manual</a>
+  <a class="side-sub" href="#agenda-acciones">Completar, posponer y descartar</a>
+  <a class="side-sub" href="#agenda-rutinas">Rutinas — generadores recurrentes</a>
+  <a class="side-sub" href="#agenda-crear-rutina">Crear una rutina</a>
+  <a class="side-sub" href="#agenda-avisos">Avisos — la bandeja de notificaciones</a>
+  <a class="side-sub" href="#agenda-faq">Dudas frecuentes</a>
+  <a class="side-mod" href="#mod-configuracion-sistema">11 · Configuración / Sistema</a>
+  <a class="side-sub" href="#configuracion-sistema-mapa">Cómo funciona</a>
+  <a class="side-sub" href="#configuracion-sistema-mi-cuenta">Mi cuenta</a>
+  <a class="side-sub" href="#configuracion-sistema-usuarios">Usuarios</a>
+  <a class="side-sub" href="#configuracion-sistema-backup">Backups</a>
+  <a class="side-sub" href="#configuracion-sistema-restore">Restaurar desde un backup</a>
+  <a class="side-sub" href="#configuracion-sistema-smtp">Email / SMTP</a>
+  <a class="side-sub" href="#configuracion-sistema-demo">Datos demo</a>
+  <a class="side-sub" href="#configuracion-sistema-faq">Dudas frecuentes</a>
+  <div class="foot"><a href="index.html">← Índice de guías</a></div>
+</nav>
+<main>
+<div class="wrap">
+<header class="hero" id="top">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Manual de Usuario Completo</h1>
+  <p>Las 11 guías del sistema en un solo documento — pensado para imprimir o buscar con Ctrl+F. Para navegar módulo por módulo con vista de tarjetas, usá el <a href="index.html">índice</a>.</p>
+</header>
+
+<section id="mod-pos" class="mod-section">
+
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Punto de Venta (<b>POS</b>) — Guía paso a paso</h1>
+  <p>Cómo armar una venta, cobrarla con uno o varios medios de pago, dejarla en espera para más tarde, y qué hacer si te equivocás — con diagramas de flujo y capturas reales de la pantalla.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="pos-mapa">0 · Cómo funciona (las 3 zonas)</h2>
+<p class="lead">La pantalla de venta tiene <b>tres zonas</b>: búsqueda/carga de productos arriba, el detalle de la venta en curso en el medio, y los totales y acciones abajo. <b>Nada se guarda hasta que confirmás la venta</b> en el modal final — podés armar y deshacer sin miedo.</p>
+
+<div class="shot">
+  <img src="assets/pos-overview.png" alt="Pantalla completa del POS con una venta en curso" loading="lazy">
+  <figcaption>La app completa: sidebar de navegación a la izquierda, POS con una venta armada a la derecha.</figcaption>
+</div>
+
+<div class="shot">
+  <img src="assets/pos-tres-zonas.png" alt="Las tres zonas del POS: búsqueda, detalle de la venta y totales" loading="lazy">
+  <figcaption>Solo el contenido del POS. De arriba a abajo: buscador + cliente + medio de pago rápido → líneas de la venta → totales y acciones.</figcaption>
+</div>
+
+<!-- ============ 1. BUSCAR ============ -->
+<h2 id="pos-buscar">1 · Buscar y agregar productos</h2>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body">
+      <h4>Escaneá o escribí</h4>
+      <p>Con el lector QR/EAN escaneá el producto, o escribí su nombre o SKU en el buscador (<code>Escanear QR / EAN o buscar por nombre...</code>).</p>
+    </div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body">
+      <h4>Elegí el resultado</h4>
+      <p>Aparece un desplegable con las coincidencias. Al hacer clic en una, se agrega como línea nueva con cantidad 1.</p>
+    </div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body">
+      <h4>Repetí para cada ítem</h4>
+      <p>Si volvés a buscar el mismo producto, se suma a la línea existente en vez de duplicarla.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 2. CANTIDADES ============ -->
+<h2 id="pos-cantidades">2 · Cantidades, unidades y descuentos de línea</h2>
+<table>
+  <tr><th>Campo</th><th>Qué hace</th></tr>
+  <tr><td><b>Cant.</b></td><td>Cantidad de la línea. Los botones <code>−</code> / <code>+</code> suman o restan de a uno; si el producto <b>permite fracción</b>, también podés escribir un decimal (ej. 2,5).</td></tr>
+  <tr><td><b>Selector de unidad</b></td><td>Si el producto tiene más de una <b>presentación</b> cargada (ej. metro y rollo), un desplegable debajo del nombre te deja elegir con cuál vender esa línea. El precio y el descuento de stock se recalculan solos según la presentación elegida.</td></tr>
+  <tr><td><b>Desc. %</b></td><td>Descuento manual sobre esa línea puntual, en porcentaje.</td></tr>
+  <tr><td><b>×</b></td><td>Saca la línea completa de la venta.</td></tr>
+</table>
+
+<!-- ============ 3. DESC GLOBAL ============ -->
+<h2 id="pos-global">3 · Descuento global</h2>
+<p>El campo <code>Desc. global %</code>, abajo a la izquierda, aplica un descuento adicional sobre el <b>total</b> de la venta — se suma al de cada línea, no lo reemplaza.</p>
+
+<!-- ============ 4. CONFIRMAR ============ -->
+<h2 id="pos-confirmar">4 · Confirmar la venta y elegir medio de pago</h2>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Presioná <b>Confirmar</b></h4><p>Se abre el modal <b>Confirmar venta</b> con el total de productos.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Elegí el medio de pago</h4><p>Desplegable con: <b>Efectivo</b>, <b>Tarjeta</b>, <b>Transferencia</b>, <b>Cuenta corriente</b> y <b>Cheque</b>.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Cargá el monto y confirmá</h4><p>Ingresá cuánto cubre ese medio y presioná <b>Confirmar</b>. Recién ahí la venta queda registrada y se descuenta el stock.</p></div>
+  </div>
+</div>
+
+<div class="shot small">
+  <img src="assets/pos-modal-confirmar.png" alt="Modal Confirmar venta con un solo medio de pago" loading="lazy">
+  <figcaption>Modal “Confirmar venta” — un solo medio de pago (Efectivo).</figcaption>
+</div>
+
+<div class="callout warn">
+  <h3>⚠️ Se necesita la caja abierta</h3>
+  <p>Si no hay una caja abierta para tu turno, el sistema no deja confirmar la venta. Abrí la caja primero desde <code>Caja</code>.</p>
+</div>
+
+<div class="callout info">
+  <h3>Cliente “Consumidor Final” por defecto</h3>
+  <p>Toda venta arranca con el cliente <b>Consumidor Final</b>. Si necesitás asociarla a un cliente puntual (por ejemplo para cobrar en cuenta corriente), usá el botón <b>Cambiar</b> junto al nombre del cliente, antes de confirmar.</p>
+</div>
+
+<!-- ============ 5. MIXTO ============ -->
+<h2 id="pos-mixto">5 · Pagos combinados (mixtos)</h2>
+<p>Podés cobrar una misma venta con <b>varios medios de pago</b> — por ejemplo, una parte en efectivo y otra con tarjeta.</p>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Agregá una línea por cada medio</h4><p>En el modal, usá <b>+ Agregar medio de pago</b> tantas veces como medios necesites.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Cargá el monto de cada una</h4><p>La suma de todas las líneas tiene que cubrir el total de la venta.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Recargo de tarjeta (opcional)</h4><p>Si el medio es <b>Tarjeta</b>, aparece un campo extra de <b>% de recargo</b>. El sistema muestra cuánto es ese recargo en pesos al costado de la línea.</p></div>
+  </div>
+</div>
+
+<div class="shot small">
+  <img src="assets/pos-pago-mixto.png" alt="Modal Confirmar venta con pago mixto: efectivo + tarjeta con recargo" loading="lazy">
+  <figcaption>Ejemplo real: $2.000 en efectivo + $2.659 con tarjeta al 5% de recargo (+$132,95).</figcaption>
+</div>
+
+<div class="callout danger">
+  <h3>⛔ El recargo NO se suma al total de la venta</h3>
+  <p>Es <b>informativo</b>: te dice cuánto cobrarle de más al cliente por pagar con esa tarjeta, pero <b>el total registrado de la venta no cambia</b> por el recargo. Es una decisión de diseño del sistema, no un error.</p>
+</div>
+
+<!-- ============ 6. VUELTO ============ -->
+<h2 id="pos-vuelto">6 · Vuelto y redondeo</h2>
+<p>El <b>total de la venta</b> se redondea siempre al <b>peso entero más cercano</b> (la diferencia queda registrada como ajuste de redondeo; las líneas conservan sus centavos exactos). Por eso vas a ver un renglón <code>Redondeo: ±$0,XX</code> junto al total.</p>
+<p>Si pagás una parte con <b>efectivo</b> y el monto ingresado supera lo que falta cubrir, el sistema calcula el <b>vuelto</b> automáticamente (también redondeado al peso).</p>
+
+<!-- ============ 7. ESPERA ============ -->
+<h2 id="pos-espera">7 · Ventas en espera</h2>
+<p>Si un cliente deja la compra para más tarde:</p>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Presioná <b>Espera</b></h4><p>Con la venta armada, podés ponerle un <b>alias</b> opcional (ej. nombre del cliente o número de mesa) para reconocerla después.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Queda guardada, sin tocar nada</h4><p>No afecta el stock ni la caja hasta que se confirme de verdad.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Retomala o descartala</h4><p>Abrí el panel con el botón <b>Ventas en espera</b> (muestra un contador). Ahí podés <b>Retomar</b> (vuelve al carrito para seguir o confirmar) o <b>Descartar</b> (se pierde, no registra nada).</p></div>
+  </div>
+</div>
+
+<div class="shot small">
+  <img src="assets/pos-ventas-espera.png" alt="Panel de ventas en espera con una venta marcada como Vencida" loading="lazy">
+  <figcaption>Panel “Ventas en espera”. La etiqueta <b>Vencida</b> es solo un aviso — la venta se puede retomar igual.</figcaption>
+</div>
+
+<div class="callout info">
+  <h3>¿Qué significa “Vencida”?</h3>
+  <p>Pasadas <b>24 horas</b> sin retomarla (valor configurable por parámetro del sistema), la venta en espera se marca como <b>Vencida</b>. Es solo una alerta visual para que el equipo la revise — <b>no se borra ni se cancela sola</b>, sigue disponible para retomar o descartar.</p>
+</div>
+
+<!-- ============ 8. CANCELAR ============ -->
+<h2 id="pos-cancelar">8 · Cancelar una venta en curso</h2>
+<p>Si te equivocaste armando la venta y querés empezar de nuevo (distinto de “Espera”, que la guarda):</p>
+<div class="shot small">
+  <img src="assets/pos-cancelar.png" alt="Confirmación al cancelar la venta en curso" loading="lazy">
+  <figcaption>Confirmación al presionar “Cancelar”. Vacía el carrito por completo y no registra nada.</figcaption>
+</div>
+
+<!-- ============ 9. FLUJO ============ -->
+<h2 id="pos-flujo">9 · Diagrama: flujo completo de una venta</h2>
+<figure class="fig">
+  <figcaption>Diagrama 1 · De buscar el producto a que se descuente el stock</figcaption>
+  <svg viewBox="0 0 960 260" role="img" aria-label="Flujo completo de una venta en el POS">
+    <defs><marker id="pos-ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+
+    <rect class="n-box" x="10" y="90" width="150" height="60" rx="10"/>
+    <text class="t" x="85" y="115" text-anchor="middle">Buscar / escanear</text>
+    <text class="t-sm" x="85" y="133" text-anchor="middle">y agregar producto</text>
+    <path class="edge" marker-end="url(#pos-ah)" d="M160,120 L196,120"/>
+
+    <rect class="n-box" x="198" y="90" width="150" height="60" rx="10"/>
+    <text class="t" x="273" y="115" text-anchor="middle">Repetir por</text>
+    <text class="t-sm" x="273" y="133" text-anchor="middle">cada ítem</text>
+    <path class="edge" marker-end="url(#pos-ah)" d="M348,120 L384,120"/>
+
+    <!-- decision -->
+    <polygon class="n-accent" points="460,60 590,120 460,180 330,120"/>
+    <text class="t" x="460" y="116" text-anchor="middle">¿Confirmar</text>
+    <text class="t" x="460" y="132" text-anchor="middle">ahora?</text>
+
+    <!-- yes path -->
+    <path class="edge" marker-end="url(#pos-ah)" d="M590,120 L640,120"/>
+    <text class="edge-lbl" x="612" y="112" text-anchor="middle">sí</text>
+    <rect class="n-accent" x="642" y="90" width="150" height="60" rx="10"/>
+    <text class="t" x="717" y="115" text-anchor="middle">Confirmar</text>
+    <text class="t-sm" x="717" y="133" text-anchor="middle">elegir medio(s) de pago</text>
+    <path class="edge" marker-end="url(#pos-ah)" d="M792,120 L828,120"/>
+
+    <rect class="n-ok" x="830" y="90" width="120" height="60" rx="10"/>
+    <text class="t" x="890" y="112" text-anchor="middle">Stock</text>
+    <text class="t" x="890" y="128" text-anchor="middle">descontado</text>
+    <text class="t-sm" x="890" y="143" text-anchor="middle">venta en caja</text>
+
+    <!-- no path -->
+    <path class="edge" marker-end="url(#pos-ah)" d="M460,180 L460,215"/>
+    <text class="edge-lbl" x="480" y="200" text-anchor="middle">no, más tarde</text>
+    <rect class="n-warn" x="330" y="217" width="260" height="40" rx="9"/>
+    <text class="t-sm" x="460" y="241" text-anchor="middle"><tspan class="t">Espera</tspan> → guarda el carrito, sin tocar stock ni caja</text>
+
+    <path class="edge" marker-end="url(#pos-ah)" d="M330,237 L200,237 L200,150"/>
+    <text class="edge-lbl" x="230" y="230" text-anchor="middle">Retomar</text>
+  </svg>
+</figure>
+
+<figure class="fig">
+  <figcaption>Diagrama 2 · Ciclo de vida de una venta en espera</figcaption>
+  <svg viewBox="0 0 1020 170" role="img" aria-label="Ciclo de vida de una venta en espera">
+    <defs><marker id="pos-ah2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+    <rect class="n-box" x="10" y="55" width="170" height="56" rx="10"/>
+    <text class="t" x="95" y="80" text-anchor="middle">En espera</text>
+    <text class="t-sm" x="95" y="97" text-anchor="middle">alias opcional</text>
+    <path class="edge" marker-end="url(#pos-ah2)" d="M180,83 L216,83"/>
+
+    <rect class="n-warn" x="218" y="55" width="180" height="56" rx="10"/>
+    <text class="t" x="308" y="80" text-anchor="middle">+ 24 horas</text>
+    <text class="t-sm" x="308" y="97" text-anchor="middle">se marca “Vencida” (aviso visual)</text>
+    <path class="edge" marker-end="url(#pos-ah2)" d="M398,83 L434,83"/>
+
+    <rect class="n-box" x="436" y="55" width="170" height="56" rx="10"/>
+    <text class="t" x="521" y="80" text-anchor="middle">Sigue disponible</text>
+    <text class="t-sm" x="521" y="97" text-anchor="middle">no se borra sola</text>
+    <path class="edge" marker-end="url(#pos-ah2)" d="M606,83 L642,83"/>
+
+    <polygon class="n-accent" points="720,40 830,83 720,126 610,83" transform="translate(0,0)"/>
+    <text class="t" x="720" y="79" text-anchor="middle">Retomar o</text>
+    <text class="t" x="720" y="94" text-anchor="middle">descartar</text>
+
+    <path class="edge" marker-end="url(#pos-ah2)" d="M830,74 L850,42"/>
+    <text class="edge-lbl" x="840" y="60" text-anchor="middle">retomar</text>
+    <rect class="n-ok" x="850" y="8" width="150" height="34" rx="8"/>
+    <text class="t-sm" x="925" y="29" text-anchor="middle"><tspan class="t">Vuelve al POS</tspan></text>
+
+    <path class="edge" marker-end="url(#pos-ah2)" d="M830,92 L850,128"/>
+    <text class="edge-lbl" x="840" y="110" text-anchor="middle">descartar</text>
+    <rect class="n-err" x="850" y="128" width="150" height="34" rx="8"/>
+    <text class="t-sm" x="925" y="149" text-anchor="middle"><tspan class="t">Se pierde</tspan> (nada registrado)</text>
+  </svg>
+</figure>
+
+<!-- ============ FAQ ============ -->
+<h2 id="pos-faq">10 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿El recargo de tarjeta se suma al total de la venta?</summary>
+  <div class="ans">No. Es un dato informativo para saber cuánto cobrarle de más al cliente por ese medio; <b>el total registrado de la venta no cambia</b>. Ver <a href="#pos-mixto">Pagos combinados</a>.</div>
+</details>
+
+<details>
+  <summary>Una venta en espera quedó marcada “Vencida”. ¿Se cancela sola?</summary>
+  <div class="ans">No. Sigue disponible en el listado tal cual — “Vencida” es solo un aviso de que pasaron más de 24 horas sin retomarla. La podés <b>Retomar</b> o <b>Descartar</b> igual que cualquier otra.</div>
+</details>
+
+<details>
+  <summary>¿Puedo vender un producto sin stock disponible?</summary>
+  <div class="ans">No, es una regla del sistema sin excepción. Si el producto no tiene stock suficiente, no se puede completar la venta con esa cantidad.</div>
+</details>
+
+<details>
+  <summary>Cancelé una venta en curso por error. ¿Se guardó algo?</summary>
+  <div class="ans">No. <b>Cancelar</b> vacía el carrito completo — líneas, cliente y descuentos — sin registrar nada. Es distinto de <b>Espera</b>, que sí guarda el carrito para retomarlo después.</div>
+</details>
+
+<details>
+  <summary>¿Necesito la caja abierta para vender?</summary>
+  <div class="ans">Sí. Si no hay una caja abierta, el sistema no permite confirmar la venta. Abrila primero desde la pantalla <b>Caja</b>.</div>
+</details>
+
+<details>
+  <summary>¿Puedo cambiar el cliente durante la venta?</summary>
+  <div class="ans">Sí, con el botón <b>Cambiar</b> junto a “Consumidor Final”, antes de confirmar. Es necesario, por ejemplo, para cobrar en <b>cuenta corriente</b> — ese medio de pago requiere un cliente real con cuenta habilitada, no “Consumidor Final”.</div>
+</details>
+
+<details>
+  <summary>¿Por qué el total termina en $0 o $50 y no coincide con la suma de las líneas?</summary>
+  <div class="ans">Porque el total se redondea al peso entero más cercano (ver <a href="#pos-vuelto">Vuelto y redondeo</a>). La diferencia entre el total exacto y el redondeado queda guardada como ajuste; las líneas individuales conservan sus centavos reales.</div>
+</details>
+
+<details>
+  <summary>¿El producto se puede vender por metro y también por rollo (o caja, etc.)?</summary>
+  <div class="ans">Sí, si tiene más de una <b>presentación</b> cargada en su ficha. En la línea de la venta aparece un selector de unidad para elegir con cuál vender ese ítem puntual.</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Punto de Venta (POS)
+</footer>
+</div>
+
+</section>
+
+<section id="mod-caja" class="mod-section">
+
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Caja — Guía paso a paso</h1>
+  <p>Cómo abrir el turno, registrar ingresos y egresos que no son ventas, y cerrar la caja con el arqueo — incluida la autorización del Supervisor cuando la diferencia es grande.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="caja-mapa">0 · Cómo funciona (un turno = una caja)</h2>
+<p class="lead">Cada vez que alguien empieza a trabajar, <b>abre una caja</b> con un fondo inicial en efectivo. Desde ese momento, todas las ventas del POS y los movimientos manuales (retiros, gastos, aportes) quedan asociados a esa caja, hasta que se <b>cierra</b> con un arqueo. <b>No se puede vender sin una caja abierta.</b></p>
+
+<div class="shot">
+  <img src="assets/caja-apertura.png" alt="Pantalla de Caja con un turno abierto" loading="lazy">
+  <figcaption>Caja abierta: fondo de apertura, duración del turno, y el resumen en vivo de ventas, ingresos y egresos.</figcaption>
+</div>
+
+<!-- ============ 1. ABRIR ============ -->
+<h2 id="caja-abrir">1 · Abrir la caja</h2>
+<p>Si no hay una caja abierta para tu sesión, el sistema te pide abrirla antes de dejarte hacer cualquier otra cosa en el POS.</p>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Cargá el <b>monto inicial</b></h4><p>El efectivo con el que arrancás el turno (obligatorio, tiene que ser mayor a $0).</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Observaciones (opcional)</h4><p>Cualquier nota que quieras dejar sobre el inicio del turno.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Presioná <b>Abrir caja</b></h4><p>Desde ahí el sistema empieza a contar la duración del turno y a acumular ventas y movimientos.</p></div>
+  </div>
+</div>
+<p class="muted">Cada usuario abre su propia caja para su turno; un Supervisor puede cerrar la de cualquiera, un Operador solo la suya (ver <a href="#caja-diferencia">autorización</a>).</p>
+
+<!-- ============ 2. DURANTE ============ -->
+<h2 id="caja-durante">2 · Durante el turno</h2>
+<p>Mientras la caja está abierta, la pantalla <b>Caja</b> muestra en vivo: total de ventas, ventas anuladas, total de ingresos, total de egresos, y el detalle de cada venta del turno. Las ventas se registran automáticamente ahí a medida que se confirman en el <a href="#mod-pos">POS</a> — no hace falta hacer nada manual por cada venta.</p>
+
+<!-- ============ 3. MOVIMIENTO ============ -->
+<h2 id="caja-movimiento">3 · Registrar un movimiento</h2>
+<p>Para todo lo que <b>no es una venta</b> pero mueve el efectivo de la caja: un retiro, un gasto del local, o un aporte extra.</p>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Presioná <b>+ Movimiento</b></h4></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Elegí <b>Tipo</b> y <b>Motivo</b></h4>
+      <p><b>Tipo:</b> Ingreso o Egreso. <b>Motivo:</b> Retiro, Gasto o Aporte.</p>
+    </div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Cargá el monto, la forma de pago y confirmá</h4><p>Forma de pago: Efectivo, Transferencia o Tarjeta. Las observaciones son opcionales.</p></div>
+  </div>
+</div>
+
+<div class="shot small">
+  <img src="assets/caja-movimiento.png" alt="Modal Nuevo movimiento" loading="lazy">
+  <figcaption>Modal “Nuevo movimiento”.</figcaption>
+</div>
+
+<div class="callout info">
+  <h3>¿Por qué solo Retiro, Gasto y Aporte?</h3>
+  <p>Son los únicos motivos que carga una persona a mano. Los demás motivos que vas a ver en el historial de movimientos (<code>venta</code>, <code>cobro_cta_cte</code>, <code>pago_proveedor</code>) los genera el sistema solo, desde el POS, el cobro de cuenta corriente o el pago a un proveedor — no hace falta (ni se puede) cargarlos manualmente acá.</p>
+</div>
+
+<!-- ============ 4. CERRAR ============ -->
+<h2 id="caja-cerrar">4 · Cerrar caja y hacer el arqueo</h2>
+<p>El <b>arqueo</b> compara el efectivo que el sistema espera encontrar contra el efectivo que contás a mano.</p>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Presioná <b>Cerrar caja</b></h4><p>Ves el resumen de ventas del turno y el desglose por medio de pago.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Contá el efectivo real</h4><p>Cargalo en <b>Efectivo declarado</b>. El <b>arqueo cuenta solo el efectivo</b> — tarjeta, transferencia y demás ya quedaron registrados en su medio, sin necesidad de contarlos a mano.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Revisá la diferencia y confirmá</h4><p>El sistema calcula el <b>Sobrante</b> o <b>Faltante</b> contra el efectivo esperado. Agregá observaciones si hace falta y confirmá el cierre.</p></div>
+  </div>
+</div>
+
+<div class="shot">
+  <img src="assets/caja-cierre-arqueo.png" alt="Pantalla de cierre de caja con el arqueo exacto" loading="lazy">
+  <figcaption>Cierre de caja — arqueo exacto (efectivo declarado = efectivo esperado).</figcaption>
+</div>
+
+<!-- ============ 5. DIFERENCIA ============ -->
+<h2 id="caja-diferencia">5 · Diferencias y autorización del Supervisor</h2>
+<p>Si lo que declarás se aleja mucho de lo esperado (por encima de un <b>umbral configurable</b> del sistema), cerrar la caja deja de ser algo que un Operador pueda hacer solo.</p>
+
+<div class="shot">
+  <img src="assets/caja-diferencia.png" alt="Cierre de caja con una diferencia grande y aviso de autorización requerida" loading="lazy">
+  <figcaption>Diferencia grande ($115.930 de sobrante): aparece el aviso <b>“La diferencia supera el umbral. Se requiere autorización del Supervisor”</b>.</figcaption>
+</div>
+
+<div class="shot small">
+  <img src="assets/caja-autorizacion.png" alt="Modal de autorización del Supervisor" loading="lazy">
+  <figcaption>Al confirmar con la diferencia por encima del umbral, se pide usuario y contraseña de un Supervisor.</figcaption>
+</div>
+
+<div class="callout warn">
+  <h3>⚠️ Sin autorización, no se cierra</h3>
+  <p>Un Operador puede contar y declarar el efectivo, pero si la diferencia supera el umbral, necesita que un <b>Supervisor</b> escriba su usuario y contraseña en ese momento para que el cierre se registre. Queda guardado quién autorizó.</p>
+</div>
+
+<!-- ============ 6. FLUJO ============ -->
+<h2 id="caja-flujo">6 · Diagrama: ciclo de vida de un turno de caja</h2>
+<figure class="fig">
+  <figcaption>Diagrama · De abrir la caja a cerrarla con el arqueo</figcaption>
+  <svg viewBox="0 0 1080 260" role="img" aria-label="Ciclo de vida de un turno de caja">
+    <defs><marker id="caja-ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+
+    <rect class="n-box" x="10" y="90" width="160" height="60" rx="10"/>
+    <text class="t" x="90" y="115" text-anchor="middle">Abrir caja</text>
+    <text class="t-sm" x="90" y="133" text-anchor="middle">fondo inicial</text>
+    <path class="edge" marker-end="url(#caja-ah)" d="M170,120 L206,120"/>
+
+    <rect class="n-ok" x="208" y="90" width="200" height="60" rx="10"/>
+    <text class="t" x="308" y="115" text-anchor="middle">Turno abierto</text>
+    <text class="t-sm" x="308" y="133" text-anchor="middle">ventas del POS + movimientos</text>
+    <path class="edge" marker-end="url(#caja-ah)" d="M408,120 L444,120"/>
+
+    <rect class="n-box" x="446" y="90" width="160" height="60" rx="10"/>
+    <text class="t" x="526" y="115" text-anchor="middle">Cerrar caja</text>
+    <text class="t-sm" x="526" y="133" text-anchor="middle">contar efectivo</text>
+    <path class="edge" marker-end="url(#caja-ah)" d="M606,120 L642,120"/>
+
+    <polygon class="n-accent" points="720,60 850,120 720,180 590,120"/>
+    <text class="t" x="720" y="116" text-anchor="middle">¿Diferencia</text>
+    <text class="t" x="720" y="132" text-anchor="middle">&gt; umbral?</text>
+
+    <path class="edge" marker-end="url(#caja-ah)" d="M850,120 L900,120"/>
+    <text class="edge-lbl" x="875" y="112" text-anchor="middle">no</text>
+
+    <rect class="n-ok" x="900" y="90" width="150" height="60" rx="10"/>
+    <text class="t" x="975" y="115" text-anchor="middle">Caja cerrada</text>
+    <text class="t-sm" x="975" y="133" text-anchor="middle">turno finalizado</text>
+
+    <path class="edge" marker-end="url(#caja-ah)" d="M720,180 L720,215"/>
+    <text class="edge-lbl" x="760" y="200" text-anchor="middle">sí</text>
+    <rect class="n-warn" x="580" y="217" width="280" height="40" rx="9"/>
+    <text class="t-sm" x="720" y="241" text-anchor="middle"><tspan class="t">Autorización del Supervisor</tspan> → recién ahí cierra</text>
+  </svg>
+</figure>
+
+<!-- ============ FAQ ============ -->
+<h2 id="caja-faq">7 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Puedo vender si no abrí la caja?</summary>
+  <div class="ans">No. El sistema no permite confirmar una venta sin una caja abierta para tu turno. Ver <a href="#pos-confirmar">Confirmar venta y medio de pago</a> en la guía de POS.</div>
+</details>
+
+<details>
+  <summary>¿El arqueo cuenta las ventas con tarjeta o transferencia?</summary>
+  <div class="ans">No, el arqueo compara solo el <b>efectivo</b>. Las ventas con otros medios ya quedaron registradas por ese medio y se ven en el desglose, pero no forman parte del conteo físico de billetes.</div>
+</details>
+
+<details>
+  <summary>¿Qué pasa si la diferencia es chica?</summary>
+  <div class="ans">Si está por debajo del umbral configurado, el cierre se confirma directo, sin pedir autorización de nadie.</div>
+</details>
+
+<details>
+  <summary>¿Puedo cargar un movimiento con motivo “venta”?</summary>
+  <div class="ans">No. El modal “Nuevo movimiento” solo ofrece <b>Retiro</b>, <b>Gasto</b> y <b>Aporte</b> — los que carga una persona a mano. Los movimientos por venta, cobro de cuenta corriente o pago a proveedor los genera el sistema automáticamente desde esas pantallas.</div>
+</details>
+
+<details>
+  <summary>Un Operador, ¿puede cerrar la caja de otro empleado?</summary>
+  <div class="ans">Un Operador cierra su propia caja. Un Supervisor puede cerrar la caja de cualquiera.</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Caja
+</footer>
+</div>
+
+</section>
+
+<section id="mod-presupuestos-remitos" class="mod-section">
+
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Presupuestos y Remitos — Guía paso a paso</h1>
+  <p>Cómo cotizarle a un cliente sin comprometer stock, convertir ese presupuesto en una venta real, y generar el comprobante de entrega cuando la mercadería sale del local — con diagramas y capturas reales.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="presupuestos-remitos-mapa">0 · Cómo funciona</h2>
+<table>
+  <tr><th></th><th>Presupuesto</th><th>Remito</th></tr>
+  <tr><td><b>Qué es</b></td><td>Una cotización para un cliente</td><td>Comprobante de que se entregó mercadería</td></tr>
+  <tr><td><b>Nace de</b></td><td>Cero — se arma como una mini-venta</td><td>Una venta <b>ya confirmada</b></td></tr>
+  <tr><td><b>¿Compromete stock?</b></td><td>No</td><td>No — solo documenta la entrega</td></tr>
+  <tr><td><b>¿Tiene valor fiscal?</b></td><td>No</td><td>No</td></tr>
+  <tr><td><b>Termina en</b></td><td>Se convierte en una venta real (o vence)</td><td>Queda conformado cuando el cliente lo recibe</td></tr>
+</table>
+<p class="lead">Un presupuesto <b>no reserva nada</b>: podés cotizar tranquilo aunque el stock cambie después. Un remito, en cambio, parte siempre de una <b>venta ya confirmada</b> — es la forma de dejar constancia de qué se entregó, cuándo, y quién lo recibió, sin volver a tocar precios ni stock.</p>
+
+<!-- ============ 1. CREAR PRESU ============ -->
+<h2 id="presupuestos-remitos-crear-presu">1 · Crear un presupuesto</h2>
+<p>Desde <code>Presupuestos → + Nuevo presupuesto</code>: es prácticamente un mini-POS sin cobro.</p>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Elegí el cliente</h4><p>Opcional — si no elegís ninguno, queda a nombre de Consumidor Final.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Buscá y agregá productos</h4><p>Cada línea admite cantidad y descuento individual; además hay un descuento global para todo el presupuesto.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Guardá como borrador</h4><p>Podés seguir editándolo — cliente, líneas, cantidades — mientras siga en borrador.</p></div>
+  </div>
+</div>
+<div class="shot">
+  <img src="assets/presu-nuevo.png" alt="Formulario de nuevo presupuesto con un cliente y una línea cargada" loading="lazy">
+  <figcaption>Nuevo presupuesto — cliente, producto y validez en días.</figcaption>
+</div>
+<div class="shot">
+  <img src="assets/presu-borrador.png" alt="Listado de presupuestos con uno en estado borrador" loading="lazy">
+  <figcaption>El presupuesto queda en <b>Borrador</b> hasta que se emite — sin número asignado todavía.</figcaption>
+</div>
+
+<!-- ============ 2. EMITIR PRESU ============ -->
+<h2 id="presupuestos-remitos-emitir-presu">2 · Emitir el presupuesto</h2>
+<div class="shot small">
+  <img src="assets/presu-emitir.png" alt="Modal para emitir un presupuesto, con validez en días" loading="lazy">
+  <figcaption>Al emitir elegís cuántos días queda vigente.</figcaption>
+</div>
+<div class="callout warn">
+  <h3>⚠️ Emitir es un punto sin retorno para los precios</h3>
+  <p>Al emitir, el sistema le <b>asigna número</b>, <b>congela el precio de cada línea</b> (aunque después cambien las listas de precio, este presupuesto conserva los valores del día que se emitió) y calcula la <b>fecha de validez</b> según los días indicados.</p>
+</div>
+<div class="shot">
+  <img src="assets/presu-emitido.png" alt="Presupuesto emitido con número asignado y fecha de validez" loading="lazy">
+  <figcaption>Ya emitido: número <code>PR-0000005</code>, válido hasta una fecha concreta, y los botones <b>Convertir</b> / <b>PDF</b> / <b>Anular</b>.</figcaption>
+</div>
+<p class="muted">Si se pasa la fecha de validez sin convertirse, el presupuesto pasa solo a estado <b>Vencido</b> — pero igual se puede convertir si el cliente vuelve y todavía sirve.</p>
+
+<!-- ============ 3. CONVERTIR ============ -->
+<h2 id="presupuestos-remitos-convertir">3 · Convertir a venta</h2>
+<p>El botón <b>Convertir</b> te lleva directo al <a href="#mod-pos">POS</a> con el carrito <b>ya cargado</b> con las líneas del presupuesto. Desde ahí es una venta común: podés seguir editando el carrito si hace falta, elegir medio de pago y confirmar.</p>
+<div class="callout info">
+  <h3>El total de la venta puede no coincidir con el cotizado</h3>
+  <p>Si al convertir se edita el carrito (se saca o se agrega algo), el total final de la venta va a diferir del presupuesto original — el sistema lo señala en el detalle del presupuesto convertido, sin ocultar la diferencia.</p>
+</div>
+
+<!-- ============ 4. GENERAR REMITO ============ -->
+<h2 id="presupuestos-remitos-generar-remito">4 · Generar un remito</h2>
+<p>Se genera siempre <b>desde una venta ya confirmada</b>. Abrí la venta (por ejemplo desde <code>Caja → Ventas del turno</code>) y usá <b>Generar remito</b>.</p>
+<div class="shot">
+  <img src="assets/remito-venta-detalle.png" alt="Detalle de una venta confirmada con el botón Generar remito" loading="lazy">
+  <figcaption>Detalle de la venta: <b>Generar remito</b> arranca el comprobante de entrega.</figcaption>
+</div>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Elegí cuánto entregar de cada línea</h4><p>El sistema te muestra lo <b>vendido</b>, lo <b>entregado</b> hasta ahora y lo <b>pendiente</b> — podés remitir menos de lo pendiente si la entrega es parcial.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Domicilio de entrega y transportista</h4><p>Ambos obligatorios. El domicilio viene precargado con el del cliente si lo tiene cargado.</p></div>
+  </div>
+</div>
+<div class="shot">
+  <img src="assets/remito-generar.png" alt="Formulario Generar remito con cantidades, domicilio y transportista" loading="lazy">
+  <figcaption>Una venta puede generar <b>varios remitos</b> a lo largo del tiempo — el sistema siempre calcula lo pendiente en base a lo ya remitido antes.</figcaption>
+</div>
+
+<!-- ============ 5. CONFORMAR ============ -->
+<h2 id="presupuestos-remitos-conformar">5 · Conformar la entrega</h2>
+<p>Cuando el cliente recibe la mercadería, se <b>conforma</b> el remito con el nombre de quien la recibió.</p>
+<div class="shot small">
+  <img src="assets/remito-conformar.png" alt="Modal para conformar un remito, con el campo Recibido por" loading="lazy">
+  <figcaption>“Recibido por” es obligatorio — el sistema no deja confirmar sin ese dato.</figcaption>
+</div>
+<div class="shot">
+  <img src="assets/remitos-listado.png" alt="Listado de remitos con distintos estados: emitido, conformado y anulado" loading="lazy">
+  <figcaption>Un remito pasa por <b>Emitido</b> → <b>Conformado</b>, o se <b>Anula</b> en el camino.</figcaption>
+</div>
+<div class="callout danger">
+  <h3>⛔ Anular un remito no toca el stock</h3>
+  <p>Anular libera las cantidades entregadas — vuelven a quedar <b>pendientes</b> para un remito futuro — pero <b>no genera ningún movimiento de stock</b>. Tiene sentido: el remito nunca movió stock al emitirse, así que anularlo tampoco tiene nada que revertir ahí.</p>
+</div>
+
+<!-- ============ 6. TRANSPORTISTAS ============ -->
+<h2 id="presupuestos-remitos-transportistas">6 · Transportistas</h2>
+<p>Catálogo simple de fleteros/transportistas, en <code>Configuración → Transportistas</code>. Solo datos de contacto — no tienen relación fiscal con la ferretería, porque no le facturan nada.</p>
+<div class="shot">
+  <img src="assets/transportistas.png" alt="Listado de transportistas" loading="lazy">
+  <figcaption>Listado de transportistas.</figcaption>
+</div>
+
+<!-- ============ 7. FLUJO ============ -->
+<h2 id="presupuestos-remitos-flujo">7 · Diagramas: ciclo de vida</h2>
+<figure class="fig">
+  <figcaption>Diagrama 1 · Presupuesto</figcaption>
+  <svg viewBox="0 0 960 140" role="img" aria-label="Ciclo de vida de un presupuesto">
+    <defs><marker id="presupuestos-remitos-ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+    <rect class="n-box" x="10" y="40" width="150" height="56" rx="10"/>
+    <text class="t" x="85" y="64" text-anchor="middle">Borrador</text>
+    <text class="t-sm" x="85" y="82" text-anchor="middle">editable</text>
+    <path class="edge" marker-end="url(#presupuestos-remitos-ah)" d="M160,68 L196,68"/>
+
+    <rect class="n-accent" x="198" y="40" width="150" height="56" rx="10"/>
+    <text class="t" x="273" y="64" text-anchor="middle">Emitido</text>
+    <text class="t-sm" x="273" y="82" text-anchor="middle">precios congelados</text>
+    <path class="edge" marker-end="url(#presupuestos-remitos-ah)" d="M348,68 L384,68"/>
+
+    <rect class="n-warn" x="386" y="40" width="150" height="56" rx="10"/>
+    <text class="t" x="461" y="64" text-anchor="middle">Vencido</text>
+    <text class="t-sm" x="461" y="82" text-anchor="middle">se puede convertir igual</text>
+
+    <path class="edge" marker-end="url(#presupuestos-remitos-ah)" d="M273,40 L273,10 L714,10 L714,38"/>
+    <path class="edge" marker-end="url(#presupuestos-remitos-ah)" d="M461,40 L461,20 L714,20 L714,38"/>
+    <rect class="n-ok" x="636" y="40" width="156" height="56" rx="10"/>
+    <text class="t" x="714" y="64" text-anchor="middle">Convertido</text>
+    <text class="t-sm" x="714" y="82" text-anchor="middle">se generó la venta</text>
+
+    <rect class="n-err" x="830" y="40" width="120" height="56" rx="10"/>
+    <text class="t" x="890" y="64" text-anchor="middle">Anulado</text>
+    <path class="edge" marker-end="url(#presupuestos-remitos-ah)" d="M85,96 C85,120 890,120 890,98"/>
+  </svg>
+</figure>
+
+<figure class="fig">
+  <figcaption>Diagrama 2 · Remito</figcaption>
+  <svg viewBox="0 0 960 140" role="img" aria-label="Ciclo de vida de un remito">
+    <defs><marker id="presupuestos-remitos-ah2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+    <rect class="n-ok" x="10" y="40" width="180" height="56" rx="10"/>
+    <text class="t" x="100" y="64" text-anchor="middle">Venta confirmada</text>
+    <text class="t-sm" x="100" y="82" text-anchor="middle">punto de partida</text>
+    <path class="edge" marker-end="url(#presupuestos-remitos-ah2)" d="M190,68 L226,68"/>
+
+    <rect class="n-accent" x="228" y="40" width="180" height="56" rx="10"/>
+    <text class="t" x="318" y="64" text-anchor="middle">Remito emitido</text>
+    <text class="t-sm" x="318" y="82" text-anchor="middle">domicilio + transportista</text>
+    <path class="edge" marker-end="url(#presupuestos-remitos-ah2)" d="M408,68 L444,68"/>
+
+    <rect class="n-ok" x="446" y="40" width="180" height="56" rx="10"/>
+    <text class="t" x="536" y="64" text-anchor="middle">Conformado</text>
+    <text class="t-sm" x="536" y="82" text-anchor="middle">recibido por…</text>
+
+    <rect class="n-err" x="700" y="40" width="150" height="56" rx="10"/>
+    <text class="t" x="775" y="64" text-anchor="middle">Anulado</text>
+    <text class="t-sm" x="775" y="82" text-anchor="middle">libera lo entregado</text>
+    <path class="edge" marker-end="url(#presupuestos-remitos-ah2)" d="M318,96 C318,120 775,120 775,98"/>
+  </svg>
+</figure>
+
+<!-- ============ FAQ ============ -->
+<h2 id="presupuestos-remitos-faq">8 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Un presupuesto reserva el stock de los productos cotizados?</summary>
+  <div class="ans">No. El presupuesto no toca stock en ningún momento — recién se descuenta cuando efectivamente se convierte en venta y esa venta se confirma.</div>
+</details>
+
+<details>
+  <summary>Cambié los precios de lista después de emitir un presupuesto. ¿Se actualiza solo?</summary>
+  <div class="ans">No, a propósito. Al emitir, cada línea congela el precio de ese momento — es lo que hace que el presupuesto sea una cotización confiable para el cliente, no un número que cambia solo.</div>
+</details>
+
+<details>
+  <summary>¿Puedo remitir menos de lo que se vendió?</summary>
+  <div class="ans">Sí. El formulario de remito siempre muestra lo <b>pendiente</b> (vendido menos lo ya remitido antes), y podés cargar cualquier cantidad hasta ese máximo — para entregas parciales en varios viajes.</div>
+</details>
+
+<details>
+  <summary>¿El remito reemplaza a la factura?</summary>
+  <div class="ans">No. El remito es un comprobante <b>interno</b>, sin valor fiscal — documenta que la mercadería salió del local y quién la recibió. No tiene relación con la facturación electrónica.</div>
+</details>
+
+<details>
+  <summary>¿Puedo generar un remito de una venta que todavía no confirmé?</summary>
+  <div class="ans">No, el remito siempre parte de una venta <b>ya confirmada</b>. Mientras la venta esté en el POS sin confirmar, no existe todavía nada de qué generar un remito.</div>
+</details>
+
+<details>
+  <summary>Anulé un remito por error. ¿Se puede deshacer?</summary>
+  <div class="ans">No hay "deshacer": lo que sí podés hacer es generar un remito nuevo — las cantidades que liberó la anulación vuelven a estar disponibles como pendientes de esa venta.</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulos Presupuestos y Remitos
+</footer>
+</div>
+
+</section>
+
+<section id="mod-clientes-cuenta-corriente" class="mod-section">
+
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Clientes y Cuenta Corriente — Guía paso a paso</h1>
+  <p>Cómo dar de alta un cliente, habilitarle cuenta corriente con límite de crédito, y registrar sus cobros — con diagrama de flujo y capturas reales.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="clientes-cuenta-corriente-mapa">0 · Cómo funciona</h2>
+<p class="lead">No todo cliente tiene cuenta corriente — es una casilla que se activa <b>por cliente</b>. Una vez habilitada, cada <b>venta a crédito</b> le suma saldo (lo que debe) automáticamente, y cada <b>cobro</b> se lo resta. El <b>límite de crédito</b> es solo una alerta visual — <code>$0</code> o vacío significa <b>sin límite</b>.</p>
+
+<!-- ============ 1. ALTA ============ -->
+<h2 id="clientes-cuenta-corriente-alta">1 · Dar de alta un cliente</h2>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Identificación</h4><p>Tipo y número de documento, <b>nombre y apellido</b> (obligatorios), nombre de fantasía opcional, condición fiscal.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Contacto y domicilio</h4><p>Ambos opcionales, salvo que quieras usarlos después para remitos.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Habilitar cuenta corriente</h4><p>Checkbox al final del formulario — sin marcarlo, el cliente no puede comprar "fiado" en el POS.</p></div>
+  </div>
+</div>
+<div class="shot">
+  <img src="assets/cliente-form.png" alt="Formulario de alta de cliente con el checkbox Habilitar cuenta corriente" loading="lazy">
+  <figcaption>El checkbox “Habilitar cuenta corriente” es lo único que distingue a un cliente que puede comprar a crédito.</figcaption>
+</div>
+<div class="shot">
+  <img src="assets/clientes-listado.png" alt="Listado de clientes con la columna Cta. Cte." loading="lazy">
+  <figcaption>La columna <b>CTA. CTE.</b> marca de un vistazo quién tiene la cuenta habilitada.</figcaption>
+</div>
+
+<!-- ============ 2. FICHA ============ -->
+<h2 id="clientes-cuenta-corriente-ficha">2 · La ficha del cliente</h2>
+<p>Si el cliente tiene cuenta corriente habilitada, su ficha muestra el resumen — saldo, límite, estado — con accesos directos para <b>cobrar</b> o ver el detalle completo.</p>
+<div class="shot">
+  <img src="assets/cliente-ficha.png" alt="Ficha de cliente con el resumen de su cuenta corriente" loading="lazy">
+  <figcaption>La ficha integra el resumen de cuenta corriente — no hace falta salir a buscarlo aparte.</figcaption>
+</div>
+
+<!-- ============ 3. LISTADO CTACTE ============ -->
+<h2 id="clientes-cuenta-corriente-listado-ctacte">3 · Listado de cuentas corrientes</h2>
+<p>Desde <code>Clientes → Cuentas corrientes</code> ves todas las cuentas de un vistazo, con el total <b>en deuda</b> y <b>a favor</b> del negocio.</p>
+<div class="shot">
+  <img src="assets/ctacte-listado.png" alt="Listado de cuentas corrientes con estados Sin límite y Excedido" loading="lazy">
+  <figcaption>Tres estados posibles en la columna Estado: <b>Sin límite</b>, dentro del límite (sin badge), y <b>Excedido</b>.</figcaption>
+</div>
+
+<!-- ============ 4. DETALLE CTACTE ============ -->
+<h2 id="clientes-cuenta-corriente-detalle-ctacte">4 · Ver una cuenta: saldo, límite y movimientos</h2>
+<p>El detalle de una cuenta muestra el saldo actual, el límite (editable ahí mismo con el lápiz), y el <b>libro de movimientos</b> completo — cada venta a crédito, cada cobro, con su saldo resultante.</p>
+<div class="shot">
+  <img src="assets/ctacte-detalle.png" alt="Detalle de una cuenta corriente con sus movimientos" loading="lazy">
+  <figcaption>Cada movimiento queda registrado con su saldo resultante — es un libro, no se edita ni se borra.</figcaption>
+</div>
+
+<!-- ============ 5. COBRO ============ -->
+<h2 id="clientes-cuenta-corriente-cobro">5 · Registrar un cobro</h2>
+<div class="shot small">
+  <img src="assets/ctacte-cobro.png" alt="Modal Registrar cobro con monto y forma de pago" loading="lazy">
+  <figcaption>Registrar cobro — monto, forma de pago (Efectivo o Transferencia) y observaciones opcionales.</figcaption>
+</div>
+<div class="callout warn">
+  <h3>⚠️ Cobrar en efectivo necesita caja abierta</h3>
+  <p>Si elegís <b>Efectivo</b>, el cobro pasa a formar parte de la caja del turno (movimiento de tipo <i>cobro cuenta corriente</i>) — así que hace falta tener una <a href="#mod-caja">caja abierta</a> para registrarlo. Con <b>Transferencia</b> no hace falta.</p>
+</div>
+
+<!-- ============ 6. FLUJO ============ -->
+<h2 id="clientes-cuenta-corriente-flujo">6 · Diagrama: ciclo de la cuenta corriente</h2>
+<figure class="fig">
+  <figcaption>Diagrama · De la venta a crédito al cobro</figcaption>
+  <svg viewBox="0 0 960 220" role="img" aria-label="Ciclo de la cuenta corriente de un cliente">
+    <defs><marker id="clientes-cuenta-corriente-ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+
+    <rect class="n-box" x="10" y="80" width="180" height="60" rx="10"/>
+    <text class="t" x="100" y="105" text-anchor="middle">Venta a crédito</text>
+    <text class="t-sm" x="100" y="123" text-anchor="middle">medio de pago = cta. cte.</text>
+    <path class="edge" marker-end="url(#clientes-cuenta-corriente-ah)" d="M190,110 L226,110"/>
+
+    <rect class="n-warn" x="228" y="80" width="180" height="60" rx="10"/>
+    <text class="t" x="318" y="105" text-anchor="middle">Saldo sube</text>
+    <text class="t-sm" x="318" y="123" text-anchor="middle">movimiento “venta_credito”</text>
+    <path class="edge" marker-end="url(#clientes-cuenta-corriente-ah)" d="M408,110 L444,110"/>
+
+    <polygon class="n-accent" points="520,70 640,110 520,150 400,110" transform="translate(46,0)"/>
+    <text class="t" x="566" y="106" text-anchor="middle">¿Supera el</text>
+    <text class="t" x="566" y="122" text-anchor="middle">límite?</text>
+
+    <path class="edge" marker-end="url(#clientes-cuenta-corriente-ah)" d="M566,150 L566,180"/>
+    <rect class="n-err" x="466" y="182" width="200" height="34" rx="8"/>
+    <text class="t-sm" x="566" y="204" text-anchor="middle"><tspan class="t">Excedido</tspan> — solo visual, no bloquea</text>
+    <text class="edge-lbl" x="600" y="170" text-anchor="middle">sí</text>
+
+    <path class="edge" marker-end="url(#clientes-cuenta-corriente-ah)" d="M666,110 L702,110"/>
+    <text class="edge-lbl" x="684" y="102" text-anchor="middle">no</text>
+    <rect class="n-ok" x="704" y="80" width="150" height="60" rx="10"/>
+    <text class="t" x="779" y="105" text-anchor="middle">Registrar cobro</text>
+    <text class="t-sm" x="779" y="123" text-anchor="middle">efectivo o transferencia</text>
+
+    <path class="edge" marker-end="url(#clientes-cuenta-corriente-ah)" d="M779,80 L779,50 L318,50 L318,78"/>
+    <text class="edge-lbl" x="550" y="42" text-anchor="middle">saldo baja (o queda a favor si se sobrepaga)</text>
+  </svg>
+</figure>
+
+<!-- ============ FAQ ============ -->
+<h2 id="clientes-cuenta-corriente-faq">7 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Qué pasa si el saldo queda "Excedido"?</summary>
+  <div class="ans">Es solo un estado visual de alerta. El sistema no bloquea automáticamente nuevas ventas a crédito — según el rol, un Operador necesita autorización de un Supervisor para vender por encima del límite; un Supervisor puede hacerlo directo.</div>
+</details>
+
+<details>
+  <summary>¿Qué significa límite "Sin límite"?</summary>
+  <div class="ans">Que el campo está en $0 o vacío — el sistema lo interpreta como que no hay techo para esa cuenta.</div>
+</details>
+
+<details>
+  <summary>Un cliente pagó de más. ¿Qué pasa con la diferencia?</summary>
+  <div class="ans">Queda como <b>saldo a favor</b> (el sobrepago está permitido a propósito) — se descuenta solo de la próxima venta a crédito que haga.</div>
+</details>
+
+<details>
+  <summary>¿Puedo cobrar en cuenta corriente sin tener la caja abierta?</summary>
+  <div class="ans">Si el cobro es en <b>efectivo</b>, no — necesita caja abierta porque ese efectivo pasa a formar parte del turno. Si es por <b>transferencia</b>, no hace falta.</div>
+</details>
+
+<details>
+  <summary>¿Se puede editar o borrar un movimiento de cuenta corriente?</summary>
+  <div class="ans">No. Es un libro inmutable, igual que el Kardex de stock o los movimientos de caja: cada corrección se hace agregando un movimiento nuevo, nunca modificando uno existente.</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Clientes / Cuenta Corriente
+</footer>
+</div>
+
+</section>
+
+<section id="mod-catalogo-productos" class="mod-section">
+
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Catálogo de Productos — Guía paso a paso</h1>
+  <p>Cómo dar de alta un producto, entender su ficha, venderlo en más de una presentación (metro/rollo, unidad/caja, etc.) e imprimirle la etiqueta — con diagramas y capturas reales.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="catalogo-productos-mapa">0 · Cómo funciona</h2>
+<p class="lead">Cada producto tiene un <b>SKU único</b> que el sistema asigna solo (formato <code>P-NNNNNNN-D</code>) — es la identidad interna, no lo elegís vos. Además puede tener un <b>código de barras (EAN/GTIN)</b> del fabricante, opcional. El QR y el código de barras que salen impresos en la etiqueta <b>se generan a partir del SKU</b> en el momento de imprimir — no son datos separados que haya que cargar.</p>
+<div class="callout info">
+  <h3>Reglas que no cambian</h3>
+  <ul style="margin:.3em 0">
+    <li>Un producto <b>siempre</b> pertenece a una <b>categoría</b> (obligatoria). La <b>marca</b> es opcional.</li>
+    <li>El stock <b>nunca</b> se edita directamente: todo cambio queda registrado como un movimiento (entrada, ajuste, merma).</li>
+    <li>Un producto no se borra: se <b>desactiva</b>, para no perder el historial de ventas y stock que ya tiene.</li>
+  </ul>
+</div>
+
+<!-- ============ 1. LISTADO ============ -->
+<h2 id="catalogo-productos-listado">1 · Listado y búsqueda</h2>
+<p>Desde <code>Catálogo → Productos</code> podés buscar por nombre, SKU o EAN, filtrar por ubicación, categoría, marca o estado, y exportar el listado.</p>
+<div class="shot">
+  <img src="assets/catalogo-listado.png" alt="Listado de productos con filtros" loading="lazy">
+  <figcaption>Listado de productos — columnas de sector/estante/posición incluidas para ubicar mercadería sin abrir cada ficha.</figcaption>
+</div>
+
+<!-- ============ 2. ALTA ============ -->
+<h2 id="catalogo-productos-alta">2 · Dar de alta un producto</h2>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Datos básicos</h4><p>Nombre corto (obligatorio), nombre largo, descripción técnica, categoría (obligatoria) y marca (opcional).</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Precio y unidades</h4><p>Precio de venta de lista (<b>IVA incluido</b>), impuesto, unidad de venta (obligatoria — es la unidad en la que se lleva el <b>stock</b>), unidad de compra y factor de conversión entre ambas.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Stock y ubicación</h4><p>Stock mínimo/máximo, ubicación en depósito, código EAN/barcode (opcional), si <b>permite fracción</b> (para vender cantidades con decimales) y si queda activo.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">4</span>
+    <div class="body"><h4><b>Crear producto</b></h4><p>El sistema le asigna el SKU automáticamente.</p></div>
+  </div>
+</div>
+
+<div class="shot">
+  <img src="assets/producto-form-1.png" alt="Formulario de alta de producto — datos básicos" loading="lazy">
+  <figcaption>Datos básicos, categoría y marca.</figcaption>
+</div>
+<div class="shot">
+  <img src="assets/producto-form-2.png" alt="Formulario de alta de producto — precio, unidades, stock y ubicación" loading="lazy">
+  <figcaption>Precio y unidades, stock y ubicación.</figcaption>
+</div>
+
+<div class="callout warn">
+  <h3>⚠️ No confundas “Unidad de compra” con “Presentaciones”</h3>
+  <p>El campo <b>Unidad de compra + Factor conversión</b> del alta es para el caso simple: comprás en una unidad distinta a la que vendés (ej. comprás por caja, vendés por unidad), con un solo factor fijo. Si necesitás que el <b>mostrador</b> pueda vender el mismo producto de <b>varias formas distintas</b> (por ejemplo metro <i>y</i> rollo, ambas elegibles en el POS), esa es otra herramienta — ver <a href="#catalogo-productos-presentaciones">Vender en más de una presentación</a>.</p>
+</div>
+
+<!-- ============ 3. PREREQ ============ -->
+<h2 id="catalogo-productos-prereq">3 · Categoría, marca y unidad</h2>
+<p>Se administran desde <code>Configuración</code>, como catálogos simples reutilizables por todos los productos.</p>
+<div class="shot-row">
+  <div class="shot small">
+    <img class="zoomable" src="assets/catalogo-categorias.png" alt="Pantalla de Categorías" loading="lazy">
+    <figcaption>Categorías (con jerarquía padre/hijo). Clic para ampliar.</figcaption>
+  </div>
+  <div class="shot small">
+    <img class="zoomable" src="assets/catalogo-marcas.png" alt="Pantalla de Marcas" loading="lazy">
+    <figcaption>Marcas. Clic para ampliar.</figcaption>
+  </div>
+</div>
+<div class="shot small">
+  <img class="zoomable" src="assets/catalogo-unidades.png" alt="Pantalla de Unidades" loading="lazy">
+  <figcaption>Unidades (nombre + abreviatura), la base de la que eligen tanto el alta como las presentaciones. Clic para ampliar.</figcaption>
+</div>
+<p class="muted">Una categoría o marca con productos activos asociados no se puede desactivar.</p>
+
+<!-- ============ 4. FICHA ============ -->
+<h2 id="catalogo-productos-ficha">4 · La ficha del producto</h2>
+<p>Al abrir un producto desde el listado, ves toda su información en un solo lugar, con acciones rápidas arriba: <b>Editar</b>, <b>Imprimir etiqueta</b>, <b>Kardex</b> (historial de movimientos de stock), <b>Entrada</b>, <b>Ajuste</b> y <b>Merma</b>.</p>
+<div class="shot">
+  <img src="assets/producto-ficha-1.png" alt="Ficha de producto — identificación, precio y unidades, ubicación, stock" loading="lazy">
+  <figcaption>Identificación, precio y unidades, ubicación en depósito y stock actual.</figcaption>
+</div>
+<div class="shot">
+  <img src="assets/producto-ficha-2.png" alt="Ficha de producto — proveedores, presentaciones y precios por lista" loading="lazy">
+  <figcaption>Proveedores asociados, presentaciones, y precio vigente en cada lista de precios.</figcaption>
+</div>
+
+<!-- ============ 5. PRESENTACIONES ============ -->
+<h2 id="catalogo-productos-presentaciones">5 · Vender en más de una presentación</h2>
+<p>Un mismo producto puede tener <b>varias presentaciones de venta</b> (ej. metro y rollo; unidad y caja de 10) — todas comparten el mismo stock, precio base y ficha. En el POS, el vendedor elige con cuál vender cada línea.</p>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>En la ficha, sección <b>Presentaciones → + Agregar</b></h4></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Elegí la <b>unidad</b> y el <b>factor a stock</b></h4><p>El factor dice cuánto vale <i>una</i> unidad de esa presentación, medido en la unidad de stock del producto (ej. si el stock es en metros y la presentación es “rollo de 100 m”, el factor es <code>100</code>).</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>GTIN/EAN opcional</h4><p>Si esa presentación tiene su propio código de barras (ej. el de la caja o el bulto), lo cargás acá para escanearla directo en el POS.</p></div>
+  </div>
+</div>
+
+<div class="shot small">
+  <img src="assets/producto-nueva-presentacion.png" alt="Formulario Nueva presentación" loading="lazy">
+  <figcaption>Formulario “Nueva presentación”.</figcaption>
+</div>
+
+<div class="callout info">
+  <h3>¿Vender por metro y por rollo? Hay una guía dedicada</h3>
+  <p>Si tu caso es justamente ese — un producto que se compra por rollo/caja/paquete y se vende tanto por unidad suelta como por el paquete entero — existe una guía específica con el ejemplo completo (cable de 100 m) y el error más común (dejar el factor en 1).</p>
+</div>
+
+<!-- ============ 6. PRECIOS ============ -->
+<h2 id="catalogo-productos-precios">6 · Precios por lista</h2>
+<p>La ficha muestra, de un vistazo, el precio vigente del producto en cada <b>lista de precios</b> (Minorista, Mayorista, etc.), de dónde salió ese precio, y desde cuándo. La lógica completa de listas, márgenes y lotes de precios está en la guía dedicada al módulo <b>Precios / Costos</b>.</p>
+
+<!-- ============ 7. ETIQUETAS ============ -->
+<h2 id="catalogo-productos-etiquetas">7 · Imprimir etiquetas</h2>
+<p>Desde <code>Configuración → Etiquetas</code>: elegís el formato de hoja y el tipo de código (QR o código de barras), marcás los productos con el checkbox de cada fila, y usás <b>Vista previa</b>, <b>Exportar PDF</b> o <b>Imprimir</b>.</p>
+<div class="shot">
+  <img src="assets/catalogo-etiquetas.png" alt="Pantalla de impresión de etiquetas" loading="lazy">
+  <figcaption>Selección de productos para imprimir etiquetas, con filtro por categoría, ubicación y stock.</figcaption>
+</div>
+
+<!-- ============ 8. UBICACIONES ============ -->
+<h2 id="catalogo-productos-ubicaciones">8 · Ubicaciones</h2>
+<p>Desde <code>Configuración → Ubicaciones</code>: el catálogo de posiciones físicas del depósito, con un código canónico armado a partir de <b>sector + estante + posición</b> (los tres obligatorios). El código se calcula solo — recorta ceros a la izquierda en los segmentos numéricos y pasa todo a mayúsculas, así que <code>b, 03, 05</code> se guarda como <code>B-3-5</code>.</p>
+<div class="shot">
+  <img src="assets/catalogo-ubicaciones.png" alt="Listado de ubicaciones con sector, estante, posición y cantidad de productos" loading="lazy">
+  <figcaption>Cada fila muestra cuántos productos tiene asignados esa ubicación.</figcaption>
+</div>
+<div class="shot small">
+  <img src="assets/catalogo-ubicacion-nueva.png" alt="Modal Nueva ubicación con vista previa del código canónico" loading="lazy">
+  <figcaption>El formulario muestra el código final antes de guardar.</figcaption>
+</div>
+<div class="callout info">
+  <h3>Eliminar una ubicación con productos</h3>
+  <p>Si la ubicación tiene productos asignados, borrarla exige elegir a dónde reasignarlos primero (a otra ubicación, o dejarlos sin ubicación) — no se puede eliminar "en el aire".</p>
+</div>
+<p class="muted">El botón <b>"Detectar duplicados"</b> encuentra ubicaciones que canonicalizan al mismo código (por ejemplo, cargadas antes de que existiera la regla de canonicalización) y las fusiona de un clic, reasignando los productos de las duplicadas a la que se conserva.</p>
+
+<!-- ============ 9. SINONIMOS ============ -->
+<h2 id="catalogo-productos-sinonimos">9 · Sinónimos de búsqueda</h2>
+<p>Desde <code>Configuración → Sinónimos</code>: grupos de términos equivalentes para que el buscador del POS y del catálogo encuentre un producto sin importar qué palabra usó el cliente o el vendedor.</p>
+<div class="shot">
+  <img src="assets/catalogo-sinonimos.png" alt="Listado de grupos de sinónimos con término canónico, sinónimos, abreviaturas y rubro" loading="lazy">
+  <figcaption>Ejemplo: buscar "brida", "zuncho" o "clamp" encuentra los mismos productos que "abrazadera".</figcaption>
+</div>
+<div class="shot small">
+  <img src="assets/catalogo-sinonimo-nuevo.png" alt="Modal Nuevo grupo de sinónimos" loading="lazy">
+  <figcaption>Nuevo grupo — un término canónico, sus sinónimos y, opcionalmente, abreviaturas.</figcaption>
+</div>
+<table>
+  <tr><th>Campo</th><th>Qué hace</th></tr>
+  <tr><td>Sinónimos</td><td>Términos completos que <b>también se pueden usar como texto a buscar</b> — equivalentes reales del canónico.</td></tr>
+  <tr><td>Abreviaturas</td><td><b>Disparan</b> la búsqueda pero no aparecen como resultado de texto — evita falsos positivos con abreviaturas muy cortas o ambiguas.</td></tr>
+</table>
+<div class="callout warn">
+  <h3>Los grupos existen aunque la búsqueda por sinónimos esté apagada</h3>
+  <p>El interruptor de arriba de la pantalla ("Activada"/"Desactivada") controla si el buscador <b>usa</b> los grupos o no — pero podés seguir dándolos de alta, editarlos e importarlos por CSV con el interruptor apagado; simplemente no van a afectar los resultados de búsqueda hasta que lo actives.</p>
+</div>
+
+<!-- ============ 10. IMPORTAR ============ -->
+<h2 id="catalogo-productos-importar">10 · Importar datos en masa</h2>
+<p>En <code>Configuración → Importar datos</code> (requiere permiso de administración), un asistente de tres pasos para cargar por CSV en lote: <b>Productos</b>, <b>Clientes</b>, <b>Proveedores</b>, <b>Ubicaciones</b> o <b>Stock inicial</b> — una entidad a la vez.</p>
+<div class="shot">
+  <img src="assets/importar-productos.png" alt="Paso 1 de Importar datos: columnas esperadas y selector de archivo CSV" loading="lazy">
+  <figcaption>Cada entidad muestra sus propias columnas esperadas, cuáles son obligatorias, y un botón para descargar la plantilla ya armada.</figcaption>
+</div>
+<div class="card">
+  <div class="step"><div class="dot">1</div><div class="body"><h4>Subir archivo</h4><p>Descargás la plantilla de la entidad elegida (ya trae las columnas correctas) o subís tu propio CSV.</p></div></div>
+  <div class="step"><div class="dot">2</div><div class="body"><h4>Previsualizar</h4><p>Cada fila queda clasificada como <span class="pill ok">✓ Nuevo</span>, <span class="pill warn">↻ Actualiza</span> (ya existe y se va a pisar) o <span class="pill err">✕ Error</span>, filtrable por estado. Se puede corregir una fila puntual antes de confirmar.</p></div></div>
+  <div class="step"><div class="dot">3</div><div class="body"><h4>Resultado</h4><p>Resumen de cuántas filas se crearon, actualizaron u omitieron.</p></div></div>
+</div>
+<p class="muted">Las filas con error se omiten automáticamente — no frenan la importación del resto. Si falta una columna obligatoria completa (no una celda puntual), el asistente avisa antes de procesar en vez de repetir el mismo error fila por fila.</p>
+
+<!-- ============ 11. FLUJO ============ -->
+<h2 id="catalogo-productos-flujo">11 · Diagrama: de la ficha a la venta</h2>
+<figure class="fig">
+  <figcaption>Diagrama · Cómo un producto llega al mostrador</figcaption>
+  <svg viewBox="0 0 960 220" role="img" aria-label="Flujo desde el alta del producto hasta la venta">
+    <defs><marker id="catalogo-productos-ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+
+    <rect class="n-box" x="10" y="80" width="160" height="60" rx="10"/>
+    <text class="t" x="90" y="105" text-anchor="middle">Alta del producto</text>
+    <text class="t-sm" x="90" y="123" text-anchor="middle">SKU asignado solo</text>
+    <path class="edge" marker-end="url(#catalogo-productos-ah)" d="M170,110 L206,110"/>
+
+    <rect class="n-box" x="208" y="80" width="170" height="60" rx="10"/>
+    <text class="t" x="293" y="105" text-anchor="middle">+ Presentaciones</text>
+    <text class="t-sm" x="293" y="123" text-anchor="middle">(opcional)</text>
+    <path class="edge" marker-end="url(#catalogo-productos-ah)" d="M378,110 L414,110"/>
+
+    <rect class="n-accent" x="416" y="80" width="160" height="60" rx="10"/>
+    <text class="t" x="496" y="105" text-anchor="middle">Imprimir etiqueta</text>
+    <text class="t-sm" x="496" y="123" text-anchor="middle">QR/code128 desde el SKU</text>
+    <path class="edge" marker-end="url(#catalogo-productos-ah)" d="M576,110 L612,110"/>
+
+    <rect class="n-accent" x="614" y="80" width="160" height="60" rx="10"/>
+    <text class="t" x="694" y="105" text-anchor="middle">Entrada de stock</text>
+    <text class="t-sm" x="694" y="123" text-anchor="middle">compra o carga inicial</text>
+    <path class="edge" marker-end="url(#catalogo-productos-ah)" d="M774,110 L810,110"/>
+
+    <rect class="n-ok" x="812" y="80" width="140" height="60" rx="10"/>
+    <text class="t" x="882" y="105" text-anchor="middle">Disponible</text>
+    <text class="t-sm" x="882" y="123" text-anchor="middle">en el POS</text>
+  </svg>
+</figure>
+
+<!-- ============ FAQ ============ -->
+<h2 id="catalogo-productos-faq">12 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Puedo elegir yo el SKU de un producto?</summary>
+  <div class="ans">No, el sistema lo asigna automáticamente (formato <code>P-NNNNNNN-D</code>) para garantizar que sea único. Es un código interno, opaco — no codifica categoría, proveedor ni marca.</div>
+</details>
+
+<details>
+  <summary>¿Qué diferencia hay entre el SKU y el código QR de la etiqueta?</summary>
+  <div class="ans">Ninguna en el fondo: el QR (y el código de barras) que se imprimen <b>se generan a partir del SKU</b> en el momento de imprimir. No existe un “código QR” guardado por separado.</div>
+</details>
+
+<details>
+  <summary>¿Se puede borrar un producto?</summary>
+  <div class="ans">No se elimina físicamente: se <b>desactiva</b>. Así no se pierde el historial de ventas, compras y movimientos de stock que ya generó.</div>
+</details>
+
+<details>
+  <summary>¿Puedo dejar un producto sin categoría?</summary>
+  <div class="ans">No, la categoría es obligatoria. La marca sí es opcional.</div>
+</details>
+
+<details>
+  <summary>Agregué una presentación pero en el POS sigue vendiendo como antes. ¿Por qué?</summary>
+  <div class="ans">Revisá cuál presentación quedó marcada como <b>Default</b> — es la que aparece seleccionada de entrada en el POS. Las demás siguen disponibles por el selector de unidad de la línea, ver la guía de <a href="#pos-cantidades">Cantidades y unidades</a> en POS.</div>
+</details>
+
+<details>
+  <summary>¿El código de barras del producto y el de una presentación pueden ser distintos?</summary>
+  <div class="ans">Sí. El producto tiene su propio EAN/GTIN opcional (el del fabricante, para identificarlo en la entrada de mercadería), y cada presentación puede tener el suyo propio (por ejemplo el código de la caja o el bulto), para escanearlos directo en el POS.</div>
+</details>
+
+<details>
+  <summary>¿Importar un CSV de productos puede pisar precios o stock por error?</summary>
+  <div class="ans">La importación de <b>Productos</b> actualiza la ficha (nombre, precio, categoría, etc.) de los productos que ya existen — por eso el paso de Previsualizar marca cada fila como Nuevo o Actualiza antes de confirmar nada, para que puedas revisar qué se va a pisar. El <b>stock</b> no se toca desde ahí: para eso está la entidad separada "Stock inicial".</div>
+</details>
+
+<details>
+  <summary>¿Tengo que activar la búsqueda por sinónimos para poder cargar los grupos?</summary>
+  <div class="ans">No — podés dar de alta, editar e importar grupos de sinónimos con el interruptor apagado. Mientras esté desactivado, simplemente no se usan para expandir las búsquedas del POS y el catálogo.</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Catálogo de Productos
+</footer>
+
+<script>
+  (function(){
+    if (window.__lightboxInit) return;
+    window.__lightboxInit = true;
+    var overlay = document.createElement('div');
+    overlay.className = 'lightbox-overlay';
+    var img = document.createElement('img');
+    overlay.appendChild(img);
+    document.body.appendChild(overlay);
+    document.addEventListener('click', function(e){
+      var el = e.target.closest && e.target.closest('img.zoomable');
+      if (el) {
+        img.src = el.src;
+        img.alt = el.alt;
+        overlay.classList.add('open');
+      }
+    });
+    overlay.addEventListener('click', function(){ overlay.classList.remove('open'); });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') overlay.classList.remove('open');
+    });
+  })();
+</script>
+</div>
+
+</section>
+
+<section id="mod-stock" class="mod-section">
+
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Stock — Guía paso a paso</h1>
+  <p>Cómo cargar mercadería que entra, ajustar el stock después de un conteo físico, registrar una rotura, y leer el historial completo de cada producto — con diagramas y capturas reales.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="stock-mapa">0 · Cómo funciona (todo cambio es un movimiento)</h2>
+<p class="lead">El stock de un producto <b>nunca se edita a mano</b>. Cada vez que cambia — por una venta, una entrada de mercadería, un conteo físico o una rotura — el sistema genera un <b>movimiento de stock</b>, y ese movimiento queda guardado para siempre en el <a href="#stock-kardex">Kardex</a> del producto. Así siempre podés reconstruir por qué el stock de algo es el que es.</p>
+
+<!-- ============ 1. VISTA GENERAL ============ -->
+<h2 id="stock-vista">1 · Vista general de Stock</h2>
+<p>La pantalla <code>Stock</code> te da un panorama de todo el catálogo de un vistazo: cuántos productos están <b>con stock OK</b>, <b>bajo mínimo</b> o <b>sin stock</b>, con filtros por SKU, nombre y estado. Desde cada fila podés hacer las mismas acciones (entrada, editar, merma, kardex) sin entrar a la ficha completa del producto.</p>
+<div class="shot">
+  <img src="assets/stock-listado.png" alt="Vista general de Stock con KPIs de stock OK, bajo mínimo y sin stock" loading="lazy">
+  <figcaption>Vista general de Stock — 5 productos bajo mínimo, 6 sin stock.</figcaption>
+</div>
+
+<!-- ============ 2. ENTRADA ============ -->
+<h2 id="stock-entrada">2 · Entrada de stock</h2>
+<p>Para cargar mercadería que entró sin pasar por el circuito de compras (o para la carga inicial de un producto nuevo). Se hace desde la ficha del producto, botón <b>Entrada</b>.</p>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Cargá la <b>cantidad a ingresar</b></h4><p>Ves en vivo cómo queda el stock (<code>actual → nuevo</code>).</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4><b>Costo unitario</b> (opcional)</h4><p>Si lo cargás, el sistema recalcula el <a href="#stock-cpp">costo promedio ponderado</a> del producto. Si lo dejás en blanco, el costo promedio no se toca.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Confirmá la entrada</h4></div>
+  </div>
+</div>
+<div class="shot small">
+  <img src="assets/stock-entrada.png" alt="Modal Entrada de stock" loading="lazy">
+  <figcaption>Entrada de 20 unidades a $450 c/u — el aviso confirma que va a actualizar el CPP.</figcaption>
+</div>
+
+<!-- ============ 3. AJUSTE ============ -->
+<h2 id="stock-ajuste">3 · Ajuste (conteo físico)</h2>
+<p>Para corregir el stock del sistema contra lo que realmente hay en el estante, después de un conteo.</p>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Cargá la <b>cantidad contada (real)</b></h4><p>No la diferencia — el número total que contaste. El sistema calcula solo la diferencia contra el stock actual.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Observaciones — <b>obligatorias</b></h4><p>A diferencia de la entrada, acá el motivo del ajuste es obligatorio: queda como parte del historial permanente.</p></div>
+  </div>
+</div>
+<div class="shot small">
+  <img src="assets/stock-ajuste.png" alt="Modal Ajuste de stock (conteo)" loading="lazy">
+  <figcaption>De 50 a 5 unidades tras un conteo físico.</figcaption>
+</div>
+
+<!-- ============ 4. MERMA ============ -->
+<h2 id="stock-merma">4 · Merma / rotura</h2>
+<p>Para dar de baja mercadería perdida, vencida o rota — a diferencia del ajuste, acá cargás <b>cuánto se perdió</b>, no el total nuevo.</p>
+<div class="shot small">
+  <img src="assets/stock-merma.png" alt="Modal Merma / rotura" loading="lazy">
+  <figcaption>Merma de 2 unidades por rotura — el botón de confirmar es rojo a propósito, para diferenciarlo de las otras acciones.</figcaption>
+</div>
+<div class="callout warn">
+  <h3>⚠️ No te deja dejar el stock en negativo</h3>
+  <p>Si la cantidad que cargás como pérdida es mayor al stock disponible, el sistema no te deja confirmar la merma.</p>
+</div>
+
+<!-- ============ 5. KARDEX ============ -->
+<h2 id="stock-kardex">5 · Kardex — historial completo</h2>
+<p>El Kardex es la <b>bitácora completa</b> de un producto: cada entrada, salida, ajuste y merma, con fecha, motivo, cantidad, el saldo resultante y el costo unitario cuando corresponde. Se accede desde el botón <b>Kardex</b> en la ficha del producto, y se puede filtrar por tipo, motivo y rango de fechas.</p>
+<div class="shot">
+  <img src="assets/stock-kardex.png" alt="Kardex de un producto con el historial completo de movimientos" loading="lazy">
+  <figcaption>Kardex — cada línea de venta genera su propio movimiento de <b>Salida</b>, motivo <b>Venta</b>.</figcaption>
+</div>
+<p class="muted">Los movimientos son <b>inmutables</b>: no se editan ni se borran. Si algo estuvo mal, se corrige con un nuevo movimiento (un ajuste), nunca modificando uno viejo.</p>
+
+<!-- ============ 6. CPP ============ -->
+<h2 id="stock-cpp">6 · Costo promedio ponderado</h2>
+<p>Cada vez que entra mercadería <b>con costo cargado</b>, el sistema recalcula el costo promedio ponderado (CPP) del producto:</p>
+<div class="formula">
+  <div class="eq">CPP nuevo = <span class="hl">(stock × CPP actual) + (cantidad × costo de entrada)</span> / (stock + cantidad)</div>
+</div>
+<p>Es el mismo criterio contable de siempre: si tenías 10 unidades a $100 y entran 10 más a $140, el nuevo costo promedio no es ni $100 ni $140, sino <code>(10×100 + 10×140) / 20 = $120</code>. Este costo es el que se usa como base para calcular márgenes cuando una lista de precios está configurada en modo “margen sobre costo” (ver la guía de <b>Precios / Costos</b>).</p>
+
+<!-- ============ 7. FLUJO ============ -->
+<h2 id="stock-flujo">7 · Diagrama: tipos y motivos de movimiento</h2>
+<figure class="fig">
+  <figcaption>Diagrama · Qué genera cada tipo de movimiento</figcaption>
+  <svg viewBox="0 0 960 260" role="img" aria-label="Tipos y motivos de movimiento de stock">
+    <defs><marker id="stock-ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+
+    <rect class="n-dark" x="380" y="10" width="200" height="40" rx="10"/>
+    <text class="t t-white" x="480" y="35" text-anchor="middle">Movimiento de stock</text>
+
+    <path class="edge" marker-end="url(#stock-ah)" d="M420,50 L150,90"/>
+    <path class="edge" marker-end="url(#stock-ah)" d="M460,50 L400,90"/>
+    <path class="edge" marker-end="url(#stock-ah)" d="M540,50 L620,90"/>
+    <path class="edge" marker-end="url(#stock-ah)" d="M560,50 L840,90"/>
+
+    <rect class="n-ok" x="30" y="92" width="240" height="60" rx="10"/>
+    <text class="t" x="150" y="115" text-anchor="middle">Entrada</text>
+    <text class="t-sm" x="150" y="133" text-anchor="middle">manual, recepción de compra, inicial</text>
+
+    <rect class="n-err" x="290" y="92" width="220" height="60" rx="10"/>
+    <text class="t" x="400" y="115" text-anchor="middle">Salida</text>
+    <text class="t-sm" x="400" y="133" text-anchor="middle">venta, devolución</text>
+
+    <rect class="n-warn" x="530" y="92" width="180" height="60" rx="10"/>
+    <text class="t" x="620" y="115" text-anchor="middle">Ajuste</text>
+    <text class="t-sm" x="620" y="133" text-anchor="middle">conteo, merma/rotura</text>
+
+    <rect class="n-box" x="730" y="92" width="200" height="60" rx="10"/>
+    <text class="t" x="830" y="115" text-anchor="middle">Transferencia</text>
+    <text class="t-sm" x="830" y="133" text-anchor="middle">entre ubicaciones (futuro)</text>
+
+    <rect class="n-accent" x="30" y="180" width="900" height="50" rx="10"/>
+    <text class="t" x="480" y="210" text-anchor="middle">Todos quedan guardados en el Kardex del producto, con su saldo resultante — nunca se editan ni se borran</text>
+  </svg>
+</figure>
+
+<!-- ============ FAQ ============ -->
+<h2 id="stock-faq">8 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Cuál es la diferencia entre Ajuste y Merma?</summary>
+  <div class="ans">En <b>Ajuste</b> cargás el <b>total contado</b> (el sistema calcula la diferencia). En <b>Merma</b> cargás directamente <b>cuánto se perdió</b>. Ambos requieren observaciones obligatorias y quedan en el Kardex, pero pensalos como dos preguntas distintas: “¿cuánto hay realmente?” vs. “¿cuánto se rompió/perdió?”.</div>
+</details>
+
+<details>
+  <summary>¿Por qué en Ajuste y Merma las observaciones son obligatorias, y en Entrada no?</summary>
+  <div class="ans">Ajuste y Merma corrigen o dan de baja stock que "debería" estar — el sistema exige que quede documentado el motivo. Una Entrada simplemente suma stock nuevo, así que no hace la misma exigencia (aunque siempre podés agregar una observación igual).</div>
+</details>
+
+<details>
+  <summary>Si no cargo el costo unitario en una Entrada, ¿qué pasa con el costo promedio?</summary>
+  <div class="ans">No se toca. El costo promedio ponderado (CPP) solo se recalcula cuando la entrada trae un costo unitario cargado.</div>
+</details>
+
+<details>
+  <summary>¿Puedo dejar el stock en negativo con una Merma?</summary>
+  <div class="ans">No. Si la cantidad que cargás supera el stock disponible, el sistema no te deja confirmar — te avisa "stock insuficiente".</div>
+</details>
+
+<details>
+  <summary>¿Puedo editar o borrar un movimiento que cargué mal?</summary>
+  <div class="ans">No, los movimientos son inmutables. Si te equivocaste, corregí con un nuevo <b>Ajuste</b> que refleje el stock real, con la observación explicando qué pasó.</div>
+</details>
+
+<details>
+  <summary>¿De dónde salen los movimientos de tipo "Venta"?</summary>
+  <div class="ans">Se generan solos cuando se confirma una venta en el <a href="#mod-pos">POS</a> — no hace falta (ni se puede) cargarlos manualmente desde Stock.</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Stock
+</footer>
+</div>
+
+</section>
+
+<section id="mod-abastecimiento" class="mod-section">
+
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Abastecimiento — Guía paso a paso</h1>
+  <p>Cómo dar de alta proveedores, marcar cuál es el preferido de cada producto, armar y emitir una orden de compra, recibir la mercadería, y dejar que el sistema te sugiera qué reponer — con diagramas y capturas reales.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="abastecimiento-mapa">0 · Cómo funciona</h2>
+<p class="lead">Cada producto puede comprarse a <b>varios proveedores distintos</b>, cada uno con su propio costo y código. De todos ellos, uno se marca como <b>preferido</b> — es el que el sistema usa para calcular márgenes y para armar sugerencias de compra. Una <b>orden de compra (OC)</b> nace en <b>borrador</b> (podés editar los ítems libremente), pasa a <b>emitida</b> (ya no se puede tocar), y se cierra <b>recibiendo la mercadería</b> — total o parcialmente.</p>
+
+<!-- ============ 1. PROVEEDORES ============ -->
+<h2 id="abastecimiento-proveedores">1 · Proveedores</h2>
+<div class="shot">
+  <img src="assets/proveedores-listado.png" alt="Listado de proveedores" loading="lazy">
+  <figcaption>Listado de proveedores.</figcaption>
+</div>
+<p>El alta de un proveedor tiene tres bloques: <b>identificación fiscal</b> (CUIT, razón social, condición fiscal — el código de proveedor lo asigna el sistema solo), <b>contacto</b>, y <b>condiciones comerciales</b>.</p>
+<div class="shot">
+  <img src="assets/proveedor-nuevo-1.png" alt="Formulario de alta de proveedor — identificación y contacto" loading="lazy">
+  <figcaption>Identificación fiscal y contacto.</figcaption>
+</div>
+<div class="shot">
+  <img src="assets/proveedor-nuevo-2.png" alt="Formulario de alta de proveedor — condiciones comerciales y domicilio" loading="lazy">
+  <figcaption>Condiciones comerciales, domicilio y umbral de pre-selección por similitud (para matchear importaciones de costos automáticamente).</figcaption>
+</div>
+<div class="callout info">
+  <h3>Bonificación, costo financiero y flete <b>por defecto</b></h3>
+  <p>Estos tres porcentajes se aplican <b>a todos los productos de este proveedor</b> a la hora de calcular el costo neto (costo bruto ± bonificación ± financiero ± flete). Si un producto puntual necesita otro trato, se puede sobrescribir <b>por excepción</b> desde su propia ficha — sin tocar el default del proveedor.</p>
+</div>
+
+<!-- ============ 2. PREFERIDO ============ -->
+<h2 id="abastecimiento-preferido">2 · El proveedor "preferido"</h2>
+<p>Desde la ficha del proveedor, pestaña <b>Productos</b>, ves todo lo que le comprás: costo, costo neto, código de ese proveedor, y si es el <b>preferido</b> para ese producto.</p>
+<div class="shot">
+  <img src="assets/proveedor-productos.png" alt="Pestaña Productos de un proveedor, con la marca de preferido" loading="lazy">
+  <figcaption>“Martillo 500g” tiene 3 proveedores posibles, pero <i>este</i> no es el preferido (estrella vacía) — los demás sí lo son para sus respectivos productos.</figcaption>
+</div>
+<div class="callout warn">
+  <h3>⚠️ Por qué importa el preferido</h3>
+  <p>El costo del proveedor <b>preferido</b> es el que alimenta el cálculo de márgenes (listas de precios en modo "margen sobre costo") y las cantidades de la <a href="#abastecimiento-sugerida">OC Sugerida</a>. Un producto sin preferido asignado queda fuera de esos cálculos hasta que se lo asignes.</p>
+</div>
+
+<!-- ============ 3. NUEVA OC ============ -->
+<h2 id="abastecimiento-nueva-oc">3 · Crear una orden de compra</h2>
+<div class="shot">
+  <img src="assets/oc-listado.png" alt="Listado de órdenes de compra" loading="lazy">
+  <figcaption>Listado de órdenes de compra, con su estado y total.</figcaption>
+</div>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Elegí el proveedor</h4><p>Botón <b>+ Nueva OC manual</b>. Observaciones opcionales.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Agregá los ítems</h4><p>Producto, cantidad, costo y % de IVA. La OC nace en <b>borrador</b> y podés agregar tantos ítems como necesites.</p></div>
+  </div>
+</div>
+<div class="shot-row">
+  <div class="shot small">
+    <img class="zoomable" src="assets/oc-nueva.png" alt="Formulario de nueva orden de compra manual" loading="lazy">
+    <figcaption>Nueva OC — solo pide proveedor. Clic para ampliar.</figcaption>
+  </div>
+  <div class="shot small">
+    <img class="zoomable" src="assets/oc-agregar-item.png" alt="Formulario para agregar un ítem a la OC" loading="lazy">
+    <figcaption>Agregar ítem: producto, cantidad, costo, IVA. Clic para ampliar.</figcaption>
+  </div>
+</div>
+<div class="shot">
+  <img src="assets/oc-item-agregado.png" alt="OC en borrador con un ítem cargado y los totales calculados" loading="lazy">
+  <figcaption>El sistema calcula subtotal neto, IVA y total automáticamente por cada ítem que agregás.</figcaption>
+</div>
+
+<!-- ============ 4. EMITIR ============ -->
+<h2 id="abastecimiento-emitir">4 · Emitir la OC</h2>
+<p>Mientras la OC está en <b>borrador</b> podés seguir agregando o sacando ítems. Al presionar <b>Emitir OC</b>, el sistema te avisa que después de esto <b>ya no vas a poder modificar los ítems</b>.</p>
+<div class="shot small">
+  <img src="assets/oc-emitir-confirmacion.png" alt="Confirmación al emitir una orden de compra" loading="lazy">
+  <figcaption>Confirmación antes de emitir — es la única oportunidad de volver atrás y corregir un ítem.</figcaption>
+</div>
+<div class="shot">
+  <img src="assets/oc-emitida.png" alt="Orden de compra en estado emitida, con el botón Recibir mercadería" loading="lazy">
+  <figcaption>Ya emitida: aparece “Recibir mercadería” y ya no se pueden editar los ítems.</figcaption>
+</div>
+
+<!-- ============ 5. RECIBIR ============ -->
+<h2 id="abastecimiento-recibir">5 · Recibir mercadería</h2>
+<p>Al recibir, el sistema te muestra solo lo <b>pendiente</b> (pedido menos lo ya recibido), con la cantidad a recibir precargada al máximo posible — la podés bajar si llegó menos.</p>
+<div class="shot">
+  <img src="assets/oc-recibir.png" alt="Formulario de recepción de mercadería" loading="lazy">
+  <figcaption>Recepción: remito del proveedor (opcional), observaciones, y cantidad a recibir ahora por cada ítem pendiente.</figcaption>
+</div>
+<div class="shot">
+  <img src="assets/oc-recibida-total.png" alt="Orden de compra en estado recibida total" loading="lazy">
+  <figcaption>Al recibir todo lo pedido, la OC pasa a <b>recibida total</b>. Cada recepción genera su propia entrada de stock.</figcaption>
+</div>
+<div class="callout info">
+  <h3>¿Y si llega menos de lo pedido?</h3>
+  <p>Registrás la cantidad que efectivamente llegó. La OC queda en <b>recibida parcial</b> y el botón "Recibir mercadería" sigue disponible para completar el resto cuando llegue.</p>
+</div>
+
+<!-- ============ 6. SUGERIDA ============ -->
+<h2 id="abastecimiento-sugerida">6 · OC Sugerida — reposición automática</h2>
+<p>En vez de revisar producto por producto, <b>OC Sugerida</b> arma la lista sola: junta todos los productos <b>bajo su stock mínimo</b>, calcula cuánto falta, y los agrupa <b>por proveedor preferido</b>.</p>
+<div class="shot">
+  <img src="assets/oc-sugerida.png" alt="Pantalla OC Sugerida agrupada por proveedor, con productos sin proveedor asignado" loading="lazy">
+  <figcaption>Un grupo por proveedor preferido, con botón “Crear OC y editar” — y una sección aparte para lo que todavía no tiene proveedor preferido asignado.</figcaption>
+</div>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Revisá cada grupo</h4><p>Mínimo, faltante y cantidad sugerida por producto, con el costo del proveedor preferido.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4><b>Crear OC y editar</b></h4><p>Genera de una la orden de compra completa con todos los ítems del grupo, en borrador, lista para ajustar y emitir.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Los productos sin proveedor preferido quedan aparte</h4><p>Con un enlace directo <b>Asignar proveedor</b> para resolverlo ahí mismo.</p></div>
+  </div>
+</div>
+
+<!-- ============ 7. FLUJO ============ -->
+<h2 id="abastecimiento-flujo">7 · Diagrama: ciclo de vida de una OC</h2>
+<figure class="fig">
+  <figcaption>Diagrama · De borrador a recibida</figcaption>
+  <svg viewBox="0 0 960 200" role="img" aria-label="Ciclo de vida de una orden de compra">
+    <defs><marker id="abastecimiento-ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+
+    <rect class="n-box" x="10" y="70" width="160" height="60" rx="10"/>
+    <text class="t" x="90" y="95" text-anchor="middle">Borrador</text>
+    <text class="t-sm" x="90" y="113" text-anchor="middle">agregar/sacar ítems</text>
+    <path class="edge" marker-end="url(#abastecimiento-ah)" d="M170,100 L206,100"/>
+
+    <rect class="n-accent" x="208" y="70" width="160" height="60" rx="10"/>
+    <text class="t" x="288" y="95" text-anchor="middle">Emitida</text>
+    <text class="t-sm" x="288" y="113" text-anchor="middle">ítems ya fijos</text>
+    <path class="edge" marker-end="url(#abastecimiento-ah)" d="M368,100 L404,100"/>
+
+    <rect class="n-warn" x="406" y="70" width="180" height="60" rx="10"/>
+    <text class="t" x="496" y="95" text-anchor="middle">Recibida parcial</text>
+    <text class="t-sm" x="496" y="113" text-anchor="middle">llegó una parte</text>
+    <path class="edge" marker-end="url(#abastecimiento-ah)" d="M450,130 C450,168 542,168 542,130"/>
+    <text class="edge-lbl" x="496" y="184" text-anchor="middle">recibe otra parte</text>
+    <path class="edge" marker-end="url(#abastecimiento-ah)" d="M586,100 L622,100"/>
+
+    <rect class="n-ok" x="624" y="70" width="180" height="60" rx="10"/>
+    <text class="t" x="714" y="95" text-anchor="middle">Recibida total</text>
+    <text class="t-sm" x="714" y="113" text-anchor="middle">stock actualizado</text>
+
+    <path class="edge" marker-end="url(#abastecimiento-ah)" d="M288,60 L288,20 L850,20 L850,68"/>
+    <rect class="n-err" x="800" y="70" width="130" height="60" rx="10"/>
+    <text class="t" x="865" y="95" text-anchor="middle">Anulada</text>
+    <text class="t-sm" x="865" y="113" text-anchor="middle">desde borrador o emitida</text>
+  </svg>
+</figure>
+
+<!-- ============ FAQ ============ -->
+<h2 id="abastecimiento-faq">8 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Puedo editar los ítems de una OC ya emitida?</summary>
+  <div class="ans">No. Una vez emitida, la única forma de corregirla es <b>anularla</b> y crear una nueva. Por eso el sistema pide confirmación explícita antes de emitir.</div>
+</details>
+
+<details>
+  <summary>¿Qué diferencia hay entre "OC manual" y "OC sugerida"?</summary>
+  <div class="ans">Son el mismo circuito (borrador → emitida → recibida). La diferencia es solo el origen: una la armás vos a mano eligiendo proveedor y productos; la otra la genera el sistema agrupando todo lo que está bajo stock mínimo por su proveedor preferido.</div>
+</details>
+
+<details>
+  <summary>Un producto no aparece agrupado en ningún proveedor en OC Sugerida. ¿Por qué?</summary>
+  <div class="ans">Porque no tiene un proveedor marcado como <b>preferido</b>. Va a aparecer en la sección "Sin proveedor preferido asignado", con un enlace directo para asignárselo.</div>
+</details>
+
+<details>
+  <summary>¿Se puede recibir más cantidad de la que se pidió?</summary>
+  <div class="ans">No, el campo de cantidad a recibir no deja superar lo pendiente (pedido menos lo ya recibido) — eso requiere autorización de Supervisor como "sobre-recepción" en el sistema.</div>
+</details>
+
+<details>
+  <summary>¿La bonificación/costo financiero/flete del proveedor se puede cambiar para un producto puntual?</summary>
+  <div class="ans">Sí. Los porcentajes que cargás en la ficha del proveedor son el <b>default</b> para todos sus productos, pero se pueden sobrescribir por excepción desde el detalle de cada producto sin afectar a los demás.</div>
+</details>
+
+<details>
+  <summary>¿Anular una OC afecta el stock?</summary>
+  <div class="ans">No. Mientras no se reciba mercadería, una OC (en borrador o emitida) no toca el stock. Anularla simplemente la cierra sin efecto.</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Abastecimiento (Proveedores + Órdenes de compra)
+</footer>
+
+<script>
+  (function(){
+    if (window.__lightboxInit) return;
+    window.__lightboxInit = true;
+    var overlay = document.createElement('div');
+    overlay.className = 'lightbox-overlay';
+    var img = document.createElement('img');
+    overlay.appendChild(img);
+    document.body.appendChild(overlay);
+    document.addEventListener('click', function(e){
+      var el = e.target.closest && e.target.closest('img.zoomable');
+      if (el) {
+        img.src = el.src;
+        img.alt = el.alt;
+        overlay.classList.add('open');
+      }
+    });
+    overlay.addEventListener('click', function(){ overlay.classList.remove('open'); });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') overlay.classList.remove('open');
+    });
+  })();
+</script>
+</div>
+
+</section>
+
+<section id="mod-precios-costos" class="mod-section">
+
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Precios / Costos — Guía paso a paso</h1>
+  <p>Cómo se importan costos y el catálogo del proveedor, cómo se revisan, y el proceso completo de Listas de precios — con diagramas de flujo y capturas reales.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="precios-costos-mapa">0 · Cómo funciona (de dónde sale un precio)</h2>
+<p class="lead">Un <b>precio de venta</b> no sale de un solo lado: se arma encadenando costo →
+costo neto → margen → precio publicado → precio que lee el mostrador.</p>
+
+<figure class="fig">
+  <figcaption>Diagrama 1 · La cadena costo → precio</figcaption>
+  <svg viewBox="0 0 960 200" role="img" aria-label="Cadena de costo a precio">
+    <defs>
+      <marker id="precios-costos-ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+        <path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/>
+      </marker>
+    </defs>
+    <g>
+      <rect class="n-blue" x="8" y="70" width="140" height="60" rx="10"/>
+      <text class="t" x="78" y="94" text-anchor="middle">Importar</text>
+      <text class="t" x="78" y="111" text-anchor="middle">costos / catálogo</text>
+
+      <rect class="n-box" x="188" y="70" width="150" height="60" rx="10"/>
+      <text class="t" x="263" y="93" text-anchor="middle">producto_proveedor</text>
+      <text class="t-sm" x="263" y="111" text-anchor="middle">costo bruto + preferido</text>
+
+      <rect class="n-accent" x="378" y="70" width="150" height="60" rx="10"/>
+      <text class="t" x="453" y="93" text-anchor="middle">Costo neto</text>
+      <text class="t-sm" x="453" y="111" text-anchor="middle">± bonif/flete/fin</text>
+
+      <rect class="n-accent" x="568" y="70" width="140" height="60" rx="10"/>
+      <text class="t" x="638" y="93" text-anchor="middle">× Regla margen</text>
+      <text class="t-sm" x="638" y="111" text-anchor="middle">(vía Lote)</text>
+
+      <rect class="n-ok" x="748" y="70" width="150" height="60" rx="10"/>
+      <text class="t" x="823" y="93" text-anchor="middle">lista_precio_valor</text>
+      <text class="t-sm" x="823" y="111" text-anchor="middle">precio vigente</text>
+
+      <rect class="n-dark" x="800" y="12" width="150" height="40" rx="10"/>
+      <text class="t t-white" x="875" y="37" text-anchor="middle">POS / Presupuestos</text>
+    </g>
+    <path class="edge" marker-end="url(#precios-costos-ah)" d="M148,100 L186,100"/>
+    <path class="edge" marker-end="url(#precios-costos-ah)" d="M338,100 L376,100"/>
+    <path class="edge" marker-end="url(#precios-costos-ah)" d="M528,100 L566,100"/>
+    <path class="edge" marker-end="url(#precios-costos-ah)" d="M708,100 L746,100"/>
+    <path class="edge" marker-end="url(#precios-costos-ah)" d="M823,70 L823,54 L875,54 L875,52"/>
+  </svg>
+</figure>
+
+<table>
+  <tr><th>Pantalla</th><th>Para qué sirve</th></tr>
+  <tr><td><b>Importar costos</b></td><td>Actualiza el <b>costo</b> de productos <b>ya vinculados</b> a un proveedor, desde un archivo.</td></tr>
+  <tr><td><b>Importar Catálogo del Proveedor</b></td><td><b>Establece el vínculo</b> producto↔proveedor (qué vende y con qué código).</td></tr>
+  <tr><td><b>Revisión de Costos y Catálogo</b></td><td>Resuelve a mano lo que no matcheó y muestra el <b>historial</b> de importaciones.</td></tr>
+  <tr><td><b>Listas de precios</b></td><td>Listas, reglas de margen, precios vigentes, promociones, recálculos.</td></tr>
+  <tr><td><b>Lotes de precios</b></td><td>El circuito de aprobación/publicación de cambios de precio.</td></tr>
+</table>
+
+<!-- ============ 1. COSTOS ============ -->
+<h2 id="precios-costos-costos">1 · Importar <b>costos</b></h2>
+<p><b>Objetivo:</b> actualizar el <b>costo bruto</b> de productos que <b>ya están vinculados</b> a
+un proveedor. Asistente de <b>3 pasos</b>.</p>
+
+<div class="shot">
+  <img src="assets/precios-importar-costos.png" alt="Pantalla Importar costos de proveedor, paso 1: archivo y proveedor" loading="lazy">
+  <figcaption>Importar costos — paso 1: elegir proveedor y archivo.</figcaption>
+</div>
+
+<figure class="fig">
+  <figcaption>Diagrama 2 · Asistente de importación (3 pasos) + cascada de matching</figcaption>
+  <svg viewBox="0 0 960 250" role="img" aria-label="Asistente de importación de costos">
+    <defs><marker id="precios-costos-ah2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+    <rect class="n-box" x="20" y="24" width="200" height="58" rx="10"/>
+    <text class="t" x="120" y="49" text-anchor="middle">1 · Archivo y proveedor</text>
+    <text class="t-sm" x="120" y="67" text-anchor="middle">CSV/XLSX + mapeo de columnas</text>
+
+    <rect class="n-accent" x="290" y="24" width="220" height="58" rx="10"/>
+    <text class="t" x="400" y="49" text-anchor="middle">2 · Previsualizar</text>
+    <text class="t-sm" x="400" y="67" text-anchor="middle">match en memoria · nada se graba</text>
+
+    <rect class="n-ok" x="580" y="24" width="200" height="58" rx="10"/>
+    <text class="t" x="680" y="49" text-anchor="middle">3 · Aplicado (Confirmar)</text>
+    <text class="t-sm" x="680" y="67" text-anchor="middle">persiste todo de una vez</text>
+
+    <path class="edge" marker-end="url(#precios-costos-ah2)" d="M220,53 L288,53"/>
+    <path class="edge" marker-end="url(#precios-costos-ah2)" d="M510,53 L578,53"/>
+
+    <rect class="n-dark" x="290" y="120" width="220" height="46" rx="9"/>
+    <text class="t t-white" x="400" y="140" text-anchor="middle">Cascada de matching</text>
+    <text class="t-sm t-white" x="400" y="157" text-anchor="middle" style="fill:#e7a877">EAN → cód. proveedor → SKU</text>
+    <path class="edge" marker-end="url(#precios-costos-ah2)" d="M400,82 L400,118"/>
+
+    <rect class="n-ok" x="560" y="112" width="180" height="40" rx="9"/>
+    <text class="t-sm" x="650" y="136" text-anchor="middle"><tspan class="t">matched</tspan> → aplica costo</text>
+    <rect class="n-warn" x="560" y="162" width="180" height="40" rx="9"/>
+    <text class="t-sm" x="650" y="186" text-anchor="middle"><tspan class="t">sin_matchear</tspan> → Cola Revisión</text>
+    <rect class="n-err" x="560" y="212" width="180" height="34" rx="9"/>
+    <text class="t-sm" x="650" y="234" text-anchor="middle"><tspan class="t">error_formato</tspan></text>
+    <path class="edge" marker-end="url(#precios-costos-ah2)" d="M510,143 L558,132"/>
+    <path class="edge" marker-end="url(#precios-costos-ah2)" d="M510,150 L558,182"/>
+    <path class="edge" marker-end="url(#precios-costos-ah2)" d="M510,156 L558,228"/>
+  </svg>
+</figure>
+
+<h3>Paso 1 — Archivo y proveedor</h3>
+<p>Elegís <b>proveedor</b> + <b>archivo</b> (CSV/XLSX). Hay <b>plantilla descargable</b>. Las
+columnas se interpretan con el <b>mapeo del proveedor</b> (<code>proveedor_importacion_config</code>:
+formato, delimitador, fila de encabezado, y qué columna es costo / código del proveedor / EAN / SKU).</p>
+
+<h3>Paso 2 — Previsualizar <span class="muted">(nada se graba todavía)</span></h3>
+<p>El archivo se <b>parsea en memoria</b>. Cada fila se matchea <b>solo contra productos ya
+vinculados a este proveedor</b>, con la cascada:</p>
+<div class="cascade"><b>EAN (GTIN)</b> → <b>código del proveedor</b> → <b>código interno (SKU)</b> &nbsp; — el primero que matchea, gana.</div>
+<p class="muted">Alcance acotado: un producto de <i>otro</i> proveedor no matchea aunque su EAN/SKU
+aparezca — así no se cargan costos cruzados por error.</p>
+<table>
+  <tr><th>Estado</th><th>Significado</th></tr>
+  <tr><td><span class="pill ok">matched</span></td><td>Producto identificado; muestra costo anterior → nuevo.</td></tr>
+  <tr><td><span class="pill warn">sin_matchear</span></td><td>No se identificó → va a la <b>Cola de Revisión</b>.</td></tr>
+  <tr><td><span class="pill err">error_formato</span></td><td>El costo no es un número válido, etc.</td></tr>
+</table>
+<p>Extras: <b>advertencia cruzada</b> (no bloquea) si el código del proveedor del archivo difiere
+del guardado; detección de <b>duplicados</b> en el archivo (aplica el último); <b>edición inline</b>,
+<b>filtros</b> y buscador <b>"Consultar productos"</b>. El preview es <b>persistente</b> (sobrevive
+navegar y volver).</p>
+
+<h3>Paso 3 — Aplicado (Confirmar)</h3>
+<p>Recién al <b>Confirmar</b> se persiste todo: se guarda la importación (cabecera + detalle por
+fila), se <b>actualiza el costo</b> de las filas <i>matched</i>, y <b>se generan lotes de precios</b>
+por evento de costo para las listas en modo <b>margen sobre costo</b> (quedan para revisar y
+publicar — ver §5). Las filas <b>sin matchear</b> pasan a la Cola de Revisión.</p>
+
+<!-- ============ 2. CATALOGO ============ -->
+<h2 id="precios-costos-catalogo">2 · Importar <b>Catálogo del Proveedor</b></h2>
+<p><b>Objetivo:</b> <b>establecer el vínculo</b> producto↔proveedor (qué vende y con qué código).
+El matching es <b>global</b> (todo el catálogo), no acotado al proveedor. Mismo asistente de 3 pasos.</p>
+
+<div class="shot">
+  <img src="assets/precios-importar-catalogo.png" alt="Pantalla Importar Catálogo del Proveedor" loading="lazy">
+  <figcaption>Importar Catálogo del Proveedor — el costo es opcional; lo que sí se guarda siempre es el vínculo.</figcaption>
+</div>
+
+<div class="cascade">Matching: <b>EAN (GTIN)</b> → <b>código interno (SKU)</b>. &nbsp;El código del proveedor <b>NO</b> matchea — es el dato que se <b>guarda</b>.</div>
+<table>
+  <tr><th>Acción</th><th>Significado</th></tr>
+  <tr><td><span class="pill ok">Crear vínculo</span></td><td>El producto existe y aún no está vinculado a este proveedor.</td></tr>
+  <tr><td><span class="pill warn">Actualizar</span></td><td>Ya estaba vinculado; actualiza código (y costo si vino).</td></tr>
+  <tr><td><span class="pill mut">sin_matchear</span></td><td>El producto <b>no existe</b>. <b>No se crean productos.</b></td></tr>
+  <tr><td><span class="pill err">error</span></td><td>Dato inválido (p. ej. costo no numérico).</td></tr>
+</table>
+<p>Para las filas <i>sin matchear</i> se sugieren <b>candidatos por similitud de nombre</b>. El
+<b>costo es opcional</b>. Al <b>Confirmar</b>: <b>upsert</b> de <code>producto_proveedor</code>;
+el <b>preferido</b> se asigna <b>solo si el producto no tenía ninguno</b> (nunca pisa). Resultado con
+contadores <i>creados / actualizados / sin identificar / errores / preferidos asignados</i> y tabla de impactados.</p>
+
+<!-- ============ 3. REVISION ============ -->
+<h2 id="precios-costos-revision">3 · Revisión de Costos y Catálogo</h2>
+<p>Pantalla unificada para lo que quedó "colgado" de las importaciones.</p>
+<div class="shot">
+  <img src="assets/precios-revision.png" alt="Pantalla Revisión de Costos y Catálogo, pestaña Historial" loading="lazy">
+  <figcaption>Historial de importaciones — quién cargó qué, cuándo, y con qué resultado.</figcaption>
+</div>
+<div class="card">
+  <h3>3.1 · Cola de Revisión</h3>
+  <p>Filas <b>sin asignar</b> (las <i>sin_matchear</i> de costos y catálogo). Por cada una:
+  <b>Resolver</b> (asignar a un producto a mano o por candidato de similitud), <b>Editar</b>, o
+  <b>Descartar</b>.</p>
+  <h3>3.2 · Historial de importaciones</h3>
+  <p>Todas las importaciones (costos y catálogo) con cabecera —proveedor, archivo, fecha, totales,
+  <b>identificados / rechazados / pendientes</b>, y estado <span class="pill mut">pendiente</span>
+  <span class="pill ok">confirmado</span> <span class="pill err">cancelado</span>—, ordenable y con
+  <b>detalle fila por fila</b> (filtros). Es la auditoría: qué se cargó, cuándo y con qué resultado.</p>
+</div>
+
+<!-- ============ 4. LISTAS ============ -->
+<h2 id="precios-costos-listas">4 · Proceso completo de <b>Listas de precios</b></h2>
+<p>Acá vive el <b>precio de venta</b>. El modelo separa la <b>definición</b> (listas + reglas),
+el <b>valor</b> (precios vigentes historizados) y el <b>flujo de cambio</b> (lotes).</p>
+
+<h3>4.1 · Listas y su modo de cálculo</h3>
+<div class="shot">
+  <img src="assets/precios-listas.png" alt="Pantalla Listas de precios" loading="lazy">
+  <figcaption>Listas de precios — Minorista, Mayorista 2 (predeterminada) y Tornillos, cada una con su tipo y modo de cálculo.</figcaption>
+</div>
+<table>
+  <tr><th>Modo</th><th>Cómo calcula</th></tr>
+  <tr><td><b>Margen sobre costo</b></td><td>Reglas de margen sobre el <b>costo neto</b> del preferido.</td></tr>
+  <tr><td><b>% sobre lista</b> <span class="muted">(default)</span></td><td>Ajuste porcentual sobre el precio base del producto.</td></tr>
+  <tr><td><b>Manual</b></td><td>Precio cargado a mano.</td></tr>
+</table>
+<p class="muted">La lista <b>predeterminada</b> es la que usa el POS para el consumidor final. Un
+cliente puede tener su propia lista (<code>cliente.lista_precio_id</code>).</p>
+
+<h3>4.2 · Reglas de margen <span class="muted">(solo modo margen sobre costo)</span></h3>
+<div class="cascade">Precedencia (gana la más específica): <b>Producto → Marca → Rubro → Proveedor → Lista (base)</b></div>
+<p>Una sola regla aplica por producto. Precio propuesto = <code>costo_neto × (1 + margen/100)</code>, con redondeo comercial.</p>
+
+<h3>4.3 · Precios vigentes</h3>
+<p>Es <code>lista_precio_valor</code>: precio absoluto por producto y lista, historizado
+(<b>SCD tipo 2</b>: el vigente tiene <code>fecha_hasta = null</code>; al cambiar se cierra el viejo y
+se inserta el nuevo). Se puede <b>ver, filtrar (nombre/SKU/EAN) y ordenar</b>.
+Desde acá se dispara el <b>Recálculo masivo</b> y se ven los <b>cambios programados</b> (scheduler).</p>
+
+<h3>4.4 · Promociones</h3>
+<p>Precio temporal que <b>pisa</b> al vigente mientras está activa (máxima prioridad al resolver).</p>
+
+<h3>4.5 · Lotes de precios <span class="muted">(el circuito de cambio)</span></h3>
+<div class="shot">
+  <img src="assets/precios-lotes.png" alt="Pantalla Lotes de precios" loading="lazy">
+  <figcaption>Lotes de precios — acá se ven dos lotes de la lista "Tornillos" con estado "Validación fallida".</figcaption>
+</div>
+<figure class="fig">
+  <figcaption>Diagrama 3 · Ciclo de vida de un lote</figcaption>
+  <svg viewBox="0 0 960 210" role="img" aria-label="Ciclo de vida del lote">
+    <defs><marker id="precios-costos-ah3" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+    <rect class="n-box" x="16" y="80" width="96" height="48" rx="10"/><text class="t" x="64" y="109" text-anchor="middle">Crear</text>
+    <rect class="n-ok" x="150" y="52" width="150" height="44" rx="10"/><text class="t" x="225" y="79" text-anchor="middle">validado</text>
+    <rect class="n-err" x="150" y="112" width="150" height="44" rx="10"/><text class="t" x="225" y="135" text-anchor="middle">validacion_fallida</text>
+    <rect class="n-accent" x="360" y="80" width="120" height="48" rx="10"/><text class="t" x="420" y="109" text-anchor="middle">aprobado</text>
+    <rect class="n-dark" x="530" y="80" width="120" height="48" rx="10"/><text class="t t-white" x="590" y="109" text-anchor="middle">publicado</text>
+    <rect class="n-box" x="700" y="80" width="130" height="48" rx="10"/><text class="t" x="765" y="104" text-anchor="middle">ROLLBACK</text><text class="t-sm" x="765" y="120" text-anchor="middle">(revertir)</text>
+
+    <path class="edge" marker-end="url(#precios-costos-ah3)" d="M112,98 L148,80"/>
+    <path class="edge" marker-end="url(#precios-costos-ah3)" d="M112,106 L148,130"/>
+    <path class="edge" marker-end="url(#precios-costos-ah3)" d="M300,74 L358,100"/>
+    <path class="edge" marker-end="url(#precios-costos-ah3)" d="M480,104 L528,104"/>
+    <path class="edge" marker-end="url(#precios-costos-ah3)" d="M650,104 L698,104"/>
+    <path class="edge" marker-end="url(#precios-costos-ah3)" d="M225,156 C225,190 320,190 320,150 L300,134"/>
+    <text class="edge-lbl" x="300" y="188" text-anchor="middle">Re-validar / Excluir errores</text>
+    <text class="edge-lbl" x="512" y="70" text-anchor="middle">requiere aprobación</text>
+    <text class="edge-lbl" x="590" y="150" text-anchor="middle">escribe lista_precio_valor</text>
+  </svg>
+</figure>
+<ol>
+  <li><b>Crear:</b> por producto calcula <b>costo neto del preferido × regla</b> → precio propuesto, lo compara con el vigente y <b>valida</b>. Queda <span class="pill ok">validado</span> o <span class="pill err">validacion_fallida</span>. Errores típicos: <i>sin preferido/sin costo</i>, <i>precio bajo el costo</i>, <i>margen fuera de regla</i>. Advertencia: <i>variación mayor al umbral</i>.</li>
+  <li><b>Re-validar</b>: reejecuta el cálculo contra el <b>estado actual</b> (recupera filas que arreglaste). <b>Respeta las excluidas</b>.</li>
+  <li><b>Excluir errores / fila:</b> saca del lote lo que no se puede aprobar.</li>
+  <li><b>Aprobar</b> (permiso de Supervisor) → <span class="pill">aprobado</span>.</li>
+  <li><b>Publicar:</b> escribe los precios en <code>lista_precio_valor</code> <b>de la lista del lote</b>. <b>Acá cambia el precio.</b></li>
+  <li><b>Revertir:</b> genera un lote <b>ROLLBACK</b> con los precios previos (nunca borra historia).</li>
+</ol>
+
+<h3>4.6 · Cómo se consume el precio (POS / Presupuestos)</h3>
+<figure class="fig">
+  <figcaption>Diagrama 4 · Resolución del precio al vender (sobre la lista efectiva)</figcaption>
+  <svg viewBox="0 0 960 280" role="img" aria-label="Resolución de precio en el POS">
+    <defs><marker id="precios-costos-ah4" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+    <rect class="n-blue" x="360" y="14" width="240" height="46" rx="10"/>
+    <text class="t" x="480" y="34" text-anchor="middle">Lista efectiva</text>
+    <text class="t-sm" x="480" y="51" text-anchor="middle">cliente.lista_precio_id ?? predeterminada</text>
+
+    <polygon class="n-accent" points="480,80 610,120 480,160 350,120"/>
+    <text class="t" x="480" y="116" text-anchor="middle">¿Promoción</text>
+    <text class="t" x="480" y="132" text-anchor="middle">activa?</text>
+    <path class="edge" marker-end="url(#precios-costos-ah4)" d="M480,60 L480,80"/>
+    <rect class="n-ok" x="662" y="98" width="150" height="44" rx="10"/><text class="t" x="737" y="125" text-anchor="middle">Precio de promo</text>
+    <path class="edge" marker-end="url(#precios-costos-ah4)" d="M610,120 L660,120"/><text class="edge-lbl" x="636" y="112" text-anchor="middle">sí</text>
+
+    <polygon class="n-accent" points="480,186 610,226 480,266 350,226"/>
+    <text class="t" x="480" y="222" text-anchor="middle">¿Vigente en</text>
+    <text class="t" x="480" y="238" text-anchor="middle">esa lista?</text>
+    <path class="edge" marker-end="url(#precios-costos-ah4)" d="M480,160 L480,186"/><text class="edge-lbl" x="502" y="176" text-anchor="start">no</text>
+    <rect class="n-ok" x="662" y="204" width="150" height="44" rx="10"/><text class="t" x="737" y="231" text-anchor="middle">Precio vigente</text>
+    <path class="edge" marker-end="url(#precios-costos-ah4)" d="M610,226 L660,226"/><text class="edge-lbl" x="636" y="218" text-anchor="middle">sí</text>
+
+    <rect class="n-warn" x="150" y="204" width="180" height="44" rx="10"/>
+    <text class="t" x="240" y="224" text-anchor="middle">Fallback (legacy)</text>
+    <text class="t-sm" x="240" y="241" text-anchor="middle">precio_venta_lista × (1+ajuste%)</text>
+    <path class="edge" marker-end="url(#precios-costos-ah4)" d="M350,226 L332,226"/><text class="edge-lbl" x="342" y="218" text-anchor="middle">no</text>
+  </svg>
+</figure>
+
+<!-- ============ 5. NOTA ============ -->
+<h2 id="precios-costos-nota">5 · Nota: "re-validé y publiqué un lote, pero el precio no cambió"</h2>
+<div class="callout warn">
+  <h3>⚠️ Qué pasó (no es un error del lote)</h3>
+  <p><b>Observación:</b> al re-validar el lote funcionó, pero lo que cambió fue el <b>costo del
+  producto para ese proveedor</b>, no el <b>precio de venta</b>.</p>
+  <ol>
+    <li><b>El lote publica en la lista del lote.</b> Si esa lista <b>no es la predeterminada</b>, el
+    POS (que vende de la <b>predeterminada</b>) <b>no ve</b> ese precio. Se actualizó… en otra lista.</li>
+    <li><b>La pantalla del Producto muestra el campo legacy</b> <code>producto.precio_venta_lista</code>,
+    que <b>ningún lote actualiza</b>. Por eso "Precio lista" no se mueve aunque publiques.</li>
+    <li><b>El costo sí cambió</b> porque lo editaste y <b>Re-validar lo tomó</b> para recalcular. Eso es
+    correcto; lo que no aterriza en el mostrador es el <b>precio publicado</b>, por el punto 1.</li>
+  </ol>
+  <p><b>Para que un lote impacte la venta:</b> hacelo sobre la <b>lista predeterminada</b> (la que
+  vende el mostrador), o asigná esa lista al cliente. <b>Verificalo</b> en <i>Listas de precios</i>:
+  mirá cuál tiene el chip "predeterminada" y que el lote esté sobre esa.</p>
+</div>
+<div class="callout info">
+  <h3>Deuda conocida (fuera de esta guía)</h3>
+  <p>Cerrar del todo el circuito —que la pantalla de Producto muestre el <b>precio vigente del
+  motor</b> en vez del campo legacy, y/o definir cómo se relaciona un lote con la predeterminada—
+  es arquitectura del motor v2 a resolver con su propio ADR.</p>
+</div>
+
+<!-- ============ FAQ ============ -->
+<h2 id="precios-costos-faq">6 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Cuál es la diferencia entre "Importar costos" e "Importar Catálogo del Proveedor"?</summary>
+  <div class="ans"><b>Importar costos</b> actualiza el costo de productos que <b>ya están vinculados</b> a ese proveedor. <b>Importar Catálogo del Proveedor</b> es el paso anterior: <b>crea el vínculo</b> producto↔proveedor (qué vende y con qué código) para que después haya algo que actualizar.</div>
+</details>
+
+<details>
+  <summary>Si un producto tiene promoción activa Y está en una lista con precio vigente, ¿cuál gana?</summary>
+  <div class="ans">La <b>promoción</b>. Es un precio temporal que <b>pisa</b> al vigente mientras está activa — tiene la prioridad más alta de las tres fuentes (ver Diagrama 4).</div>
+</details>
+
+<details>
+  <summary>Un lote quedó en "Validación fallida", ¿cómo lo destrabo?</summary>
+  <div class="ans">Corregí lo que falló (costo del preferido, margen fuera de regla, etc.) y usá <b>Re-validar</b> — reejecuta el cálculo contra el estado actual y recupera las filas que arreglaste, respetando las que ya excluiste. Si una fila puntual no se puede arreglar, usá <b>Excluir errores</b> para sacarla del lote y aprobar el resto.</div>
+</details>
+
+<details>
+  <summary>¿Qué regla de margen aplica si un producto tiene reglas por Marca y por Rubro a la vez?</summary>
+  <div class="ans">Gana la <b>más específica</b>. La precedencia es: <b>Producto → Marca → Rubro → Proveedor → Lista (base)</b>. Solo se aplica una regla por producto, nunca se combinan.</div>
+</details>
+
+<details>
+  <summary>¿Cuándo entra en juego el precio "Fallback (legacy)"?</summary>
+  <div class="ans">Solo cuando no hay promoción activa <b>y</b> no hay un precio vigente cargado para esa lista en <code>lista_precio_valor</code>. Ahí el sistema recurre al campo histórico <code>precio_venta_lista</code> del producto, ajustado por el porcentaje de la lista — es la salida de emergencia, no el camino normal.</div>
+</details>
+
+<details>
+  <summary>¿"Publicar" un lote y "Aprobar" un lote son lo mismo?</summary>
+  <div class="ans">No. <b>Aprobar</b> (requiere permiso de Supervisor) es una validación de que el lote está bien y puede avanzar. <b>Publicar</b> es el paso que realmente escribe los precios en <code>lista_precio_valor</code> — recién ahí cambia lo que ve el mostrador. Un lote aprobado y no publicado todavía no tocó ningún precio.</div>
+</details>
+
+<details>
+  <summary>Me equivoqué al publicar un lote, ¿puedo deshacerlo?</summary>
+  <div class="ans">Sí, con <b>Revertir</b>: genera un lote <b>ROLLBACK</b> que restaura los precios previos. Nunca se borra el historial — el rollback queda registrado como un lote más, no como una edición silenciosa.</div>
+</details>
+
+<p class="muted" style="margin-top:40px;border-top:1px solid var(--line);padding-top:14px">
+Glosario — <b>Costo bruto:</b> lo que factura el proveedor. <b>Costo neto:</b> bruto ± bonif/flete/fin (el del preferido alimenta el margen).
+<b>lista_precio_valor:</b> precio vigente historizado por producto y lista. <b>Lote:</b> un cambio de precios en revisión.
+<b>Lista predeterminada:</b> la que usa el POS para el consumidor final.</p>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Precios / Costos
+</footer>
+</div>
+
+</section>
+
+<section id="mod-reportes-dashboard" class="mod-section">
+
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Reportes y Dashboard — Guía paso a paso</h1>
+  <p>Cómo leer el panorama del negocio por período — ventas, productos, caja, clientes y proveedores — y cómo exportar el detalle de ventas para análisis externo.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="reportes-dashboard-mapa">0 · Cómo funciona</h2>
+<p class="lead">El <b>Dashboard</b> tiene 6 pestañas — cada una mira el negocio desde un ángulo distinto, pero todas comparten el mismo <b>selector de período</b> arriba. Es exclusivo del rol <b>Supervisor</b>. Aparte, en <b>Reportes → Ventas</b> hay una pantalla independiente para buscar y <b>exportar</b> el detalle fila por fila de cada venta — el Dashboard te da la foto general, esa pantalla te da el dato puntual.</p>
+
+<!-- ============ 1. PERIODO ============ -->
+<h2 id="reportes-dashboard-periodo">1 · El selector de período</h2>
+<p>Compartido por las 6 pestañas: <b>Hoy</b>, <b>Semana</b>, <b>Mes</b>, <b>Trimestre</b> o <b>Personalizado</b> (rango de fechas a elección). Cambiarlo recalcula todos los números y gráficos de la pestaña activa.</p>
+
+<!-- ============ 2. RESUMEN ============ -->
+<h2 id="reportes-dashboard-resumen">2 · Resumen</h2>
+<p>La foto del día: ventas de hoy (con atajo a semana/mes), alertas de stock (sin stock / bajo mínimo / sin movimiento), y el estado de la caja del turno con los últimos arqueos.</p>
+<div class="shot">
+  <img src="assets/dash-resumen.png" alt="Pestaña Resumen del Dashboard" loading="lazy">
+  <figcaption>Resumen — todo lo urgente en una sola pantalla al entrar.</figcaption>
+</div>
+
+<!-- ============ 3. VENTAS ============ -->
+<h2 id="reportes-dashboard-ventas">3 · Ventas</h2>
+<p>Total, cantidad de ventas, ticket promedio e IVA del período, filtrable por rubro. Abajo: evolución día a día (comparada contra el período anterior), un mapa de calor de <b>ventas por hora y día</b> de la semana, ranking de vendedores y top de productos.</p>
+<div class="shot">
+  <img src="assets/dash-ventas.png" alt="Pestaña Ventas del Dashboard con gráficos de evolución y heatmap" loading="lazy">
+  <figcaption>Ventas — evolución, heatmap por hora/día, ranking de vendedores y top productos.</figcaption>
+</div>
+
+<!-- ============ 4. PRODUCTOS ============ -->
+<h2 id="reportes-dashboard-productos">4 · Productos</h2>
+<p>Mismo bloque de alertas de stock, más dos herramientas de análisis: <b>curva ABC</b> (clasifica productos por cuánto explican del total facturado — A son los que más venden, C los que menos) y <b>margen por categoría</b>.</p>
+<div class="shot">
+  <img src="assets/dash-productos.png" alt="Pestaña Productos del Dashboard con curva ABC y margen por categoría" loading="lazy">
+  <figcaption>Curva ABC y margen por categoría — para saber en qué productos conviene enfocarse.</figcaption>
+</div>
+
+<!-- ============ 5. CAJA ============ -->
+<h2 id="reportes-dashboard-caja">5 · Caja</h2>
+<p>Ingresos, egresos y recargos totales del período, movimientos agrupados por turno, y el desglose por medio de pago.</p>
+<div class="shot">
+  <img src="assets/dash-caja.png" alt="Pestaña Caja del Dashboard" loading="lazy">
+  <figcaption>Caja — cuánto entró, cuánto salió, y por qué medio.</figcaption>
+</div>
+
+<!-- ============ 6. CLIENTES ============ -->
+<h2 id="reportes-dashboard-clientes">6 · Clientes</h2>
+<p>Deuda total y deuda vencida de todas las cuentas corrientes, clientes nuevos e inactivos del período, y un ranking de clientes por facturación.</p>
+<div class="shot">
+  <img src="assets/dash-clientes.png" alt="Pestaña Clientes del Dashboard" loading="lazy">
+  <figcaption>Clientes — deuda, actividad y ranking.</figcaption>
+</div>
+
+<!-- ============ 7. PROVEEDORES ============ -->
+<h2 id="reportes-dashboard-proveedores">7 · Proveedores</h2>
+<p>Órdenes de compra pendientes de recepción, sugerencias de reposición sin resolver, y ranking de proveedores por gasto del período.</p>
+<div class="shot">
+  <img src="assets/dash-proveedores.png" alt="Pestaña Proveedores del Dashboard" loading="lazy">
+  <figcaption>Proveedores — a diferencia de Clientes, acá no hay columna de deuda: el sistema no lleva cuenta corriente de proveedores (ver la guía de Abastecimiento).</figcaption>
+</div>
+
+<!-- ============ 8. REPORTE ============ -->
+<h2 id="reportes-dashboard-reporte">8 · Reporte de Ventas (detalle exportable)</h2>
+<p>Pantalla independiente en <code>Reportes → Ventas</code>, para cuando necesitás el <b>detalle</b> en vez del resumen: cada venta como una fila, filtrable por fecha, cliente, producto, categoría, vendedor y medio de pago, con botón <b>Exportar</b>.</p>
+<div class="shot">
+  <img src="assets/reporte-ventas.png" alt="Reporte de Ventas con el listado detallado y exportable" loading="lazy">
+  <figcaption>31 ventas en el rango elegido — cada una con su IVA discriminado, lista para exportar.</figcaption>
+</div>
+
+<!-- ============ FAQ ============ -->
+<h2 id="reportes-dashboard-faq">9 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Por qué no veo el Dashboard en el menú?</summary>
+  <div class="ans">El Dashboard requiere el rol <b>Supervisor</b> — un Operador no lo ve ni puede acceder aunque escriba la URL directamente.</div>
+</details>
+
+<details>
+  <summary>¿Qué diferencia hay entre la pestaña "Ventas" del Dashboard y "Reportes → Ventas"?</summary>
+  <div class="ans">La pestaña del Dashboard muestra <b>resúmenes y gráficos</b> agregados por período. "Reportes → Ventas" es una grilla con <b>una fila por venta</b>, pensada para filtrar casos puntuales y exportar el detalle.</div>
+</details>
+
+<details>
+  <summary>¿Qué significa la curva ABC?</summary>
+  <div class="ans">Clasifica los productos según cuánto explican de la facturación total: los <b>A</b> son el núcleo de las ventas, los <b>C</b> son los de menor peso. Es una herramienta clásica para decidir en qué productos prestar más atención (stock, exhibición, negociación con proveedores).</div>
+</details>
+
+<details>
+  <summary>¿Por qué la pestaña Proveedores no muestra cuánto le debo a cada uno?</summary>
+  <div class="ans">Porque el sistema, a propósito, todavía no lleva cuenta corriente de proveedores — esa función quedó diferida. En su lugar, la pestaña te muestra OCs pendientes de recepción y el ranking de gasto.</div>
+</details>
+
+<details>
+  <summary>¿Los números cambian si cambio el período mientras estoy en otra pestaña?</summary>
+  <div class="ans">El período es compartido por las 6 pestañas del Dashboard, así que cambiarlo recalcula la pestaña en la que estés parado en ese momento — y se mantiene si cambiás de pestaña después.</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Reportes y Dashboard
+</footer>
+</div>
+
+</section>
+
+<section id="mod-agenda" class="mod-section">
+
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Agenda — Guía paso a paso</h1>
+  <p>Cómo organizar tareas y recordatorios del local: crear eventos sueltos, armar rutinas que se repiten solas, y seguir los avisos que el sistema manda a quien corresponda.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="agenda-mapa">0 · Cómo funciona</h2>
+<p class="lead">La Agenda tiene tres pantallas que se alimentan una a la otra: una <b>Rutina</b> (opcional) genera <b>Eventos</b> automáticamente según una frecuencia; cada Evento, al enviarse, genera uno o más <b>Avisos</b> (en la app y/o por email) para el destinatario que corresponda. También podés saltear la Rutina y cargar un Evento suelto a mano.</p>
+
+<div class="fig">
+  <figcaption>Rutina → Evento → Aviso</figcaption>
+  <svg viewBox="0 0 860 160" xmlns="http://www.w3.org/2000/svg">
+    <rect class="n-box" x="250" y="6" width="180" height="52" rx="10"/>
+    <text class="t" x="340" y="28" text-anchor="middle">Evento manual</text>
+    <text class="t-sm" x="340" y="44" text-anchor="middle">cargado a mano</text>
+
+    <rect class="n-box" x="20" y="70" width="180" height="70" rx="10"/>
+    <text class="t" x="110" y="98" text-anchor="middle">Rutina</text>
+    <text class="t-sm" x="110" y="116" text-anchor="middle">frecuencia + destinatario</text>
+
+    <rect class="n-accent" x="340" y="70" width="180" height="70" rx="10"/>
+    <text class="t" x="430" y="98" text-anchor="middle">Agenda evento</text>
+    <text class="t-sm" x="430" y="116" text-anchor="middle">pendiente / completado / pospuesto / descartado</text>
+
+    <rect class="n-ok" x="620" y="70" width="200" height="70" rx="10"/>
+    <text class="t" x="720" y="98" text-anchor="middle">Aviso</text>
+    <text class="t-sm" x="720" y="116" text-anchor="middle">in-app y/o email</text>
+
+    <path class="edge" d="M200,105 L340,105" marker-end="url(#agenda-ah)"/>
+    <path class="edge" d="M340,58 L400,70" marker-end="url(#agenda-ah)"/>
+    <path class="edge" d="M520,105 L620,105" marker-end="url(#agenda-ah)"/>
+    <defs>
+      <marker id="agenda-ah" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#b9b1a6"/></marker>
+    </defs>
+  </svg>
+</div>
+
+<p>Módulo detrás de un interruptor de configuración (activado en esta instalación). No tiene permiso propio en el sistema de roles: cualquier usuario con sesión iniciada —Operador o Supervisor— puede usar las tres pantallas.</p>
+
+<!-- ============ 1. EVENTOS ============ -->
+<h2 id="agenda-eventos">1 · Eventos — las tres zonas</h2>
+<p>La pantalla principal (<code>Agenda → Eventos</code>) agrupa todo lo pendiente en tres zonas según la fecha: <b>Atrasadas</b> (venció y sigue sin resolver), <b>Hoy</b> y <b>Próximos</b>. Por defecto solo se listan los eventos activos; el check <b>"Incluir completadas/descartadas"</b> suma también el historial cerrado.</p>
+<div class="shot">
+  <img src="assets/agenda-eventos-overview.png" alt="Pantalla de Eventos de Agenda con la zona Atrasadas" loading="lazy">
+  <figcaption>Zona "Atrasadas" — cuatro instancias de una misma rutina que quedaron sin completar.</figcaption>
+</div>
+<p>Cada fila puede filtrarse por <b>origen</b>: <span class="pill mut">Manual</span> (cargado a mano) o <span class="pill mut">Rutina</span> (generado por una rutina) son los que vas a ver en el uso normal. El filtro también contempla orígenes reservados para integraciones futuras del propio sistema (orden de compra, recepción, stock bajo mínimo, cierre de caja) que hoy todavía no generan eventos automáticamente.</p>
+<p>Cuando un evento sí tiene un origen navegable (por ejemplo, quedó enlazado a una orden de compra o a un proveedor), aparece el botón <b>"Abrir origen"</b> que te lleva directo a esa pantalla.</p>
+
+<!-- ============ 2. CREAR EVENTO ============ -->
+<h2 id="agenda-crear-evento">2 · Crear un evento manual</h2>
+<div class="card">
+  <div class="step"><div class="dot">1</div><div class="body"><h4>"+ Nuevo evento"</h4><p>Arriba a la izquierda, en Eventos.</p></div></div>
+  <div class="step"><div class="dot">2</div><div class="body"><h4>Título y descripción opcional</h4><p>Lo que necesitás recordar — sin campos de destinatario ni canal: un evento manual queda visible en la bandeja de Eventos, no dispara un aviso aparte.</p></div></div>
+  <div class="step"><div class="dot">3</div><div class="body"><h4>Fecha</h4><p>Fecha y hora en que el evento debe aparecer como vencido si nadie lo resuelve antes.</p></div></div>
+</div>
+<div class="shot small">
+  <img src="assets/agenda-evento-nuevo.png" alt="Modal Nuevo evento con título, descripción y fecha" loading="lazy">
+  <figcaption>Nuevo evento — el formulario más simple de las tres pantallas.</figcaption>
+</div>
+
+<!-- ============ 3. ACCIONES ============ -->
+<h2 id="agenda-acciones">3 · Completar, posponer y descartar</h2>
+<p>Cada fila tiene tres acciones posibles, sin importar de dónde vino el evento:</p>
+<table>
+  <tr><th>Acción</th><th>Qué hace</th></tr>
+  <tr><td><b>Completar</b></td><td>Marca el evento como resuelto de inmediato — un solo clic, sin modal.</td></tr>
+  <tr><td><b>Posponer</b></td><td>Abre un modal para elegir una nueva fecha (y una nota opcional) sin cerrar el evento.</td></tr>
+  <tr><td><b>Descartar</b></td><td>Pide confirmación y saca el evento del listado activo sin marcarlo como completado.</td></tr>
+</table>
+<div class="shot-row">
+  <div class="shot small">
+    <img src="assets/agenda-posponer-modal.png" alt="Modal Posponer con campo de nueva fecha y nota" loading="lazy">
+    <figcaption>Posponer — nueva fecha + nota opcional.</figcaption>
+  </div>
+  <div class="shot small">
+    <img src="assets/agenda-descartar-confirm.png" alt="Confirmación antes de descartar un evento" loading="lazy">
+    <figcaption>Descartar pide confirmación explícita.</figcaption>
+  </div>
+</div>
+<div class="callout info">
+  <h3>Posponer no borra el vencimiento original</h3>
+  <p>El evento queda con estado <code>pospuesto</code> y una nueva fecha objetivo; si esa nueva fecha también se pasa sin resolverse, vuelve a aparecer en "Atrasadas" como cualquier otro pendiente.</p>
+</div>
+
+<!-- ============ 4. RUTINAS ============ -->
+<h2 id="agenda-rutinas">4 · Rutinas — generadores recurrentes</h2>
+<p>Una <b>Rutina</b> no es una tarea en sí: es una regla que genera Eventos solos, con la frecuencia y el destinatario que definiste. Sirve para lo que se repite siempre igual — un conteo físico semanal, un recordatorio mensual de pago, etc. — sin tener que cargarlo a mano cada vez.</p>
+<div class="shot">
+  <img src="assets/agenda-rutinas-overview.png" alt="Listado de Rutinas con frecuencia, próximo disparo y estado" loading="lazy">
+  <figcaption>Una rutina semanal, activa, con su próximo disparo calculado.</figcaption>
+</div>
+<p>Desde el listado podés <b>Editar</b>, <b>Pausar</b> (la deja de disparar sin borrarla — distinto de eliminarla) o <b>Eliminar</b> una rutina. Si el <b>próximo disparo</b> queda vacío, la rutina ya agotó su rango de fechas y no va a volver a generar eventos.</p>
+
+<!-- ============ 5. CREAR RUTINA ============ -->
+<h2 id="agenda-crear-rutina">5 · Crear una rutina</h2>
+<div class="card">
+  <div class="step"><div class="dot">1</div><div class="body"><h4>"+ Nueva rutina"</h4><p>Nombre y descripción opcional.</p></div></div>
+  <div class="step"><div class="dot">2</div><div class="body"><h4>Frecuencia</h4><p><b>Única</b> (una sola vez), <b>Diaria</b>, <b>Semanal</b>, <b>Mensual</b> o <b>Cada N días</b>. Semanal y Mensual también admiten un intervalo ("cada cuántas semanas/meses"), no solo "cada N días".</p></div></div>
+  <div class="step"><div class="dot">3</div><div class="body"><h4>Detalle según frecuencia</h4><p>Semanal pide el día de la semana; Mensual pide el día del mes (<b>31 se ajusta automáticamente al último día real de cada mes</b>); Cada N días pide el intervalo en días. Todas piden la hora del disparo.</p></div></div>
+  <div class="step"><div class="dot">4</div><div class="body"><h4>Desde / Hasta</h4><p>Rango de vigencia. "Hasta" es opcional: sin fecha de fin, la rutina se repite indefinidamente.</p></div></div>
+  <div class="step"><div class="dot">5</div><div class="body"><h4>Responsable</h4><p>Un usuario puntual o un rol completo (por ejemplo, "todos los Supervisores").</p></div></div>
+  <div class="step"><div class="dot">6</div><div class="body"><h4>Canales</h4><p>"En la app" y/o "Email" — al menos uno debe quedar tildado para que el aviso llegue a alguna parte. El canal Email depende de que el SMTP esté configurado (ver la guía de Configuración/Sistema).</p></div></div>
+</div>
+<div class="shot small">
+  <img src="assets/agenda-rutina-nueva.png" alt="Modal Nueva rutina con frecuencia semanal, día, intervalo, vigencia y responsable" loading="lazy">
+  <figcaption>Nueva rutina — frecuencia semanal, todos los lunes, responsable "Yo".</figcaption>
+</div>
+
+<!-- ============ 6. AVISOS ============ -->
+<h2 id="agenda-avisos">6 · Avisos — la bandeja de notificaciones</h2>
+<p><code>Agenda → Avisos</code> es la bandeja de salida: cada vez que un evento dispara una notificación, queda un registro acá por canal (in-app, email) y por destinatario, con su propio estado (<span class="pill warn">pendiente</span>, <span class="pill ok">enviado</span>, <span class="pill err">fallido</span>, <span class="pill mut">descartado</span>). Se puede filtrar por texto, canal y estado.</p>
+<div class="shot">
+  <img src="assets/agenda-avisos-overview.png" alt="Bandeja de avisos con filtros de canal y estado" loading="lazy">
+  <figcaption>Bandeja vacía en este entorno de datos de prueba — los filtros quedan igual de útiles cuando hay avisos reales.</figcaption>
+</div>
+<div class="callout warn">
+  <h3>Un aviso "fallido" reintenta solo</h3>
+  <p>Si el envío por email falla (por ejemplo, el SMTP está mal configurado), el sistema reintenta con backoff automático antes de dejarlo definitivamente en <code>fallido</code>. No hace falta reenviarlo a mano.</p>
+</div>
+
+<!-- ============ FAQ ============ -->
+<h2 id="agenda-faq">7 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Cuál es la diferencia entre "Descartar" y "Completar"?</summary>
+  <div class="ans"><b>Completar</b> dice que la tarea se hizo. <b>Descartar</b> dice que ya no aplica o no hace falta resolverla — en ambos casos el evento sale del listado activo, pero quedan como estados distintos en el historial (activá "Incluir completadas/descartadas" para verlos).</div>
+</details>
+
+<details>
+  <summary>Si pauso una rutina, ¿qué pasa con los eventos que ya generó?</summary>
+  <div class="ans">Nada — pausar solo detiene los <b>próximos</b> disparos. Los eventos ya generados siguen en la bandeja de Eventos con su estado actual, y se resuelven (completar/posponer/descartar) igual que cualquier otro.</div>
+</details>
+
+<details>
+  <summary>Puse "31" como día del mes, ¿se rompe en febrero?</summary>
+  <div class="ans">No: el sistema ajusta automáticamente al último día real de cada mes (28, 29, 30 o 31 según corresponda). No hace falta crear una rutina distinta para meses cortos.</div>
+</details>
+
+<details>
+  <summary>¿Un evento manual también genera un aviso por email?</summary>
+  <div class="ans">Un evento cargado a mano no tiene destinatario ni canal propios — queda como una tarea visible en la bandeja de Eventos para quien la vea, pero no dispara un aviso en la bandeja de Avisos. Los avisos por canal (in-app/email) están asociados al flujo de Rutinas, donde sí se define destinatario y canal.</div>
+</details>
+
+<details>
+  <summary>¿Por qué el filtro "Origen" tiene opciones que nunca veo en la lista (orden de compra, recepción, bajo mínimo, cierre de caja)?</summary>
+  <div class="ans">Son orígenes que el sistema ya contempla en su modelo de datos para integrar la Agenda con otros módulos (por ejemplo, avisar automáticamente cuando un producto cae bajo el stock mínimo) pero que todavía no están conectados. Hoy, en la práctica, todo evento que vas a ver tiene origen <b>Manual</b> o <b>Rutina</b>.</div>
+</details>
+
+<details>
+  <summary>No veo "Agenda" en el menú, ¿por qué?</summary>
+  <div class="ans">El módulo está detrás de un interruptor de configuración que puede estar apagado en tu instalación. Si lo esperás y no aparece, pedile a un Supervisor que lo revise en Configuración/Sistema.</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Agenda
+</footer>
+</div>
+
+</section>
+
+<section id="mod-configuracion-sistema" class="mod-section">
+
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Configuración / Sistema — Guía paso a paso</h1>
+  <p>Cómo administrar tu cuenta, dar de alta y baja usuarios, configurar el envío de emails, programar backups y restaurar desde uno, y cargar/vaciar el catálogo de demostración.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="configuracion-sistema-mapa">0 · Cómo funciona</h2>
+<p class="lead">El sidebar tiene dos grupos separados que a veces se confunden: <b>Configuración</b> (catálogo auxiliar — Etiquetas, Categorías, Marcas, Unidades, Ubicaciones, Sinónimos, Transportistas, Importar datos) y <b>Sistema</b> (administración de la instalación en sí). Esta guía cubre solo el grupo <b>Sistema</b>: Mi cuenta, Usuarios, Backup/Restore, Email/SMTP y Datos demo. El resto de Configuración ya está en la guía de Catálogo/Productos y en la de Precios/Costos.</p>
+<div class="shot small">
+  <img src="assets/config-sidebar-overview.png" alt="Sidebar mostrando los grupos Configuración y Sistema por separado" loading="lazy">
+  <figcaption>Dos grupos distintos en el sidebar — esta guía es sobre el de abajo, "Sistema".</figcaption>
+</div>
+<p>Casi todas las pantallas de Sistema requieren permisos de administración (en la práctica, rol <b>Supervisor</b>): Usuarios, Backup/Restore, Email/SMTP y Datos demo. La única excepción es <b>Mi cuenta</b>, disponible para cualquier usuario logueado — cada quien administra su propio perfil ahí, sin necesitar que un Supervisor lo edite.</p>
+
+<!-- ============ 1. MI CUENTA ============ -->
+<h2 id="configuracion-sistema-mi-cuenta">1 · Mi cuenta</h2>
+<p>Dos bloques independientes: datos personales (nombre completo, email) y cambio de contraseña. Para cambiar tu propia contraseña necesitás escribir la <b>actual</b> — a diferencia de cuando un Supervisor le cambia la contraseña a otro usuario desde Usuarios, donde no hace falta saber la anterior.</p>
+<div class="shot">
+  <img src="assets/config-mi-cuenta.png" alt="Pantalla Mi cuenta con datos personales y cambio de contraseña" loading="lazy">
+  <figcaption>Mi cuenta — el único rincón de Sistema abierto a cualquier usuario.</figcaption>
+</div>
+
+<!-- ============ 2. USUARIOS ============ -->
+<h2 id="configuracion-sistema-usuarios">2 · Usuarios</h2>
+<p>Alta, edición, cambio de contraseña y baja lógica (desactivar/reactivar) de usuarios — requiere el permiso de administración de usuarios.</p>
+<div class="shot">
+  <img src="assets/config-usuarios-lista.png" alt="Listado de usuarios con nombre, usuario, rol y estado" loading="lazy">
+  <figcaption>El usuario <code>admin</code> no tiene botones de editar/desactivar: es intocable desde esta pantalla.</figcaption>
+</div>
+<div class="shot small">
+  <img src="assets/config-usuario-nuevo.png" alt="Modal Nuevo usuario con nombre, usuario, email, contraseña y rol" loading="lazy">
+  <figcaption>Nuevo usuario — el nombre de usuario y la contraseña solo se piden al crear, no al editar.</figcaption>
+</div>
+<div class="callout warn">
+  <h3>No se puede desactivar al último Supervisor activo</h3>
+  <p>Es una regla dura del sistema, no solo una confirmación: si intentás desactivar al único Supervisor que queda activo, la acción se rechaza — así la instalación nunca se queda sin nadie que pueda administrarla.</p>
+</div>
+
+<!-- ============ 3. BACKUPS ============ -->
+<h2 id="configuracion-sistema-backup">3 · Backups</h2>
+<p>Backup/Restore junta tres cosas: la <b>configuración</b> del backup automático, el botón para <b>crear uno manual</b>, y el <b>listado</b> de los que ya existen en la carpeta destino.</p>
+<div class="shot">
+  <img src="assets/config-backup-restore.png" alt="Pantalla de Backups con configuración, acciones y listado" loading="lazy">
+  <figcaption>Backups automáticos al cerrar caja, retención de 30 días, y cuatro backups guardados.</figcaption>
+</div>
+<table>
+  <tr><th>Campo</th><th>Qué controla</th></tr>
+  <tr><td>Carpeta destino</td><td>Podés apuntarla a una carpeta de Google Drive Desktop o OneDrive para tener copia fuera de la máquina, sin configurar nada extra.</td></tr>
+  <tr><td>Backup automático al cerrar caja</td><td>Dispara un backup solo cada vez que se cierra un turno de caja — no es un cronómetro fijo.</td></tr>
+  <tr><td>Retención (días)</td><td>Backups más viejos que este número se rotan (se eliminan) automáticamente.</td></tr>
+  <tr><td>Incluir certificados AFIP</td><td>Apagado por defecto. Si lo activás, el backup se cifra con contraseña porque va a contener credenciales fiscales.</td></tr>
+</table>
+<p>Cada fila del listado muestra fecha, si fue <span class="pill mut">manual</span> o <span class="pill mut">auto</span>, tamaño, si incluye certificados y si está cifrado — con acción para eliminarlo.</p>
+
+<!-- ============ 4. RESTORE ============ -->
+<h2 id="configuracion-sistema-restore">4 · Restaurar desde un backup</h2>
+<p>El botón "Restaurar desde archivo…" abre un wizard de varios pasos, a propósito lento: restaurar <b>reemplaza toda la base de datos actual</b>, así que el flujo está diseñado para que sea difícil hacerlo por error.</p>
+<div class="shot">
+  <img src="assets/config-restore-paso1.png" alt="Paso 1 del wizard: ruta del archivo .fbk y contraseña opcional" loading="lazy">
+  <figcaption>Paso 1 — elegís el archivo <code>.fbk</code> (y su contraseña, solo si está cifrado).</figcaption>
+</div>
+<div class="shot">
+  <img src="assets/config-restore-paso2.png" alt="Paso 2 del wizard: comparación de compatibilidad y cantidad de filas por tabla" loading="lazy">
+  <figcaption>Paso 2 — compara compatibilidad de versión y cantidad de filas por tabla antes de tocar nada.</figcaption>
+</div>
+<div class="card">
+  <div class="step"><div class="dot">1</div><div class="body"><h4>Validar backup</h4><p>Se lee el archivo y se muestra si es compatible directamente o si necesita migraciones automáticas por ser de una versión anterior.</p></div></div>
+  <div class="step"><div class="dot">2</div><div class="body"><h4>Comparar</h4><p>Tabla por tabla: cuántas filas tiene la base actual contra cuántas trae el backup — para detectar a ojo si es el archivo que realmente querías.</p></div></div>
+  <div class="step"><div class="dot">3</div><div class="body"><h4>Confirmar</h4><p>Hay que escribir la palabra <code>RESTAURAR</code> a mano para habilitar el botón final. Antes de ejecutar, el sistema crea automáticamente un backup de seguridad de la base actual.</p></div></div>
+  <div class="step"><div class="dot">4</div><div class="body"><h4>Ejecutar</h4><p>La aplicación se reinicia sola al terminar. Al volver a abrir, ves un resumen de filas "antes" y "después" por tabla.</p></div></div>
+</div>
+<div class="callout danger">
+  <h3>Es una operación destructiva e irreversible en el momento</h3>
+  <p>Restaurar reemplaza <b>todos</b> los datos actuales por los del backup. El respaldo de seguridad automático te da una salida si te arrepentís después, pero mientras se ejecuta no hay vuelta atrás — por eso el wizard exige escribir <code>RESTAURAR</code> literal antes de dejarte avanzar.</p>
+</div>
+
+<!-- ============ 5. SMTP ============ -->
+<h2 id="configuracion-sistema-smtp">5 · Email / SMTP</h2>
+<p>Acá se configura el servidor de correo saliente que usa toda la app para mandar emails — hoy, principalmente los avisos de Agenda (ver la guía de Agenda) y el aviso de cierre de caja.</p>
+<div class="shot small">
+  <img src="assets/config-smtp.png" alt="Formulario de configuración SMTP con host, puerto, remitente, usuario y contraseña" loading="lazy">
+  <figcaption>Puerto 587 sin conexión segura = STARTTLS, la combinación más común (Gmail, etc.).</figcaption>
+</div>
+<table>
+  <tr><th>Puerto</th><th>Conexión segura</th><th>Protocolo</th></tr>
+  <tr><td><code>587</code></td><td>Destildada</td><td>STARTTLS — el más habitual (Gmail, Outlook)</td></tr>
+  <tr><td><code>465</code></td><td>Tildada</td><td>TLS directa</td></tr>
+</table>
+<p>El formulario avisa solo si elegís una combinación de puerto/conexión que normalmente no funciona.</p>
+<div class="callout warn">
+  <h3>El campo "Usuario" se guarda sin cifrar</h3>
+  <p>A diferencia de la <b>contraseña</b> (cifrada con <code>safeStorage</code> del sistema operativo, fuera de la base y de los backups), el <b>Usuario</b> viaja en texto plano dentro de <code>parametros_sistema</code> — y por lo tanto entra en los backups <code>.fbk</code>. Si por error escribís tu contraseña ahí en vez del usuario, el sistema te lo advierte antes de guardar. Casi siempre el Usuario es tu dirección de correo completa, no solo el nombre.</p>
+</div>
+<p>Gmail, Outlook y proveedores similares no aceptan la contraseña normal de la cuenta: hace falta generar una <b>contraseña de aplicación</b> desde la configuración de seguridad de la cuenta, con la verificación en dos pasos activada.</p>
+<p>Al pie del formulario, el check <b>"Avisar los cierres de caja por email"</b> es lo que conecta esta pantalla con el aviso automático de cierre de caja: con el email apagado, el aviso igual queda en la bandeja in-app de Agenda, pero no se manda el correo.</p>
+
+<!-- ============ 6. DATOS DEMO ============ -->
+<h2 id="configuracion-sistema-demo">6 · Datos demo</h2>
+<p>Carga (o vacía) un catálogo de 15 productos de muestra pensado para evaluar la app antes de operar en serio — con precio, stock y algún caso borde ya cargado.</p>
+<div class="shot">
+  <img src="assets/config-datos-demo.png" alt="Pantalla Datos demo con estado del catálogo y botones cargar/vaciar" loading="lazy">
+  <figcaption>Con 36 productos reales ya cargados, "Cargar catálogo demo" queda deshabilitado.</figcaption>
+</div>
+<div class="callout info">
+  <h3>Solo se carga sobre un catálogo vacío</h3>
+  <p>"Cargar catálogo demo" se deshabilita apenas hay al menos un producto real cargado — no existe un modo de "agregar demo encima" de tu catálogo. "Vaciar catálogo demo" solo borra los productos marcados como demo, nunca los que vos cargaste.</p>
+</div>
+
+<!-- ============ FAQ ============ -->
+<h2 id="configuracion-sistema-faq">7 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Por qué no veo Usuarios, Backup/Restore, Email/SMTP o Datos demo en mi menú?</summary>
+  <div class="ans">Las cuatro requieren permisos de administración que en la práctica solo tiene el rol <b>Supervisor</b>. Un Operador ve "Mi cuenta" nada más.</div>
+</details>
+
+<details>
+  <summary>Cambié la contraseña de otro usuario desde Usuarios, ¿necesito saber la anterior?</summary>
+  <div class="ans">No — esa es la diferencia con "Mi cuenta". Cuando un Supervisor cambia la contraseña de otro usuario desde el listado de Usuarios, no hace falta la contraseña actual de esa persona. Para cambiar la <b>propia</b> desde "Mi cuenta", sí hay que escribirla.</div>
+</details>
+
+<details>
+  <summary>¿Puedo eliminar un usuario en vez de desactivarlo?</summary>
+  <div class="ans">No hay borrado físico de usuarios — solo baja lógica (Desactivar/Reactivar), como en el resto del sistema. Un usuario desactivado no puede iniciar sesión, pero su historial de auditoría (ventas, movimientos, autorizaciones) se conserva intacto.</div>
+</details>
+
+<details>
+  <summary>¿La carpeta de backups tiene que estar en esta PC?</summary>
+  <div class="ans">No necesariamente — podés apuntarla a una carpeta sincronizada por Google Drive Desktop o OneDrive para tener copia fuera de la máquina, sin ninguna configuración adicional del lado del sistema.</div>
+</details>
+
+<details>
+  <summary>¿Restaurar un backup toca los certificados AFIP?</summary>
+  <div class="ans">Solo si ese backup en particular se creó con "Incluir certificados AFIP" activado. Los backups sin esa opción no tocan certificados al restaurar.</div>
+</details>
+
+<details>
+  <summary>Configuré el email pero los avisos no llegan, ¿qué reviso primero?</summary>
+  <div class="ans">Usá el botón "Probar conexión" en Email/SMTP — te dice si el servidor rechaza la conexión. Las causas más comunes: puerto/conexión segura no coinciden (ver la tabla de esta guía), o el campo Contraseña tiene la contraseña normal de la cuenta en vez de una contraseña de aplicación (Gmail/Outlook la rechazan).</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Configuración / Sistema
+</footer>
+</div>
+
+</section>
+
+</div>
+</main>
+</div>
+
+<script>
+  (function(){
+    var links=[...document.querySelectorAll('nav.side a[href^="#"]')];
+    var map=new Map();
+    links.forEach(function(a){var id=a.getAttribute('href').slice(1);var el=document.getElementById(id);if(el)map.set(el,a);});
+    var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove('active');});var a=map.get(e.target);if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-10% 0px -80% 0px',threshold:0});
+    [...map.keys()].forEach(function(t){obs.observe(t);});
+  })();
+</script>
+

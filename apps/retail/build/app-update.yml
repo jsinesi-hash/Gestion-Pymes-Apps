@@ -1,0 +1,8 @@
+# Config del feed de auto-update que consume electron-updater en runtime.
+# dist.cjs lo copia a resources/app-update.yml del paquete prepackaged (el flujo
+# --prepackaged NO deja que electron-builder lo inyecte solo). Apunta a un repo
+# PÚBLICO de releases para que la descarga sea anónima; el código sigue privado.
+owner: jsinesi-hash
+repo: Ferreteria-releases
+provider: github
+updaterCacheDirName: ferreteria-client-updater

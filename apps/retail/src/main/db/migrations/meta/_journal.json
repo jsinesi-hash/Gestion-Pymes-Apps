@@ -1,0 +1,356 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1780704000000,
+      "tag": "0000_init",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1780760281557,
+      "tag": "0001_r1_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781222400000,
+      "tag": "0002_p1.7_caja",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781481600000,
+      "tag": "0003_p1.8_venta",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1782604800000,
+      "tag": "0004_p1.11_dashboard",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1782691200000,
+      "tag": "0005_r3_compras",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782777600000,
+      "tag": "0006_brave_phalanx",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1782864000000,
+      "tag": "0007_geo",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1782950400000,
+      "tag": "0008_localidad_fk",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1783036800000,
+      "tag": "0009_personas_v2",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1783123200000,
+      "tag": "0010_adr025_sku",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1783209600000,
+      "tag": "0011_adr029_auth_password",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788480000000,
+      "tag": "0012_adr032_pos_redesign",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791072000000,
+      "tag": "0013_venta_en_espera",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791158400000,
+      "tag": "0014_adr034_precios",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1791244800000,
+      "tag": "0015_adr034_costo_detalle",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791331200000,
+      "tag": "0016_adr035_importacion_costos",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791417600000,
+      "tag": "0017_proveedor_codigo",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791504000000,
+      "tag": "0018_cola_revision_descartado",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791590400000,
+      "tag": "0019_adr036_producto_proveedor",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791633600000,
+      "tag": "0020_adr038_dashboard_fase2",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791676800000,
+      "tag": "0021_adr041_unidad",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791763200000,
+      "tag": "0022_adr040_presentaciones",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791849600000,
+      "tag": "0023_adr045_remitos",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791936000000,
+      "tag": "0024_adr045_transportista",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1792022400000,
+      "tag": "0025_adr046_presupuesto",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1792108800000,
+      "tag": "0026_adr047_agenda",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1792195200000,
+      "tag": "0027_adr048_cierre_email",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1792281600000,
+      "tag": "0028_adr049_costo_neto",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1792368000000,
+      "tag": "0029_adr049_reglas_margen",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1792454400000,
+      "tag": "0030_adr049_price_batch",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1792540800000,
+      "tag": "0031_adr051_error_formato",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1792627200000,
+      "tag": "0032_adr051_codigo_interno",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1792713600000,
+      "tag": "0033_adr050_cliente_nombre_apellido",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1793577600000,
+      "tag": "0034_adr054_importacion_catalogo",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1793664000000,
+      "tag": "0035_adr060_habilitar_modulos_1_1",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1793750400000,
+      "tag": "0036_sustitutos_equivalencia",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1793793600000,
+      "tag": "0037_adr067_sinonimos",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1793836800000,
+      "tag": "0038_adr067_nombre_norm",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1793923200000,
+      "tag": "0039_adr063_match_umbral",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1794009600000,
+      "tag": "0040_adr068_gtin_activo",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1794096000000,
+      "tag": "0041_adr073_busqueda_similares_flag",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1794182400000,
+      "tag": "0042_adr076_retencion_backups",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1794268800000,
+      "tag": "0043_adr078_hub_precios_on",
+      "breakpoints": true
+    }
+    ,{
+      "idx": 44,
+      "version": "7",
+      "when": 1794355200000,
+      "tag": "0044_adr061_encender_flags_restantes",
+      "breakpoints": true
+    }
+    ,{
+      "idx": 45,
+      "version": "7",
+      "when": 1794441600000,
+      "tag": "0045_adr079_bloqueo_inactividad",
+      "breakpoints": true
+    }
+    ,{
+      "idx": 46,
+      "version": "7",
+      "when": 1794528000000,
+      "tag": "0046_adr080_inicio_favoritos",
+      "breakpoints": true
+    }
+    ,{
+      "idx": 47,
+      "version": "7",
+      "when": 1794614400000,
+      "tag": "0047_adr081_vistos_recientes_flag",
+      "breakpoints": true
+    }
+    ,{
+      "idx": 48,
+      "version": "7",
+      "when": 1794700800000,
+      "tag": "0048_adr086_skin_modo",
+      "breakpoints": true
+    }
+    ,{
+      "idx": 49,
+      "version": "7",
+      "when": 1794787200000,
+      "tag": "0049_adr089_tipografias",
+      "breakpoints": true
+    }
+  ]
+}

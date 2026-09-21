@@ -1,0 +1,12 @@
+Error occurred in handler for 'importacionCosto:getConfig': SqliteError: no such table: proveedor_importacion_config
+    at Database.prepare (C:\Users\Joaco\Downloads\Ferreteria-app\node_modules\better-sqlite3\lib\methods\wrappers.js:5:21)
+    at BetterSQLiteSession.prepareQuery (C:\Users\Joaco\Downloads\Ferreteria-app\packages\client\.vite\build\index.js:5455:30)
+    at BetterSQLiteSession.prepareOneTimeQuery (C:\Users\Joaco\Downloads\Ferreteria-app\packages\client\.vite\build\index.js:5394:17)
+    at SQLiteSelectBase._prepare (C:\Users\Joaco\Downloads\Ferreteria-app\packages\client\.vite\build\index.js:4360:88)
+    at SQLiteSelectBase.get (C:\Users\Joaco\Downloads\Ferreteria-app\packages\client\.vite\build\index.js:4348:19)
+    at importacionCostoGetConfigHandler (C:\Users\Joaco\Downloads\Ferreteria-app\packages\client\.vite\build\index.js:77663:126)
+    at C:\Users\Joaco\Downloads\Ferreteria-app\packages\client\.vite\build\index.js:77961:82
+    at C:\Users\Joaco\Downloads\Ferreteria-app\packages\client\.vite\build\index.js:17925:12
+    at WebContents.<anonymous> (node:electron/js2c/browser_init:2:86178)
+    at WebContents.emit (node:events:518:28) {
+  code: 'SQLITE_ERROR'

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PERF-3 — Mockup opción B (permisos por rol editable)</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.31.0/iconfont/tabler-icons.min.css" />
+<style>
+  :root{
+    --surface-0:#f5f4ef; --surface-1:#faf9f5; --surface-2:#ffffff;
+    --text-primary:#141413; --text-secondary:#5f5e5a; --text-muted:#8a8980;
+    --border:rgba(0,0,0,.09); --border-strong:rgba(0,0,0,.15);
+    --fill-accent:#378add; --text-accent:#185fa5; --bg-accent:#e6f1fb;
+    --text-warning:#854f0b; --bg-warning:#faeeda; --text-success:#3b6d11;
+    --radius:8px; --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+    --font-sans:"Hanken Grotesk",system-ui,-apple-system,Segoe UI,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --surface-0:#1a1a19; --surface-1:#232322; --surface-2:#2c2c2a;
+      --text-primary:#f5f4ef; --text-secondary:#b4b2a9; --text-muted:#888780;
+      --border:rgba(255,255,255,.1); --border-strong:rgba(255,255,255,.18);
+      --fill-accent:#378add; --text-accent:#85b7eb; --bg-accent:#0c447c;
+      --text-warning:#efc275; --bg-warning:#4a2b06; --text-success:#97c459;
+    }
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--surface-0); color:var(--text-primary);
+    font-family:var(--font-sans); font-size:14px; line-height:1.5;
+    padding:2rem 1rem;}
+  .page{max-width:780px; margin:0 auto;}
+  .docnote{font-size:12px; color:var(--text-muted); border:0.5px dashed var(--border-strong);
+    border-radius:var(--radius); padding:10px 12px; margin-bottom:24px;}
+  button{font-family:inherit; padding:7px 12px; border-radius:var(--radius);
+    border:0.5px solid var(--border-strong); background:transparent; color:var(--text-primary); cursor:pointer;}
+  button:hover{background:var(--surface-1);}
+  table{width:100%; border-collapse:collapse;}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="docnote">
+    <strong>Mockup de diseño — no funcional.</strong> Opción B de PERF-3 (editor de permisos por rol).
+    Documento de referencia para el futuro ADR de permisos. Los toggles son interactivos solo para ilustrar
+    el concepto de "cambios sin guardar" y las guardas de invariante (candados). Ver el análisis completo en
+    <code>docs/perf3-permisos-analisis.md</code>.
+  </div>
+
+  <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-muted); margin-bottom:4px;">
+    <span>Administración</span>
+    <i class="ti ti-chevron-right" style="font-size:14px;" aria-hidden="true"></i>
+    <span style="color:var(--text-secondary);">Roles y permisos</span>
+  </div>
+
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
+    <h1 style="font-size:22px; font-weight:500; margin:0;">Roles y permisos</h1>
+    <span style="display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:4px 10px; border-radius:999px; background:var(--bg-warning); color:var(--text-warning);">
+      <i class="ti ti-pencil" style="font-size:14px;" aria-hidden="true"></i> Edición
+    </span>
+  </div>
+
+  <div style="display:flex; gap:8px; align-items:flex-start; background:var(--bg-accent); border-radius:var(--radius); padding:10px 12px; margin-bottom:16px;">
+    <i class="ti ti-shield-lock" style="font-size:16px; color:var(--text-accent); margin-top:1px;" aria-hidden="true"></i>
+    <p style="margin:0; font-size:12px; color:var(--text-accent); line-height:1.5;">
+      Son 2 roles de sistema. Los permisos con candado no se pueden quitar: dejarían al sistema sin administrador o romperían un flujo esencial.
+    </p>
+  </div>
+
+  <div style="background:var(--surface-2); border:0.5px solid var(--border); border-radius:12px; overflow:hidden;">
+    <table style="font-size:13px;">
+      <thead>
+        <tr style="border-bottom:0.5px solid var(--border-strong);">
+          <th style="text-align:left; padding:10px 14px; font-weight:500; color:var(--text-secondary);">Puede&hellip;</th>
+          <th style="text-align:center; padding:10px 14px; font-weight:500; width:120px;">Operador</th>
+          <th style="text-align:center; padding:10px 14px; font-weight:500; width:120px;">Supervisor</th>
+        </tr>
+      </thead>
+      <tbody id="rbac-body"></tbody>
+    </table>
+  </div>
+
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:14px; padding:10px 14px; background:var(--surface-1); border-radius:var(--radius);">
+    <span id="changecount" style="font-size:13px; color:var(--text-secondary);"></span>
+    <div style="display:flex; gap:8px;">
+      <button id="btn-descartar">Descartar</button>
+      <button id="btn-guardar" style="border-color:var(--text-accent); color:var(--text-accent);">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var data = [
+    ["Ventas", [
+      ["Vender (POS)","venta.crear",1,1,0,1],
+      ["Anular ventas","venta.anular",0,1,0,0],
+      ["Modificar precio en la venta","precio.override",0,1,0,0]]],
+    ["Caja", [["Abrir/cerrar caja y movimientos","caja.operar",1,1,0,1]]],
+    ["Stock", [
+      ["Registrar entradas de stock","stock.entrada",1,1,0,0],
+      ["Ajustar stock (conteo/merma)","stock.ajustar",1,1,0,0]]],
+    ["Catálogo", [
+      ["Crear productos","producto.crear",1,1,0,0],
+      ["Editar productos","producto.editar",1,1,0,0],
+      ["Consultar el catálogo","producto.consultar",1,1,0,0]]],
+    ["Compras", [
+      ["Recibir compras","compra.recibir",1,1,0,0],
+      ["Pagar a proveedores","proveedor.pagar",0,1,0,0],
+      ["Gestionar proveedores y órdenes de compra","proveedor.gestionar",0,1,0,0]]],
+    ["Cuentas", [["Cobrar cuenta corriente","ctacte.cobrar",1,1,0,0]]],
+    ["Precios", [["Aprobar lotes de precios","precio.aprobar",0,1,0,0]]],
+    ["Remitos", [
+      ["Emitir remitos","remito.crear",1,1,0,0],
+      ["Conformar remitos","remito.conformar",1,1,0,0],
+      ["Anular remitos","remito.anular",1,1,0,0],
+      ["Gestionar transportistas","transportista.gestionar",1,1,0,0]]],
+    ["Presupuestos", [
+      ["Crear presupuestos","presupuesto.crear",1,1,0,0],
+      ["Emitir presupuestos","presupuesto.emitir",1,1,0,0],
+      ["Anular presupuestos","presupuesto.anular",1,1,0,0]]],
+    ["Exportación", [
+      ["Exportar datos (básico)","export.basico",1,1,0,0],
+      ["Exportar datos (completo)","export.supervisor",0,1,0,0]]],
+    ["Reportes", [["Ver dashboard y reportes","dashboard.ver",0,1,0,0]]],
+    ["Administración", [
+      ["Importación masiva","import.masiva",0,1,0,0],
+      ["Administrar usuarios","usuario.administrar",0,1,0,1],
+      ["Configuración fiscal y parámetros","config.fiscal",0,1,0,0],
+      ["Crear backups","backup.crear",0,1,0,0],
+      ["Restaurar backups","backup.restaurar",0,1,0,0]]]
+  ];
+
+  var orig = {};
+  function sw(role, code, on, locked){
+    var key = role+"|"+code;
+    orig[key] = on;
+    if(locked){
+      return '<span title="No se puede quitar" style="display:inline-flex; align-items:center; gap:5px; font-size:12px; color:var(--text-muted);">'
+        + '<span style="display:inline-block; width:34px; height:20px; border-radius:999px; background:var(--fill-accent); position:relative; opacity:0.55;">'
+        + '<span style="position:absolute; top:2px; right:2px; width:16px; height:16px; border-radius:50%; background:#fff;"></span></span>'
+        + '<i class="ti ti-lock" style="font-size:13px;" aria-hidden="true"></i></span>';
+    }
+    return '<button class="tog" data-key="'+key+'" data-on="'+on+'" aria-label="alternar" '
+      + 'style="padding:0; border:none; background:none; display:inline-flex; align-items:center;">'
+      + '<span class="track" style="display:inline-block; width:34px; height:20px; border-radius:999px; position:relative; transition:background .12s; background:'
+      + (on?'var(--fill-accent)':'var(--border-strong)')+';">'
+      + '<span class="knob" style="position:absolute; top:2px; left:'+(on?'16px':'2px')+'; width:16px; height:16px; border-radius:50%; background:#fff; transition:left .12s;"></span>'
+      + '</span></button>';
+  }
+
+  var html = "";
+  data.forEach(function(g){
+    html += '<tr style="background:var(--surface-1);"><td colspan="3" style="padding:7px 14px; font-size:11px; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-muted); border-top:0.5px solid var(--border);">'+g[0]+'</td></tr>';
+    g[1].forEach(function(p){
+      var label=p[0], code=p[1], op=p[2], sup=p[3], opL=p[4], supL=p[5];
+      html += '<tr style="border-top:0.5px solid var(--border);">'
+        + '<td style="padding:9px 14px;">'+label+'</td>'
+        + '<td style="padding:9px 14px; text-align:center;">'+sw("op",code,op,opL)+'</td>'
+        + '<td style="padding:9px 14px; text-align:center;">'+sw("sup",code,sup,supL)+'</td>'
+        + '</tr>';
+    });
+  });
+  var body=document.getElementById("rbac-body");
+  body.innerHTML=html;
+
+  var cur=Object.assign({},orig);
+  cur["op|proveedor.gestionar"]=1;
+
+  function refresh(){
+    body.querySelectorAll(".tog").forEach(function(b){
+      var k=b.getAttribute("data-key"); var on=cur[k]===1;
+      b.querySelector(".track").style.background=on?"var(--fill-accent)":"var(--border-strong)";
+      b.querySelector(".knob").style.left=on?"16px":"2px";
+    });
+    var n=0; Object.keys(cur).forEach(function(k){ if(cur[k]!==orig[k]) n++; });
+    var cc=document.getElementById("changecount");
+    if(n===0){ cc.textContent="Sin cambios sin guardar"; cc.style.color="var(--text-muted)"; }
+    else { cc.innerHTML='<i class="ti ti-point-filled" style="color:var(--text-warning); vertical-align:-2px;"></i> '+n+' cambio'+(n>1?"s":"")+" sin guardar"; cc.style.color="var(--text-secondary)"; }
+  }
+  body.addEventListener("click",function(e){
+    var b=e.target.closest(".tog"); if(!b) return;
+    var k=b.getAttribute("data-key"); cur[k]=cur[k]===1?0:1; refresh();
+  });
+  document.getElementById("btn-descartar").addEventListener("click",function(){ cur=Object.assign({},orig); cur["op|proveedor.gestionar"]=1; refresh(); });
+  refresh();
+})();
+</script>
+</body>
+</html>

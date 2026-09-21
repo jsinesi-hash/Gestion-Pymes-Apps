@@ -1,0 +1,25 @@
+Sección 3 aprobada con un ajuste obligatorio y un checkpoint:
+
+1. FALTA promoción activa en el flujo de precio.
+   getPrecioEnLista tal como está descripto solo resuelve lista_precio_valor + fallback, pero
+   nunca consulta promocion. Por la precedencia definida en ADR-034 (promoción activa > valor
+   vigente > fallback), si hay una promoción vigente para ese producto, el POS tiene que cobrar
+   el precio promocional — no el de lista_precio_valor.
+
+   Esto tiene que resolverse DENTRO de getPrecioEnLista (o el resolver que uses), como parte de
+   la misma llamada IPC: primero chequeás si hay promocion activa para ese producto/alcance en
+   este momento, y si la hay, devolvés ese precio; si no, seguís con lista_precio_valor y después
+   el fallback. No lo repartas en consultas separadas desde el renderer — la precedencia
+   completa vive en el backend, en un solo lugar.
+
+   El campo fallback: boolean queda igual, pero agregá también algo como origen:
+   'promocion' | 'vigente' | 'fallback' en la respuesta, para que la UI (badge/toast) pueda
+   distinguir "está en promo" de "está sin confirmar" — son estados distintos y no se deben
+   mostrar igual.
+
+2. Checkpoint (no bloquea esta sección): ¿en qué sección cubrís el auto-seed de
+   lista_precio_valor al crear un producto nuevo? Es lo que definimos en Q5 para que el fallback
+   sea excepcional, no rutina. No apareció en Sección 3 ni en Sección 4 — confirmame si ya está
+   en otra sección o si falta agregarlo a la de alta de productos.
+
+Con el punto 1 resuelto y el checkpoint del punto 2 confirmado, avanzá.

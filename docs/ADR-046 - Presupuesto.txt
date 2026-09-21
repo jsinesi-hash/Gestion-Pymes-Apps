@@ -1,0 +1,107 @@
+CONTEXTO
+Ferretería-app (Electron + React + TS, SQLite/Drizzle, monorepo pnpm). App en v1.0.0, trabajando
+sobre módulos aprobados. Este prompt implementa ADR-046: módulo nuevo de Presupuesto (cotización
+previa a la venta). Es una entidad/tabla nueva: respetá el gate de schema al frente. No toques
+venta, caja ni el módulo fiscal fuera de lo que este prompt indica explícitamente.
+
+Invariantes del proyecto que aplican: montos en centavos; soft-delete (nunca borrado físico);
+UUID como PK; transacciones atómicas para operaciones financieras/de venta; parámetros de negocio
+en parametros_sistema (nunca hardcode); IPC namespaceado por entidad.
+
+---
+
+GATE 0 — Schema discovery + DDL para confirmar (NO MIGRAR TODAVÍA)
+
+Antes de escribir cualquier migración, presentame:
+1. El DDL propuesto de las dos tablas nuevas (presupuesto, presupuesto_detalle) siguiendo la
+   convención real del proyecto (version, origin_id, sync_state, updated_at — verificá contra
+   una tabla existente como venta/venta_detalle, no asumas los nombres).
+2. El ALTER de venta para agregar presupuesto_id (nullable, FK a presupuesto).
+3. Los parámetros nuevos en parametros_sistema: presupuesto_proximo_secuencial (contador,
+   arranca en 1, sin Luhn) y presupuesto.validez_dias_default (sugerido 15).
+Detené acá y esperá mi confirmación del DDL antes de aplicar la migración.
+
+Modelo objetivo (a validar contra el schema real en el gate):
+
+presupuesto
+- id UUID PK
+- numero TEXT (null hasta emitir) — formato PR-0000042, secuencial estilo SKU SIN dígito Luhn
+- cliente_id UUID nullable (null = consumidor final)
+- estado TEXT: 'borrador'|'emitido'|'vencido'|'convertido'|'anulado'
+- fecha_emision INTEGER nullable (null en borrador)
+- validez_dias INTEGER
+- fecha_validez INTEGER nullable (se calcula al emitir: fecha_emision + validez_dias)
+- descuento_global_centavos INTEGER default 0
+- total_centavos INTEGER
+- usuario_id UUID
+- venta_id UUID nullable (se completa al convertir)
+- activo INTEGER default 1 (soft-delete)
+- version / origin_id / sync_state / updated_at (según convención del proyecto)
+
+presupuesto_detalle
+- id UUID PK
+- presupuesto_id UUID FK
+- producto_id UUID FK
+- cantidad
+- precio_unitario_centavos INTEGER (snapshot congelado al emitir)
+- descuento_linea (% o centavos, seguí el patrón que ya usa venta_detalle)
+- version / origin_id / sync_state / updated_at
+
+Sugerido (no bloqueante, comentámelo si lo ves): CHECK que ate estado a la nulidad de campos —
+numero/fecha_emision/fecha_validez NOT NULL cuando estado != 'borrador'; venta_id NOT NULL cuando
+estado = 'convertido'. Índice parcial por estado para el job de vencimiento.
+
+---
+
+1. ABM de Presupuesto (borrador)
+   Pantalla para armar un presupuesto: selección de cliente (opcional, permite consumidor final),
+   agregado de líneas (producto + cantidad + descuento de línea), descuento global, total.
+   En estado borrador NO se asigna número ni se congela precio: los precios se muestran en vivo
+   (mismo resolver que el POS: getPrecioEnLista, precedencia promoción > vigente > fallback).
+   Se puede guardar borrador, editar y anular.
+
+2. Emitir presupuesto
+   Acción "Emitir" sobre un borrador:
+   - Asigna numero desde presupuesto_proximo_secuencial (atómico, mismo patrón que el correlativo
+     SKU/Numeración-sufijos).
+   - Congela snapshot: copia el precio_unitario_centavos vigente de cada línea (resuelto por el
+     motor de precios) a presupuesto_detalle. A partir de acá el precio de la línea NO se recalcula.
+   - Setea fecha_emision = ahora, fecha_validez = ahora + validez_dias. validez_dias arranca desde
+     presupuesto.validez_dias_default pero es EDITABLE en el momento de emitir.
+   - estado pasa a 'emitido'.
+   Todo dentro de una transacción atómica.
+
+3. Vencimiento automático
+   Job diario que marca estado 'emitido' → 'vencido' cuando fecha_validez < hoy. Solo señaliza
+   (no borra, no impacta nada). Update condicionado a estado='emitido' (compare-and-swap) para no
+   pisar un presupuesto que se esté convirtiendo en simultáneo.
+
+4. Convertir a venta
+   Acción "Convertir" sobre un presupuesto emitido o vencido:
+   - Abre el POS precargado con las líneas del presupuesto.
+   - Si el presupuesto está DENTRO de validez: precarga a precio snapshot (el congelado).
+   - Si está VENCIDO: reprecia cada línea al valor vigente del día y mostrá un aviso NO bloqueante
+     ("presupuesto vencido, precios actualizados al valor de hoy") antes de confirmar. No vender a
+     precio viejo por vencido.
+   - stock, caja y fiscal impactan RECIÉN al confirmar la venta, con el flujo normal del POS.
+   - Al confirmarse la venta: venta.presupuesto_id = presupuesto.id y presupuesto.estado =
+     'convertido' con presupuesto.venta_id = venta.id. Ambos updates en la misma transacción de la
+     venta. Update de presupuesto condicionado a estado IN ('emitido','vencido').
+
+5. Export PDF básico
+   Botón "Exportar PDF" sobre un presupuesto emitido: genera un PDF simple (encabezado del negocio,
+   datos del cliente si hay, líneas con cantidad/precio/subtotal, descuentos, total, número y fecha
+   de validez). Reutilizá el mecanismo de impresión ya existente (webContents.printToPDF, patrón de
+   ADR-027). SIN plantilla fiscal — no es un comprobante AFIP.
+
+6. Navegación
+   Agregar entrada "Presupuesto" al sidebar. Proponeme en qué grupo va (según ADR-028/030) antes de
+   tocar la navegación.
+
+---
+
+Fuera de alcance de este prompt (parkeado en ADR-046): conversión parcial de líneas, plantilla/
+branding avanzado del PDF, reserva de stock para presupuestos emitidos.
+
+Gates de parada obligatorios: (a) GATE 0 antes de migrar; (b) confirmar el grupo de sidebar antes
+de tocar navegación; (c) cualquier escritura en parametros_sistema.

@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ferretería App - Diagramas de Procesos y Base de Datos</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        nav {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 2px solid #e9ecef;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        nav a {
+            color: #667eea;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            background: white;
+            border: 2px solid #667eea;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        nav a:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .section {
+            padding: 40px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .section:last-child {
+            border-bottom: none;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .section h3 {
+            color: #764ba2;
+            font-size: 1.5em;
+            margin: 30px 0 15px 0;
+        }
+        
+        .diagram-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            overflow-x: auto;
+            border: 2px solid #e9ecef;
+        }
+        
+        .diagram-title {
+            font-size: 1.3em;
+            color: #495057;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .release-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .release-r1 { background: #28a745; color: white; }
+        .release-r2 { background: #17a2b8; color: white; }
+        .release-r3 { background: #ffc107; color: #333; }
+        .release-r4 { background: #fd7e14; color: white; }
+        .release-r5 { background: #6f42c1; color: white; }
+        
+        .actor-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+        
+        .actor-operador { background: #e3f2fd; color: #1976d2; }
+        .actor-supervisor { background: #fff3e0; color: #f57c00; }
+        .actor-ambos { background: #f3e5f5; color: #7b1fa2; }
+        
+        footer {
+            background: #343a40;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.8em; }
+            .section { padding: 20px; }
+            nav a { padding: 8px 15px; font-size: 0.9em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏪 Sistema de Gestión de Ferretería</h1>
+            <p>Diagramas de Procesos de Negocio, Base de Datos e Historias de Usuario</p>
+        </header>
+        
+        <nav>
+            <ul>
+                <li><a href="#procesos">📋 Procesos de Negocio</a></li>
+                <li><a href="#basedatos">🗄️ Diagrama ER Base de Datos</a></li>
+                <li><a href="#historias">📖 Historias de Usuario</a></li>
+            </ul>
+        </nav>
+        
+        <section id="procesos" class="section">
+            <h2>📋 Diagramas de Flujo de Procesos</h2>
+            
+            <h3>3.1 Alta de Producto <span class="release-badge release-r1">R1</span> <span class="actor-badge actor-ambos">Operador/Supervisor</span></h3>
+            <div class="diagram-container">
+                <div class="diagram-title">Flujo: Alta de Producto</div>
+                <div class="mermaid">
+flowchart TD
+    A[Inicio] --> B{Tiene código EAN/UPC?}
+    B -->|Sí| C[Escanear EAN/UPC]
+    B -->|No| D[Continuar sin código]
+    C --> E[Validar duplicado por gtin_barcode]
+    D --> F[Advertir por nombre similar]
+    E --> G{Duplicado?}
+    F --> G
+    G -->|Sí| H[Mostrar error y permitir continuar]
+    G -->|No| I[Cargar datos del producto]
+    H --> I
+    I --> J[Nombre]
+    I --> K[Categoría]
+    I --> L[Marca]
+    I --> M[Unidad venta/compra]
+    I --> N[Factor conversión]
+    I --> O[Permite fracción]
+    I --> P[Impuesto sugiere 21%]
+    I --> Q[Costo]
+    I --> R[Precio venta lista]
+    J --> S[Asignar ubicación del catálogo]
+    K --> S
+    L --> S
+    M --> S
+    N --> S
+    O --> S
+    P --> S
+    Q --> S
+    R --> S
+    S --> T[Guardar producto]
+    T --> U[Generar codigo_qr único]
+    T --> V[Generar SKU correlativo]
+    T --> W[Crear Existencias en 0]
+    U --> X{Imprimir etiqueta QR?}
+    V --> X
+    W --> X
+    X -->|Sí| Y[Seleccionar tamaño]
+    X -->|No| Z[Fin]
+    Y --> Y1[Chico 5x5 cm]
+    Y --> Y2[Mediano 10x10 cm]
+    Y --> Y3[Grande 15x15 cm]
+    Y1 --> Z
+    Y2 --> Z
+    Y3 --> Z
+                </div>
+            </div>
+            
+            <h3>3.2 Entrada de Stock <span class="release-badge release-r1">R1</span> <span class="actor-badge actor-ambos">Operador/Supervisor</span></h3>
+            <div class="diagram-container">
+                <div class="diagram-title">Flujo: Entrada de Stock</div>
+                <div class="mermaid">
+flowchart TD
+    A[Inicio] --> B[Buscar producto]
+    B --> C{Método de búsqueda}
+    C -->|QR| D[Escanear QR]
+    C -->|EAN| E[Escanear EAN/UPC]
+    C -->|Nombre| F[Buscar por nombre]
+    C -->|SKU| G[Buscar por SKU]
+    D --> H[Producto encontrado]
+    E --> H
+    F --> H
+    G --> H
+    H --> I[Ingresar cantidad]
+    I --> J[Ingresar costo opcional]
+    J --> K[Generar MovimientoStock tipo entrada]
+    K --> L[Incrementar Existencias]
+    L --> M[Recalcular costo promedio ponderado]
+    M --> N[Fin]
+                </div>
+            </div>
+            
+            <h3>3.3 Recepción de Compra <span class="release-badge release-r3">R3</span> <span class="actor-badge actor-ambos">Operador/Supervisor</span></h3>
+            <div class="diagram-container">
+                <div class="diagram-title">Flujo: Recepción de Compra</div>
+                <div class="mermaid">
+flowchart TD
+    A[Inicio] --> B[Seleccionar Orden de Compra]
+    B --> C{Estado OC?}
+    C -->|Emitida| D[Continuar]
+    C -->|Recibida Parcial| D
+    C -->|Otro| E[Error: OC no válida]
+    D --> F[Registrar Recepción]
+    F --> G[Ingresar remito proveedor opcional]
+    G --> H[Por cada línea]
+    H --> I[Confirmar cantidad recibida]
+    I --> J[Confirmar costo real]
+    J --> K{Sobre-recepción?}
+    K -->|Sí| L[Requiere autorización Supervisor]
+    K -->|No| M[Continuar]
+    L --> N{Autorizado?}
+    N -->|No| O[Rechazar sobre-recepción]
+    N -->|Sí| M
+    O --> M
+    M --> P[Crear RecepcionDetalle]
+    P --> Q[Crear MovimientoStock entrada/recepcion_compra]
+    Q --> R[Incrementar stock]
+    R --> S[Recalcular costo promedio]
+    S --> T[Acumular cantidad_recibida]
+    T --> U{Más líneas?}
+    U -->|Sí| H
+    U -->|No| V[Actualizar estado OC]
+    V --> W[Generar cargo en cuenta proveedor]
+    W --> X{Producto sin ubicación?}
+    X -->|Sí| Y[Asignar ubicación antes de cerrar]
+    X -->|No| Z[Fin]
+    Y --> Z
+                </div>
+            </div>
+            
+            <h3>3.4 Reglas de Resolución de Precio <span class="release-badge release-r1">R1</span></h3>
+            <div class="diagram-container">
+                <div class="diagram-title">Flujo: Cálculo de Precio</div>
+                <div class="mermaid">
+flowchart TD
+    A[Inicio] --> B[Precio base: precio_venta_lista]
+    B --> C{Tiene ajuste propio del producto?}
+    C -->|Sí| D[Usar ajuste porcentual del producto]
+    C -->|No| E[Usar ajuste porcentual general de la lista]
+    D --> F[Aplicar ajuste de lista]
+    E --> F
+    F --> G[Aplicar descuento de línea]
+    G --> H[Aplicar descuento global]
+    H --> I[Calcular IVA discriminado]
+    I --> J[Calcular total con centavos]
+    J --> K[Redondear total a $1]
+    K --> L[Diferencia en ajuste_redondeo]
+    L --> M[Fin]
+                </div>
+            </div>
+            
+            <h3>3.5 Venta en POS <span class="release-badge release-r1">R1</span> <span class="actor-badge actor-ambos">Operador/Supervisor</span></h3>
+            <div class="diagram-container">
+                <div class="diagram-title">Flujo: Venta en POS</div>
+                <div class="mermaid">
+flowchart TD
+    A[Inicio] --> B{Caja abierta?}
+    B -->|No| C[Error: Abrir caja primero]
+    B -->|Sí| D[Cliente por defecto: Consumidor Final]
+    D --> E[Agregar líneas]
+    E --> F{Método de ingreso}
+    F -->|QR| G[Escanear QR]
+    F -->|EAN| H[Escanear EAN/UPC]
+    F -->|Búsqueda| I[Buscar producto]
+    G --> J[Producto encontrado]
+    H --> J
+    I --> J
+    J --> K{Producto activo?}
+    K -->|No| L[Error: Producto inactivo]
+    K -->|Sí| M{Stock disponible?}
+    M -->|No| N[Error: Sin stock disponible]
+    M -->|Sí| O[Crear snapshot datos]
+    O --> P[Ingresar cantidad]
+    P --> Q{Fraccionable?}
+    Q -->|Sí| R[Permitir decimales]
+    Q -->|No| S[Solo enteros]
+    R --> T[Resolver precio 3.4]
+    S --> T
+    T --> U{Más líneas?}
+    U -->|Sí| E
+    U -->|No| V[Aplicar descuento global]
+    V --> W[Calcular IVA y total]
+    W --> X[Redondear a $1]
+    X --> Y[Seleccionar forma de pago]
+    Y --> Z{Forma de pago}
+    Z -->|Efectivo| AA[Continuar]
+    Z -->|Tarjeta| AB[Continuar]
+    Z -->|Transferencia| AC[Continuar]
+    Z -->|Cuenta Corriente| AD{Cliente habilitado?}
+    AD -->|No| AE[Error: CT no habilitada]
+    AD -->|Sí| AF{Excede límite crédito?}
+    AF -->|Sí| AG[Advertir y bloquear]
+    AF -->|No| AH[Continuar]
+    AG --> AI{Autorización Supervisor?}
+    AI -->|No| AJ[Rechazar venta]
+    AI -->|Sí| AH
+    AA --> AK[Confirmar venta]
+    AB --> AK
+    AC --> AK
+    AH --> AK
+    AK --> AL[Crear Venta + VentaDetalle]
+    AL --> AM[Crear MovimientoStock salida/venta]
+    AM --> AN[Decrementar stock]
+    AN --> AO{Forma de pago}
+    AO -->|Efectivo/Tarjeta/Transferencia| AP[Crear MovimientoCaja]
+    AO -->|Cuenta Corriente| AQ[Crear MovimientoCtaCte cargo/venta_credito]
+    AP --> AR[Actualizar Caja]
+    AQ --> AS[Actualizar Cuenta Corriente]
+    AR --> AT[Emitir comprobante]
+    AS --> AT
+    AT --> AU[Imprimir]
+    AU --> AV[Fin]
+                </div>
+            </div>
+            
+            <h3>3.5b Anulación de Venta <span class="release-badge release-r1">R1</span> <span class="actor-badge actor-supervisor">Solo Supervisor</span></h3>
+            <div class="diagram-container">
+                <div class="diagram-title">Flujo: Anulación de Venta</div>
+                <div class="mermaid">
+flowchart TD
+    A[Inicio] --> B[Seleccionar venta confirmada]
+    B --> C{Caja abierta?}
+    C -->|No| D[Error: Abrir caja para reversión efectivo]
+    C -->|Sí| E[Ingresar motivo de anulación]
+    E --> F[Confirmar anulación]
+    F --> G[Cambiar estado Venta a anulada]
+    G --> H[Crear MovimientoStock entrada/devolución]
+    H --> I[Incrementar stock]
+    I --> J{Forma de pago original}
+    J -->|Efectivo| K[Crear MovimientoCaja egreso]
+    J -->|Cuenta Corriente| L[Crear MovimientoCtaCte contra-cargo]
+    K --> M[Actualizar Caja actual]
+    L --> N[Actualizar Cuenta Corriente]
+    M --> O{R2 Fiscal?}
+    N --> O
+    O -->|Sí| P[Generar nota crédito fiscal]
+    O -->|No| Q[Fin]
+    P --> Q
+                </div>
+            </div>
+            
+            <h3>3.6 Apertura y Cierre de Caja <span class="release-badge release-r1">R1</span> <span class="actor-badge actor-ambos">Operador/Supervisor</span></h3>
+            <div class="diagram-container">
+                <div class="diagram-title">Flujo: Apertura de Caja</div>
+                <div class="mermaid">
+flowchart TD
+    A[Inicio] --> B{Usuario tiene caja abierta?}
+    B -->|Sí| C[Error: Ya tiene caja abierta]
+    B -->|No| D[Ingresar monto inicial]
+    D --> E[Crear registro Caja estado abierta]
+    E --> F[Registrar fecha_apertura]
+    F --> G[Fin]
+                </div>
+            </div>
+            
+            <div class="diagram-container">
+                <div class="diagram-title">Flujo: Cierre de Caja</div>
+                <div class="mermaid">
+flowchart TD
+    A[Inicio] --> B[Calcular monto esperado por forma de pago]
+    B --> C[Contar efectivo físico]
+    C --> D[Conciliar tarjeta contra comprobantes]
+    D --> E[Conciliar transferencia contra comprobantes]
+    E --> F[Calcular diferencia solo sobre efectivo]
+    F --> G{Diferencia > umbral?}
+    G -->|Sí| H[Requiere autorización Supervisor]
+    G -->|No| I[Continuar]
+    H --> J{Autorizado?}
+    J -->|No| K[Rechazar cierre]
+    J -->|Sí| I
+    I --> L[Registrar fecha_cierre]
+    L --> M[Registrar monto_contado]
+    M --> N[Registrar diferencia]
+    N --> O[Registrar usuario_cierre]
+    O --> P[Cambiar estado a cerrada]
+    P --> Q[Generar reporte Z]
+    Q --> R[Fin]
+                </div>
+            </div>
+            
+            <h3>3.7 Cobro de Cuenta Corriente <span class="release-badge release-r3">R3</span> <span class="actor-badge actor-ambos">Operador/Supervisor</span></h3>
+            <div class="diagram-container">
+                <div class="diagram-title">Flujo: Cobro de Cuenta Corriente</div>
+                <div class="mermaid">
+flowchart TD
+    A[Inicio] --> B{Caja abierta?}
+    B -->|No| C[Error: Abrir caja primero]
+    B -->|Sí| D[Buscar cliente]
+    D --> E[Mostrar saldo actual]
+    E --> F[Ingresar monto a cobrar]
+    F --> G{Sobrepago?}
+    G -->|Sí| H[Permitir saldo a favor]
+    G -->|No| I[Continuar]
+    H --> J[Seleccionar forma de pago]
+    I --> J
+    J --> K[Crear MovimientoCtaCte pago/cobro]
+    K --> L[Actualizar saldo cuenta corriente]
+    L --> M[Crear MovimientoCaja ingreso/cobro_cta_cte]
+    M --> N[Actualizar caja]
+    N --> O[Fin]
+                </div>
+            </div>
+            
+            <h3>3.8 Pago a Proveedor <span class="release-badge release-r3">R3</span> <span class="actor-badge actor-supervisor">Solo Supervisor</span></h3>
+            <div class="diagram-container">
+                <div class="diagram-title">Flujo: Pago a Proveedor</div>
+                <div class="mermaid">
+flowchart TD
+    A[Inicio] --> B{Caja abierta?}
+    B -->|No| C[Error: Abrir caja primero]
+    B -->|Sí| D[Buscar proveedor]
+    D --> E[Mostrar saldo actual]
+    E --> F[Ingresar monto a pagar]
+    F --> G{Sobrepago?}
+    G -->|Sí| H[Permitir saldo a favor]
+    G -->|No| I[Continuar]
+    H --> J[Seleccionar forma de pago]
+    I --> J
+    J --> K[Crear MovimientoCtaCteProveedor pago]
+    K --> L[Actualizar saldo cuenta proveedor]
+    L --> M[Crear MovimientoCaja egreso/pago_proveedor]
+    M --> N[Actualizar caja]
+    N --> O[Fin]
+                </div>
+            </div>
+            
+            <h3>3.9 Localización de Producto <span class="release-badge release-r1">R1</span> <span class="actor-badge actor-ambos">Operador/Supervisor</span></h3>
+            <div class="diagram-container">
+                <div class="diagram-title">Flujo: Localización por Producto</div>
+                <div class="mermaid">
+flowchart TD
+    A[Inicio] --> B{Método de búsqueda}
+    B -->|QR| C[Escanear QR del producto]
+    B -->|EAN| D[Escanear EAN/UPC]
+    B -->|Nombre| E[Buscar por nombre]
+    B -->|SKU| F[Buscar por SKU]
+    C --> G[Producto encontrado]
+    D --> G
+    E --> G
+    F --> G
+    G --> H[Mostrar ubicación]
+    H --> I[Sector]
+    H --> J[Estante]
+    H --> K[Posición]
+    H --> L[Código ubicación]
+    I --> M[Mostrar stock disponible]
+    J --> M
+    K --> M
+    L --> M
+    M --> N[Fin]
+                </div>
+            </div>
+            
+            <div class="diagram-container">
+                <div class="diagram-title">Flujo: Localización Inversa por Ubicación</div>
+                <div class="mermaid">
+flowchart TD
+    A[Inicio] --> B[Seleccionar ubicación]
+    B --> C[Listar productos asignados]
+    C --> D[Por cada producto]
+    D --> E[Mostrar nombre]
+    D --> F[Mostrar stock]
+    D --> G[Mostrar QR]
+    E --> H{Más productos?}
+    F --> H
+    G --> H
+    H -->|Sí| D
+    H -->|No| I[Fin]
+                </div>
+            </div>
+            
+            <h3>3.10 Importación Masiva <span class="release-badge release-r1">R1</span> <span class="actor-badge actor-supervisor">Solo Supervisor</span></h3>
+            <div class="diagram-container">
+                <div class="diagram-title">Flujo: Importación Masiva</div>
+                <div class="mermaid">
+flowchart TD
+    A[Inicio] --> B[Seleccionar entidad]
+    B --> C{Entidad}
+    C -->|Producto| D[Descargar plantilla productos]
+    C -->|Cliente| E[Descargar plantilla clientes]
+    C -->|Proveedor| F[Descargar plantilla proveedores]
+    C -->|Ubicacion| G[Descargar plantilla ubicaciones]
+    C -->|Stock Inicial| H[Descargar plantilla stock]
+    C -->|Lista Precios| I[Descargar plantilla precios]
+    D --> J[Completar archivo Excel/CSV]
+    E --> J
+    F --> J
+    G --> J
+    H --> J
+    I --> J
+    J --> K[Subir archivo]
+    K --> L[Validación fila por fila]
+    L --> M{Validación}
+    M --> N[Tipos de datos]
+    M --> O[Campos obligatorios]
+    M --> P[Duplicados]
+    M --> Q[Referencias válidas]
+    N --> R[Previsualización]
+    O --> R
+    P --> R
+    Q --> R
+    R --> S[Por cada fila]
+    S --> T{Estado}
+    T -->|OK| U[Crear registro]
+    T -->|Error| V[Mostrar error con motivo]
+    T -->|Actualización| W[Actualizar existente]
+    U --> X{Más filas?}
+    V --> X
+    W --> X
+    X -->|Sí| S
+    X -->|No| Y[Confirmar importación]
+    Y --> Z[Procesar válidas aunque otras fallen]
+    Z --> AA[Productos autogeneran QR y SKU]
+    AA --> AB[Productos nacen con Existencias 0]
+    AC[Stock inicial genera MovimientoStock] --> AB
+    AB --> AD[Generar resumen descargable]
+    AD --> AE[Fin]
+                </div>
+            </div>
+            
+            <h3>3.11 Dashboard Local <span class="release-badge release-r1">R1</span> <span class="actor-badge actor-supervisor">Solo Supervisor</span></h3>
+            <div class="diagram-container">
+                <div class="diagram-title">Flujo: Dashboard Local</div>
+                <div class="mermaid">
+flowchart TD
+    A[Inicio] --> B[Cargar datos del día]
+    B --> C[Área Ventas]
+    C --> D[Ventas del día]
+    C --> E[Ticket promedio]
+    C --> F[Productos más vendidos]
+    C --> G[Ventas por forma de pago]
+    B --> H[Área Stock]
+    H --> I[Productos bajo mínimo]
+    H --> J[Valor de inventario a costo]
+    H --> K[Productos sin movimiento]
+    B --> L[Área Caja]
+    L --> M[Ingresos vs egresos]
+    L --> N[Estado de caja actual]
+    L --> O[Diferencias de arqueo]
+    D --> P[Mostrar en dashboard]
+    E --> P
+    F --> P
+    G --> P
+    I --> P
+    J --> P
+    K --> P
+    M --> P
+    N --> P
+    O --> P
+    P --> Q[Actualización en tiempo real]
+    Q --> R[Fin]
+                </div>
+            </div>
+            
+            <h3>3.12 Sincronización Offline-First <span class="release-badge release-r4">R4</span></h3>
+            <div class="diagram-container">
+                <div class="diagram-title">Flujo: Sincronización</div>
+                <div class="mermaid">
+flowchart TD
+    A[Inicio] --> B[Subida]
+    B --> C[Tomar operaciones pending del outbox]
+    C --> D[Ordenar por timestamp]
+    D --> E[Por cada operación]
+    E --> F[Enviar con id/version/origin_id]
+    F --> G[Backend aplica idempotente]
+    G --> H{Éxito?}
+    H -->|Sí| I[Marcar como synced]
+    H -->|No| J[Reintentar con backoff]
+    I --> K{Más operaciones?}
+    J --> K
+    K -->|Sí| E
+    K -->|No| L[Bajada]
+    L --> M[Backend devuelve cambios desde último updated_at]
+    M --> N[Cliente aplica cambios]
+    N --> O{Conflicto?}
+    O -->|Sí| P[Marcar como conflict]
+    O -->|No| Q[Marcar como synced]
+    P --> R[Log revisable por Supervisor]
+    R --> S[Resolver según ADR-012]
+    Q --> T[Fin]
+    S --> T
+                </div>
+            </div>
+        </section>
+        
+        <section id="basedatos" class="section">
+            <h2>🗄️ Diagrama Entidad-Relación (DER) - Base de Datos</h2>
+            <div class="diagram-container">
+                <div class="diagram-title">Modelo Completo de Datos (29 Tablas)</div>
+                <div class="mermaid">
+erDiagram
+    %% CATÁLOGO Y STOCK
+    Categoria ||--o{ Categoria : "categoria_padre_id"
+    Categoria ||--o{ Producto : "categoria_id"
+    Marca ||--o{ Producto : "marca_id"
+    Impuesto ||--o{ Producto : "impuesto_id"
+    Ubicacion ||--o{ Producto : "ubicacion_id"
+    Producto ||--o| Existencias : "producto_id"
+    Producto ||--o{ MovimientoStock : "producto_id"
+    Producto ||--o{ ListaPrecioDetalle : "producto_id"
+    Producto ||--o{ VentaDetalle : "producto_id"
+    Producto ||--o{ OrdenCompraDetalle : "producto_id"
+    
+    %% PRECIOS
+    ListaPrecio ||--o{ ListaPrecioDetalle : "lista_precio_id"
+    Cliente ||--o{ ListaPrecio : "lista_precio_id"
+    
+    %% PERSONAS - CLIENTES
+    Cliente ||--o| CuentaCorriente : "cliente_id"
+    CuentaCorriente ||--o{ MovimientoCtaCte : "cuenta_id"
+    Cliente ||--o{ Venta : "cliente_id"
+    
+    %% VENTAS
+    Venta ||--o{ VentaDetalle : "venta_id"
+    Venta ||--o| Comprobante : "venta_id"
+    Venta }o--|| Caja : "caja_id"
+    
+    %% CAJA
+    Caja ||--o{ MovimientoCaja : "caja_id"
+    
+    %% PERSONAS - PROVEEDORES
+    Proveedor ||--o| CuentaCorrienteProveedor : "proveedor_id"
+    CuentaCorrienteProveedor ||--o{ MovimientoCtaCteProveedor : "cuenta_id"
+    Proveedor ||--o{ OrdenCompra : "proveedor_id"
+    
+    %% COMPRAS
+    OrdenCompra ||--o{ OrdenCompraDetalle : "orden_compra_id"
+    OrdenCompra ||--o{ Recepcion : "orden_compra_id"
+    Recepcion ||--o{ RecepcionDetalle : "recepcion_id"
+    RecepcionDetalle }o--|| OrdenCompraDetalle : "orden_compra_detalle_id"
+    
+    %% SEGURIDAD
+    Usuario }o--|| Rol : "rol_id"
+    Rol ||--o{ RolPermiso : "rol_id"
+    RolPermiso }o--|| Permiso : "permiso_id"
+    Usuario ||--o| UsuarioPreferencias : "usuario_id"
+                </div>
+            </div>
+        </section>
+        
+        <section id="historias" class="section">
+            <h2>📖 Historias de Usuario por Módulo</h2>
+            
+            <div class="diagram-container">
+                <div class="diagram-title">Módulo: Catálogo de Productos <span class="release-badge release-r1">R1</span></div>
+                <div class="mermaid">
+mindmap
+  root((Catálogo de Productos))
+    Como operador
+      Quiero crear productos
+        Para agregar nuevos items al inventario
+      Quiero editar productos
+        Para mantener actualizada la información
+      Quiero asignar categorías
+        Para organizar el catálogo
+      Quiero asignar marcas
+        Para identificar fabricantes
+      Quiero gestionar variantes
+        Para manejar productos similares
+    Como supervisor
+      Quiero importar productos masivamente
+        Para cargar el inventario inicial
+      Quiero configurar listas de precios
+        Para aplicar descuentos generales
+                </div>
+            </div>
+            
+            <div class="diagram-container">
+                <div class="diagram-title">Módulo: Inventario y Stock <span class="release-badge release-r1">R1</span></div>
+                <div class="mermaid">
+mindmap
+  root((Inventario y Stock))
+    Como operador
+      Quiero registrar entradas de stock
+        Para actualizar el inventario
+      Quiero registrar salidas de stock
+        Para justificar reducciones
+      Quiero ver el saldo actual
+        Para conocer disponibilidad
+      Quiero ver el libro de movimientos
+        Para auditar cambios
+      Quiero recibir alertas de reposición
+        Para evitar stockouts
+    Como supervisor
+      Quiero hacer ajustes de stock
+        Para corregir errores de inventario
+      Quiero ver el valor del inventario
+        Para conocer el capital invertido
+                </div>
+            </div>
+            
+            <div class="diagram-container">
+                <div class="diagram-title">Módulo: Ubicaciones y Localización <span class="release-badge release-r1">R1</span></div>
+                <div class="mermaid">
+mindmap
+  root((Ubicaciones y Localización))
+    Como operador
+      Quiero escanear el QR del producto
+        Para encontrar su ubicación rápidamente
+      Quiero ver productos por ubicación
+        Para saber qué hay en cada estante
+      Quiero reubicar productos
+        Para reorganizar el depósito
+      Quiero imprimir etiquetas QR
+        Para identificar productos físicamente
+    Como supervisor
+      Quiero gestionar el catálogo de ubicaciones
+        Para mantener ordenado el almacén
+                </div>
+            </div>
+            
+            <div class="diagram-container">
+                <div class="diagram-title">Módulo: Punto de Venta (POS) <span class="release-badge release-r1">R1</span> <span class="release-badge release-r2">R2</span></div>
+                <div class="mermaid">
+mindmap
+  root((Punto de Venta POS))
+    Como operador
+      Quiero vender con lector de códigos
+        Para agilizar el proceso de venta
+      Quiero buscar productos manualmente
+        Para cuando no tengo el código
+      Quiero aplicar descuentos
+        Para ofrecer promociones
+      Quiero seleccionar forma de pago
+        Para registrar cómo me pagan
+      Quiero imprimir comprobantes
+        Para entregar prueba de venta
+    Como supervisor
+      Quiero anular ventas
+        Para corregir errores
+      Quiero override de precio
+        Para hacer excepciones
+      Quiero facturar electrónicamente
+        Para cumplir con AFIP R2
+                </div>
+            </div>
+            
+            <div class="diagram-container">
+                <div class="diagram-title">Módulo: Caja y Cobranzas <span class="release-badge release-r1">R1</span></div>
+                <div class="mermaid">
+mindmap
+  root((Caja y Cobranzas))
+    Como operador
+      Quiero abrir mi caja
+        Para iniciar mi turno
+      Quiero registrar retiros
+        Para sacar dinero del negocio
+      Quiero registrar gastos
+        Para registrar pagos del negocio
+      Quiero cerrar mi caja
+        Para finalizar mi turno
+      Quiero hacer arqueo de efectivo
+        Para conciliar el dinero físico
+    Como supervisor
+      Quiero cerrar cualquier caja
+        Para supervisar el cierre
+      Quiero autorizar cierres con diferencia
+        Para permitir excepciones
+      Quiero ver el reporte Z
+        Para analizar el rendimiento
+                </div>
+            </div>
+            
+            <div class="diagram-container">
+                <div class="diagram-title">Módulo: Facturación Electrónica <span class="release-badge release-r2">R2</span></div>
+                <div class="mermaid">
+mindmap
+  root((Facturación Electrónica))
+    Como supervisor
+      Quiero configurar condición fiscal
+        Para adaptarme a mi situación
+      Quiero emitir facturas A
+        Para vender a responsables inscriptos
+      Quiero emitir facturas B
+        Para vender a consumidores finales
+      Quiero emitir facturas C
+        Para vender a monotributistas
+      Quiero emitir notas de crédito
+        Para corregir facturas emitidas
+      Quiero obtener el CAE
+        Para validar comprobantes fiscalmente
+                </div>
+            </div>
+            
+            <div class="diagram-container">
+                <div class="diagram-title">Módulo: Compras y Proveedores <span class="release-badge release-r3">R3</span></div>
+                <div class="mermaid">
+mindmap
+  root((Compras y Proveedores))
+    Como operador
+      Quiero crear órdenes de compra
+        Para solicitar mercadería
+      Quiero registrar recepciones
+        Para ingresar stock al inventario
+      Quiero hacer recepciones parciales
+        Para cuando llega parte del pedido
+    Como supervisor
+      Quiero gestionar proveedores
+        Para mantener actualizados los datos
+      Quiero ver cuenta corriente proveedores
+        Para controlar deudas
+      Quiero pagar a proveedores
+        Para cancelar obligaciones
+                </div>
+            </div>
+            
+            <div class="diagram-container">
+                <div class="diagram-title">Módulo: Cuenta Corriente Clientes <span class="release-badge release-r3">R3</span></div>
+                <div class="mermaid">
+mindmap
+  root((Cuenta Corriente Clientes))
+    Como operador
+      Quiero vender a cuenta corriente
+        Para fidelizar clientes
+      Quiero ver el saldo del cliente
+        Para conocer su deuda
+      Quiero cobrar cuentas corrientes
+        Para recuperar el dinero
+      Quiero ver el estado de cuenta
+        Para mostrar el historial
+    Como supervisor
+      Quiero configurar límite de crédito
+        Para controlar el riesgo
+      Quiero autorizar ventas sobre límite
+        Para hacer excepciones
+                </div>
+            </div>
+            
+            <div class="diagram-container">
+                <div class="diagram-title">Módulo: Dashboard y Reportes <span class="release-badge release-r1">R1</span> <span class="release-badge release-r5">R5</span></div>
+                <div class="mermaid">
+mindmap
+  root((Dashboard y Reportes))
+    Como supervisor
+      Quiero ver ventas del día
+        Para monitorear el rendimiento
+      Quiero ver productos más vendidos
+        Para identificar éxito
+      Quiero ver stock bajo mínimo
+        Para planificar reposición
+      Quiero ver diferencias de caja
+        Para detectar problemas
+      Quiero ver reportes consolidados R5
+        Para analizar multi-sucursal
+      Quiero ver KPIs del negocio
+        Para tomar decisiones informadas
+                </div>
+            </div>
+            
+            <div class="diagram-container">
+                <div class="diagram-title">Módulo: Sincronización <span class="release-badge release-r4">R4</span></div>
+                <div class="mermaid">
+mindmap
+  root((Sincronización Offline-First))
+    Como usuario
+      Quiero operar sin internet
+        Para no depender de la conexión
+      Quiero que los datos se sincronicen
+        Para tener backup en la nube
+      Quiero acceder remotamente
+        Para consultar desde casa
+    Como supervisor
+      Quiero ver reportes consolidados
+        Para analizar todas las sucursales
+      Quiero resolver conflictos de sync
+        Para mantener la integridad
+                </div>
+            </div>
+            
+            <div class="diagram-container">
+                <div class="diagram-title">Roadmap de Releases</div>
+                <div class="mermaid">
+gantt
+    title Roadmap de Desarrollo - Ferretería App
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %Y
+    
+    section R1 - Núcleo Local
+    Catálogo y Stock           :r1, 2024-01, 3M
+    Ubicaciones y QR           :r1, after r1, 2M
+    POS y Caja                 :r1, after r1, 3M
+    Importación Masiva        :r1, after r1, 2M
+    Dashboard Local           :r1, after r1, 2M
+    
+    section R2 - Fiscal
+    Integración AFIP/ARCA     :r2, 2024-07, 3M
+    Facturación Electrónica   :r2, after r2, 2M
+    Notas de Crédito/Débito   :r2, after r2, 1M
+    
+    section R3 - Abastecimiento
+    Compras y Proveedores      :r3, 2024-10, 3M
+    Cuenta Corriente Clientes  :r3, after r3, 2M
+    Cuenta Corriente Proveedores :r3, after r3, 2M
+    Listas de Precios         :r3, after r3, 1M
+    
+    section R4 - Nube y Sync
+    Backend Cloud              :r4, 2025-01, 3M
+    Motor de Sincronización    :r4, after r4, 2M
+    Backup y Acceso Remoto    :r4, after r4, 2M
+    
+    section R5 - Inteligencia
+    Reportes Consolidados      :r5, 2025-04, 2M
+    KPIs y Analytics          :r5, after r5, 2M
+    Preparación Multi-sucursal :r5, after r5, 2M
+                </div>
+            </div>
+        </section>
+        
+        <footer>
+            <p>🏪 Sistema de Gestión de Ferretería - Documentación de Procesos y Arquitectura</p>
+            <p>Stack: TypeScript | Electron + React | SQLite | Drizzle ORM | pnpm workspaces</p>
+        </footer>
+    </div>
+    
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#667eea',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#764ba2',
+                lineColor: '#667eea',
+                secondaryColor: '#f8f9fa',
+                tertiaryColor: '#e9ecef',
+                background: '#ffffff',
+                mainBkg: '#667eea',
+                nodeBorder: '#764ba2',
+                clusterBkg: '#f8f9fa',
+                clusterBorder: '#667eea',
+                titleColor: '#333',
+                edgeLabelBackground: '#fff',
+                actorBkg: '#667eea',
+                actorBorder: '#764ba2',
+                actorTextColor: '#fff',
+                signalColor: '#667eea',
+                signalTextColor: '#333',
+                labelBoxBkgColor: '#f8f9fa',
+                labelBoxBorderColor: '#667eea',
+                labelTextColor: '#333',
+                loopTextColor: '#333',
+                noteBorderColor: '#764ba2',
+                noteBkgColor: '#fff3e0',
+                noteTextColor: '#333',
+                activationBorderColor: '#667eea',
+                activationBkgColor: '#e3f2fd',
+                sequenceNumberColor: '#fff'
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            er: {
+                useMaxWidth: true,
+                htmlLabels: true
+            },
+            mindmap: {
+                useMaxWidth: true,
+                htmlLabels: true
+            },
+            gantt: {
+                useMaxWidth: true,
+                htmlLabels: true
+            }
+        });
+    </script>
+</body>
+</html>

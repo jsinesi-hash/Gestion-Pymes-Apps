@@ -1,0 +1,34 @@
+CONTEXTO: Implementar el módulo Remitos según ADR-045. Módulo NUEVO y AISLADO.
+Leé ADR-045 en DECISIONES.md antes de tocar nada.
+
+GATES OBLIGATORIOS — pará y esperá confirmación antes de:
+- Generar/aplicar cualquier migración de schema (mostrame el drizzle-kit generate primero).
+- Escribir en parametros_sistema (semilla de remito_proximo_secuencial).
+- Instalar dependencias (no debería hacer falta ninguna nueva; si creés que sí, pará).
+- Tocar CUALQUIER módulo aprobado (POS, caja, stock, venta, comprobante_fiscal, fiscal R2).
+  El módulo SOLO LEE de esas entidades; si necesitás escribir en ellas, pará: es un error de alcance.
+
+ALCANCE (solo esto):
+1. Schema: tablas `remito` y `remito_linea` con los campos de ADR-045 §5 (UUID PK,
+   campos de sync, soft-delete). NO agregar columnas a tablas existentes.
+2. Numeración: contador atómico `remito_proximo_secuencial` en parametros_sistema,
+   incremento en la MISMA transacción de la emisión. Proyección `RE-` + 7 dígitos
+   cero-padded, sin Luhn. Asignar `numero` al EMITIR, no antes.
+3. IPC namespaced `remito:*`: crear (emitir), listar, obtener, conformar, anular, imprimir.
+   Emisión atómica (remito + N líneas + incremento del contador en una sola transacción).
+4. Validación entregado-vs-pendiente: por venta_linea, Σ cantidad_entregada de remitos
+   NO anulados ≤ cantidad vendida. Respetar permite_fraccion/unidad_venta.
+5. Estados: emitido → conformado (setea fecha_entrega + recibido_por); emitido → anulado
+   (estado + auditoría, SIN movimientos inversos, NO toca stock ni caja).
+6. NO mover stock desde este módulo. Ni un solo write a movimientos de stock.
+7. UI: ruta /remitos (listado) + acción "Generar remito" desde detalle/historial de venta
+   (modal: selección de líneas + cantidades). Grupo Facturación en el sidebar.
+8. Impresión: reutilizar webContents.printToPDF (ADR-015/026). Remito SIN importes:
+   cantidad + descripción, datos de entrega, pie con firma de recepción.
+
+FUERA DE ALCANCE (NO implementar): remito valorizado, remito fiscal "R"/CAE/CAI,
+stock comprometido, M:N remito↔factura, numeración multinodo.
+
+SECUENCIA (lotes): (1) schema + migración [GATE] → (2) contador + IPC de emisión/listado/
+obtención → (3) IPC conformar/anular + validación pendiente → (4) UI listado + modal →
+(5) impresión PDF. Un lote por vez, no mezclar.

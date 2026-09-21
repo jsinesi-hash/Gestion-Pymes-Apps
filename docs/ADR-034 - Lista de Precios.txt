@@ -1,0 +1,89 @@
+CONTEXTO
+Ferretería-app (Electron + React + TS, SQLite/Drizzle, monorepo pnpm). Vas a implementar
+ADR-034 (Lista de Precios: motor de reglas, vigencia y auditoría histórica) — ya está diseñado
+y aprobado, no rediseñes el modelo, implementalo tal como está descripto acá. Respetá los
+principios ya establecidos del proyecto: centavos hasta el borde (todo monto entero, sin
+decimales), soft-delete siempre (nunca borrado físico), transacciones atómicas en toda operación
+que toque más de una tabla relacionada, canales IPC namespaced por entidad (ej. `listaPrecio:*`,
+`recalculo:*`).
+
+GATE OBLIGATORIO — ANTES DE TOCAR SCHEMA
+Antes de escribir cualquier migración: hacé schema discovery de las tablas actuales
+`producto`, `proveedor`, y de cualquier tabla de lista de precios ya existente. Presentame el
+DDL completo propuesto para las tablas nuevas (`lista_precio`, `lista_precio_valor`,
+`producto_proveedor`, `recalculo_masivo`, `promocion`, `cambio_programado`,
+`importacion_costo_proveedor`) y esperá mi confirmación explícita antes de aplicar la migración.
+No asumas nombres de columnas existentes — confirmalos con el discovery.
+
+PASOS
+
+1. Migración (con gate de arriba). Incluí:
+   - Índice único parcial en `lista_precio_valor` sobre (lista_precio_id, producto_id) WHERE
+     fecha_hasta IS NULL.
+   - FK de `producto_proveedor` a `producto` y `proveedor`; constraint que garantice un único
+     `preferido = true` por producto (mismo patrón que otras exclusividades del sistema, ej.
+     proveedor preferido / precio predeterminado).
+
+2. Backend — motor de recálculo masivo (`recalculo_masivo`):
+   - Input: porcentaje, base de cálculo (costo preferido / lista existente / valor manual),
+     alcance (catálogo / rubro / marca / proveedor / lista puntual), flag de exclusión de ítems
+     con precio manual reciente (definir ventana de "reciente" como parámetro, no hardcodeado).
+   - Debe correr en una única transacción atómica: por cada producto alcanzado, cierra la fila
+     vigente en `lista_precio_valor` (fecha_hasta = ahora) y crea una nueva (fecha_desde = ahora,
+     fecha_hasta = NULL, origen = 'recalculo', referencia al id de `recalculo_masivo`).
+   - Guardá el registro de `recalculo_masivo` con la cantidad de productos afectados, para
+     trazabilidad.
+
+3. Backend — vigencia (`promocion` y `cambio_programado`):
+   - `promocion`: CRUD + estado calculado por fecha (programada/activa/vencida) — no dependas de
+     un job para saber si está activa "para lectura", calculalo al vuelo comparando con la fecha
+     actual en la consulta de precio del POS.
+   - `cambio_programado`: requiere un job/scheduler que, al llegar `fecha_aplicacion`, ejecute el
+     mismo motor de recálculo masivo (paso 2) y marque el registro como aplicado. Definí dónde
+     vive este scheduler dentro de la arquitectura Electron actual (proceso principal) antes de
+     implementarlo — confirmá conmigo el mecanismo (cron local, `setInterval` con chequeo al
+     iniciar la app, etc.) si no hay un patrón ya establecido en el proyecto para jobs
+     programados.
+
+4. Backend — costo multi-proveedor (`producto_proveedor`):
+   - CRUD de la relación producto-proveedor con costo y flag `preferido`.
+   - Al marcar un proveedor como preferido para un producto, desmarcá atómicamente el anterior
+     (mismo patrón que otros flags exclusivos ya implementados).
+
+5. Backend — importación de costos de proveedor (`importacion_costo_proveedor`):
+   - Parser de archivo (Excel/CSV) con columnas configurables por proveedor (cada proveedor
+     puede tener su propio formato de archivo — no asumas un formato único).
+   - Matching por `codigo_proveedor` contra `producto_proveedor` existente. Productos sin match:
+     listar aparte para revisión manual, no crear productos nuevos automáticamente.
+   - Al confirmar la importación, actualiza costos en bloque (misma lógica de vigencia/no
+     sobreescritura que el resto del sistema si corresponde, o reemplazo directo de costo si
+     `producto_proveedor` no se historiza — confirmar conmigo si el costo también necesita
+     auditoría histórica o alcanza con el valor vigente).
+
+6. UI — listado de Lista de Precios:
+   - Filtros por rubro y por proveedor (usando `producto.rubro_id` y
+     `producto_proveedor.preferido`).
+   - Función de auditoría histórica: dado un producto y una lista, poder consultar qué precio
+     estaba vigente en una fecha pasada (query sobre `lista_precio_valor` con fecha_desde ≤ X ≤
+     fecha_hasta o fecha_hasta NULL).
+
+7. UI — pantalla de recálculo masivo:
+   - Formulario con porcentaje, base de cálculo y alcance. Antes de confirmar, mostrá un preview
+     (cantidad de productos afectados y ejemplos) — no ejecutes el recálculo sin esa
+     confirmación explícita del usuario en pantalla.
+
+8. UI — gestión de promociones y cambios programados:
+   - ABM de `promocion` y `cambio_programado` con su estado visible (badge, mismo patrón de
+     estados semánticos del design system).
+
+9. Testing:
+   - Atomicidad del recálculo masivo (si falla a mitad de camino, no debe dejar productos a
+     medio actualizar).
+   - Unicidad del registro vigente por (lista, producto) bajo concurrencia.
+   - Redondeo de centavos en porcentajes que no dan un entero exacto — definí y documentá la
+     regla de redondeo antes de implementar si no hay una ya establecida en el proyecto.
+
+RESTRICCIONES
+- No toques el flujo de cobro del POS más allá de leer `lista_precio_valor` — el cambio de medio
+  de pago "Cuenta Corriente" es un ítem aparte, no lo mezcles acá.
+- No implementes Dashboard ni Presupuesto en este prompt — son ítems separados.

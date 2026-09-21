@@ -1,0 +1,42 @@
+Vamos a implementar el Motor de Precios v2 (ADR-049) en el proyecto Ferretería-app
+(C:\Users\Joaco\Downloads\Ferreteria-app).
+
+FUENTES DE VERDAD — leé ambas completas antes de tocar nada:
+- Plan aprobado: C:\Users\Joaco\.claude\plans\motor-de-precios-quiero-quiet-dove.md
+- Mockup de UI/navegación: C:\Users\Joaco\Downloads\Ferreteria-app\docs\Mockups\mock-adr049-motor-precios-circuito.html
+
+Usá el skill de superpowers para ejecutar planes (executing-plans), con checkpoints de
+revisión conmigo entre fases. Respetá TDD (RED-GREEN-REFACTOR) y las convenciones de
+CLAUDE.md: dos test runners por NMV (renderer jsdom + main bajo Electron), dinero en
+centavos, migraciones aditivas/retrocompatibles, canales IPC namespaced por entidad, y los
+TRES registros que necesita cada pantalla nueva (ruta en routes/index.tsx + ítem en
+NAV_GROUPS + entrada en CRUMBS de AppShell.tsx). Ojo con ConfigShell.tsx: es código muerto.
+
+Rama: feat/adr-049-motor-precios-v2. Todo detrás del flag motor_precios_v2_habilitado en
+parametros_sistema (default false). Cada fase termina desplegable y en verde sin romper las
+anteriores.
+
+EMPEZÁ POR LA FASE 0 (es un gate): escribir el ADR-049 en docs/ADR-Log-ferreteria.md y
+actualizar Estado.md — documento standalone, sin migraciones, incluyendo la autorización
+del alta del grupo de navegación "precios". Pará ahí y mostrámelo para aprobar antes de
+tocar schema.
+
+DECISIONES YA CERRADAS (están en el plan, no reabrir):
+- Margen = markup sobre costo (precio = costoNeto × (1+m)); la UI muestra al lado el margen
+  real sobre precio como dato derivado de solo lectura.
+- Bonificación / Costo Financiero / Flete = default por proveedor + override nullable por
+  producto (flete como % con override absoluto para peso/volumen). Resolución:
+  override_producto ?? default_proveedor ?? 0.
+- Se ELIMINA el tab "Cambios programados" y se retira el scheduler de precios
+  (cambio_programado queda deprecada, sin migración destructiva).
+- Todo evento de costo (importación, cambio de preferido, recepción, edición de defaults del
+  proveedor) genera un batch en BORRADOR; nada publica sin aprobación. Permiso nuevo
+  precio.aprobar (solo Supervisor).
+- Reglas es un TAB de Listas de precios (reemplaza "Ajustes por producto"), no pantalla nueva.
+- Se puede excluir filas con error del lote para habilitar la aprobación; listas de proveedor
+  parciales son normales (no validar "conteo esperado" como bloqueante).
+
+Al agregar el permiso precio.aprobar, actualizá los conteos exactos en
+auth/__tests__/seed.test.ts e ipc/__tests__/auth.ipc.test.ts (afirman el número exacto).
+
+Antes de empezar a codear, confirmame el orden de fases y el gate de la Fase 0.

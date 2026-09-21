@@ -1,0 +1,31 @@
+### P1.1 — Modelo de datos local (migraciones R1)
+
+```
+Objetivo: crear el esquema completo de las tablas necesarias para R1 con sus migraciones.
+
+Tablas (ver Tech Spec §2 para campos exactos):
+Producto, Ubicacion, Existencias, MovimientoStock, Categoria (autorreferenciada), Marca,
+Impuesto, Cliente, Proveedor, Venta, VentaDetalle, Comprobante, Caja, MovimientoCaja,
+ListaPrecio, ListaPrecioDetalle, Usuario, Rol, Permiso, RolPermiso, UsuarioPreferencias.
+
+Tareas:
+- Migraciones para todas las tablas, con FKs, índices y restricciones de unicidad
+  (ej. Ubicacion: unique en codigo y en (sector,estante,posicion); Producto.codigo_qr
+  unique; gtin_barcode nullable; Existencias.producto_id unique).
+- Todos los campos de sync y auditoría según Prompt 0.
+- NO incluir stock en Producto; el stock vive en Existencias. limite_credito NO va en
+  Cliente (irá en CuentaCorriente en R3).
+- Producto incluye `unidad_venta` (stock/venta), `unidad_compra` y `factor_conversion`
+  (default 1) para soportar compra por caja y venta por unidad (ADR-014).
+- Stock_reservado y stock_en_transito en Existencias: nullable (uso futuro).
+- Enums según Tech Spec (tipo/motivo de MovimientoStock y MovimientoCaja, estados, etc.).
+- Tests de migración (aplicar/revertir) y de integridad referencial.
+
+Criterios de aceptación:
+- Migraciones aplican y revierten limpio.
+- Restricciones de unicidad y FKs verificadas por test.
+- Sin lógica de negocio todavía (solo esquema + acceso a datos tipado).
+
+Restricciones: no crear tablas de R2+ (sin Comprobante fiscal completo más allá del
+ticket interno; sin OrdenCompra/Recepcion; sin CuentaCorriente). Respetar Prompt 0.
+```

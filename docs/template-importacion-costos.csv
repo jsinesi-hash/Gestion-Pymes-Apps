@@ -1,0 +1,5 @@
+CODIGO_PROVEEDOR,EAN,DESCRIPCION,PRECIO
+1001,7798000001234,Tornillo hexagonal M6x20,125.50
+1002,7798000001235,Tuerca hexagonal M6,45.00
+1003,,Clavo 2" sin código de barras,38.00
+,7798000001236,Producto sin código de proveedor,210.75

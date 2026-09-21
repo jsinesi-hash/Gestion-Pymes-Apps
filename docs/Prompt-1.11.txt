@@ -1,0 +1,17 @@
+### P1.11 — Dashboard local
+
+```
+Objetivo: dashboard local de R1 (Tech Spec 3.11), solo Supervisor.
+
+Tareas:
+- Ventas: del día, ticket promedio, productos más vendidos, ventas por forma de pago.
+- Stock: productos bajo mínimo, valor de inventario a costo, productos sin movimiento.
+- Caja: ingresos vs egresos del día, estado de la caja actual, diferencias de arqueo.
+- Todo a partir de datos locales; solo lectura.
+
+Criterios de aceptación:
+- Métricas correctas contra datos de prueba; performante con catálogo grande.
+
+Restricciones: Compras y Cuentas Corrientes NO (entran en R3); consolidado multi-terminal
+es R4/R5.
+```

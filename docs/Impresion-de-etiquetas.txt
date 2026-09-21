@@ -1,0 +1,53 @@
+TAREA: Módulo nuevo "etiquetas" — impresión de etiquetas por lote (ADR-026, excepción phase-gate).
+
+REGLAS QUE NO SE NEGOCIAN:
+- Módulo AISLADO. Solo LEE de `producto` y `producto_proveedor`. NO tocar POS, caja, ni detalle de producto aprobados.
+- IPC namespaced bajo `etiquetas:*`. Nada de canales genéricos.
+- Toda la config de formato va en `parametros_sistema`. NADA hardcodeado.
+- Precios: enteros en centavos en toda la lógica; formateo SOLO en el render (centavos hasta el borde).
+- Antes de cualquier operación sensible (escribir parámetros, instalar deps, guardar archivos a disco), pará y pedí confirmación.
+
+ALCANCE v1:
+1. Perfil de etiqueta en `parametros_sistema`, con tipo 'hoja' | 'rollo':
+   { tipo, ancho_mm, alto_mm, cols, filas, margen_mm, gap_mm, barcode_tipo, campos:{nombre,precio,sku,barcode} }
+   - 'hoja': usa cols/filas/margen/gap (grilla A4 tipo Avery).
+   - 'rollo': cada etiqueta = una "página" de ancho_mm × alto_mm, sin grilla.
+   - barcode_tipo: 'code128' | 'qr'.
+   - Permitir varios perfiles guardados y elegir uno al imprimir.
+2. Salida UNIFICADA: ambas modalidades (hoja y rollo) vía Electron `webContents.printToPDF` + driver de Windows. NADA de ZPL nativo en v1.
+3. DOS destinos de salida:
+   a) IMPRIMIR: dispara print con selección de impresora (silent:false).
+   b) EXPORTAR A PDF: guardar el lote como archivo PDF. El operador elige la ruta con `dialog.showSaveDialog` (diálogo nativo). NUNCA ruta hardcodeada, NUNCA persistir la ruta. Confirmá antes de escribir el archivo.
+4. Contenido de etiqueta FIJO en v1: nombre + precio + código. La geometría y el barcode_tipo son lo configurable; el contenido NO.
+5. Código de barras / QR:
+   - 'code128': jsbarcode (SVG inline).
+   - 'qr': librería qrcode (SVG inline).
+   - AMBOS codifican el SKU/código INTERNO del producto (mismo payload). El QR NO debe codificar un payload distinto: tiene que escanearse en POS igual que el code128.
+   - Si jsbarcode o qrcode no están instaladas, pedí confirmación antes de instalarlas.
+
+PANTALLA (renderer, ruta /etiquetas):
+- Patrón listado denso del design-system.
+- Filtros arriba: rubro/categoría, proveedor, estado de stock, búsqueda con lector (termina en Enter).
+- Tabla con checkbox por fila + "seleccionar todos los filtrados" + columna editable "cant. etiquetas" (default 1).
+- NO listar productos dados de baja (respetá soft-delete).
+- Panel de impresión: selector de perfil, campo "celda de inicio" (solo si perfil 'hoja', para reaprovechar hojas a medio usar), botón Vista previa, botón Imprimir y botón Exportar PDF (acción primaria: Imprimir).
+- Vista previa real de la hoja antes de imprimir/exportar.
+
+IPC (`packages/client/src/main/ipc/etiquetas.ts`):
+- etiquetas:listar-perfiles
+- etiquetas:guardar-perfil   (sensible: confirmá antes de escribir parámetros)
+- etiquetas:generar-pdf      (input: items[{producto_id, cantidad}], perfil, celda_inicio; output: buffer PDF)
+- etiquetas:imprimir         (genera + dispara print con selección de impresora)
+- etiquetas:exportar-pdf     (genera + dialog.showSaveDialog; sensible: confirmá antes de escribir el archivo)
+
+TIPOS en packages/shared: PerfilEtiqueta (incluye barcode_tipo), EtiquetaItem.
+
+PARÁ Y CONFIRMÁ ANTES DE:
+- escribir/crear perfiles en parametros_sistema
+- instalar jsbarcode o qrcode
+- escribir el PDF exportado a disco
+- cualquier cosa que toque módulos R1/R2/R3 aprobados (no debería hacer falta)
+
+ENTREGÁ:
+- entrada ADR-027 en DECISIONES.md (con exportar PDF y barcode_tipo)
+- actualización de ESTADO.md (módulo etiquetas en curso)

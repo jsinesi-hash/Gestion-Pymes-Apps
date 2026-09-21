@@ -1,0 +1,148 @@
+<meta charset="utf-8">
+<title>Manual de Usuario — Índice</title>
+<style>
+  :root{
+    --bg:#f7f7f5; --surface:#ffffff; --ink:#1c1a17; --ink-2:#4b463f; --ink-3:#8a8279;
+    --line:#e7e3dc; --accent:#e8730a; --accent-soft:#fdefe1; --accent-strong:#b45309;
+    --ok:#2e7d52; --ok-soft:#e7f3ec; --warn:#b7791f; --warn-soft:#fbf3e0; --danger:#c0392b; --danger-soft:#fbeceb;
+    --blue:#2f6fb0; --blue-soft:#e9f1f9;
+    --radius:12px; --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+      --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+      --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+      --blue:#7fb0e0; --blue-soft:#182533;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+    --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+    --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+    --blue:#7fb0e0; --blue-soft:#182533;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 "Hanken Grotesk",-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 22px 80px}
+  header.hero{background:linear-gradient(135deg,#1c1a17,#3a332b);color:#fff;border-radius:18px;padding:34px 34px 30px;margin-bottom:28px}
+  header.hero .kicker{color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:12.5px}
+  header.hero h1{margin:.35em 0 .2em;font-size:30px;line-height:1.15}
+  header.hero p{margin:0;color:#d7d1c8;max-width:70ch}
+  h2{font-size:15px;margin:2.4em 0 .8em;padding-bottom:.5em;border-bottom:2px solid var(--line);
+     text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:700}
+  h2:first-of-type{margin-top:1.4em}
+  p,li{color:var(--ink-2)}
+  code{font-family:var(--mono);font-size:.87em;background:var(--accent-soft);padding:.1em .38em;border-radius:5px;color:var(--accent-strong)}
+  a{color:var(--blue)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:640px){.grid{grid-template-columns:1fr}}
+  .g-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px 20px;display:flex;flex-direction:column;gap:6px;text-decoration:none;
+    transition:border-color .15s, transform .15s;}
+  .g-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .g-card .num{font:700 11px var(--mono);color:var(--accent-strong);background:var(--accent-soft);
+    display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;margin-bottom:2px}
+  .g-card h3{margin:0;font-size:16px;color:var(--ink)}
+  .g-card p{margin:0;font-size:13.5px;color:var(--ink-3);line-height:1.5}
+  .g-card .go{margin-top:8px;font-size:12.5px;font-weight:700;color:var(--accent-strong)}
+  footer{color:var(--ink-3);font-size:13px;text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--line)}
+</style>
+
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería</div>
+  <h1>Manual de Usuario</h1>
+  <p>Guías paso a paso por módulo, con capturas reales de la aplicación, diagramas de flujo y respuestas a las dudas más frecuentes. Elegí un módulo para empezar.</p>
+</header>
+
+<h2>Venta y facturación</h2>
+<div class="grid">
+  <a class="g-card" href="pos-guia.html">
+    <span class="num">01</span>
+    <h3>Punto de venta (POS)</h3>
+    <p>Escaneo, carrito, medios de pago, ventas en espera y confirmación.</p>
+    <span class="go">Abrir guía →</span>
+  </a>
+  <a class="g-card" href="caja-guia.html">
+    <span class="num">02</span>
+    <h3>Caja</h3>
+    <p>Apertura, movimientos, arqueo y cierre con autorización por diferencia.</p>
+    <span class="go">Abrir guía →</span>
+  </a>
+  <a class="g-card" href="presupuestos-remitos-guia.html">
+    <span class="num">03</span>
+    <h3>Presupuestos y Remitos</h3>
+    <p>Cotizar sin mover stock, convertir a venta y emitir el remito de entrega.</p>
+    <span class="go">Abrir guía →</span>
+  </a>
+  <a class="g-card" href="clientes-cuenta-corriente-guia.html">
+    <span class="num">04</span>
+    <h3>Clientes y Cuenta Corriente</h3>
+    <p>Alta de clientes, límite de crédito, saldo y cobros.</p>
+    <span class="go">Abrir guía →</span>
+  </a>
+</div>
+
+<h2>Catálogo y stock</h2>
+<div class="grid">
+  <a class="g-card" href="catalogo-productos-guia.html">
+    <span class="num">05</span>
+    <h3>Catálogo / Productos</h3>
+    <p>Alta de productos, presentaciones, SKU/QR, y catálogo auxiliar (categorías, marcas, etc.).</p>
+    <span class="go">Abrir guía →</span>
+  </a>
+  <a class="g-card" href="stock-guia.html">
+    <span class="num">06</span>
+    <h3>Stock</h3>
+    <p>Entradas, ajustes, mermas y kardex de movimientos.</p>
+    <span class="go">Abrir guía →</span>
+  </a>
+  <a class="g-card" href="abastecimiento-guia.html">
+    <span class="num">07</span>
+    <h3>Abastecimiento</h3>
+    <p>Proveedores, órdenes de compra sugeridas o manuales, y recepción.</p>
+    <span class="go">Abrir guía →</span>
+  </a>
+  <a class="g-card" href="precios-costos-guia.html">
+    <span class="num">08</span>
+    <h3>Precios / Costos</h3>
+    <p>Listas de precios, recálculo masivo, promociones y lotes de precios.</p>
+    <span class="go">Abrir guía →</span>
+  </a>
+</div>
+
+<h2>Gestión y administración</h2>
+<div class="grid">
+  <a class="g-card" href="reportes-dashboard-guia.html">
+    <span class="num">09</span>
+    <h3>Reportes y Dashboard</h3>
+    <p>Panorama del negocio por período y el reporte de ventas exportable.</p>
+    <span class="go">Abrir guía →</span>
+  </a>
+  <a class="g-card" href="agenda-guia.html">
+    <span class="num">10</span>
+    <h3>Agenda</h3>
+    <p>Eventos, rutinas recurrentes y la bandeja de avisos.</p>
+    <span class="go">Abrir guía →</span>
+  </a>
+  <a class="g-card" href="configuracion-sistema-guia.html">
+    <span class="num">11</span>
+    <h3>Configuración / Sistema</h3>
+    <p>Mi cuenta, usuarios, backup/restore, email y datos demo.</p>
+    <span class="go">Abrir guía →</span>
+  </a>
+</div>
+
+<h2>Versión completa</h2>
+<a class="g-card" href="manual-completo.html">
+  <h3>Manual completo en una sola página</h3>
+  <p>Las 11 guías concatenadas en un solo documento — para imprimir o buscar todo con Ctrl+F de una vez.</p>
+  <span class="go">Abrir manual completo →</span>
+</a>
+
+<footer>
+  Manual de Usuario · Sistema de Gestión de Ferretería · 11 módulos
+</footer>
+</div>

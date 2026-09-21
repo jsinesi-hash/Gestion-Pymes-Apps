@@ -1,0 +1,40 @@
+Punto de Venta
+- Al comenzar a escribir el nombre del producto, se debe mostrar los productos disponibles que vayan coincidiendo con la búsqueda, no esperar a que se presione enter.
+- Al confirmar la venta, en la pantalla emergente: - No aparece una línea de descuento. - El botón "Imprimir" no funciona (debería generar un .pdf con el detalle de la venta).
+
+Caja
+- No carga los movimientos. Si bien abre la ventana emergente y permite cargar el importe y el motivo, no los muestra por pantalla. En este punto no se si los guarda o no en la BBDD.
+- En la parte superior deberían aparecer los montos con los totales: Total de ventas (sumatoria de ventas) - Total ventas rechazadas, Total Ingresos, Total Egresos.
+
+Productos
+- Una vez que se selecciona una categoría, no permite volver a seleccionar "Todas las categorías". Lo mismo sucede con Marcas y Activos/inactivos.
+- "Imprimir Etiqueta" quiero que se maneje como un PDF y abra la impresora directamente para confirmar la impresión, no que utilice One-Note.
+- Kardex no funciona, da el siguiente error:
+Unexpected Application Error!
+Cannot read properties of undefined (reading 'toLocaleString')
+TypeError: Cannot read properties of undefined (reading 'toLocaleString')
+    at fmtNum (http://localhost:5176/views/stock/Kardex.tsx:55:12)
+    at http://localhost:5176/views/stock/Kardex.tsx:422:135
+    at Array.map (<anonymous>)
+    at Kardex (http://localhost:5176/views/stock/Kardex.tsx:377:23)
+    at renderWithHooks (http://localhost:5176/@fs/C:/Users/Joaco/Downloads/Ferreteria-app/packages/client/node_modules/.vite/deps/chunk-QN6UW5NE.js?v=b850a074:11546:26)
+    at updateFunctionComponent (http://localhost:5176/@fs/C:/Users/Joaco/Downloads/Ferreteria-app/packages/client/node_modules/.vite/deps/chunk-QN6UW5NE.js?v=b850a074:14580:28)
+    at beginWork (http://localhost:5176/@fs/C:/Users/Joaco/Downloads/Ferreteria-app/packages/client/node_modules/.vite/deps/chunk-QN6UW5NE.js?v=b850a074:15922:22)
+    at beginWork$1 (http://localhost:5176/@fs/C:/Users/Joaco/Downloads/Ferreteria-app/packages/client/node_modules/.vite/deps/chunk-QN6UW5NE.js?v=b850a074:19751:22)
+    at performUnitOfWork (http://localhost:5176/@fs/C:/Users/Joaco/Downloads/Ferreteria-app/packages/client/node_modules/.vite/deps/chunk-QN6UW5NE.js?v=b850a074:19196:20)
+    at workLoopSync (http://localhost:5176/@fs/C:/Users/Joaco/Downloads/Ferreteria-app/packages/client/node_modules/.vite/deps/chunk-QN6UW5NE.js?v=b850a074:19135:13)
+
+- En la descripción del Producto quiero que aparezcan los datos del stock (actual - mínimo - máximo)
+- Hice una carga de stock a un artículo y lo carga bien, Pero en las opciones "Entrada" - "Ajuste" - "Merma" aparece en 0 (cero)
+
+Stock
+- El cuadro "Con Stock Ok" y "Sin Stock" no dan la opción de seleccionarlos y que haga el filtro.
+- En el listado aparecen los 20, pero no permite avanzar a la página 2/2 que figura en el pie de página.
+- El cuadro "Bajo Mínimo" está tomando los Productos que aparecen en la pantalla NO el total. Luego sí, muestra todos. Entiendo que eso tambien falla para "Con Stock Ok" y "Sin Stock".
+- Quiero que el listado permita filtros por nombre y el resto de los campos.
+
+Dashboard
+- El contador de productos "Sin Stock" trae 0 productos cuando al menos hay 4.
+
+Configuración
+- Solo aparece Lista de precios, no hay opciones de Cuenta/Usuario. El cajero tendría que poder cambiar la clave y editar sus datos. El Administrador debería poder agregar nuevos usuarios, cambiar contraseñas, resetearlas, etc.

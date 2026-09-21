@@ -1,0 +1,46 @@
+CORRECCIONES Y NOTAS SOBRE EL SPEC DE ETIQUETAS (ADR-027) — leer antes de implementar.
+
+1. FILTRO DE SOFT-DELETE — VERIFICAR CAMPO REAL (bloqueante):
+   El spec dice "excluye activo=false". Antes de escribir el query, verificá en el esquema
+   cuál es el campo real de borrado lógico del proyecto (soft-delete). `activo` puede ser un
+   flag de negocio (producto vigente/descontinuado) distinto del borrado lógico.
+   - Si son campos distintos: el listado de etiquetas debe filtrar por el campo de soft-delete
+     (no borrados). Confirmá conmigo si además hay que excluir descontinuados o no.
+   - NO asumas el nombre de la columna. Verificá el esquema y avisá qué encontraste antes de codear.
+
+2. COLUMNA DE PRECIO — VERIFICAR NOMBRE Y ORIGEN REAL (bloqueante):
+   `EtiquetaItem.precio_venta_lista` (centavos) tiene que mapear a la columna real del esquema.
+   Verificá el nombre exacto y de qué tabla sale. Si el precio se calcula (ej. con IVA) o vive
+   en otra tabla, el handler `etiquetas:listar-productos` necesita el join/cálculo correcto.
+   NO inventes el nombre de la columna. Confirmá antes de implementar.
+
+3. RENDER DEL BARCODE/QR ANTES DE printToPDF (hard gate de verificación):
+   jsbarcode/qrcode generan el SVG por JS en el DOM del BrowserWindow oculto. Hay riesgo real
+   de que printToPDF dispare ANTES de que los SVG estén pintados → etiquetas sin código.
+   - Garantizá que TODOS los SVG existan en el DOM antes de llamar printToPDF. No alcanza con
+     `did-finish-load`. Usá una señal explícita: un ipcRenderer que avise "render completo", o
+     un webContents.executeJavaScript que resuelva cuando el número de <svg> esperados ya está
+     en el DOM.
+   - Parátes en verificación manual: confirmá visualmente que el PDF sale CON códigos.
+
+4. PRECISIÓN EN mm CON printToPDF (verificación manual obligatoria):
+   El posicionamiento absoluto en mm depende de que printToPDF respete `@page size` sin escalar.
+   Electron a veces aplica un factor de escala. Para hoja A4 tipo Avery, un corrimiento de 1-2mm
+   arruina toda la grilla.
+   - La verificación manual NO es mirar el PDF en pantalla: es IMPRIMIR sobre papel Avery real y
+     MEDIR con regla que las etiquetas caigan en las celdas físicas. Dejá esto anotado como paso
+     de QA manual explícito.
+
+5. @types/jsbarcode PUEDE NO EXISTIR / ESTAR DESACTUALIZADO:
+   Si `pnpm add -D @types/jsbarcode --filter @ferreteria/client` falla o instala tipos rotos,
+   el fallback es crear un `.d.ts` propio con `declare module 'jsbarcode';`. No te trabes con esto.
+   (Recordá: pará y confirmá antes de instalar dependencias.)
+
+6. TEST EXTRA EN generarLayoutHoja PARA ROLLO (robustez):
+   Agregá un test: para perfil tipo='rollo', la función IGNORA cols/filas/celdaInicio aunque
+   vengan seteados en el perfil (cada item cae en (0,0)). Protege contra un perfil mal armado.
+
+CONFIRMADO Y CERRADO (no cambiar):
+- 1 etiqueta por producto, SIN campo cantidad. Es decisión deliberada del product owner:
+  en la ferretería cada producto tiene una única ubicación física en góndola, no se reponen
+  múltiples etiquetas del mismo artículo. NO reintroducir cantidad.

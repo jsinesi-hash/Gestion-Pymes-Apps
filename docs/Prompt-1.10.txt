@@ -1,0 +1,18 @@
+### P1.10 — Reposición sugerida
+
+```
+Objetivo: alerta y reporte de reposición (Tech Spec 4.2), informativo.
+
+Tareas:
+- Disparador: stock_disponible <= stock_minimo (un solo umbral).
+- Cantidad sugerida = stock_maximo - stock_disponible (si hay máximo; si no, alerta sin
+  cantidad). Calcular en `unidad_venta`; opcional mostrar equivalente en `unidad_compra`
+  (cajas) vía `factor_conversion`.
+- Indicador de cantidad de productos bajo mínimo + reporte de reposición (Supervisor).
+
+Criterios de aceptación:
+- Lista correcta de productos a reponer y cantidad sugerida (tests).
+- Solo lectura; no genera compras ni movimientos.
+
+Restricciones: informativo; no ejecuta reposición.
+```

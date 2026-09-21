@@ -1,0 +1,17 @@
+Stock
+- Se sigue viendo mal el número de "Bajo Mínimo". Figuran los de la primera pantalla, no el total.
+- Los filtros agregados (SKU - Nombre - Estado) quiero que estén en el header (primera línea) no en una línea separada.
+- Cuando se comienza a escribir sobre los filtros agregados (SKU - Nombre) buscan con las primeras 2 letras y te sacan el cursor. Quiero que permita seguir escribiendo y filtrando a medida que se escribe. Ese es el comportamiento esperado para todos los filtros.
+
+Configuración
+- No se ve en ningún lado el "Número de PIN" y se solicita para las anulaciones.
+- No funciona el modo oscuro
+
+Punto de Venta
+- En el detalle del producto a vender, se debe permitir poner la cantidad, actualmente se puede agregar/quitar unidades usando + y -.
+
+Caja
+- En el cierre de caja el campo "Efectivo Declarado" aparece con 12 decimales, dejarlo en 2 decimales.
+
+Ubicaciones
+- En el panel donde se listan los productos, que traiga el listado de productos por defecto. Actualmente viene vacío.

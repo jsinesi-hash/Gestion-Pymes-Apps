@@ -1,0 +1,25 @@
+### P1.8 — POS / Venta (núcleo)
+
+```
+Objetivo: el proceso de venta completo offline con comprobante interno (Tech Spec 3.5).
+
+Tareas:
+- Venta con cliente Consumidor Final por defecto; alta de líneas por QR/EAN/búsqueda con
+  snapshots (descripcion, precio_unitario, alicuota_iva); cantidades decimales si fracción.
+- Resolución de precio (usa el motor de 1.6); descuento de línea y global; total
+  redondeado a $1 con ajuste_redondeo.
+- SIN STOCK DISPONIBLE NO HAY VENTA; productos inactivos no se venden.
+- Forma de pago: efectivo/transferencia/tarjeta → MovimientoCaja; cuenta corriente queda
+  para R3 (en R1, deshabilitada o solo Consumidor Final al contado).
+- Confirmar: Venta + VentaDetalle, MovimientoStock (salida/venta), numeración interna
+  (prefijo+terminal+correlativo), Comprobante tipo ticket_interno; impresión del ticket.
+- Anulación (3.5b): solo Supervisor, por movimientos inversos; permitir anular ventas de
+  cajas cerradas impactando la caja actual.
+- Obliga a tener caja abierta para vender.
+
+Criterios de aceptación:
+- Venta descuenta stock y registra caja; ticket con numero_interno.
+- Bloqueo por stock y por producto inactivo (tests).
+- Anulación revierte stock y caja por movimientos inversos (no borra).
+
+Restricciones: sin fiscal (eso es R2); cuenta corriente real es R3.

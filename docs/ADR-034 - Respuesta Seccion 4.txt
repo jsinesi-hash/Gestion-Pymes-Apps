@@ -1,0 +1,32 @@
+Sección 4 (UI) aprobada, con tres ajustes obligatorios antes de pasar al spec doc:
+
+1. RESTITUIR el preview de cantidad afectada en el modal de Recálculo (4.2).
+   No se difiere — era un requisito explícito del prompt original de ADR-034. No hace falta el
+   preview completo con ejemplos por producto si eso es lo que complica: alcanza con un conteo
+   (SELECT COUNT(*) con el mismo WHERE que va a usar el recálculo real) mostrado antes del botón
+   de confirmar. Sin ese conteo visible, no se habilita "Aplicar ahora" ni "Programar".
+
+2. Corregir el fallback en PrecioPanel (4.1).
+   No mostrar un badge vacío "sin precio guardado" cuando no hay fila vigente. Ese estado no
+   significa que no hay precio — significa que el sistema está calculando por fallback
+   (producto.precio_venta_lista * (1 + lista.ajuste_porcentual / 100), definido en Q5 de
+   ADR-034) y ESE es el precio real que se le está cobrando al cliente ahora mismo. El panel
+   tiene que mostrar ese precio calculado con una marca de advertencia tipo "sin confirmar,
+   calculado por fallback" — no una ausencia de dato.
+
+3. Mostrar promoción activa cuando pisa el precio vigente (4.1 y 4.2 tab "Precios vigentes").
+   Por la precedencia definida en ADR-034 (promoción > valor vigente en lista_precio_valor), si
+   hay una promocion activa para ese producto, el precio que realmente paga el cliente no es el
+   que está guardado en lista_precio_valor. Tanto el panel de producto como la tabla de precios
+   vigentes necesitan indicar cuándo el precio mostrado está siendo pisado por una promoción, y
+   mostrar cuál es el precio promocional efectivo.
+
+Nota de implementación (no bloquea el diseño, pero anotalo para el spec): el botón "Cancelar" de
+un cambio_programado tiene una condición de carrera con el scheduler horario. Tanto la
+cancelación manual como la aplicación automática del job deben hacer el update condicionado a
+estado='pendiente' (compare-and-swap), para que no se pisen si ocurren casi al mismo tiempo.
+
+Historial visual de precios y UI de importación (ADR-035) quedan diferidos tal como los
+planteaste — de acuerdo con eso.
+
+Con estos tres ajustes, avanzá al spec doc.

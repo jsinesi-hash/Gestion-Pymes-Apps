@@ -1,0 +1,60 @@
+CONTEXTO
+Venta en espera para POS (R1/P1.8, extendido en P3.5). Implementar ADR-033.
+
+PASO 0 — HARD GATE. Confirmar y reportar antes de tocar nada:
+- Cómo cuelga hoy `venta` del turno/caja (campo, FK).
+- Nombre real de la tabla de líneas de venta.
+- Que el enum de estado de venta admite agregar valores sin migración destructiva.
+No ejecutar migraciones destructivas sin confirmación.
+
+PRINCIPIOS A RESPETAR
+- Centavos hasta el borde.
+- Cobro impacta caja de forma atómica (en_espera NO toca caja).
+- Anulación = movimientos inversos sin borrado físico (P1.8) — esto es un estado 
+  distinto, no una anulación.
+- IPC namespaced: venta.espera.*
+- Parámetros de negocio en parametros_sistema, nunca hardcode.
+
+MODELO DE DATOS — reusar tabla venta
+- Enum estado: agregar en_espera, descartada.
+- Campos nuevos: alias (opcional), en_espera_desde (timestamp), turno_creacion_id.
+- turno_id de cobro se asigna RECIÉN al confirmar, contra el turno abierto en ese 
+  instante. Sin turno abierto → bloquear.
+
+REGLAS
+- en_espera no impacta caja ni stock. Cobro/descuento de stock en la transición a 
+  confirmada.
+- Stock no se reserva; se revalida al retomar/confirmar (avisa, no bloquea).
+- Precio se repricea al retomar, avisando si cambió.
+- Compartidas por turno: cualquier Operador retoma/descarta.
+- Sobreviven al cierre de turno.
+- Sin correlativo fiscal en espera; se asigna al confirmar.
+
+PARÁMETROS (parametros_sistema, con seed)
+- pos.ventas_en_espera.max (int, sugerido 10)
+- pos.ventas_en_espera.ttl_horas (int, sugerido 24) — solo señaliza, nunca auto-descarta
+
+IPC
+- venta.espera.pausar — persiste la venta en curso como en_espera (alias opcional)
+- venta.espera.listar — ventas en espera del turno/caja activo
+- venta.espera.retomar — recarga al POS, revalida stock y reprecia, devuelve avisos
+- venta.espera.descartar — transición a descartada (confirmación en UI)
+
+UI
+- Botón "Poner en espera" en POS + atajo de teclado. Alias opcional.
+- Indicador visible de cuántas ventas en espera hay.
+- Lista/cajón: alias, hora, nº ítems, total estimado. Acciones: retomar / descartar.
+- Retomar con stock caído o precio cambiado: banner no bloqueante.
+- Descartar: modal de confirmación.
+
+AUDITORÍA CRÍTICA (hacer y reportar)
+Grep de TODO punto que lea venta: informes, arqueo/cierre de turno, ventas del turno, 
+exportación CSV, dashboard. Cada uno debe filtrar estado = 'confirmada'. Reportar 
+lugares tocados, verificación por código real.
+
+TESTS OBLIGATORIOS
+pausar y retomar misma venta · pausar varias y retomar la correcta · descartar no 
+impacta caja/stock/reportes · máximo bloquea nuevo hold · retomar con stock caído 
+avisa · retomar con precio cambiado reprecia y avisa · en_espera NO aparece en arqueo 
+del turno · confirmar asigna el turno abierto actual · confirmar sin turno abierto 
+bloquea · TTL marca vencida sin auto-descartar.

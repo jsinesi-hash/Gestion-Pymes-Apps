@@ -1,0 +1,24 @@
+### P1.2 — Seguridad y RBAC
+
+```
+Objetivo: autenticación de usuarios y autorización por rol, con seed de los dos roles.
+
+Tareas:
+- Login con usuario + hash de contraseña; soporte de pin_rapido (hasheado) para cambio
+  rápido de operador.
+- Catálogo de permisos (codigo, modulo) y relación RolPermiso.
+- Seed inicial: roles Operador y Supervisor (es_sistema=true) con su set de permisos
+  según la matriz RBAC del Tech Spec §5.
+- Middleware/guard que verifica el permiso requerido en cada caso de uso.
+- Regla: no se puede desactivar el último Supervisor activo.
+- Cargar las preferencias de apariencia del usuario (UsuarioPreferencias: tema, acento,
+  ui_font, densidad) al iniciar sesión y aplicarlas; valores por defecto si no existen
+  (tema claro, acento amber, Hanken Grotesk, densidad comfortable). Ver Sistema de Diseño §8.
+
+Criterios de aceptación:
+- Login y cambio rápido por pin funcionan; contraseñas y pin nunca en texto plano.
+- Un Operador no puede ejecutar acciones exclusivas de Supervisor (test).
+- Seed reproducible; matriz RBAC cubierta por tests.
+
+Restricciones: respetar Prompt 0 (dos roles, permisos como datos).
+```

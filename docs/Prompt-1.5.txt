@@ -1,0 +1,17 @@
+### P1.5 — Localización por QR
+
+```
+Objetivo: localizar productos con el lector 2D, 100% offline (Tech Spec 3.9).
+
+Tareas:
+- Por producto: ingresar/escanear codigo_qr (o EAN, o buscar) → mostrar ubicación
+  (sector/estante/posicion + codigo) y stock disponible.
+- Consulta inversa por ubicación: elegir ubicación → listar productos con stock.
+- El lector entra como HID (texto): resolver el código a producto/ubicación; distinguir
+  por formato si es QR de producto vs EAN.
+
+Criterios de aceptación:
+- Resolución correcta por QR y por EAN; consulta inversa lista los productos.
+- Funciona sin red (sin llamadas a la nube).
+
+Restricciones: es consulta, no modifica datos. Sin móvil/PWA.

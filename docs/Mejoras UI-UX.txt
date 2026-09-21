@@ -1,0 +1,36 @@
+ETIQUETAS
+- Los campos de configuración deben estar en la parte superior y ocupar una línea, al lado del título "Etiquetas". El botón Imprimir debe ser el último a derecha.
+- Listado: debe ocupar todo el ancho de la página. Reordenar botones de filtros para que queden en una única línea. Quitar botón "Seleccionar Todos" por redundancia.
+
+CLIENTES
+- Agregar botón exportar.
+
+CUENTA CORRIENTE
+- Agregar botón exportar.
+
+REPOSICION SUGERIDA
+- En el listado el SKU aparece en dos líneas (dígito verificador en la segunda) ampliar para que todo aparezca en la misma línea.
+
+PROVEEDORES
+- El campo Notas Internas sobre el proveedor quedó muy al margen, ajustar para que no quede sobre el margen del botón.
+
+ORDENES DE COMPRA
+- OC SUGERIDA: Si el producto no tiene un proveedor preferido asociado, debe permitir asignar uno al hacer click sobre el producto.
+- Agregar búsqueda por producto y orden mayor/menor por cant. sugerida al hacer click.
+
+STOCK
+- En el listado el SKU aparece en dos líneas (dígito verificador en la segunda) ampliar para que todo aparezca en la misma línea.
+
+PRODUCTOS
+- Entrada de Stock: el campo cantidad a ingresar agrega en milesimas al seleccionar las flechas, debe ser enteros positivos.
+
+PUNTO DE VENTA
+- Confirmar venta: el campo monto agrega en milesimas al seleccionar las flechas, debe ser enteros positivos. Campo Monto, sin máscara.
+
+CAJA
+- El campo Cerrar Caja debe aparecer en la misma línea superior a la derecha de todos los botones.
+- Agregar a las cabeceras los filtros por número, estado, permitir orden mayor/menor al tildar los campos.
+- Al seleccionar los movimientos, abrir pantalla de detalle con todo lo referente al movimiento. Habilitar el botón volver que trae a la pantalla anterior del listado.
+- El campo Total Ingresos se debe adaptar a una línea. Actualmente $ 107.591,25 queda en dos líneas. Contemplar xx.xxx.xxx,xx. Lo mismo para Egresos.
+
+TODOS LOS CAMPOS DE IMPORTE DEBEN TENER LA MÁSCARA XXX.XXX.XXX,XX

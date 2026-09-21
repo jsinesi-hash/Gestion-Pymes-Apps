@@ -1,0 +1,68 @@
+CONTEXTO
+Este prompt agrupa bugs y mejoras detectadas en uso real,
+ordenados por prioridad. Encarálos en el orden numerado — no saltes bloques. Cada ítem indica
+si requiere gate de confirmación antes de tocar schema o lógica de negocio sensible (saldo de
+cliente, migraciones). Si un ítem no trae gate explícito, es cambio de UI/filtro/routing sin
+impacto en datos.
+
+Regla general: cualquier cambio que toque `cliente.saldo`, `parametros_sistema`, tablas nuevas o
+dependencias nuevas se hace dentro de una transacción atómica y se detiene para confirmación
+antes de aplicar la migración. No asumas formato de tabla: hacé schema discovery primero.
+
+---
+
+BLOQUE 1 — Bugs de comportamiento (corregir primero)
+
+1. Stock — botón "Bajo mínimo" mal enlazado
+   Actual: redirige a "Reposición sugerida".
+   Esperado: debe aplicar el filtro "Bajo mínimo" en el propio listado de Stock (igual patrón
+   que los demás botones-filtro de esa pantalla).
+
+2. Dashboard — contador "Sin Stock" incorrecto
+   Actual: el recuadro de Stock muestra "Sin Stock: 0" aunque existen productos sin stock.
+   Esperado: recalcular el conteo real de productos con stock = 0. Revisar la query/agregación
+   que alimenta ese KPI.
+
+3. POS — falta forma de pago "Cuenta Corriente"
+   Actual: el flujo de cobro no contempla cuenta corriente como medio de pago; la deuda del
+   cliente no se actualiza.
+   Esperado: agregar "Cuenta Corriente" a los medios de pago del POS (reutilizando el modelo de
+   pagos mixtos de ADR-032). Al confirmarse la venta con este medio, debe impactar el saldo del
+   cliente de forma atómica junto con el resto de la operación de venta.
+   GATE: antes de implementar, confirmar conmigo: (a) si corresponde validar límite de crédito
+   en el momento del cobro o solo se registra, y (b) el punto exacto de la transacción donde se
+   actualiza `cliente.saldo`. No migres ni toques esa tabla sin esta confirmación.
+
+---
+
+BLOQUE 2 — Consistencia visual (bajo esfuerzo, alto impacto)
+
+4. Clientes y Cuenta Corriente — alinear al design system
+   Aplicar el mismo formato visual que el resto de las pantallas (ver design-system.md):
+   fondo blanco, bordes redondeados, mismo patrón que Proveedores.
+
+5. Categorías y Marcas — alinear al design system + filtros
+   Mismo ajuste visual que el punto anterior. Además agregar filtros de búsqueda por nombre y
+   selector de estado (activo/inactivo), siguiendo el patrón de filtros ya usado en otros listados.
+
+---
+
+BLOQUE 3 — Mejoras funcionales sobre pantallas existentes
+
+6. Cuenta Corriente — filtros, orden y totales
+   - Agregar filtros por cliente y por DNI.
+   - Permitir ordenar por saldo (mayor/menor), límite (mayor/menor) y estado.
+   - Mostrar en la parte superior dos totales: Monto total a favor y Monto total en deuda.
+
+7. Órdenes de Compra — botones resumen con filtro
+   Agregar botones "OC Emitidas (cantidad)" y "OC Borrador (cantidad)" que, al hacer clic,
+   apliquen el filtro correspondiente en el listado — mismo patrón que los botones-filtro de
+   Stock.
+
+8. Etiquetas — aclarar campo sin descripción
+   El campo junto a la lista QR/CODE128 (actualmente "Etiquetas en blanco") no tiene descripción
+   clara. Cambiar la etiqueta/label a algo explícito, ej. "Comenzar desde:". Confirmar el texto
+   final conmigo antes de aplicar si hay ambigüedad sobre el comportamiento del campo.
+
+---
+

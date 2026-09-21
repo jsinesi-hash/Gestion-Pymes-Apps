@@ -1,0 +1,32 @@
+Contexto: implementamos ADR-039 — nueva sección de menú "Reportes", separada
+del Dashboard (ADR-036/038). En esta etapa SOLO se implementa Detalle de
+Ventas (operativo). NO implementar detalle de comprobantes/facturas fiscales
+todavía: `comprobante_fiscal` no existe en el schema actual — si aparece
+durante la exploración, parar y avisar en vez de asumir su forma.
+
+Alcance de esta etapa:
+1. Agregar grupo de sidebar nuevo "Reportes" (hoy existen Catálogo,
+   Abastecimiento, Clientes, Configuración — ADR-028). Ítems: Ventas
+   (habilitado), Productos, Proveedores, Clientes (deshabilitados,
+   "a definir").
+2. Pantalla Reportes → Ventas → Detalle de ventas:
+   - Listado línea a línea de `venta`, paginado/con scroll virtual (mismo
+     patrón que las tablas densas de design-system.md).
+   - Filtros: rango de fechas libre, cliente, rubro/categoría, producto,
+     vendedor (usuario_id), medio de pago (venta_pago).
+   - Exportación a CSV del resultado filtrado.
+   - Sin límite de rango de fechas (a diferencia del Dashboard).
+
+Antes de escribir queries: inspeccionar el schema real de `venta`,
+`venta_pago`, `producto`, `categoria`, `cliente`, `usuario` y confirmar los
+campos disponibles antes de implementar filtros y export.
+
+Gates obligatorios — parar y avisar antes de:
+- Cualquier migración de schema.
+- Instalar cualquier dependencia nueva.
+- Implementar cualquier lógica relacionada a `comprobante_fiscal` o AFIP/ARCA
+  — está fuera de alcance de esta etapa.
+- Tocar cualquier pantalla o módulo fuera de este nuevo grupo "Reportes".
+
+Al terminar: actualizar ESTADO.md (bitácora + inventario de pantallas) según
+la plantilla del proyecto.

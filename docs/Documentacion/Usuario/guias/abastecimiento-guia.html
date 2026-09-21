@@ -1,0 +1,362 @@
+<meta charset="utf-8">
+<title>Abastecimiento — Guía</title>
+<style>
+  :root{
+    --bg:#f7f7f5; --surface:#ffffff; --ink:#1c1a17; --ink-2:#4b463f; --ink-3:#8a8279;
+    --line:#e7e3dc; --accent:#e8730a; --accent-soft:#fdefe1; --accent-strong:#b45309;
+    --ok:#2e7d52; --ok-soft:#e7f3ec; --warn:#b7791f; --warn-soft:#fbf3e0; --danger:#c0392b; --danger-soft:#fbeceb;
+    --blue:#2f6fb0; --blue-soft:#e9f1f9;
+    --radius:12px; --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+      --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+      --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+      --blue:#7fb0e0; --blue-soft:#182533;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+    --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+    --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+    --blue:#7fb0e0; --blue-soft:#182533;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 "Hanken Grotesk",-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 22px 80px}
+  header.hero{background:linear-gradient(135deg,#1c1a17,#3a332b);color:#fff;border-radius:18px;padding:34px 34px 30px;margin-bottom:28px}
+  header.hero .kicker{color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:12.5px}
+  header.hero h1{margin:.35em 0 .2em;font-size:30px;line-height:1.15}
+  header.hero p{margin:0;color:#d7d1c8;max-width:70ch}
+  h2{font-size:22px;margin:2.2em 0 .5em;padding-top:.5em;border-top:2px solid var(--line)}
+  h3{font-size:17px;margin:1.4em 0 .4em;color:var(--ink)}
+  p,li{color:var(--ink-2)}
+  code{font-family:var(--mono);font-size:.87em;background:var(--accent-soft);padding:.1em .38em;border-radius:5px;color:var(--accent-strong)}
+  a{color:var(--blue)}
+  .lead{font-size:16.5px}
+  .toc{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 20px;margin:0 0 8px}
+  .toc b{font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+  .toc ol{margin:.5em 0 0;padding-left:1.2em;columns:2;column-gap:32px}
+  .toc a{text-decoration:none}
+  table{width:100%;border-collapse:collapse;margin:1em 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px}
+  th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--accent-soft);font-size:12.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-3)}
+  tr:last-child td{border-bottom:none}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 22px 18px;margin:16px 0}
+  .fig{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin:20px 0;overflow-x:auto}
+  .fig figcaption{font-size:12.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;font-weight:700}
+  .shot{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px;margin:16px 0;text-align:center}
+  .shot img{max-width:100%;border-radius:8px;display:block;margin:0 auto;border:1px solid var(--line)}
+  .shot.small img{max-width:440px}
+  .shot figcaption{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+  .shot-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:640px){.shot-row{grid-template-columns:1fr}}
+  .callout{border-radius:var(--radius);padding:16px 20px;margin:18px 0;border:1px solid}
+  .callout.warn{background:var(--warn-soft);border-color:#ecd9a8}
+  .callout.info{background:var(--blue-soft);border-color:#cfe0ef}
+  .callout.danger{background:var(--danger-soft);border-color:#eec4bf}
+  .callout h3{margin-top:.2em}
+  .pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px}
+  .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .pill.err{background:var(--danger-soft);color:var(--danger)} .pill.mut{background:var(--accent-soft);color:var(--ink-3)}
+  .step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .step:last-child{border-bottom:none}
+  .step .dot{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent-strong);
+    font-weight:700;display:grid;place-items:center;font-size:.85rem}
+  .step .body{flex:1}
+  .step .body h4{margin:0 0 4px;font-size:1rem;color:var(--ink)}
+  details{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin:10px 0;overflow:hidden}
+  details summary{cursor:pointer;padding:14px 18px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;color:var(--ink)}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"+";color:var(--accent);font-size:1.3rem;font-weight:400}
+  details[open] summary::after{content:"–"}
+  details .ans{padding:0 18px 16px;color:var(--ink-2)}
+  svg{max-width:100%;height:auto;display:block}
+  .muted{color:var(--ink-3);font-size:13.5px}
+  .n-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+  .n-accent{fill:var(--accent-soft);stroke:#f0c79a}
+  .n-ok{fill:var(--ok-soft);stroke:#bfe0cd}
+  .n-warn{fill:var(--warn-soft);stroke:#ecd9a8}
+  .n-err{fill:var(--danger-soft);stroke:#eec4bf}
+  .n-dark{fill:#26221d;stroke:#26221d}
+  .t{font:600 13px "Hanken Grotesk",sans-serif;fill:var(--ink)}
+  .t-sm{font:500 11px "Hanken Grotesk",sans-serif;fill:var(--ink-2)}
+  .t-white{fill:#fff}
+  .edge{stroke:#b9b1a6;stroke-width:1.6;fill:none}
+  .edge-lbl{font:600 10.5px "Hanken Grotesk",sans-serif;fill:var(--ink-3)}
+  footer{color:var(--ink-3);font-size:13px;text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--line)}
+  .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink-3);text-decoration:none;margin-bottom:14px}
+  .back-link:hover{color:var(--accent)}
+  img.zoomable{cursor:zoom-in}
+  .lightbox-overlay{display:none;position:fixed;inset:0;background:rgba(10,9,7,.82);z-index:999;
+    align-items:center;justify-content:center;padding:5vh 5vw;cursor:zoom-out}
+  .lightbox-overlay.open{display:flex}
+  .lightbox-overlay img{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.5);display:block}
+
+  .page{display:flex;align-items:flex-start;}
+  nav.side{position:sticky;top:0;height:100vh;width:250px;flex:0 0 250px;
+    background:#201d18;color:#cdc4b8;overflow-y:auto;padding:26px 18px 32px;}
+  nav.side h1{font-size:14.5px;color:#fff;margin:0 0 4px;line-height:1.35;font-weight:700;}
+  nav.side .sub{font-size:11px;color:var(--accent);margin-bottom:20px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+  nav.side a{display:block;color:#cdc4b8;text-decoration:none;font-size:12.6px;padding:6px 9px;border-radius:6px;margin:1px 0;border-left:3px solid transparent;}
+  nav.side a:hover{background:#332d24;color:#fff;}
+  nav.side a.active{background:#332d24;color:#fff;border-left-color:var(--accent);font-weight:600;}
+  nav.side .foot{margin-top:22px;border-top:1px solid #423b30;padding-top:14px;}
+  nav.side .foot a{color:var(--accent);font-weight:700;padding-left:0;}
+  nav.side .foot a:hover{color:#fff;background:none;}
+  main{flex:1;min-width:0;}
+  @media print{ nav.side{display:none;} }
+  @media (max-width:900px){ nav.side{display:none;} }
+</style>
+
+<div class="page">
+<nav class="side">
+  <h1>Abastecimiento</h1>
+  <div class="sub">Manual de Usuario</div>
+  <a href="#mapa">Cómo funciona</a>
+  <a href="#proveedores">Proveedores</a>
+  <a href="#preferido">El proveedor "preferido"</a>
+  <a href="#nueva-oc">Crear una orden de compra</a>
+  <a href="#emitir">Emitir la OC</a>
+  <a href="#recibir">Recibir mercadería</a>
+  <a href="#sugerida">OC Sugerida — reposición automática</a>
+  <a href="#flujo">Diagrama: ciclo de vida de una OC</a>
+  <a href="#faq">Dudas frecuentes</a>
+  <div class="foot"><a href="index.html">← Volver al índice</a></div>
+</nav>
+<main>
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Abastecimiento — Guía paso a paso</h1>
+  <p>Cómo dar de alta proveedores, marcar cuál es el preferido de cada producto, armar y emitir una orden de compra, recibir la mercadería, y dejar que el sistema te sugiera qué reponer — con diagramas y capturas reales.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="mapa">0 · Cómo funciona</h2>
+<p class="lead">Cada producto puede comprarse a <b>varios proveedores distintos</b>, cada uno con su propio costo y código. De todos ellos, uno se marca como <b>preferido</b> — es el que el sistema usa para calcular márgenes y para armar sugerencias de compra. Una <b>orden de compra (OC)</b> nace en <b>borrador</b> (podés editar los ítems libremente), pasa a <b>emitida</b> (ya no se puede tocar), y se cierra <b>recibiendo la mercadería</b> — total o parcialmente.</p>
+
+<!-- ============ 1. PROVEEDORES ============ -->
+<h2 id="proveedores">1 · Proveedores</h2>
+<div class="shot">
+  <img src="assets/proveedores-listado.png" alt="Listado de proveedores" loading="lazy">
+  <figcaption>Listado de proveedores.</figcaption>
+</div>
+<p>El alta de un proveedor tiene tres bloques: <b>identificación fiscal</b> (CUIT, razón social, condición fiscal — el código de proveedor lo asigna el sistema solo), <b>contacto</b>, y <b>condiciones comerciales</b>.</p>
+<div class="shot">
+  <img src="assets/proveedor-nuevo-1.png" alt="Formulario de alta de proveedor — identificación y contacto" loading="lazy">
+  <figcaption>Identificación fiscal y contacto.</figcaption>
+</div>
+<div class="shot">
+  <img src="assets/proveedor-nuevo-2.png" alt="Formulario de alta de proveedor — condiciones comerciales y domicilio" loading="lazy">
+  <figcaption>Condiciones comerciales, domicilio y umbral de pre-selección por similitud (para matchear importaciones de costos automáticamente).</figcaption>
+</div>
+<div class="callout info">
+  <h3>Bonificación, costo financiero y flete <b>por defecto</b></h3>
+  <p>Estos tres porcentajes se aplican <b>a todos los productos de este proveedor</b> a la hora de calcular el costo neto (costo bruto ± bonificación ± financiero ± flete). Si un producto puntual necesita otro trato, se puede sobrescribir <b>por excepción</b> desde su propia ficha — sin tocar el default del proveedor.</p>
+</div>
+
+<!-- ============ 2. PREFERIDO ============ -->
+<h2 id="preferido">2 · El proveedor "preferido"</h2>
+<p>Desde la ficha del proveedor, pestaña <b>Productos</b>, ves todo lo que le comprás: costo, costo neto, código de ese proveedor, y si es el <b>preferido</b> para ese producto.</p>
+<div class="shot">
+  <img src="assets/proveedor-productos.png" alt="Pestaña Productos de un proveedor, con la marca de preferido" loading="lazy">
+  <figcaption>“Martillo 500g” tiene 3 proveedores posibles, pero <i>este</i> no es el preferido (estrella vacía) — los demás sí lo son para sus respectivos productos.</figcaption>
+</div>
+<div class="callout warn">
+  <h3>⚠️ Por qué importa el preferido</h3>
+  <p>El costo del proveedor <b>preferido</b> es el que alimenta el cálculo de márgenes (listas de precios en modo "margen sobre costo") y las cantidades de la <a href="#sugerida">OC Sugerida</a>. Un producto sin preferido asignado queda fuera de esos cálculos hasta que se lo asignes.</p>
+</div>
+
+<!-- ============ 3. NUEVA OC ============ -->
+<h2 id="nueva-oc">3 · Crear una orden de compra</h2>
+<div class="shot">
+  <img src="assets/oc-listado.png" alt="Listado de órdenes de compra" loading="lazy">
+  <figcaption>Listado de órdenes de compra, con su estado y total.</figcaption>
+</div>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Elegí el proveedor</h4><p>Botón <b>+ Nueva OC manual</b>. Observaciones opcionales.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Agregá los ítems</h4><p>Producto, cantidad, costo y % de IVA. La OC nace en <b>borrador</b> y podés agregar tantos ítems como necesites.</p></div>
+  </div>
+</div>
+<div class="shot-row">
+  <div class="shot small">
+    <img class="zoomable" src="assets/oc-nueva.png" alt="Formulario de nueva orden de compra manual" loading="lazy">
+    <figcaption>Nueva OC — solo pide proveedor. Clic para ampliar.</figcaption>
+  </div>
+  <div class="shot small">
+    <img class="zoomable" src="assets/oc-agregar-item.png" alt="Formulario para agregar un ítem a la OC" loading="lazy">
+    <figcaption>Agregar ítem: producto, cantidad, costo, IVA. Clic para ampliar.</figcaption>
+  </div>
+</div>
+<div class="shot">
+  <img src="assets/oc-item-agregado.png" alt="OC en borrador con un ítem cargado y los totales calculados" loading="lazy">
+  <figcaption>El sistema calcula subtotal neto, IVA y total automáticamente por cada ítem que agregás.</figcaption>
+</div>
+
+<!-- ============ 4. EMITIR ============ -->
+<h2 id="emitir">4 · Emitir la OC</h2>
+<p>Mientras la OC está en <b>borrador</b> podés seguir agregando o sacando ítems. Al presionar <b>Emitir OC</b>, el sistema te avisa que después de esto <b>ya no vas a poder modificar los ítems</b>.</p>
+<div class="shot small">
+  <img src="assets/oc-emitir-confirmacion.png" alt="Confirmación al emitir una orden de compra" loading="lazy">
+  <figcaption>Confirmación antes de emitir — es la única oportunidad de volver atrás y corregir un ítem.</figcaption>
+</div>
+<div class="shot">
+  <img src="assets/oc-emitida.png" alt="Orden de compra en estado emitida, con el botón Recibir mercadería" loading="lazy">
+  <figcaption>Ya emitida: aparece “Recibir mercadería” y ya no se pueden editar los ítems.</figcaption>
+</div>
+
+<!-- ============ 5. RECIBIR ============ -->
+<h2 id="recibir">5 · Recibir mercadería</h2>
+<p>Al recibir, el sistema te muestra solo lo <b>pendiente</b> (pedido menos lo ya recibido), con la cantidad a recibir precargada al máximo posible — la podés bajar si llegó menos.</p>
+<div class="shot">
+  <img src="assets/oc-recibir.png" alt="Formulario de recepción de mercadería" loading="lazy">
+  <figcaption>Recepción: remito del proveedor (opcional), observaciones, y cantidad a recibir ahora por cada ítem pendiente.</figcaption>
+</div>
+<div class="shot">
+  <img src="assets/oc-recibida-total.png" alt="Orden de compra en estado recibida total" loading="lazy">
+  <figcaption>Al recibir todo lo pedido, la OC pasa a <b>recibida total</b>. Cada recepción genera su propia entrada de stock.</figcaption>
+</div>
+<div class="callout info">
+  <h3>¿Y si llega menos de lo pedido?</h3>
+  <p>Registrás la cantidad que efectivamente llegó. La OC queda en <b>recibida parcial</b> y el botón "Recibir mercadería" sigue disponible para completar el resto cuando llegue.</p>
+</div>
+
+<!-- ============ 6. SUGERIDA ============ -->
+<h2 id="sugerida">6 · OC Sugerida — reposición automática</h2>
+<p>En vez de revisar producto por producto, <b>OC Sugerida</b> arma la lista sola: junta todos los productos <b>bajo su stock mínimo</b>, calcula cuánto falta, y los agrupa <b>por proveedor preferido</b>.</p>
+<div class="shot">
+  <img src="assets/oc-sugerida.png" alt="Pantalla OC Sugerida agrupada por proveedor, con productos sin proveedor asignado" loading="lazy">
+  <figcaption>Un grupo por proveedor preferido, con botón “Crear OC y editar” — y una sección aparte para lo que todavía no tiene proveedor preferido asignado.</figcaption>
+</div>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Revisá cada grupo</h4><p>Mínimo, faltante y cantidad sugerida por producto, con el costo del proveedor preferido.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4><b>Crear OC y editar</b></h4><p>Genera de una la orden de compra completa con todos los ítems del grupo, en borrador, lista para ajustar y emitir.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Los productos sin proveedor preferido quedan aparte</h4><p>Con un enlace directo <b>Asignar proveedor</b> para resolverlo ahí mismo.</p></div>
+  </div>
+</div>
+
+<!-- ============ 7. FLUJO ============ -->
+<h2 id="flujo">7 · Diagrama: ciclo de vida de una OC</h2>
+<figure class="fig">
+  <figcaption>Diagrama · De borrador a recibida</figcaption>
+  <svg viewBox="0 0 960 200" role="img" aria-label="Ciclo de vida de una orden de compra">
+    <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+
+    <rect class="n-box" x="10" y="70" width="160" height="60" rx="10"/>
+    <text class="t" x="90" y="95" text-anchor="middle">Borrador</text>
+    <text class="t-sm" x="90" y="113" text-anchor="middle">agregar/sacar ítems</text>
+    <path class="edge" marker-end="url(#ah)" d="M170,100 L206,100"/>
+
+    <rect class="n-accent" x="208" y="70" width="160" height="60" rx="10"/>
+    <text class="t" x="288" y="95" text-anchor="middle">Emitida</text>
+    <text class="t-sm" x="288" y="113" text-anchor="middle">ítems ya fijos</text>
+    <path class="edge" marker-end="url(#ah)" d="M368,100 L404,100"/>
+
+    <rect class="n-warn" x="406" y="70" width="180" height="60" rx="10"/>
+    <text class="t" x="496" y="95" text-anchor="middle">Recibida parcial</text>
+    <text class="t-sm" x="496" y="113" text-anchor="middle">llegó una parte</text>
+    <path class="edge" marker-end="url(#ah)" d="M450,130 C450,168 542,168 542,130"/>
+    <text class="edge-lbl" x="496" y="184" text-anchor="middle">recibe otra parte</text>
+    <path class="edge" marker-end="url(#ah)" d="M586,100 L622,100"/>
+
+    <rect class="n-ok" x="624" y="70" width="180" height="60" rx="10"/>
+    <text class="t" x="714" y="95" text-anchor="middle">Recibida total</text>
+    <text class="t-sm" x="714" y="113" text-anchor="middle">stock actualizado</text>
+
+    <path class="edge" marker-end="url(#ah)" d="M288,60 L288,20 L850,20 L850,68"/>
+    <rect class="n-err" x="800" y="70" width="130" height="60" rx="10"/>
+    <text class="t" x="865" y="95" text-anchor="middle">Anulada</text>
+    <text class="t-sm" x="865" y="113" text-anchor="middle">desde borrador o emitida</text>
+  </svg>
+</figure>
+
+<!-- ============ FAQ ============ -->
+<h2 id="faq">8 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Puedo editar los ítems de una OC ya emitida?</summary>
+  <div class="ans">No. Una vez emitida, la única forma de corregirla es <b>anularla</b> y crear una nueva. Por eso el sistema pide confirmación explícita antes de emitir.</div>
+</details>
+
+<details>
+  <summary>¿Qué diferencia hay entre "OC manual" y "OC sugerida"?</summary>
+  <div class="ans">Son el mismo circuito (borrador → emitida → recibida). La diferencia es solo el origen: una la armás vos a mano eligiendo proveedor y productos; la otra la genera el sistema agrupando todo lo que está bajo stock mínimo por su proveedor preferido.</div>
+</details>
+
+<details>
+  <summary>Un producto no aparece agrupado en ningún proveedor en OC Sugerida. ¿Por qué?</summary>
+  <div class="ans">Porque no tiene un proveedor marcado como <b>preferido</b>. Va a aparecer en la sección "Sin proveedor preferido asignado", con un enlace directo para asignárselo.</div>
+</details>
+
+<details>
+  <summary>¿Se puede recibir más cantidad de la que se pidió?</summary>
+  <div class="ans">No, el campo de cantidad a recibir no deja superar lo pendiente (pedido menos lo ya recibido) — eso requiere autorización de Supervisor como "sobre-recepción" en el sistema.</div>
+</details>
+
+<details>
+  <summary>¿La bonificación/costo financiero/flete del proveedor se puede cambiar para un producto puntual?</summary>
+  <div class="ans">Sí. Los porcentajes que cargás en la ficha del proveedor son el <b>default</b> para todos sus productos, pero se pueden sobrescribir por excepción desde el detalle de cada producto sin afectar a los demás.</div>
+</details>
+
+<details>
+  <summary>¿Anular una OC afecta el stock?</summary>
+  <div class="ans">No. Mientras no se reciba mercadería, una OC (en borrador o emitida) no toca el stock. Anularla simplemente la cierra sin efecto.</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Abastecimiento (Proveedores + Órdenes de compra)
+</footer>
+
+<script>
+  (function(){
+    if (window.__lightboxInit) return;
+    window.__lightboxInit = true;
+    var overlay = document.createElement('div');
+    overlay.className = 'lightbox-overlay';
+    var img = document.createElement('img');
+    overlay.appendChild(img);
+    document.body.appendChild(overlay);
+    document.addEventListener('click', function(e){
+      var el = e.target.closest && e.target.closest('img.zoomable');
+      if (el) {
+        img.src = el.src;
+        img.alt = el.alt;
+        overlay.classList.add('open');
+      }
+    });
+    overlay.addEventListener('click', function(){ overlay.classList.remove('open'); });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') overlay.classList.remove('open');
+    });
+  })();
+</script>
+</div>
+</main>
+</div>
+
+<script>
+  (function(){
+    var links=[...document.querySelectorAll('nav.side a[href^="#"]')];
+    var map=new Map();
+    links.forEach(function(a){var id=a.getAttribute('href').slice(1);var el=document.getElementById(id);if(el)map.set(el,a);});
+    var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove('active');});var a=map.get(e.target);if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-10% 0px -80% 0px',threshold:0});
+    [...map.keys()].forEach(function(t){obs.observe(t);});
+  })();
+</script>
+

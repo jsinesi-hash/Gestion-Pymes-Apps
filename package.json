@@ -1,0 +1,20 @@
+{
+  "name": "gestion-pymes-apps",
+  "version": "1.1.1",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter ferreteria-client dev",
+    "build": "pnpm --filter ferreteria-client build",
+    "make": "pnpm --filter ferreteria-client make",
+    "typecheck": "pnpm -r exec tsc --noEmit",
+    "test": "pnpm -r run test",
+    "rebuild": "pnpm --filter ferreteria-client rebuild:electron"
+  },
+  "engines": {
+    "node": ">=22.13.0 <23",
+    "pnpm": ">=11"
+  },
+  "devDependencies": {
+    "tsx": "^4.22.4"
+  }
+}

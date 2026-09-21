@@ -1,0 +1,27 @@
+Q1.2 y Q1.3: recibidas, gracias por el discovery.
+
+Corrección importante antes de avanzar con el gap de "Lista General":
+
+Mayorista es hoy predeterminada=true. Eso significa que el precio real que paga cualquier
+cliente sin lista asignada es precio_venta_lista * 1.15, no precio_venta_lista a secas. Tu
+Opción A tal como la planteaste (Lista General nueva con predeterminada=true, Mayorista pasa a
+false) causaría una baja de precio del 15% en la migración para todos los clientes sin lista
+asignada — eso no es un cambio de arquitectura, es un cambio de precio real, y no lo vamos a
+colar dentro de esta migración.
+
+Vamos con una versión corregida:
+1. Crear "Lista General" (tipo='general', ajuste_porcentual=0) — SIN tocar el flag
+   predeterminada. Mayorista sigue siendo predeterminada=true, sin cambios de comportamiento.
+2. Sembrar lista_precio_valor para los 169 productos en AMBAS listas: Lista General (0%) y
+   Mayorista (+15%, respetando el override de Aguarras 1Lt a 0%).
+3. El POS debe devolver exactamente el mismo precio que devuelve hoy para cada producto —
+   verificalo con una muestra comparando el valor viejo (calculado en el renderer) contra el
+   nuevo (leído de lista_precio_valor) antes de dar el paso por cerrado.
+4. Qué lista queda como default "real" de venta a futuro es una decisión de negocio aparte
+   (ligada a asignación de lista por cliente), no se toca en esta migración.
+
+Nota aparte: en tu respuesta mencionaste "ADR-034 cierra eso" — es un error de referencia, el
+ADR de esta migración es el 035. Corregilo en el commit/PR para no romper la trazabilidad.
+
+Con esto confirmado, avanzá con la migración SQL 0014 (DDL) y el seed completo de las dos
+listas para el catálogo entero.

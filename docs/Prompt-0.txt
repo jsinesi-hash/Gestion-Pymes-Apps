@@ -1,0 +1,91 @@
+## PROMPT 0 — Contexto maestro del proyecto (`CLAUDE.md`)
+
+```
+# Proyecto: Sistema de Gestión de Ferretería
+
+Sos el asistente de desarrollo de este proyecto. Respetá SIEMPRE este contexto y no
+reintroduzcas decisiones ya tomadas (están registradas como ADR). Ante una duda de
+arquitectura, preguntá antes de improvisar.
+
+## Objetivo
+Sistema de gestión integral para una ferretería que opera OFFLINE-FIRST: vender,
+controlar stock, localizar mercadería por QR, facturar (AFIP/ARCA), gestionar compras,
+cuentas corrientes y caja. La operación NUNCA se detiene por falta de internet.
+
+## Stack (fijo — ADR-002)
+- Lenguaje: TypeScript de punta a punta.
+- Cliente de escritorio: Electron + React.
+- Base local: SQLite (FUENTE DE VERDAD local — ADR-001).
+- Backend nube (desde R4): Node.js + PostgreSQL.
+- Monorepo TypeScript. (ORM y herramienta de monorepo: ver ADR-016, pendiente —
+  si no está decidido, proponé y esperá confirmación antes de fijarlo.)
+
+## Principios de arquitectura (no negociables)
+1. Offline-first: toda operación se escribe primero en SQLite local; la nube consolida
+   pero no bloquea. (ADR-001)
+2. IDs UUID generados en el cliente. (ADR-003)
+3. Toda tabla sincronizable lleva: version (int), origin_id (terminal), sync_state
+   (pending|synced|conflict), updated_at. (ADR-003)
+4. Sincronización por OUTBOX + idempotencia: reaplicar la misma operación por su id no
+   duplica efectos. (ADR-003) — el motor de sync real recién se implementa en R4, pero
+   el esquema (campos de sync, outbox) se respeta desde R1.
+5. Patrón SALDO + LIBRO DE MOVIMIENTOS INMUTABLE para stock, caja y cuentas corrientes:
+   los movimientos NUNCA se editan, solo se agregan; cada movimiento guarda el
+   *_resultante (saldo tras el movimiento). (ADR-006)
+6. SNAPSHOTS en líneas de venta y compra: descripción, precio/costo y alícuota se copian
+   al momento de la operación (no referencia viva al producto).
+7. Baja lógica (campo `activo`) en entidades maestras; no borrado físico.
+8. Auditoría: usuario_creacion_id/fecha_creacion y, en editables, usuario_modificacion/
+   fecha_actualizacion.
+
+## Identificación de productos (ADR-005)
+- gtin_barcode (EAN/UPC del fabricante): OPCIONAL, uno solo por producto, se usa en la
+  ENTRADA (alta y recepción).
+- codigo_qr: ÚNICO por producto, generado por el sistema, identifica y localiza.
+- ubicacion_id: atributo del producto (FK a catálogo Ubicacion). UNA sola ubicación por
+  producto. Los estantes tienen cartelería pre-impresa fija (no se imprime ni escanea
+  la ubicación).
+- Periférico: lector inalámbrico 1D/2D como HID (lee EAN/UPC y QR). NO hay captura móvil
+  ni PWA. (ADR-004)
+
+## Roles (ADR-008)
+Dos roles de sistema: OPERADOR (mostrador + depósito) y SUPERVISOR (administración,
+autorizaciones, configuración fiscal, pagos a proveedor, reportes, importación masiva,
+anulaciones, override de precio). Un rol por usuario. Permisos como datos (codigo, ej.
+`venta.crear`). Toda acción se autoriza contra la matriz RBAC.
+
+## Reglas de negocio clave
+- Precio: base (precio_venta_lista, IVA INCLUIDO) → % de lista (el % por producto pisa al
+  general, ambos con signo) → descuento de línea → descuento global. (ADR-009)
+- Redondeo a $1 sobre el TOTAL de la venta; la diferencia va en Venta.ajuste_redondeo;
+  las líneas conservan centavos. (ADR-010)
+- SIN STOCK DISPONIBLE NO HAY VENTA (sin excepción).
+- Productos inactivos no se venden.
+- El stock SIEMPRE cambia vía un MovimientoStock (nunca hay stock sin movimiento).
+- Costo promedio ponderado en cada entrada con costo:
+  nuevo = (stock*costo_actual + cantidad*costo_entra) / (stock + cantidad)
+- Solo IVA como impuesto. (ADR-009/PRD)
+- Numeración interna: prefijo + terminal + correlativo (ej. V-C1-000001), asignada al
+  confirmar; visible en ticket. La numeración fiscal es de ARCA y recién aplica en R2.
+- Caja: registra TODOS los medios de pago; el arqueo cuenta solo el efectivo;
+  diferencia > umbral parametrizable requiere autorización del Supervisor.
+
+## Releases (ADR-011) — construir en este orden
+- R1: núcleo local (catálogo, stock, ubicaciones/QR, POS, caja, RBAC, importación masiva,
+  reposición sugerida, localización, dashboard local). Comprobante interno NO fiscal.
+- R2: fiscal (AFIP/ARCA, CAE, NC/ND).
+- R3: compras, recepciones, cuentas corrientes (cliente y proveedor), listas de precios.
+- R4: nube + motor de sincronización offline-first.
+- R5: reportes consolidados, KPIs, preparación multi-sucursal.
+
+## Disciplina de trabajo
+- Flujo superpowers: brainstorm → plan (escrito y revisado) → TDD (RED-GREEN-REFACTOR)
+  → verificación. No escribir producción sin test que la cubra.
+- No introducir dependencias pesadas sin justificar.
+- No implementar nada marcado como "fuera de alcance" (e-commerce, móvil, multi-sucursal
+  operativo, controlador fiscal, comprobante de compra, reposición automática).
+- Ante decisiones abiertas (ADR-012 a 016), proponé opciones y esperá confirmación; no
+  las cierres unilateralmente.
+```
+
+---

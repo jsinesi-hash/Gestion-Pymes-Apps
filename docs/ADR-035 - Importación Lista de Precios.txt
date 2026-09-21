@@ -1,0 +1,71 @@
+CONTEXTO
+Ferretería-app. Vas a implementar ADR-035 (Importación de listas de costo de proveedor), que
+completa el alcance que quedó afuera de ADR-034 (Lista de Precios) — ahí ya creaste el schema
+base de importacion_costo_proveedor / importacion_costo_proveedor_detalle y el CRUD manual de
+producto_proveedor. No rediseñes esas partes, extendé sobre lo que ya existe. Respetá los
+mismos principios del proyecto: centavos hasta el borde, soft-delete siempre, transacciones
+atómicas, canales IPC namespaced por entidad (ej. `importacionCosto:*`).
+
+GATE OBLIGATORIO — ANTES DE TOCAR SCHEMA
+Antes de migrar: hacé schema discovery de importacion_costo_proveedor_detalle tal como quedó
+después de ADR-034 (confirmá las columnas exactas que ya existen). Presentame el DDL propuesto
+para: (a) la tabla nueva proveedor_importacion_config, y (b) las columnas nuevas a agregar en
+importacion_costo_proveedor_detalle (fila_original, estado, matched_by,
+resuelto_por_usuario_id, fecha_resolucion). Esperá mi confirmación antes de aplicar.
+
+PASOS
+
+1. Migración (con gate de arriba).
+
+2. Backend — configuración de mapeo por proveedor (proveedor_importacion_config):
+   - CRUD simple: por proveedor, qué columna del archivo corresponde a costo, código de
+     proveedor, y GTIN (esta última opcional).
+   - Se crea/edita en la primera importación de ese proveedor si no existe configuración
+     todavía; las importaciones siguientes la reutilizan sin volver a pedirla.
+
+3. Backend — parser de archivo:
+   - Soportá XLSX y CSV (formato configurable por proveedor, guardado en
+     proveedor_importacion_config.formato_archivo). Si tenés dudas sobre qué librería usar para
+     XLSX, confirmá conmigo antes de agregar una dependencia nueva — no la sumes sin avisar.
+   - Aplicá el mapeo de columnas guardado para extraer costo, código de proveedor y GTIN de
+     cada fila.
+
+4. Backend — matching por cadena de fallback:
+   - Por cada fila: intentar match por producto_proveedor.codigo_proveedor primero. Si no
+     matchea (o el producto no tiene código de proveedor cargado), intentar por GTIN del
+     producto si la fila trae GTIN y el producto lo tiene cargado. Si ninguno matchea, marcar la
+     fila como estado='sin_matchear' y guardar fila_original completa para revisión.
+   - No crear productos nuevos automáticamente en ningún caso.
+
+5. UI — preview antes de confirmar:
+   - Después de parsear y matchear, mostrar una tabla con: producto, costo_anterior_centavos,
+     costo_nuevo_centavos, y las filas sin matchear aparte con una nota clara ("N filas no se
+     pudieron identificar, se resuelven después").
+   - Nada se escribe en producto_proveedor hasta que el usuario confirme explícitamente desde
+     esta pantalla.
+
+6. Backend — confirmación de importación:
+   - Al confirmar: actualizar producto_proveedor.costo_centavos para las filas matcheadas
+     (transacción atómica), completar importacion_costo_proveedor_detalle con
+     costo_anterior/costo_nuevo/matched_by='codigo_proveedor'|'gtin' para cada fila matcheada, y
+     dejar las filas sin matchear con estado='sin_matchear' para la cola de revisión.
+
+7. UI — cola de revisión manual:
+   - Listado de filas con estado='sin_matchear' (de cualquier importación). Por cada una,
+     permitir buscar y asignar manualmente el producto existente correspondiente. Al asignar:
+     actualizar producto_proveedor.costo_centavos, completar el detalle con
+     matched_by='manual', resuelto_por_usuario_id y fecha_resolucion, y pasar estado a
+     'resuelto_manual'.
+
+8. Testing:
+   - Atomicidad de la confirmación de importación (si falla a mitad de camino, no debe dejar
+     costos a medio actualizar).
+   - Casos de matching: código de proveedor presente y correcto, código ausente pero GTIN
+     presente y correcto, ninguno matchea, producto con codigo_proveedor cargado pero que no
+     aparece en el archivo (no debe verse afectado).
+
+RESTRICCIONES
+- No modifiques el motor de recálculo masivo ni la lógica de vigencia de ADR-034 — este ADR
+  solo alimenta producto_proveedor.costo_centavos, que el recálculo ya sabe leer.
+- No implementes alta automática de productos nuevos desde filas sin matchear — quedó descartado
+  explícitamente en el ADR.

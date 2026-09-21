@@ -1,0 +1,500 @@
+﻿MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:227 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:232 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:233 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:234 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:235 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:328 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:333 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:334 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:335 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:336 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:337 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigBackupRestore.tsx:32 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigBackupRestore.tsx:33 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigBackupRestore.tsx:34 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigBackupRestore.tsx:35 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigBackupRestore.tsx:45 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigBackupRestore.tsx:54 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigBackupRestore.tsx:67 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigBackupRestore.tsx:85 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigBackupRestore.tsx:93 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigBackupRestore.tsx:94 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigBackupRestore.tsx:95 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigBackupRestore.tsx:96 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/RestoreWizard.tsx:42 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/RestoreWizard.tsx:64 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/RestoreWizard.tsx:80 | Prefer `globalThis` over `window`.
+BLOCKER | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/__tests__/RestoreWizard.test.tsx:124 | Add at least one assertion to this test case.
+BLOCKER | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/__tests__/RestoreWizard.test.tsx:140 | Add at least one assertion to this test case.
+BLOCKER | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/main/db/migrations/0010_adr025_sku.sql:16 | Ensure that the WHERE clause is not missing in this DELETE query.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/db/migrations/0010_adr025_sku.sql:33 | The number of join conditions 4 exceeds the maximum allowed 3.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/dev-seed/catalog.ts:189 | Prefer `Number.parseInt` over `parseInt`.
+CRITICAL | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:76 | Refactor this function to reduce its Cognitive Complexity from 34 to the 15 allowed.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:560 | Prefer `Number.parseInt` over `parseInt`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/producto.ts:68 | Prefer `Number.parseInt` over `parseInt`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/producto.ts:385 | Use `exportâ¦from` to re-export `parseSku`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/ubicaciones/UbicacionesDeposito.tsx:235 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/shared/src/sku.ts:37 | Use the "RegExp.exec()" method instead.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/shared/src/sku.ts:39 | Prefer `Number.parseInt` over `parseInt`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/shared/src/sku.ts:40 | Prefer `Number.parseInt` over `parseInt`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/PosClienteSelector.tsx:7 | 'clienteId' PropType is defined but prop is never used
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/PosClienteSelector.tsx:20 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/PosClienteSelector.tsx:70 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/PosClienteSelector.tsx:142 | Non-interactive elements should not be assigned mouse or keyboard event listeners.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/PosClienteSelector.tsx:142 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/PosTotalsPanel.tsx:24 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/usePosSession.ts:27 | useState call is not destructured into value + setter pair
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/clientes/ClienteForm.tsx:163 | Ambiguous spacing before next element select
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/clientes/ClienteForm.tsx:193 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/clientes/ClienteForm.tsx:214 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/clientes/ClienteForm.tsx:219 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/clientes/ClienteForm.tsx:236 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/clientes/ClienteForm.tsx:240 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/clientes/ClienteForm.tsx:244 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorForm.tsx:167 | Ambiguous spacing before next element select
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorForm.tsx:175 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorForm.tsx:213 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorForm.tsx:218 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorForm.tsx:239 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorForm.tsx:243 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorForm.tsx:247 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/DireccionGeo.tsx:106 | Non-interactive elements should not be assigned mouse or keyboard event listeners.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/DireccionGeo.tsx:129 | Ambiguous spacing before next element select
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/utils/documento.ts:32 | Remove duplicates in this character class.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/db/schema/geo.ts:9 | The signature '(name: "departamento", columns: { id: IsPrimaryKey<NotNull<SQLiteTextBuilderInitial<"id", [string, ...string[]], number | undefined>>>; nombre: NotNull<...>; nombreNorm: NotNull<...>; provinciaId: NotNull<...>; }, extraConfig?: ((self: { ...; }) => SQLiteTableExtraConfig) | undefined): SQLiteTableWithColumns<...>' of 'sqliteTable' is deprecated.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/db/schema/geo.ts:24 | The signature '(name: "localidad", columns: { id: IsPrimaryKey<NotNull<SQLiteTextBuilderInitial<"id", [string, ...string[]], number | undefined>>>; ... 4 more ...; codigoPostal: SQLiteTextBuilderInitial<...>; }, extraConfig?: ((self: { ...; }) => SQLiteTableExtraConfig) | undefined): SQLiteTableWithColumns<...>' of 'sqliteTable' is deprecated.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/geo-seed/index.ts:15 | 'node:fs' imported multiple times.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/geo-seed/index.ts:16 | 'node:fs' imported multiple times.
+CRITICAL | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/main/geo-seed/index.ts:67 | Provide a compare function that depends on "String.localeCompare", to reliably sort elements alphabetically.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/geo.ts:1 | Remove this unused import of 'like'.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/DireccionGeo.tsx:21 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/DireccionGeo.tsx:31 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/DireccionGeo.tsx:38 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/DireccionGeo.tsx:139 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/DireccionGeo.tsx:153 | Ambiguous spacing before next element input
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/clientes/ClienteForm.tsx:49 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/clientes/ClienteForm.tsx:140 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/clientes/ClienteForm.tsx:171 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/clientes/ClienteForm.tsx:183 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/clientes/ClienteForm.tsx:199 | Ambiguous spacing before next element select
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/clientes/ClienteForm.tsx:226 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/clientes/ClienteForm.tsx:268 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenesCompraListado.tsx:44 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/recepciones/RecepcionView.tsx:68 | Prefer `Number.isNaN` over `isNaN`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/recepciones/RecepcionView.tsx:85 | Prefer `Number.isNaN` over `isNaN`.
+CRITICAL | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/recepciones/RecepcionView.tsx:61 | Refactor this code to not nest functions more than 4 levels deep.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/recepciones/RecepcionView.tsx:64 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/recepciones/RecepcionView.tsx:65 | Prefer `Number.isNaN` over `isNaN`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/recepciones/RecepcionView.tsx:84 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/recepciones/RecepcionView.tsx:89 | Prefer `Number.isNaN` over `isNaN`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/recepciones/RecepcionView.tsx:102 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/recepciones/RecepcionView.tsx:105 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenesCompraListado.tsx:39 | Mark the props of the component as read-only.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenesCompraListado.tsx:123 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenesCompraListado.tsx:29 | `ESTADOS_ACTIVOS` should be a `Set`, and use `ESTADOS_ACTIVOS.has()` to check existence or non-existence.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenCompraDetalle.tsx:36 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenCompraDetalle.tsx:36 | Prefer `String#replaceAll()` over `String#replace()`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenCompraDetalle.tsx:110 | Prefer `Number.parseFloat` over `parseFloat`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigBackupRestore.tsx:186 | Use <output> instead of the "status" role to ensure accessibility across all devices.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/RestoreWizard.tsx:85 | Use <dialog> instead of the "dialog" role to ensure accessibility across all devices.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/RestoreWizard.tsx:262 | A fragment with only one child is redundant.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigBackupRestore.tsx:23 | useState call is not destructured into value + setter pair
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigBackupRestore.tsx:24 | useState call is not destructured into value + setter pair
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/RestoreWizard.tsx:20 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/RestoreWizard.tsx:47 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/__tests__/backup.handlers.test.ts:62 | Prefer a more specific assertion instead of this generic one, e.g. "expect(lista).toHaveLength(1)".
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/backup.ts:14 | Prefer using an optional chain expression instead, as it's more concise and easier to read.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/backup.ts:19 | Prefer `Number.parseInt` over `parseInt`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/backup.ts:20 | Prefer `Number.isNaN` over `isNaN`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/restore.ts:14 | Prefer using an optional chain expression instead, as it's more concise and easier to read.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/backup/restore-engine.ts:1 | 'node:crypto' imported multiple times.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/backup/restore-engine.ts:5 | 'node:crypto' imported multiple times.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/backup/restore-engine.ts:24 | Prefer `.at(â¦)` over `[â¦.length - index]`.
+CRITICAL | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/backup/restore-engine.ts:58 | Refactor this function to reduce its Cognitive Complexity from 18 to the 15 allowed.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/backup/engine.ts:74 | Prefer `.at(â¦)` over `[â¦.length - index]`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/backup/engine.ts:141 | Unexpected negated condition.
+CRITICAL | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/db/migrations/0005_r3_compras.sql:12 | Define a constant instead of duplicating this literal 8 times.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/ordenes-compra.ts:1 | Remove this unused import of 'sum'.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/ordenes-compra.ts:46 | Prefer `Number.parseInt` over `parseInt`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/ordenes-compra.ts:217 | Prefer using an optional chain expression instead, as it's more concise and easier to read.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/proveedor.ts:121 | Update this function so that its implementation is not identical to the one on line 34.
+CRITICAL | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/recepcion.ts:44 | Refactor this function to reduce its Cognitive Complexity from 21 to the 15 allowed.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/recepcion.ts:84 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/NuevaOcForm.tsx:14 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/NuevaOcForm.tsx:23 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/NuevaOcForm.tsx:48 | Ambiguous spacing before next element select
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/NuevaOcForm.tsx:57 | Ambiguous spacing before next element textarea
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OcSugeridaView.tsx:34 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OcSugeridaView.tsx:42 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OcSugeridaView.tsx:47 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenCompraDetalle.tsx:37 | Prefer `Number.isNaN` over `isNaN`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenCompraDetalle.tsx:56 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenCompraDetalle.tsx:63 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenCompraDetalle.tsx:70 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenCompraDetalle.tsx:72 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenCompraDetalle.tsx:77 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenCompraDetalle.tsx:79 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenCompraDetalle.tsx:88 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenCompraDetalle.tsx:92 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenCompraDetalle.tsx:94 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenCompraDetalle.tsx:106 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenCompraDetalle.tsx:108 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenCompraDetalle.tsx:118 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenCompraDetalle.tsx:119 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/ordenes/OrdenesCompraListado.tsx:75 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorDetalle.tsx:31 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorDetalle.tsx:38 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorDetalle.tsx:41 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorForm.tsx:51 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorForm.tsx:144 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorForm.tsx:187 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorForm.tsx:192 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorForm.tsx:198 | Ambiguous spacing before next element select
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorForm.tsx:225 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorForm.tsx:229 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedorForm.tsx:272 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/proveedores/ProveedoresListado.tsx:23 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/recepciones/RecepcionView.tsx:44 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/recepciones/RecepcionView.tsx:108 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/recepciones/RecepcionView.tsx:159 | Ambiguous spacing before next element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/compras/recepciones/RecepcionView.tsx:164 | Ambiguous spacing before next element input
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProveedoresPanel.tsx:25 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProveedoresPanel.tsx:26 | Prefer `Number.isNaN` over `isNaN`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProveedoresPanel.tsx:29 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProveedoresPanel.tsx:39 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProveedoresPanel.tsx:46 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProveedoresPanel.tsx:51 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProveedoresPanel.tsx:56 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProveedoresPanel.tsx:57 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProveedoresPanel.tsx:66 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProveedoresPanel.tsx:83 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/clientes/ClienteDetalle.tsx:29 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/clientes/ClientesListado.tsx:22 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/credito/CtaCteResumenCard.tsx:14 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/credito/CtaCteResumenCard.tsx:21 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/credito/CtaCteDetalle.tsx:43 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/credito/CtaCteDetalle.tsx:58 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/credito/CtaCteDetalle.tsx:59 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/credito/CtaCteDetalle.tsx:71 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/credito/CtaCteDetalle.tsx:79 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/credito/CtaCteListado.tsx:22 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/credito/RegistrarCobroModal.tsx:11 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/credito/RegistrarCobroModal.tsx:18 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/credito/RegistrarCobroModal.tsx:27 | Prefer `globalThis` over `window`.
+CRITICAL | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/auth/seed.ts:39 | Refactor this function to reduce its Cognitive Complexity from 19 to the 15 allowed.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/export/ExportarButton.tsx:11 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/export/ExportarButton.tsx:25 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/export/ExportarModal.tsx:1 | '/builds/jsinesi-group/ferreteria-app-demo/node_modules/react/index.js' imported multiple times.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/export/ExportarModal.tsx:2 | '/builds/jsinesi-group/ferreteria-app-demo/node_modules/react/index.js' imported multiple times.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/export/ExportarModal.tsx:12 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/export/ExportarModal.tsx:30 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/export/ExportarModal.tsx:46 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/export/ExportarModal.tsx:46 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/export/ExportarModal.tsx:47 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/export/ExportarModal.tsx:47 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/export/ExportarModal.tsx:65 | A form label must be associated with a control.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/export/ExportarModal.tsx:69 | Ambiguous spacing after previous element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/export/ExportarModal.tsx:76 | Ambiguous spacing after previous element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/export/ExportarModal.tsx:83 | A form label must be associated with a control.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/export/ExportarModal.tsx:87 | Ambiguous spacing after previous element input
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/export/ExportarModal.tsx:95 | Ambiguous spacing after previous element input
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/export/__tests__/csv-writer.test.ts:24 | Prefer a more specific assertion instead of this generic one, e.g. "expect(lines).toHaveLength(1)".
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/export/csv-writer.ts:7 | 'v' will use Object's default stringification format ('[object Object]') when stringified.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/export/csv-writer.ts:9 | Prefer `String#replaceAll()` over `String#replace()`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/__tests__/exportar.queries.test.ts:152 | Prefer a more specific assertion instead of this generic one, e.g. "expect(anuladas).toHaveLength(0)".
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/__tests__/exportar.queries.test.ts:193 | Prefer a more specific assertion instead of this generic one, e.g. "expect(rows).toHaveLength(2)".
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/venta.ts:320 | Extract this nested ternary operation into an independent statement.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/venta.ts:321 | Extract this nested ternary operation into an independent statement.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/venta.ts:349 | Extract this nested ternary operation into an independent statement.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/venta.ts:350 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/__tests__/exportar.queries.test.ts:33 | Prefer a more specific assertion instead of this generic one, e.g. "expect(productoQueryAll(db, {})).toHaveLength(3)".
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/producto.ts:267 | Extract this nested ternary operation into an independent statement.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/producto.ts:272 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/producto.ts:288 | Unexpected negated condition.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/stock.ts:232 | Extract this nested ternary operation into an independent statement.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/stock.ts:237 | Extract this nested ternary operation into an independent statement.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/shared/src/export/descriptores/caja.ts:33 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/shared/src/export/descriptores/caja.ts:37 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/shared/src/export/descriptores/caja.ts:40 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/shared/src/export/descriptores/caja.ts:43 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/shared/src/export/descriptores/productos.ts:52 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/shared/src/export/descriptores/productos.ts:90 | method 'formato' is equivalent to `String`. Use `String` directly.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/shared/src/export/helpers.ts:13 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/PosItemsTable.tsx:78 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/PosItemsTable.tsx:79 | Prefer `Number.isNaN` over `isNaN`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigMiCuenta.tsx:4 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigMiCuenta.tsx:122 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigMiCuenta.tsx:136 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigMiCuenta.tsx:209 | A form label must be associated with a control.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigMiCuenta.tsx:221 | A form label must be associated with a control.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/auth.ts:251 | Unexpected negated condition.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockListado.tsx:179 | Extract this nested ternary operation into an independent statement.
+CRITICAL | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/producto.ts:166 | Refactor this function to reduce its Cognitive Complexity from 22 to the 15 allowed.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/producto.ts:208 | Extract this nested ternary operation into an independent statement.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/producto.ts:209 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:16 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:169 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:185 | Mark the props of the component as read-only.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:251 | A form label must be associated with a control.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/Kardex.tsx:63 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/Kardex.tsx:172 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockListado.tsx:15 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockListado.tsx:40 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockListado.tsx:98 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockListado.tsx:98 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockListado.tsx:112 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockListado.tsx:112 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:112 | Prefer `Number.isNaN` over `isNaN`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:114 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:133 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:135 | Prefer `Number.parseFloat` over `parseFloat`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/auth.ts:161 | Prefer using an optional chain expression instead, as it's more concise and easier to read.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/auth.ts:182 | Prefer using an optional chain expression instead, as it's more concise and easier to read.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/auth.ts:261 | Prefer using an optional chain expression instead, as it's more concise and easier to read.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/producto.ts:171 | Extract this nested ternary operation into an independent statement.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/producto.ts:176 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/print/ElectronPrintService.ts:26 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useExistencias.ts:19 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useMovimientos.ts:25 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/CajaDashboard.tsx:37 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/CajaDashboard.tsx:88 | Unexpected negated condition.
+MAJOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigMiCuenta.tsx:48 | Unexpected empty object pattern.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigMiCuenta.tsx:67 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigMiCuenta.tsx:80 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigMiCuenta.tsx:100 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigMiCuenta.tsx:157 | A form label must be associated with a control.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigMiCuenta.tsx:161 | A form label must be associated with a control.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigMiCuenta.tsx:181 | A form label must be associated with a control.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigMiCuenta.tsx:185 | A form label must be associated with a control.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigMiCuenta.tsx:189 | A form label must be associated with a control.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:71 | Prefer `globalThis` over `window`.
+MAJOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:78 | React Hook "useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:83 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:92 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:207 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:222 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:222 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:223 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:223 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:231 | A form label must be associated with a control.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:236 | A form label must be associated with a control.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:241 | A form label must be associated with a control.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:247 | A form label must be associated with a control.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:257 | A form label must be associated with a control.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:279 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:291 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:299 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:299 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:300 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:300 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:308 | A form label must be associated with a control.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ConfigUsuarios.tsx:312 | A form label must be associated with a control.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/TicketModal.tsx:22 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/TicketModal.tsx:50 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProductoDetalle.tsx:18 | Move function 'fmtStock' to the outer scope.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProductoDetalle.tsx:97 | Extract this nested ternary operation into an independent statement.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProductoDetalle.tsx:97 | Prefer using an optional chain expression instead, as it's more concise and easier to read.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProductosListado.tsx:46 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockListado.tsx:59 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockListado.tsx:185 | Extract this nested ternary operation into an independent statement.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockListado.tsx:190 | Extract this nested ternary operation into an independent statement.
+CRITICAL | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/dev-seed/ventas.ts:39 | Refactor this function to reduce its Cognitive Complexity from 21 to the 15 allowed.
+CRITICAL | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/main/dev-seed/db.ts:18 | Provide a compare function that depends on "String.localeCompare", to reliably sort elements alphabetically.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/AperturaForm.tsx:66 | Prefer `Number.parseFloat` over `parseFloat`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/CajaCierreView.tsx:49 | Extract this nested ternary operation into an independent statement.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/CajaCierreView.tsx:140 | A form label must be associated with a control.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/MovimientoModal.tsx:39 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/MovimientoModal.tsx:39 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/MovimientoModal.tsx:40 | Non-interactive elements should not be assigned mouse or keyboard event listeners.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/MovimientoModal.tsx:40 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/MovimientoModal.tsx:92 | Prefer `Number.parseFloat` over `parseFloat`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/SupervisorPinModal.tsx:28 | Use <dialog> instead of the "dialog" role to ensure accessibility across all devices.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ListasPreciosView.tsx:150 | Use <dialog> instead of the "dialog" role to ensure accessibility across all devices.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/dashboard/caja/CajaPanel.tsx:8 | Extract this nested ternary operation into an independent statement.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/dashboard/stock/StockPanel.tsx:16 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/dashboard/stock/StockPanel.tsx:16 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/dashboard/ventas/VentasPanel.tsx:16 | Unexpected negated condition.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/importar/ImportarView.tsx:46 | Extract this nested ternary operation into an independent statement.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/importar/ImportarView.tsx:49 | Extract this nested ternary operation into an independent statement.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/importar/steps/SummaryStep.tsx:38 | Extract this nested ternary operation into an independent statement.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/importar/steps/UploadStep.tsx:48 | Use <input type="button">, <input type="image">, <input type="reset">, <input type="submit">, or <button> instead of the "button" role to ensure accessibility across all devices.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/AnulacionModal.tsx:36 | Use <dialog> instead of the "dialog" role to ensure accessibility across all devices.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/PrecioPanel.tsx:45 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/PrecioPanel.tsx:107 | Extract this nested ternary operation into an independent statement.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProductoForm.tsx:271 | A form label must be associated with a control.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProductosListado.tsx:104 | Unexpected negated condition.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/shell/AppShell.tsx:169 | Ambiguous spacing after previous element span
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/shell/AppearanceDrawer.tsx:50 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/shell/AppearanceDrawer.tsx:50 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/shell/AppearanceDrawer.tsx:54 | Ambiguous spacing before next element button
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/shell/AppearanceDrawer.tsx:73 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/shell/AppearanceDrawer.tsx:73 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/Kardex.tsx:121 | A form label must be associated with a control.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/Kardex.tsx:130 | A form label must be associated with a control.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockAjusteModal.tsx:51 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockAjusteModal.tsx:51 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockAjusteModal.tsx:52 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockAjusteModal.tsx:52 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockAjusteModal.tsx:74 | A form label must be associated with a control.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockAjusteModal.tsx:80 | A form label must be associated with a control.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockEntradaModal.tsx:26 | Prefer `Number.isNaN` over `isNaN`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockEntradaModal.tsx:45 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockEntradaModal.tsx:45 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockEntradaModal.tsx:46 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockEntradaModal.tsx:46 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockEntradaModal.tsx:71 | A form label must be associated with a control.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockEntradaModal.tsx:81 | A form label must be associated with a control.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockListado.tsx:222 | Unexpected negated condition.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockMermaModal.tsx:53 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockMermaModal.tsx:53 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockMermaModal.tsx:54 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockMermaModal.tsx:54 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockMermaModal.tsx:77 | A form label must be associated with a control.
+MAJOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockMermaModal.tsx:78 | This conditional operation returns the same value whether the condition is "true" or "false".
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockMermaModal.tsx:84 | A form label must be associated with a control.
+CRITICAL | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/ubicaciones/UbicacionesDeposito.tsx:38 | Refactor this function to reduce its Cognitive Complexity from 21 to the 15 allowed.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/ubicaciones/UbicacionesDeposito.tsx:178 | Extract this nested ternary operation into an independent statement.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/ubicaciones/UbicacionesDeposito.tsx:211 | Avoid non-native interactive elements. If using native HTML is not possible, add an appropriate role and support for tabbing, mouse, keyboard, and touch inputs to an interactive content element.
+MINOR | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/ubicaciones/UbicacionesDeposito.tsx:211 | Visible, non-interactive elements with click handlers must have at least one keyboard listener.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/ubicaciones/UbicacionesDeposito.tsx:270 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/dashboard/caja/CajaPanel.tsx:6 | Mark the props of the component as read-only.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/dashboard/caja/CajaPanel.tsx:19 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/dashboard/stock/StockPanel.tsx:10 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/dashboard/stock/StockPanel.tsx:16 | Prefer `String#replaceAll()` over `String#replace()`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/dashboard/DashboardView.tsx:19 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/dashboard/caja/CajaPanel.tsx:25 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/dashboard/stock/StockPanel.tsx:54 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/dashboard/ventas/VentasPanel.tsx:9 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/dashboard/ventas/VentasPanel.tsx:21 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/dashboard/ventas/VentasPanel.tsx:21 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/dashboard.ts:206 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/dashboard.ts:124 | Prefer `Number.parseInt` over `parseInt`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/ReabastecimientoView.tsx:27 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/ReabastecimientoView.tsx:99 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/importar/steps/PreviewStep.tsx:16 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/importar/steps/SummaryStep.tsx:6 | Prefer `String#replaceAll()` over `String#replace()`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/importar/steps/SummaryStep.tsx:14 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/importar/steps/PreviewStep.tsx:26 | Mark the props of the component as read-only.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/importar/steps/PreviewStep.tsx:54 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/importar/steps/UploadStep.tsx:9 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/importar/steps/UploadStep.tsx:13 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useImportar.ts:9 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useImportar.ts:17 | useState call is not destructured into value + setter pair
+CRITICAL | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:420 | Refactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:437 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:438 | Prefer `Number.isNaN` over `isNaN`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:446 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:111 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:42 | Prefer `String#replaceAll()` over `String#replace()`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/importar.ts:42 | Prefer `String#replaceAll()` over `String#replace()`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/AnulacionModal.tsx:9 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/AnulacionModal.tsx:21 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/AnulacionModal.tsx:27 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/PosItemsTable.tsx:16 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/PosItemsTable.tsx:101 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/PosScanBar.tsx:10 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/PosScanBar.tsx:23 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/PosTotalsPanel.tsx:53 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/PosView.tsx:20 | 'any' overrides all other types in this union type.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/PosView.tsx:49 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/pos/TicketModal.tsx:40 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/usePosSession.ts:18 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/usePosSession.ts:21 | 'any' overrides all other types in this union type.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/usePosSession.ts:22 | 'any' overrides all other types in this union type.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/usePosSession.ts:83 | Prefer using an optional chain expression instead, as it's more concise and easier to read.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/venta.ts:52 | Prefer `Number.parseInt` over `parseInt`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/venta.ts:72 | Prefer using an optional chain expression instead, as it's more concise and easier to read.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/venta.ts:201 | Prefer `.some(â¦)` over `.find(â¦)`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useCajaActiva.ts:20 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useCajaCierre.ts:20 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useCajaCierre.ts:21 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useCajaCierre.ts:28 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/AperturaForm.tsx:5 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/AperturaForm.tsx:16 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/AperturaForm.tsx:17 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/CajaCierreView.tsx:31 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/CajaCierreView.tsx:111 | Prefer `Number.parseFloat` over `parseFloat`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/CajaCierreView.tsx:126 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/CajaDashboard.tsx:23 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/MovimientoModal.tsx:8 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/MovimientoModal.tsx:22 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/MovimientoModal.tsx:26 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/caja/SupervisorPinModal.tsx:8 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/caja.ts:170 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/parametros-cache.ts:13 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/PrecioPanel.tsx:14 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/PrecioPanel.tsx:41 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/PrecioPanel.tsx:42 | Prefer `Number.isNaN` over `isNaN`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/PrecioPanel.tsx:55 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ListasPreciosView.tsx:50 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ListasPreciosView.tsx:54 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ListasPreciosView.tsx:56 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ListasPreciosView.tsx:69 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/config/ListasPreciosView.tsx:184 | Ambiguous spacing after previous element input
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useListaPrecioDetalle.ts:10 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useListasPrecios.ts:10 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/shared/src/precio.ts:50 | Prefer using nullish coalescing operator (`??`) instead of a ternary expression, as it is simpler to read.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/shared/src/precio.ts:50 | Unexpected negated condition.
+BLOCKER | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/ubicaciones/LocalizacionView.test.tsx:199 | Add at least one assertion to this test case.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/ubicaciones/UbicacionesDeposito.tsx:235 | Unexpected negated condition.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/ubicaciones/UbicacionesDeposito.tsx:270 | Unexpected negated condition.
+BLOCKER | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/ubicaciones/LocalizacionView.test.tsx:105 | Add at least one assertion to this test case.
+BLOCKER | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/ubicaciones/LocalizacionView.test.tsx:113 | Add at least one assertion to this test case.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/ubicaciones/UbicacionesDeposito.tsx:91 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/ubicaciones/UbicacionesDeposito.tsx:112 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/producto.ts:191 | Extract this nested ternary operation into an independent statement.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockAjusteModal.tsx:10 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockAjusteModal.tsx:17 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockAjusteModal.tsx:19 | Prefer `Number.isNaN` over `isNaN`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockAjusteModal.tsx:22 | Prefer `Number.isNaN` over `isNaN`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockAjusteModal.tsx:34 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockEntradaModal.tsx:10 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockEntradaModal.tsx:18 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockEntradaModal.tsx:19 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockEntradaModal.tsx:21 | Prefer `Number.isNaN` over `isNaN`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockEntradaModal.tsx:22 | Prefer `Number.isNaN` over `isNaN`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockEntradaModal.tsx:30 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockEntradaModal.tsx:33 | Prefer `Number.isNaN` over `isNaN`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockMermaModal.tsx:10 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockMermaModal.tsx:17 | Prefer `Number.parseFloat` over `parseFloat`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockMermaModal.tsx:19 | Prefer `Number.isNaN` over `isNaN`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockMermaModal.tsx:23 | Prefer `Number.isNaN` over `isNaN`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/stock/StockMermaModal.tsx:36 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/shell/AppearanceDrawer.tsx:25 | Prefer `.dataset` over `setAttribute(â¦)`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/shell/AppearanceDrawer.tsx:26 | Prefer `.dataset` over `setAttribute(â¦)`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/shell/AppearanceDrawer.tsx:27 | Prefer `.dataset` over `setAttribute(â¦)`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/ubicaciones/UbicacionesDeposito.tsx:51 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/ubicaciones/UbicacionesDeposito.tsx:85 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/ubicaciones/UbicacionesDeposito.tsx:86 | Prefer `globalThis` over `window`.
+CRITICAL | BUG | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/ubicaciones/UbicacionesDeposito.tsx:142 | Provide a compare function that depends on "String.localeCompare", to reliably sort elements alphabetically.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProductoDetalle.tsx:27 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProductoForm.tsx:68 | Prefer `Number.isNaN` over `isNaN`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/productos/ProductoForm.tsx:96 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useProducto.ts:12 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useProductos.ts:13 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useCategorias.ts:6 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useImpuestos.ts:6 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useMarcas.ts:6 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useMarcas.ts:11 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/usePreferencias.ts:10 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/usePreferencias.ts:15 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useUbicacion.ts:7 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/hooks/useUbicaciones.ts:6 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/context/CatalogoContext.tsx:34 | useState call is not destructured into value + setter pair
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/context/CatalogoContext.tsx:55 | The object passed as the value prop to the Context provider changes every render. To fix this consider wrapping it in a useMemo hook.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/context/CatalogoContext.tsx:32 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/views/shell/AppearanceDrawer.tsx:31 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/producto.ts:202 | Unexpected negated condition.
+MAJOR | VULNERABILITY | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/__tests__/helpers.ts:28 | Review this potentially hard-coded password.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/main/ipc/__tests__/helpers.ts:31 | Use `exportâ¦from` to re-export `clearSession`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/test-setup.ts:12 | Prefer `globalThis` over `global`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/test-setup.ts:13 | Prefer `globalThis` over `global`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/components/ProtectedRoute.tsx:5 | Mark the props of the component as read-only.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/context/AuthContext.tsx:56 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/context/AuthContext.tsx:71 | Prefer `globalThis` over `window`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/context/AuthContext.tsx:80 | Prefer `globalThis` over `window`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/context/AuthContext.tsx:43 | Prefer `.dataset` over `setAttribute(â¦)`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/context/AuthContext.tsx:44 | Prefer `.dataset` over `setAttribute(â¦)`.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/context/AuthContext.tsx:45 | Prefer `.dataset` over `setAttribute(â¦)`.
+MINOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/context/AuthContext.tsx:49 | Mark the props of the component as read-only.
+MAJOR | CODE_SMELL | jsinesi-group_ferreteria-app-demo:packages/client/src/renderer/context/AuthContext.tsx:94 | The object passed as the value prop to the Context provider changes every render. To fix this consider wrapping it in a useMemo hook.

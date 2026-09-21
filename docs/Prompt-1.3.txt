@@ -1,0 +1,27 @@
+### P1.3 — Catálogo de productos
+
+```
+Objetivo: ABM de catálogo (Producto, Categoria, Marca, Impuesto, Ubicacion) y alta de
+producto completa.
+
+Tareas:
+- ABM de Categoria (autorreferenciada, N niveles), Marca, Impuesto (solo IVA, con
+  predeterminado 21%), Ubicacion (catálogo controlado, 3 niveles obligatorios).
+- Alta de producto (proceso Tech Spec 3.1): EAN opcional con validación de duplicados
+  (exacto por gtin_barcode; sin EAN, advertencia por nombre similar), SKU autogenerado
+  correlativo (editable), codigo_qr único autogenerado, ubicacion_id del catálogo,
+  unidad de medida, permite_fraccion, costo, precio (IVA incluido). Crea Existencias en 0.
+- Edición/baja lógica; reubicar = cambiar ubicacion_id (sin reimprimir).
+- Impresión de etiqueta SOLO-QR en tamaños 5×5 / 10×10 / 15×15 cm. **Soportar ambas
+  salidas (ADR-015): impresora de etiquetas/rollo y plancha A4 en impresora común**,
+  detrás de una interfaz de impresión configurable; el contenido (QR + tamaño) es
+  independiente del medio.
+- Datos de unidad: `unidad_venta`, `unidad_compra`, `factor_conversion` (ADR-014).
+
+Criterios de aceptación:
+- Alta genera QR y SKU; Existencias nace en 0; validación de duplicados funciona.
+- Categorías de N niveles; ubicaciones validadas contra catálogo.
+- Tests de los flujos y de las reglas de unicidad.
+
+Restricciones: stock NO se carga en el alta (entra por movimiento, fase 1.4).
+```

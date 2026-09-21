@@ -1,0 +1,26 @@
+Q1 — Fórmula: confirmada, está bien para la fila con override.
+
+Pero hay un gap de alcance: lista_precio_detalle solo tiene las excepciones (overrides). El
+ajuste general de cada lista (ej. Mayorista +15%) vive aparte — necesito que confirmes dónde
+(columna en lista_precio actual, u otro lado).
+
+Antes de dar por terminada la migración de datos, el script tiene que sembrar lista_precio_valor
+para TODO el catálogo en cada lista existente, no solo la fila de override:
+- Por cada producto en cada lista: si tiene override en lista_precio_detalle, usar ese %;
+  si no, usar el ajuste general de la lista.
+- Lista General también necesita sus filas propias en lista_precio_valor (ajuste 0% sobre
+  producto.precio_venta_lista) — de ahora en más el POS debe leer siempre de lista_precio_valor,
+  no de producto.precio_venta_lista directo, para no tener dos fuentes de verdad.
+
+Antes de seguir, contame:
+1. ¿Dónde vive el ajuste general por lista hoy (columna, tabla)?
+2. ¿Cuántas listas existen actualmente y cuántos productos tiene el catálogo? (para dimensionar
+   el script de seed)
+3. ¿El POS hoy lee producto.precio_venta_lista directo, o ya pasa por alguna capa intermedia?
+
+Sobre Q2: sí, arrancá con la migración SQL 0014 (DDL de tablas nuevas) — eso no depende de este
+gap. Pero no corras el DROP de lista_precio_detalle ni des la migración de datos por cerrada
+hasta que el script de seed cubra el catálogo completo, no solo la fila de override.
+
+PK/UUID: tu propuesta (DDL puro en SQL, inserts con crypto.randomUUID() desde script TypeScript)
+queda confirmada, coincide con la convención del proyecto.

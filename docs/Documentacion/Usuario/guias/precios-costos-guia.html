@@ -1,0 +1,485 @@
+<meta charset="utf-8">
+<title>Precios / Costos — Guía</title>
+<style>
+  :root{
+    --bg:#f7f7f5; --surface:#ffffff; --ink:#1c1a17; --ink-2:#4b463f; --ink-3:#8a8279;
+    --line:#e7e3dc; --accent:#e8730a; --accent-soft:#fdefe1; --accent-strong:#b45309;
+    --ok:#2e7d52; --ok-soft:#e7f3ec; --warn:#b7791f; --warn-soft:#fbf3e0; --danger:#c0392b; --danger-soft:#fbeceb;
+    --blue:#2f6fb0; --blue-soft:#e9f1f9;
+    --radius:12px; --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+      --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+      --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+      --blue:#7fb0e0; --blue-soft:#182533;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+    --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+    --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+    --blue:#7fb0e0; --blue-soft:#182533;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 "Hanken Grotesk",-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 22px 80px}
+  header.hero{background:linear-gradient(135deg,#1c1a17,#3a332b);color:#fff;border-radius:18px;padding:34px 34px 30px;margin-bottom:28px}
+  header.hero .kicker{color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:12.5px}
+  header.hero h1{margin:.35em 0 .2em;font-size:30px;line-height:1.15}
+  header.hero p{margin:0;color:#d7d1c8;max-width:70ch}
+  h2{font-size:22px;margin:2.2em 0 .5em;padding-top:.5em;border-top:2px solid var(--line)}
+  h3{font-size:17px;margin:1.4em 0 .4em;color:var(--ink)}
+  p,li{color:var(--ink-2)}
+  code{font-family:var(--mono);font-size:.87em;background:var(--accent-soft);padding:.1em .38em;border-radius:5px;color:var(--accent-strong)}
+  a{color:var(--blue)}
+  .lead{font-size:16.5px}
+  .toc{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 20px;margin:0 0 8px}
+  .toc b{font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+  .toc ol{margin:.5em 0 0;padding-left:1.2em;columns:2;column-gap:32px}
+  .toc a{text-decoration:none}
+  table{width:100%;border-collapse:collapse;margin:1em 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px}
+  th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--accent-soft);font-size:12.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-3)}
+  tr:last-child td{border-bottom:none}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 22px 18px;margin:16px 0}
+  .fig{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin:20px 0;overflow-x:auto}
+  .fig figcaption{font-size:12.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;font-weight:700}
+  .shot{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px;margin:16px 0;text-align:center}
+  .shot img{max-width:100%;border-radius:8px;display:block;margin:0 auto;border:1px solid var(--line)}
+  .shot.small img{max-width:440px}
+  .shot figcaption{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+  .shot-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:640px){.shot-row{grid-template-columns:1fr}}
+  .callout{border-radius:var(--radius);padding:16px 20px;margin:18px 0;border:1px solid}
+  .callout.warn{background:var(--warn-soft);border-color:#ecd9a8}
+  .callout.info{background:var(--blue-soft);border-color:#cfe0ef}
+  .callout.danger{background:var(--danger-soft);border-color:#eec4bf}
+  .callout h3{margin-top:.2em}
+  .pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px}
+  .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .pill.err{background:var(--danger-soft);color:var(--danger)} .pill.mut{background:var(--accent-soft);color:var(--ink-3)}
+  .cascade{font-family:var(--mono);background:#1c1a17;color:#f3ede3;padding:12px 16px;border-radius:10px;font-size:14px;overflow-x:auto}
+  .cascade b{color:var(--accent)}
+  .step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .step:last-child{border-bottom:none}
+  .step .dot{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent-strong);
+    font-weight:700;display:grid;place-items:center;font-size:.85rem}
+  .step .body{flex:1}
+  .step .body h4{margin:0 0 4px;font-size:1rem;color:var(--ink)}
+  details{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin:10px 0;overflow:hidden}
+  details summary{cursor:pointer;padding:14px 18px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;color:var(--ink)}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"+";color:var(--accent);font-size:1.3rem;font-weight:400}
+  details[open] summary::after{content:"–"}
+  details .ans{padding:0 18px 16px;color:var(--ink-2)}
+  svg{max-width:100%;height:auto;display:block}
+  .muted{color:var(--ink-3);font-size:13.5px}
+  .n-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+  .n-accent{fill:var(--accent-soft);stroke:#f0c79a}
+  .n-ok{fill:var(--ok-soft);stroke:#bfe0cd}
+  .n-warn{fill:var(--warn-soft);stroke:#ecd9a8}
+  .n-err{fill:var(--danger-soft);stroke:#eec4bf}
+  .n-blue{fill:var(--blue-soft);stroke:#cfe0ef}
+  .n-dark{fill:#26221d;stroke:#26221d}
+  .t{font:600 13px "Hanken Grotesk",sans-serif;fill:var(--ink)}
+  .t-sm{font:500 11px "Hanken Grotesk",sans-serif;fill:var(--ink-2)}
+  .t-white{fill:#fff}
+  .edge{stroke:#b9b1a6;stroke-width:1.6;fill:none}
+  .edge-lbl{font:600 10.5px "Hanken Grotesk",sans-serif;fill:var(--ink-3)}
+  footer{color:var(--ink-3);font-size:13px;text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--line)}
+  .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink-3);text-decoration:none;margin-bottom:14px}
+  .back-link:hover{color:var(--accent)}
+
+  .page{display:flex;align-items:flex-start;}
+  nav.side{position:sticky;top:0;height:100vh;width:250px;flex:0 0 250px;
+    background:#201d18;color:#cdc4b8;overflow-y:auto;padding:26px 18px 32px;}
+  nav.side h1{font-size:14.5px;color:#fff;margin:0 0 4px;line-height:1.35;font-weight:700;}
+  nav.side .sub{font-size:11px;color:var(--accent);margin-bottom:20px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+  nav.side a{display:block;color:#cdc4b8;text-decoration:none;font-size:12.6px;padding:6px 9px;border-radius:6px;margin:1px 0;border-left:3px solid transparent;}
+  nav.side a:hover{background:#332d24;color:#fff;}
+  nav.side a.active{background:#332d24;color:#fff;border-left-color:var(--accent);font-weight:600;}
+  nav.side .foot{margin-top:22px;border-top:1px solid #423b30;padding-top:14px;}
+  nav.side .foot a{color:var(--accent);font-weight:700;padding-left:0;}
+  nav.side .foot a:hover{color:#fff;background:none;}
+  main{flex:1;min-width:0;}
+  @media print{ nav.side{display:none;} }
+  @media (max-width:900px){ nav.side{display:none;} }
+</style>
+
+<div class="page">
+<nav class="side">
+  <h1>Precios / Costos</h1>
+  <div class="sub">Manual de Usuario</div>
+  <a href="#mapa">Cómo funciona (de dónde sale un precio)</a>
+  <a href="#costos">Importar costos</a>
+  <a href="#catalogo">Importar Catálogo del Proveedor</a>
+  <a href="#revision">Revisión de Costos y Catálogo</a>
+  <a href="#listas">Listas de precios (proceso completo)</a>
+  <a href="#nota">Nota: "publiqué un lote y el precio no cambió"</a>
+  <a href="#faq">Dudas frecuentes</a>
+  <div class="foot"><a href="index.html">← Volver al índice</a></div>
+</nav>
+<main>
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Precios / Costos — Guía paso a paso</h1>
+  <p>Cómo se importan costos y el catálogo del proveedor, cómo se revisan, y el proceso completo de Listas de precios — con diagramas de flujo y capturas reales.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="mapa">0 · Cómo funciona (de dónde sale un precio)</h2>
+<p class="lead">Un <b>precio de venta</b> no sale de un solo lado: se arma encadenando costo →
+costo neto → margen → precio publicado → precio que lee el mostrador.</p>
+
+<figure class="fig">
+  <figcaption>Diagrama 1 · La cadena costo → precio</figcaption>
+  <svg viewBox="0 0 960 200" role="img" aria-label="Cadena de costo a precio">
+    <defs>
+      <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+        <path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/>
+      </marker>
+    </defs>
+    <g>
+      <rect class="n-blue" x="8" y="70" width="140" height="60" rx="10"/>
+      <text class="t" x="78" y="94" text-anchor="middle">Importar</text>
+      <text class="t" x="78" y="111" text-anchor="middle">costos / catálogo</text>
+
+      <rect class="n-box" x="188" y="70" width="150" height="60" rx="10"/>
+      <text class="t" x="263" y="93" text-anchor="middle">producto_proveedor</text>
+      <text class="t-sm" x="263" y="111" text-anchor="middle">costo bruto + preferido</text>
+
+      <rect class="n-accent" x="378" y="70" width="150" height="60" rx="10"/>
+      <text class="t" x="453" y="93" text-anchor="middle">Costo neto</text>
+      <text class="t-sm" x="453" y="111" text-anchor="middle">± bonif/flete/fin</text>
+
+      <rect class="n-accent" x="568" y="70" width="140" height="60" rx="10"/>
+      <text class="t" x="638" y="93" text-anchor="middle">× Regla margen</text>
+      <text class="t-sm" x="638" y="111" text-anchor="middle">(vía Lote)</text>
+
+      <rect class="n-ok" x="748" y="70" width="150" height="60" rx="10"/>
+      <text class="t" x="823" y="93" text-anchor="middle">lista_precio_valor</text>
+      <text class="t-sm" x="823" y="111" text-anchor="middle">precio vigente</text>
+
+      <rect class="n-dark" x="800" y="12" width="150" height="40" rx="10"/>
+      <text class="t t-white" x="875" y="37" text-anchor="middle">POS / Presupuestos</text>
+    </g>
+    <path class="edge" marker-end="url(#ah)" d="M148,100 L186,100"/>
+    <path class="edge" marker-end="url(#ah)" d="M338,100 L376,100"/>
+    <path class="edge" marker-end="url(#ah)" d="M528,100 L566,100"/>
+    <path class="edge" marker-end="url(#ah)" d="M708,100 L746,100"/>
+    <path class="edge" marker-end="url(#ah)" d="M823,70 L823,54 L875,54 L875,52"/>
+  </svg>
+</figure>
+
+<table>
+  <tr><th>Pantalla</th><th>Para qué sirve</th></tr>
+  <tr><td><b>Importar costos</b></td><td>Actualiza el <b>costo</b> de productos <b>ya vinculados</b> a un proveedor, desde un archivo.</td></tr>
+  <tr><td><b>Importar Catálogo del Proveedor</b></td><td><b>Establece el vínculo</b> producto↔proveedor (qué vende y con qué código).</td></tr>
+  <tr><td><b>Revisión de Costos y Catálogo</b></td><td>Resuelve a mano lo que no matcheó y muestra el <b>historial</b> de importaciones.</td></tr>
+  <tr><td><b>Listas de precios</b></td><td>Listas, reglas de margen, precios vigentes, promociones, recálculos.</td></tr>
+  <tr><td><b>Lotes de precios</b></td><td>El circuito de aprobación/publicación de cambios de precio.</td></tr>
+</table>
+
+<!-- ============ 1. COSTOS ============ -->
+<h2 id="costos">1 · Importar <b>costos</b></h2>
+<p><b>Objetivo:</b> actualizar el <b>costo bruto</b> de productos que <b>ya están vinculados</b> a
+un proveedor. Asistente de <b>3 pasos</b>.</p>
+
+<div class="shot">
+  <img src="assets/precios-importar-costos.png" alt="Pantalla Importar costos de proveedor, paso 1: archivo y proveedor" loading="lazy">
+  <figcaption>Importar costos — paso 1: elegir proveedor y archivo.</figcaption>
+</div>
+
+<figure class="fig">
+  <figcaption>Diagrama 2 · Asistente de importación (3 pasos) + cascada de matching</figcaption>
+  <svg viewBox="0 0 960 250" role="img" aria-label="Asistente de importación de costos">
+    <defs><marker id="ah2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+    <rect class="n-box" x="20" y="24" width="200" height="58" rx="10"/>
+    <text class="t" x="120" y="49" text-anchor="middle">1 · Archivo y proveedor</text>
+    <text class="t-sm" x="120" y="67" text-anchor="middle">CSV/XLSX + mapeo de columnas</text>
+
+    <rect class="n-accent" x="290" y="24" width="220" height="58" rx="10"/>
+    <text class="t" x="400" y="49" text-anchor="middle">2 · Previsualizar</text>
+    <text class="t-sm" x="400" y="67" text-anchor="middle">match en memoria · nada se graba</text>
+
+    <rect class="n-ok" x="580" y="24" width="200" height="58" rx="10"/>
+    <text class="t" x="680" y="49" text-anchor="middle">3 · Aplicado (Confirmar)</text>
+    <text class="t-sm" x="680" y="67" text-anchor="middle">persiste todo de una vez</text>
+
+    <path class="edge" marker-end="url(#ah2)" d="M220,53 L288,53"/>
+    <path class="edge" marker-end="url(#ah2)" d="M510,53 L578,53"/>
+
+    <rect class="n-dark" x="290" y="120" width="220" height="46" rx="9"/>
+    <text class="t t-white" x="400" y="140" text-anchor="middle">Cascada de matching</text>
+    <text class="t-sm t-white" x="400" y="157" text-anchor="middle" style="fill:#e7a877">EAN → cód. proveedor → SKU</text>
+    <path class="edge" marker-end="url(#ah2)" d="M400,82 L400,118"/>
+
+    <rect class="n-ok" x="560" y="112" width="180" height="40" rx="9"/>
+    <text class="t-sm" x="650" y="136" text-anchor="middle"><tspan class="t">matched</tspan> → aplica costo</text>
+    <rect class="n-warn" x="560" y="162" width="180" height="40" rx="9"/>
+    <text class="t-sm" x="650" y="186" text-anchor="middle"><tspan class="t">sin_matchear</tspan> → Cola Revisión</text>
+    <rect class="n-err" x="560" y="212" width="180" height="34" rx="9"/>
+    <text class="t-sm" x="650" y="234" text-anchor="middle"><tspan class="t">error_formato</tspan></text>
+    <path class="edge" marker-end="url(#ah2)" d="M510,143 L558,132"/>
+    <path class="edge" marker-end="url(#ah2)" d="M510,150 L558,182"/>
+    <path class="edge" marker-end="url(#ah2)" d="M510,156 L558,228"/>
+  </svg>
+</figure>
+
+<h3>Paso 1 — Archivo y proveedor</h3>
+<p>Elegís <b>proveedor</b> + <b>archivo</b> (CSV/XLSX). Hay <b>plantilla descargable</b>. Las
+columnas se interpretan con el <b>mapeo del proveedor</b> (<code>proveedor_importacion_config</code>:
+formato, delimitador, fila de encabezado, y qué columna es costo / código del proveedor / EAN / SKU).</p>
+
+<h3>Paso 2 — Previsualizar <span class="muted">(nada se graba todavía)</span></h3>
+<p>El archivo se <b>parsea en memoria</b>. Cada fila se matchea <b>solo contra productos ya
+vinculados a este proveedor</b>, con la cascada:</p>
+<div class="cascade"><b>EAN (GTIN)</b> → <b>código del proveedor</b> → <b>código interno (SKU)</b> &nbsp; — el primero que matchea, gana.</div>
+<p class="muted">Alcance acotado: un producto de <i>otro</i> proveedor no matchea aunque su EAN/SKU
+aparezca — así no se cargan costos cruzados por error.</p>
+<table>
+  <tr><th>Estado</th><th>Significado</th></tr>
+  <tr><td><span class="pill ok">matched</span></td><td>Producto identificado; muestra costo anterior → nuevo.</td></tr>
+  <tr><td><span class="pill warn">sin_matchear</span></td><td>No se identificó → va a la <b>Cola de Revisión</b>.</td></tr>
+  <tr><td><span class="pill err">error_formato</span></td><td>El costo no es un número válido, etc.</td></tr>
+</table>
+<p>Extras: <b>advertencia cruzada</b> (no bloquea) si el código del proveedor del archivo difiere
+del guardado; detección de <b>duplicados</b> en el archivo (aplica el último); <b>edición inline</b>,
+<b>filtros</b> y buscador <b>"Consultar productos"</b>. El preview es <b>persistente</b> (sobrevive
+navegar y volver).</p>
+
+<h3>Paso 3 — Aplicado (Confirmar)</h3>
+<p>Recién al <b>Confirmar</b> se persiste todo: se guarda la importación (cabecera + detalle por
+fila), se <b>actualiza el costo</b> de las filas <i>matched</i>, y <b>se generan lotes de precios</b>
+por evento de costo para las listas en modo <b>margen sobre costo</b> (quedan para revisar y
+publicar — ver §5). Las filas <b>sin matchear</b> pasan a la Cola de Revisión.</p>
+
+<!-- ============ 2. CATALOGO ============ -->
+<h2 id="catalogo">2 · Importar <b>Catálogo del Proveedor</b></h2>
+<p><b>Objetivo:</b> <b>establecer el vínculo</b> producto↔proveedor (qué vende y con qué código).
+El matching es <b>global</b> (todo el catálogo), no acotado al proveedor. Mismo asistente de 3 pasos.</p>
+
+<div class="shot">
+  <img src="assets/precios-importar-catalogo.png" alt="Pantalla Importar Catálogo del Proveedor" loading="lazy">
+  <figcaption>Importar Catálogo del Proveedor — el costo es opcional; lo que sí se guarda siempre es el vínculo.</figcaption>
+</div>
+
+<div class="cascade">Matching: <b>EAN (GTIN)</b> → <b>código interno (SKU)</b>. &nbsp;El código del proveedor <b>NO</b> matchea — es el dato que se <b>guarda</b>.</div>
+<table>
+  <tr><th>Acción</th><th>Significado</th></tr>
+  <tr><td><span class="pill ok">Crear vínculo</span></td><td>El producto existe y aún no está vinculado a este proveedor.</td></tr>
+  <tr><td><span class="pill warn">Actualizar</span></td><td>Ya estaba vinculado; actualiza código (y costo si vino).</td></tr>
+  <tr><td><span class="pill mut">sin_matchear</span></td><td>El producto <b>no existe</b>. <b>No se crean productos.</b></td></tr>
+  <tr><td><span class="pill err">error</span></td><td>Dato inválido (p. ej. costo no numérico).</td></tr>
+</table>
+<p>Para las filas <i>sin matchear</i> se sugieren <b>candidatos por similitud de nombre</b>. El
+<b>costo es opcional</b>. Al <b>Confirmar</b>: <b>upsert</b> de <code>producto_proveedor</code>;
+el <b>preferido</b> se asigna <b>solo si el producto no tenía ninguno</b> (nunca pisa). Resultado con
+contadores <i>creados / actualizados / sin identificar / errores / preferidos asignados</i> y tabla de impactados.</p>
+
+<!-- ============ 3. REVISION ============ -->
+<h2 id="revision">3 · Revisión de Costos y Catálogo</h2>
+<p>Pantalla unificada para lo que quedó "colgado" de las importaciones.</p>
+<div class="shot">
+  <img src="assets/precios-revision.png" alt="Pantalla Revisión de Costos y Catálogo, pestaña Historial" loading="lazy">
+  <figcaption>Historial de importaciones — quién cargó qué, cuándo, y con qué resultado.</figcaption>
+</div>
+<div class="card">
+  <h3>3.1 · Cola de Revisión</h3>
+  <p>Filas <b>sin asignar</b> (las <i>sin_matchear</i> de costos y catálogo). Por cada una:
+  <b>Resolver</b> (asignar a un producto a mano o por candidato de similitud), <b>Editar</b>, o
+  <b>Descartar</b>.</p>
+  <h3>3.2 · Historial de importaciones</h3>
+  <p>Todas las importaciones (costos y catálogo) con cabecera —proveedor, archivo, fecha, totales,
+  <b>identificados / rechazados / pendientes</b>, y estado <span class="pill mut">pendiente</span>
+  <span class="pill ok">confirmado</span> <span class="pill err">cancelado</span>—, ordenable y con
+  <b>detalle fila por fila</b> (filtros). Es la auditoría: qué se cargó, cuándo y con qué resultado.</p>
+</div>
+
+<!-- ============ 4. LISTAS ============ -->
+<h2 id="listas">4 · Proceso completo de <b>Listas de precios</b></h2>
+<p>Acá vive el <b>precio de venta</b>. El modelo separa la <b>definición</b> (listas + reglas),
+el <b>valor</b> (precios vigentes historizados) y el <b>flujo de cambio</b> (lotes).</p>
+
+<h3>4.1 · Listas y su modo de cálculo</h3>
+<div class="shot">
+  <img src="assets/precios-listas.png" alt="Pantalla Listas de precios" loading="lazy">
+  <figcaption>Listas de precios — Minorista, Mayorista 2 (predeterminada) y Tornillos, cada una con su tipo y modo de cálculo.</figcaption>
+</div>
+<table>
+  <tr><th>Modo</th><th>Cómo calcula</th></tr>
+  <tr><td><b>Margen sobre costo</b></td><td>Reglas de margen sobre el <b>costo neto</b> del preferido.</td></tr>
+  <tr><td><b>% sobre lista</b> <span class="muted">(default)</span></td><td>Ajuste porcentual sobre el precio base del producto.</td></tr>
+  <tr><td><b>Manual</b></td><td>Precio cargado a mano.</td></tr>
+</table>
+<p class="muted">La lista <b>predeterminada</b> es la que usa el POS para el consumidor final. Un
+cliente puede tener su propia lista (<code>cliente.lista_precio_id</code>).</p>
+
+<h3>4.2 · Reglas de margen <span class="muted">(solo modo margen sobre costo)</span></h3>
+<div class="cascade">Precedencia (gana la más específica): <b>Producto → Marca → Rubro → Proveedor → Lista (base)</b></div>
+<p>Una sola regla aplica por producto. Precio propuesto = <code>costo_neto × (1 + margen/100)</code>, con redondeo comercial.</p>
+
+<h3>4.3 · Precios vigentes</h3>
+<p>Es <code>lista_precio_valor</code>: precio absoluto por producto y lista, historizado
+(<b>SCD tipo 2</b>: el vigente tiene <code>fecha_hasta = null</code>; al cambiar se cierra el viejo y
+se inserta el nuevo). Se puede <b>ver, filtrar (nombre/SKU/EAN) y ordenar</b>.
+Desde acá se dispara el <b>Recálculo masivo</b> y se ven los <b>cambios programados</b> (scheduler).</p>
+
+<h3>4.4 · Promociones</h3>
+<p>Precio temporal que <b>pisa</b> al vigente mientras está activa (máxima prioridad al resolver).</p>
+
+<h3>4.5 · Lotes de precios <span class="muted">(el circuito de cambio)</span></h3>
+<div class="shot">
+  <img src="assets/precios-lotes.png" alt="Pantalla Lotes de precios" loading="lazy">
+  <figcaption>Lotes de precios — acá se ven dos lotes de la lista "Tornillos" con estado "Validación fallida".</figcaption>
+</div>
+<figure class="fig">
+  <figcaption>Diagrama 3 · Ciclo de vida de un lote</figcaption>
+  <svg viewBox="0 0 960 210" role="img" aria-label="Ciclo de vida del lote">
+    <defs><marker id="ah3" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+    <rect class="n-box" x="16" y="80" width="96" height="48" rx="10"/><text class="t" x="64" y="109" text-anchor="middle">Crear</text>
+    <rect class="n-ok" x="150" y="52" width="150" height="44" rx="10"/><text class="t" x="225" y="79" text-anchor="middle">validado</text>
+    <rect class="n-err" x="150" y="112" width="150" height="44" rx="10"/><text class="t" x="225" y="135" text-anchor="middle">validacion_fallida</text>
+    <rect class="n-accent" x="360" y="80" width="120" height="48" rx="10"/><text class="t" x="420" y="109" text-anchor="middle">aprobado</text>
+    <rect class="n-dark" x="530" y="80" width="120" height="48" rx="10"/><text class="t t-white" x="590" y="109" text-anchor="middle">publicado</text>
+    <rect class="n-box" x="700" y="80" width="130" height="48" rx="10"/><text class="t" x="765" y="104" text-anchor="middle">ROLLBACK</text><text class="t-sm" x="765" y="120" text-anchor="middle">(revertir)</text>
+
+    <path class="edge" marker-end="url(#ah3)" d="M112,98 L148,80"/>
+    <path class="edge" marker-end="url(#ah3)" d="M112,106 L148,130"/>
+    <path class="edge" marker-end="url(#ah3)" d="M300,74 L358,100"/>
+    <path class="edge" marker-end="url(#ah3)" d="M480,104 L528,104"/>
+    <path class="edge" marker-end="url(#ah3)" d="M650,104 L698,104"/>
+    <path class="edge" marker-end="url(#ah3)" d="M225,156 C225,190 320,190 320,150 L300,134"/>
+    <text class="edge-lbl" x="300" y="188" text-anchor="middle">Re-validar / Excluir errores</text>
+    <text class="edge-lbl" x="512" y="70" text-anchor="middle">requiere aprobación</text>
+    <text class="edge-lbl" x="590" y="150" text-anchor="middle">escribe lista_precio_valor</text>
+  </svg>
+</figure>
+<ol>
+  <li><b>Crear:</b> por producto calcula <b>costo neto del preferido × regla</b> → precio propuesto, lo compara con el vigente y <b>valida</b>. Queda <span class="pill ok">validado</span> o <span class="pill err">validacion_fallida</span>. Errores típicos: <i>sin preferido/sin costo</i>, <i>precio bajo el costo</i>, <i>margen fuera de regla</i>. Advertencia: <i>variación mayor al umbral</i>.</li>
+  <li><b>Re-validar</b>: reejecuta el cálculo contra el <b>estado actual</b> (recupera filas que arreglaste). <b>Respeta las excluidas</b>.</li>
+  <li><b>Excluir errores / fila:</b> saca del lote lo que no se puede aprobar.</li>
+  <li><b>Aprobar</b> (permiso de Supervisor) → <span class="pill">aprobado</span>.</li>
+  <li><b>Publicar:</b> escribe los precios en <code>lista_precio_valor</code> <b>de la lista del lote</b>. <b>Acá cambia el precio.</b></li>
+  <li><b>Revertir:</b> genera un lote <b>ROLLBACK</b> con los precios previos (nunca borra historia).</li>
+</ol>
+
+<h3>4.6 · Cómo se consume el precio (POS / Presupuestos)</h3>
+<figure class="fig">
+  <figcaption>Diagrama 4 · Resolución del precio al vender (sobre la lista efectiva)</figcaption>
+  <svg viewBox="0 0 960 280" role="img" aria-label="Resolución de precio en el POS">
+    <defs><marker id="ah4" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+    <rect class="n-blue" x="360" y="14" width="240" height="46" rx="10"/>
+    <text class="t" x="480" y="34" text-anchor="middle">Lista efectiva</text>
+    <text class="t-sm" x="480" y="51" text-anchor="middle">cliente.lista_precio_id ?? predeterminada</text>
+
+    <polygon class="n-accent" points="480,80 610,120 480,160 350,120"/>
+    <text class="t" x="480" y="116" text-anchor="middle">¿Promoción</text>
+    <text class="t" x="480" y="132" text-anchor="middle">activa?</text>
+    <path class="edge" marker-end="url(#ah4)" d="M480,60 L480,80"/>
+    <rect class="n-ok" x="662" y="98" width="150" height="44" rx="10"/><text class="t" x="737" y="125" text-anchor="middle">Precio de promo</text>
+    <path class="edge" marker-end="url(#ah4)" d="M610,120 L660,120"/><text class="edge-lbl" x="636" y="112" text-anchor="middle">sí</text>
+
+    <polygon class="n-accent" points="480,186 610,226 480,266 350,226"/>
+    <text class="t" x="480" y="222" text-anchor="middle">¿Vigente en</text>
+    <text class="t" x="480" y="238" text-anchor="middle">esa lista?</text>
+    <path class="edge" marker-end="url(#ah4)" d="M480,160 L480,186"/><text class="edge-lbl" x="502" y="176" text-anchor="start">no</text>
+    <rect class="n-ok" x="662" y="204" width="150" height="44" rx="10"/><text class="t" x="737" y="231" text-anchor="middle">Precio vigente</text>
+    <path class="edge" marker-end="url(#ah4)" d="M610,226 L660,226"/><text class="edge-lbl" x="636" y="218" text-anchor="middle">sí</text>
+
+    <rect class="n-warn" x="150" y="204" width="180" height="44" rx="10"/>
+    <text class="t" x="240" y="224" text-anchor="middle">Fallback (legacy)</text>
+    <text class="t-sm" x="240" y="241" text-anchor="middle">precio_venta_lista × (1+ajuste%)</text>
+    <path class="edge" marker-end="url(#ah4)" d="M350,226 L332,226"/><text class="edge-lbl" x="342" y="218" text-anchor="middle">no</text>
+  </svg>
+</figure>
+
+<!-- ============ 5. NOTA ============ -->
+<h2 id="nota">5 · Nota: "re-validé y publiqué un lote, pero el precio no cambió"</h2>
+<div class="callout warn">
+  <h3>⚠️ Qué pasó (no es un error del lote)</h3>
+  <p><b>Observación:</b> al re-validar el lote funcionó, pero lo que cambió fue el <b>costo del
+  producto para ese proveedor</b>, no el <b>precio de venta</b>.</p>
+  <ol>
+    <li><b>El lote publica en la lista del lote.</b> Si esa lista <b>no es la predeterminada</b>, el
+    POS (que vende de la <b>predeterminada</b>) <b>no ve</b> ese precio. Se actualizó… en otra lista.</li>
+    <li><b>La pantalla del Producto muestra el campo legacy</b> <code>producto.precio_venta_lista</code>,
+    que <b>ningún lote actualiza</b>. Por eso "Precio lista" no se mueve aunque publiques.</li>
+    <li><b>El costo sí cambió</b> porque lo editaste y <b>Re-validar lo tomó</b> para recalcular. Eso es
+    correcto; lo que no aterriza en el mostrador es el <b>precio publicado</b>, por el punto 1.</li>
+  </ol>
+  <p><b>Para que un lote impacte la venta:</b> hacelo sobre la <b>lista predeterminada</b> (la que
+  vende el mostrador), o asigná esa lista al cliente. <b>Verificalo</b> en <i>Listas de precios</i>:
+  mirá cuál tiene el chip "predeterminada" y que el lote esté sobre esa.</p>
+</div>
+<div class="callout info">
+  <h3>Deuda conocida (fuera de esta guía)</h3>
+  <p>Cerrar del todo el circuito —que la pantalla de Producto muestre el <b>precio vigente del
+  motor</b> en vez del campo legacy, y/o definir cómo se relaciona un lote con la predeterminada—
+  es arquitectura del motor v2 a resolver con su propio ADR.</p>
+</div>
+
+<!-- ============ FAQ ============ -->
+<h2 id="faq">6 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Cuál es la diferencia entre "Importar costos" e "Importar Catálogo del Proveedor"?</summary>
+  <div class="ans"><b>Importar costos</b> actualiza el costo de productos que <b>ya están vinculados</b> a ese proveedor. <b>Importar Catálogo del Proveedor</b> es el paso anterior: <b>crea el vínculo</b> producto↔proveedor (qué vende y con qué código) para que después haya algo que actualizar.</div>
+</details>
+
+<details>
+  <summary>Si un producto tiene promoción activa Y está en una lista con precio vigente, ¿cuál gana?</summary>
+  <div class="ans">La <b>promoción</b>. Es un precio temporal que <b>pisa</b> al vigente mientras está activa — tiene la prioridad más alta de las tres fuentes (ver Diagrama 4).</div>
+</details>
+
+<details>
+  <summary>Un lote quedó en "Validación fallida", ¿cómo lo destrabo?</summary>
+  <div class="ans">Corregí lo que falló (costo del preferido, margen fuera de regla, etc.) y usá <b>Re-validar</b> — reejecuta el cálculo contra el estado actual y recupera las filas que arreglaste, respetando las que ya excluiste. Si una fila puntual no se puede arreglar, usá <b>Excluir errores</b> para sacarla del lote y aprobar el resto.</div>
+</details>
+
+<details>
+  <summary>¿Qué regla de margen aplica si un producto tiene reglas por Marca y por Rubro a la vez?</summary>
+  <div class="ans">Gana la <b>más específica</b>. La precedencia es: <b>Producto → Marca → Rubro → Proveedor → Lista (base)</b>. Solo se aplica una regla por producto, nunca se combinan.</div>
+</details>
+
+<details>
+  <summary>¿Cuándo entra en juego el precio "Fallback (legacy)"?</summary>
+  <div class="ans">Solo cuando no hay promoción activa <b>y</b> no hay un precio vigente cargado para esa lista en <code>lista_precio_valor</code>. Ahí el sistema recurre al campo histórico <code>precio_venta_lista</code> del producto, ajustado por el porcentaje de la lista — es la salida de emergencia, no el camino normal.</div>
+</details>
+
+<details>
+  <summary>¿"Publicar" un lote y "Aprobar" un lote son lo mismo?</summary>
+  <div class="ans">No. <b>Aprobar</b> (requiere permiso de Supervisor) es una validación de que el lote está bien y puede avanzar. <b>Publicar</b> es el paso que realmente escribe los precios en <code>lista_precio_valor</code> — recién ahí cambia lo que ve el mostrador. Un lote aprobado y no publicado todavía no tocó ningún precio.</div>
+</details>
+
+<details>
+  <summary>Me equivoqué al publicar un lote, ¿puedo deshacerlo?</summary>
+  <div class="ans">Sí, con <b>Revertir</b>: genera un lote <b>ROLLBACK</b> que restaura los precios previos. Nunca se borra el historial — el rollback queda registrado como un lote más, no como una edición silenciosa.</div>
+</details>
+
+<p class="muted" style="margin-top:40px;border-top:1px solid var(--line);padding-top:14px">
+Glosario — <b>Costo bruto:</b> lo que factura el proveedor. <b>Costo neto:</b> bruto ± bonif/flete/fin (el del preferido alimenta el margen).
+<b>lista_precio_valor:</b> precio vigente historizado por producto y lista. <b>Lote:</b> un cambio de precios en revisión.
+<b>Lista predeterminada:</b> la que usa el POS para el consumidor final.</p>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Precios / Costos
+</footer>
+</div>
+</main>
+</div>
+
+<script>
+  (function(){
+    var links=[...document.querySelectorAll('nav.side a[href^="#"]')];
+    var map=new Map();
+    links.forEach(function(a){var id=a.getAttribute('href').slice(1);var el=document.getElementById(id);if(el)map.set(el,a);});
+    var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove('active');});var a=map.get(e.target);if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-10% 0px -80% 0px',threshold:0});
+    [...map.keys()].forEach(function(t){obs.observe(t);});
+  })();
+</script>
+

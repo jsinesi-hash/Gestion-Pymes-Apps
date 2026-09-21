@@ -1,0 +1,73 @@
+stages:
+  - build
+  - test
+  - quality
+
+variables:
+  # Versión exacta del .nvmrc para evitar conflictos con el constraint engines.node
+  NODE_VERSION: "22.22"
+  PNPM_VERSION: "11"
+  # Evita que electron descargue su binario en el runner de CI (no se necesita)
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+  # Evita que electron-winstaller descargue artefactos de Windows en Linux
+  ELECTRON_WINSTALLER_SKIP_DOWNLOAD: "1"
+
+cache:
+  key:
+    files:
+      - pnpm-lock.yaml
+  paths:
+    - node_modules/
+    - packages/*/node_modules/
+
+.pnpm_setup: &pnpm_setup
+  - corepack enable
+  - corepack prepare pnpm@${PNPM_VERSION} --activate
+  - pnpm install --frozen-lockfile
+
+build:
+  stage: build
+  image: node:${NODE_VERSION}
+  before_script: *pnpm_setup
+  script:
+    - pnpm --filter @ferreteria/shared build
+    - pnpm --filter @ferreteria/shared exec tsc --noEmit
+    - pnpm --filter ferreteria-client exec tsc --noEmit
+
+test:
+  stage: test
+  image: node:${NODE_VERSION}
+  before_script: *pnpm_setup
+  script:
+    # Tests del renderer (jsdom) y de packages/shared corren bajo Node puro: no
+    # requieren el módulo nativo better-sqlite3 ni el binario de Electron.
+    # Los tests del main process (scripts/test-node.cjs) necesitan better-sqlite3
+    # compilado para el NMV de Electron 32 (NMV 128) y quedan fuera del pipeline.
+    - pnpm --filter @ferreteria/shared test -- --coverage
+    - pnpm --filter ferreteria-client exec vitest run --coverage
+  artifacts:
+    paths:
+      - packages/client/coverage/
+      - packages/shared/coverage/
+    expire_in: 1 hour
+
+sonarcloud:
+  stage: quality
+  image:
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  needs:
+    - test
+  variables:
+    GIT_DEPTH: "0"
+  script:
+    - sonar-scanner
+      -Dsonar.token=$SONAR_TOKEN
+      -Dsonar.organization=jsinesi-group
+      -Dsonar.projectKey=jsinesi-group_ferreteria-app-demo
+      -Dsonar.sources=packages/client/src,packages/shared/src
+      -Dsonar.tests=packages/client/src,packages/shared/src
+      -Dsonar.test.inclusions=**/*.test.ts,**/*.test.tsx
+      -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/out/**,**/.vite/**,**/*.d.ts
+      -Dsonar.javascript.lcov.reportPaths=packages/client/coverage/lcov.info,packages/shared/coverage/lcov.info
+  allow_failure: false

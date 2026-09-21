@@ -1,0 +1,79 @@
+ Q2 — Scheduler para cambio_programado
+
+  No hay patrón establecido de jobs en el proyecto. Opciones:
+  - A) setInterval cada hora en src/main/index.ts al iniciar la app, chequea si hay cambios        
+  programados con fecha_aplicacion <= now y estado 'pendiente'. Simple, consistente.
+  - B) setTimeout ajustado al próximo evento (más eficiente, más complejo de manejar cuando llegan 
+  nuevos cambios programados).
+
+  Mi recomendación: A — setInterval de 1 hora + chequeo al arrancar. ¿Confirmás?
+  
+  A2 - Q2 — Confirmado: Opción A (setInterval 1 hora + chequeo al iniciar la app).
+
+Un requisito adicional: cada corrida del scheduler debe traer solo cambio_programado con
+estado='pendiente' y fecha_aplicacion <= now, y marcar cada registro como 'aplicado' dentro de
+la MISMA transacción atómica que ejecuta el recálculo correspondiente — para garantizar que un
+cambio programado nunca se aplique dos veces si el intervalo se dispara más de una vez o la app
+se reinicia en el medio.
+
+  Q3 — Histórico de costo_centavos en producto_proveedor
+
+  La tabla ya existe con el campo costo_centavos como valor simple (sin fechas). Dos opciones:     
+  - A) Sin historial: reemplazo directo del costo vigente. La trazabilidad viene de
+  importacion_costo_proveedor (qué archivo lo actualizó y cuándo).
+  - B) Con historial SCD tipo 2: agregar fecha_desde/fecha_hasta a producto_proveedor para auditar 
+  evolución del costo.
+
+  Mi recomendación: A — sin historial en la tabla. El importacion_costo_proveedor cubre la
+  trazabilidad de cambios. ¿Confirmás?
+  
+  A3 - Q3 — Confirmado: Opción A, sin historial SCD2 en producto_proveedor.
+
+Ajuste: la trazabilidad de importacion_costo_proveedor tal como está diseñada (solo conteos
+agregados) no alcanza para ver qué costo tenía cada producto antes/después de una importación.
+Agregá una tabla de detalle:
+
+importacion_costo_proveedor_detalle: importacion_id, producto_id, costo_anterior_centavos,
+costo_nuevo_centavos.
+
+Se llena una fila por cada producto actualizado en cada importación. Las ediciones manuales
+sueltas (fuera de importación) quedan sin historizar por ahora — es una decisión consciente,
+documentada en el ADR, no un olvido.
+
+  Q4 — Regla de redondeo en recálculo masivo
+
+  El motor actual (precio.ts) usa Math.round() en cada paso. Propongo la misma regla para el       
+  recálculo:
+
+  precio_centavos = Math.round(base_centavos * (1 + porcentaje / 100))
+
+  ¿OK? ¿O preferís Math.floor (conservador, nunca sube más de lo esperado)?
+
+  A4 - Q4 — Confirmado: Math.round(), mismo criterio que precio.ts. No uses Math.floor — la diferencia
+es de máximo 1 centavo por producto y no vale la pena tener dos reglas de redondeo distintas
+conviviendo en el sistema.
+
+  Q5 — POS fallback si no hay lista_precio_valor
+
+  Con el nuevo modelo, si un producto está asignado a una lista pero aún no tiene record en        
+  lista_precio_valor, el POS necesita un fallback. Propongo:
+
+  ▎ Si no hay lista_precio_valor vigente para (lista, producto): usar producto.precio_venta_lista  
+  ▎ directamente, sin aplicar lista.ajuste_porcentual en tiempo de lectura.
+
+  Esto es consistente con "no derivo en tiempo real". Los registros faltantes se pueblan ejecutando   un recálculo masivo inicial. ¿OK?
+
+  A5 - Q5 — No confirmado tal como está. Ajustes necesarios:
+
+1. Al crear un producto nuevo, sembrar automáticamente su fila en lista_precio_valor para cada
+   lista activa (aplicando el ajuste_porcentual de esa lista), en el mismo alta del producto —
+   no queda pendiente de recálculo manual. Esto reduce el fallback a un caso excepcional.
+
+2. Si el fallback igual se dispara (ej. lista nueva sin recálculo inicial todavía corrido), NO
+   uses producto.precio_venta_lista sin ajustar. Calculá con el ajuste de la lista:
+   precio = Math.round(producto.precio_venta_lista * 100 * (1 + lista.ajuste_porcentual / 100))
+   — mismo resultado que da el motor viejo hoy. El objetivo del fallback es no vender más barato
+   por accidente, no introducir una fuente de verdad paralela.
+
+3. Cuando se use este fallback, el POS debe mostrar un aviso visible (toast/badge, "precio sin
+   confirmar en esta lista") — no debe pasar desapercibido para el cajero.

@@ -1,0 +1,42 @@
+Contexto: implementamos la fase 1 del nuevo Dashboard (ADR-037), tabs Ventas y
+Productos, dentro de /dashboard existente. NO tocar POS, Caja, ni ningún módulo
+aprobado fuera de la pantalla de dashboard.
+
+Alcance de esta fase:
+1. Instalar `recharts` en packages/client (gate: confirmar antes de instalar).
+2. Reestructurar /dashboard como pantalla única con tabs superiores: Resumen,
+   Ventas, Productos, y placeholders deshabilitados "Próximamente" para Caja,
+   Clientes, Proveedores.
+3. Selector de rango de fecha compartido por tab: Hoy / Semana / Mes /
+   Trimestre (calendario: ene-mar/abr-jun/jul-sep/oct-dic) / Personalizado.
+4. Tab Ventas:
+   - Gráfico de línea (Recharts) de evolución de ventas para el rango
+     seleccionado, con serie de comparación del período anterior.
+   - Filtro por categoría/rubro (jerárquico, ADR-007) y por producto puntual,
+     aplicado a todo el tab.
+   - Mapa de calor horario x día de semana (grid HTML/CSS propio, no Recharts).
+   - Distribución por día del mes.
+   - Ranking por vendedor (usuario_id) del período: monto, cantidad de
+     tickets, ticket promedio.
+   - Reubicar "top productos" y "margen" ya existentes bajo este tab, con el
+     mismo filtro de rango/rubro/producto.
+5. Tab Productos:
+   - Reubicar los indicadores existentes ($ en inventario, sin stock, bajo
+     mínimo, sin movimiento).
+   - Agregar curva ABC/rotación por cantidad y monto vendido.
+   - Agregar margen por categoría.
+
+Antes de escribir queries: inspeccionar el schema real de `venta`,
+`venta_pago`, `producto`, `categoria`, `usuario` y proponer las vistas SQL de
+agregación antes de implementar (no asumir columnas — confirmar contra
+schema real).
+
+Gates obligatorios — parar y avisar antes de:
+- Instalar cualquier dependencia (recharts u otra).
+- Cualquier migración de schema (no debería hacer falta en esta fase, pero
+  si aparece, parar).
+- Escribir en `parametros_sistema`.
+- Tocar cualquier pantalla o módulo fuera de /dashboard.
+
+Al terminar: actualizar ESTADO.md (bitácora + inventario de pantallas) según
+la plantilla del proyecto.

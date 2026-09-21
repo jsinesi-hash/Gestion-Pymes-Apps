@@ -1,0 +1,301 @@
+<meta charset="utf-8">
+<title>Stock — Guía</title>
+<style>
+  :root{
+    --bg:#f7f7f5; --surface:#ffffff; --ink:#1c1a17; --ink-2:#4b463f; --ink-3:#8a8279;
+    --line:#e7e3dc; --accent:#e8730a; --accent-soft:#fdefe1; --accent-strong:#b45309;
+    --ok:#2e7d52; --ok-soft:#e7f3ec; --warn:#b7791f; --warn-soft:#fbf3e0; --danger:#c0392b; --danger-soft:#fbeceb;
+    --blue:#2f6fb0; --blue-soft:#e9f1f9;
+    --radius:12px; --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+      --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+      --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+      --blue:#7fb0e0; --blue-soft:#182533;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141310; --surface:#1e1c18; --ink:#eeece7; --ink-2:#b9b3a8; --ink-3:#867f73;
+    --line:#332f28; --accent:#f0924a; --accent-soft:#2c2016; --accent-strong:#f0924a;
+    --ok:#4ade80; --ok-soft:#132a1d; --warn:#e0b563; --warn-soft:#2c2413; --danger:#f0837a; --danger-soft:#2c1917;
+    --blue:#7fb0e0; --blue-soft:#182533;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 "Hanken Grotesk",-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 22px 80px}
+  header.hero{background:linear-gradient(135deg,#1c1a17,#3a332b);color:#fff;border-radius:18px;padding:34px 34px 30px;margin-bottom:28px}
+  header.hero .kicker{color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:12.5px}
+  header.hero h1{margin:.35em 0 .2em;font-size:30px;line-height:1.15}
+  header.hero p{margin:0;color:#d7d1c8;max-width:70ch}
+  h2{font-size:22px;margin:2.2em 0 .5em;padding-top:.5em;border-top:2px solid var(--line)}
+  h3{font-size:17px;margin:1.4em 0 .4em;color:var(--ink)}
+  p,li{color:var(--ink-2)}
+  code{font-family:var(--mono);font-size:.87em;background:var(--accent-soft);padding:.1em .38em;border-radius:5px;color:var(--accent-strong)}
+  a{color:var(--blue)}
+  .lead{font-size:16.5px}
+  .toc{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 20px;margin:0 0 8px}
+  .toc b{font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+  .toc ol{margin:.5em 0 0;padding-left:1.2em;columns:2;column-gap:32px}
+  .toc a{text-decoration:none}
+  table{width:100%;border-collapse:collapse;margin:1em 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;font-size:14.5px}
+  th,td{text-align:left;padding:9px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--accent-soft);font-size:12.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-3)}
+  tr:last-child td{border-bottom:none}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px 22px 18px;margin:16px 0}
+  .fig{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin:20px 0;overflow-x:auto}
+  .fig figcaption{font-size:12.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;font-weight:700}
+  .shot{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px;margin:16px 0;text-align:center}
+  .shot img{max-width:100%;border-radius:8px;display:block;margin:0 auto;border:1px solid var(--line)}
+  .shot.small img{max-width:440px}
+  .shot figcaption{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+  .shot-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:640px){.shot-row{grid-template-columns:1fr}}
+  .callout{border-radius:var(--radius);padding:16px 20px;margin:18px 0;border:1px solid}
+  .callout.warn{background:var(--warn-soft);border-color:#ecd9a8}
+  .callout.info{background:var(--blue-soft);border-color:#cfe0ef}
+  .callout.danger{background:var(--danger-soft);border-color:#eec4bf}
+  .callout h3{margin-top:.2em}
+  .pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px}
+  .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .pill.err{background:var(--danger-soft);color:var(--danger)} .pill.mut{background:var(--accent-soft);color:var(--ink-3)}
+  .step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .step:last-child{border-bottom:none}
+  .step .dot{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent-strong);
+    font-weight:700;display:grid;place-items:center;font-size:.85rem}
+  .step .body{flex:1}
+  .step .body h4{margin:0 0 4px;font-size:1rem;color:var(--ink)}
+  details{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin:10px 0;overflow:hidden}
+  details summary{cursor:pointer;padding:14px 18px;font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;color:var(--ink)}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"+";color:var(--accent);font-size:1.3rem;font-weight:400}
+  details[open] summary::after{content:"–"}
+  details .ans{padding:0 18px 16px;color:var(--ink-2)}
+  svg{max-width:100%;height:auto;display:block}
+  .muted{color:var(--ink-3);font-size:13.5px}
+  .formula{background:var(--surface);border:1px dashed var(--accent);border-radius:12px;padding:18px;text-align:center;margin:14px 0}
+  .formula .eq{font-size:1.02rem;font-weight:600;font-family:var(--mono)}
+  .formula .eq .hl{color:var(--accent-strong)}
+  .n-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+  .n-accent{fill:var(--accent-soft);stroke:#f0c79a}
+  .n-ok{fill:var(--ok-soft);stroke:#bfe0cd}
+  .n-warn{fill:var(--warn-soft);stroke:#ecd9a8}
+  .n-err{fill:var(--danger-soft);stroke:#eec4bf}
+  .n-dark{fill:#26221d;stroke:#26221d}
+  .t{font:600 13px "Hanken Grotesk",sans-serif;fill:var(--ink)}
+  .t-sm{font:500 11px "Hanken Grotesk",sans-serif;fill:var(--ink-2)}
+  .t-white{fill:#fff}
+  .edge{stroke:#b9b1a6;stroke-width:1.6;fill:none}
+  .edge-lbl{font:600 10.5px "Hanken Grotesk",sans-serif;fill:var(--ink-3)}
+  footer{color:var(--ink-3);font-size:13px;text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--line)}
+  .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink-3);text-decoration:none;margin-bottom:14px}
+  .back-link:hover{color:var(--accent)}
+
+  .page{display:flex;align-items:flex-start;}
+  nav.side{position:sticky;top:0;height:100vh;width:250px;flex:0 0 250px;
+    background:#201d18;color:#cdc4b8;overflow-y:auto;padding:26px 18px 32px;}
+  nav.side h1{font-size:14.5px;color:#fff;margin:0 0 4px;line-height:1.35;font-weight:700;}
+  nav.side .sub{font-size:11px;color:var(--accent);margin-bottom:20px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+  nav.side a{display:block;color:#cdc4b8;text-decoration:none;font-size:12.6px;padding:6px 9px;border-radius:6px;margin:1px 0;border-left:3px solid transparent;}
+  nav.side a:hover{background:#332d24;color:#fff;}
+  nav.side a.active{background:#332d24;color:#fff;border-left-color:var(--accent);font-weight:600;}
+  nav.side .foot{margin-top:22px;border-top:1px solid #423b30;padding-top:14px;}
+  nav.side .foot a{color:var(--accent);font-weight:700;padding-left:0;}
+  nav.side .foot a:hover{color:#fff;background:none;}
+  main{flex:1;min-width:0;}
+  @media print{ nav.side{display:none;} }
+  @media (max-width:900px){ nav.side{display:none;} }
+</style>
+
+<div class="page">
+<nav class="side">
+  <h1>Stock</h1>
+  <div class="sub">Manual de Usuario</div>
+  <a href="#mapa">Cómo funciona (todo cambio es un movimiento)</a>
+  <a href="#vista">Vista general de Stock</a>
+  <a href="#entrada">Entrada de stock</a>
+  <a href="#ajuste">Ajuste (conteo físico)</a>
+  <a href="#merma">Merma / rotura</a>
+  <a href="#kardex">Kardex — historial completo</a>
+  <a href="#cpp">Costo promedio ponderado</a>
+  <a href="#flujo">Diagrama: tipos y motivos de movimiento</a>
+  <a href="#faq">Dudas frecuentes</a>
+  <div class="foot"><a href="index.html">← Volver al índice</a></div>
+</nav>
+<main>
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">Sistema de Gestión de Ferretería · Manual de Usuario</div>
+  <h1>Stock — Guía paso a paso</h1>
+  <p>Cómo cargar mercadería que entra, ajustar el stock después de un conteo físico, registrar una rotura, y leer el historial completo de cada producto — con diagramas y capturas reales.</p>
+</header>
+
+<!-- ============ 0. MAPA ============ -->
+<h2 id="mapa">0 · Cómo funciona (todo cambio es un movimiento)</h2>
+<p class="lead">El stock de un producto <b>nunca se edita a mano</b>. Cada vez que cambia — por una venta, una entrada de mercadería, un conteo físico o una rotura — el sistema genera un <b>movimiento de stock</b>, y ese movimiento queda guardado para siempre en el <a href="#kardex">Kardex</a> del producto. Así siempre podés reconstruir por qué el stock de algo es el que es.</p>
+
+<!-- ============ 1. VISTA GENERAL ============ -->
+<h2 id="vista">1 · Vista general de Stock</h2>
+<p>La pantalla <code>Stock</code> te da un panorama de todo el catálogo de un vistazo: cuántos productos están <b>con stock OK</b>, <b>bajo mínimo</b> o <b>sin stock</b>, con filtros por SKU, nombre y estado. Desde cada fila podés hacer las mismas acciones (entrada, editar, merma, kardex) sin entrar a la ficha completa del producto.</p>
+<div class="shot">
+  <img src="assets/stock-listado.png" alt="Vista general de Stock con KPIs de stock OK, bajo mínimo y sin stock" loading="lazy">
+  <figcaption>Vista general de Stock — 5 productos bajo mínimo, 6 sin stock.</figcaption>
+</div>
+
+<!-- ============ 2. ENTRADA ============ -->
+<h2 id="entrada">2 · Entrada de stock</h2>
+<p>Para cargar mercadería que entró sin pasar por el circuito de compras (o para la carga inicial de un producto nuevo). Se hace desde la ficha del producto, botón <b>Entrada</b>.</p>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Cargá la <b>cantidad a ingresar</b></h4><p>Ves en vivo cómo queda el stock (<code>actual → nuevo</code>).</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4><b>Costo unitario</b> (opcional)</h4><p>Si lo cargás, el sistema recalcula el <a href="#cpp">costo promedio ponderado</a> del producto. Si lo dejás en blanco, el costo promedio no se toca.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">3</span>
+    <div class="body"><h4>Confirmá la entrada</h4></div>
+  </div>
+</div>
+<div class="shot small">
+  <img src="assets/stock-entrada.png" alt="Modal Entrada de stock" loading="lazy">
+  <figcaption>Entrada de 20 unidades a $450 c/u — el aviso confirma que va a actualizar el CPP.</figcaption>
+</div>
+
+<!-- ============ 3. AJUSTE ============ -->
+<h2 id="ajuste">3 · Ajuste (conteo físico)</h2>
+<p>Para corregir el stock del sistema contra lo que realmente hay en el estante, después de un conteo.</p>
+<div class="card">
+  <div class="step">
+    <span class="dot">1</span>
+    <div class="body"><h4>Cargá la <b>cantidad contada (real)</b></h4><p>No la diferencia — el número total que contaste. El sistema calcula solo la diferencia contra el stock actual.</p></div>
+  </div>
+  <div class="step">
+    <span class="dot">2</span>
+    <div class="body"><h4>Observaciones — <b>obligatorias</b></h4><p>A diferencia de la entrada, acá el motivo del ajuste es obligatorio: queda como parte del historial permanente.</p></div>
+  </div>
+</div>
+<div class="shot small">
+  <img src="assets/stock-ajuste.png" alt="Modal Ajuste de stock (conteo)" loading="lazy">
+  <figcaption>De 50 a 5 unidades tras un conteo físico.</figcaption>
+</div>
+
+<!-- ============ 4. MERMA ============ -->
+<h2 id="merma">4 · Merma / rotura</h2>
+<p>Para dar de baja mercadería perdida, vencida o rota — a diferencia del ajuste, acá cargás <b>cuánto se perdió</b>, no el total nuevo.</p>
+<div class="shot small">
+  <img src="assets/stock-merma.png" alt="Modal Merma / rotura" loading="lazy">
+  <figcaption>Merma de 2 unidades por rotura — el botón de confirmar es rojo a propósito, para diferenciarlo de las otras acciones.</figcaption>
+</div>
+<div class="callout warn">
+  <h3>⚠️ No te deja dejar el stock en negativo</h3>
+  <p>Si la cantidad que cargás como pérdida es mayor al stock disponible, el sistema no te deja confirmar la merma.</p>
+</div>
+
+<!-- ============ 5. KARDEX ============ -->
+<h2 id="kardex">5 · Kardex — historial completo</h2>
+<p>El Kardex es la <b>bitácora completa</b> de un producto: cada entrada, salida, ajuste y merma, con fecha, motivo, cantidad, el saldo resultante y el costo unitario cuando corresponde. Se accede desde el botón <b>Kardex</b> en la ficha del producto, y se puede filtrar por tipo, motivo y rango de fechas.</p>
+<div class="shot">
+  <img src="assets/stock-kardex.png" alt="Kardex de un producto con el historial completo de movimientos" loading="lazy">
+  <figcaption>Kardex — cada línea de venta genera su propio movimiento de <b>Salida</b>, motivo <b>Venta</b>.</figcaption>
+</div>
+<p class="muted">Los movimientos son <b>inmutables</b>: no se editan ni se borran. Si algo estuvo mal, se corrige con un nuevo movimiento (un ajuste), nunca modificando uno viejo.</p>
+
+<!-- ============ 6. CPP ============ -->
+<h2 id="cpp">6 · Costo promedio ponderado</h2>
+<p>Cada vez que entra mercadería <b>con costo cargado</b>, el sistema recalcula el costo promedio ponderado (CPP) del producto:</p>
+<div class="formula">
+  <div class="eq">CPP nuevo = <span class="hl">(stock × CPP actual) + (cantidad × costo de entrada)</span> / (stock + cantidad)</div>
+</div>
+<p>Es el mismo criterio contable de siempre: si tenías 10 unidades a $100 y entran 10 más a $140, el nuevo costo promedio no es ni $100 ni $140, sino <code>(10×100 + 10×140) / 20 = $120</code>. Este costo es el que se usa como base para calcular márgenes cuando una lista de precios está configurada en modo “margen sobre costo” (ver la guía de <b>Precios / Costos</b>).</p>
+
+<!-- ============ 7. FLUJO ============ -->
+<h2 id="flujo">7 · Diagrama: tipos y motivos de movimiento</h2>
+<figure class="fig">
+  <figcaption>Diagrama · Qué genera cada tipo de movimiento</figcaption>
+  <svg viewBox="0 0 960 260" role="img" aria-label="Tipos y motivos de movimiento de stock">
+    <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#b9b1a6"/></marker></defs>
+
+    <rect class="n-dark" x="380" y="10" width="200" height="40" rx="10"/>
+    <text class="t t-white" x="480" y="35" text-anchor="middle">Movimiento de stock</text>
+
+    <path class="edge" marker-end="url(#ah)" d="M420,50 L150,90"/>
+    <path class="edge" marker-end="url(#ah)" d="M460,50 L400,90"/>
+    <path class="edge" marker-end="url(#ah)" d="M540,50 L620,90"/>
+    <path class="edge" marker-end="url(#ah)" d="M560,50 L840,90"/>
+
+    <rect class="n-ok" x="30" y="92" width="240" height="60" rx="10"/>
+    <text class="t" x="150" y="115" text-anchor="middle">Entrada</text>
+    <text class="t-sm" x="150" y="133" text-anchor="middle">manual, recepción de compra, inicial</text>
+
+    <rect class="n-err" x="290" y="92" width="220" height="60" rx="10"/>
+    <text class="t" x="400" y="115" text-anchor="middle">Salida</text>
+    <text class="t-sm" x="400" y="133" text-anchor="middle">venta, devolución</text>
+
+    <rect class="n-warn" x="530" y="92" width="180" height="60" rx="10"/>
+    <text class="t" x="620" y="115" text-anchor="middle">Ajuste</text>
+    <text class="t-sm" x="620" y="133" text-anchor="middle">conteo, merma/rotura</text>
+
+    <rect class="n-box" x="730" y="92" width="200" height="60" rx="10"/>
+    <text class="t" x="830" y="115" text-anchor="middle">Transferencia</text>
+    <text class="t-sm" x="830" y="133" text-anchor="middle">entre ubicaciones (futuro)</text>
+
+    <rect class="n-accent" x="30" y="180" width="900" height="50" rx="10"/>
+    <text class="t" x="480" y="210" text-anchor="middle">Todos quedan guardados en el Kardex del producto, con su saldo resultante — nunca se editan ni se borran</text>
+  </svg>
+</figure>
+
+<!-- ============ FAQ ============ -->
+<h2 id="faq">8 · Dudas frecuentes</h2>
+
+<details>
+  <summary>¿Cuál es la diferencia entre Ajuste y Merma?</summary>
+  <div class="ans">En <b>Ajuste</b> cargás el <b>total contado</b> (el sistema calcula la diferencia). En <b>Merma</b> cargás directamente <b>cuánto se perdió</b>. Ambos requieren observaciones obligatorias y quedan en el Kardex, pero pensalos como dos preguntas distintas: “¿cuánto hay realmente?” vs. “¿cuánto se rompió/perdió?”.</div>
+</details>
+
+<details>
+  <summary>¿Por qué en Ajuste y Merma las observaciones son obligatorias, y en Entrada no?</summary>
+  <div class="ans">Ajuste y Merma corrigen o dan de baja stock que "debería" estar — el sistema exige que quede documentado el motivo. Una Entrada simplemente suma stock nuevo, así que no hace la misma exigencia (aunque siempre podés agregar una observación igual).</div>
+</details>
+
+<details>
+  <summary>Si no cargo el costo unitario en una Entrada, ¿qué pasa con el costo promedio?</summary>
+  <div class="ans">No se toca. El costo promedio ponderado (CPP) solo se recalcula cuando la entrada trae un costo unitario cargado.</div>
+</details>
+
+<details>
+  <summary>¿Puedo dejar el stock en negativo con una Merma?</summary>
+  <div class="ans">No. Si la cantidad que cargás supera el stock disponible, el sistema no te deja confirmar — te avisa "stock insuficiente".</div>
+</details>
+
+<details>
+  <summary>¿Puedo editar o borrar un movimiento que cargué mal?</summary>
+  <div class="ans">No, los movimientos son inmutables. Si te equivocaste, corregí con un nuevo <b>Ajuste</b> que refleje el stock real, con la observación explicando qué pasó.</div>
+</details>
+
+<details>
+  <summary>¿De dónde salen los movimientos de tipo "Venta"?</summary>
+  <div class="ans">Se generan solos cuando se confirma una venta en el <a href="pos-guia.html">POS</a> — no hace falta (ni se puede) cargarlos manualmente desde Stock.</div>
+</details>
+
+<footer>
+  Guía de operación · Sistema de Gestión de Ferretería · Módulo Stock
+</footer>
+</div>
+</main>
+</div>
+
+<script>
+  (function(){
+    var links=[...document.querySelectorAll('nav.side a[href^="#"]')];
+    var map=new Map();
+    links.forEach(function(a){var id=a.getAttribute('href').slice(1);var el=document.getElementById(id);if(el)map.set(el,a);});
+    var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove('active');});var a=map.get(e.target);if(a){a.classList.add('active');a.scrollIntoView({block:'nearest'});}}});},{rootMargin:'-10% 0px -80% 0px',threshold:0});
+    [...map.keys()].forEach(function(t){obs.observe(t);});
+  })();
+</script>
+

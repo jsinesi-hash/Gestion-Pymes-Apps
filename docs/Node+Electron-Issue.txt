@@ -1,0 +1,11 @@
+Contexto: la app corre sobre el Node embebido en Electron 32.3.3 = Node 20.18.1, ABI (NODE_MODULE_VERSION) 128. El Node de sistema actual es 24.15.0 (ABI 131) y el .nvmrc está pineado a 24.15.0, generando divergencia de línea mayor y de ABI entre tooling y runtime. Decisión: alinear el tooling a la línea 20 (Opción A). El binario de Electron está sano; no hay nada que reinstalar.
+Tareas (solo configuración de tooling/build; no tocar lógica de R1):
+
+.nvmrc (raíz): cambiar 24.15.0 → 20.18.1.
+engines en el package.json raíz: agregar "engines": { "node": ">=20.18.0 <21", "pnpm": ">=11" } (ajustar el rango de pnpm a la versión en uso, 11.5.0).
+Revisar .npmrc: contiene onlyBuiltDependencies[]=esbuild, que entra en conflicto con la autorización de builds del pnpm-workspace.yaml (donde electron, better-sqlite3, etc. están habilitados). Unificar el criterio en un solo lugar para que better-sqlite3, electron, @electron/node-gyp y @electron/rebuild puedan ejecutar sus build scripts. Documentar cuál archivo queda como fuente de verdad.
+@electron/rebuild (ya está como dependencia autorizada en el workspace): asegurar un script (rebuild o postinstall) que recompile better-sqlite3 contra los headers de Electron 32. Aun alineando a Node 20, la ABI de Electron difiere de la de Node (BoringSSL vs OpenSSL), así que el rebuild de nativos sigue siendo necesario. Verificar que la app levanta y que pnpm seed:dev sigue funcionando tras el rebuild.
+No modificar componentes, IPC, price engine ni la lógica de seed.
+ADR en DECISIONES.md: contexto (divergencia Node sistema 24 / Electron 20, ABI 131 vs 128), decisión (pinear tooling a Node 20.18.1 vía .nvmrc + engines; mantener electron-rebuild para nativos), consecuencias (build determinístico; requisito de correr rebuild post-install; al subir versión de Electron, revisar Node embebido y ABI y reajustar .nvmrc).
+
+Entregar: lista de archivos modificados, resolución del conflicto .npmrc/workspace.yaml, y confirmación de que app + seed:dev corren post-cambio.

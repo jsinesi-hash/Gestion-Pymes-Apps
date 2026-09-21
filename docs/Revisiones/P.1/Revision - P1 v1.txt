@@ -1,0 +1,58 @@
+Revisé el **PLAN de la fase P1.0** contra `AGENTS.md` + `TechSpec-ferreteria.md` + `ADR-Log-ferreteria.md`. No incluí el Sistema de Diseño porque P1.0 es pre-UI (solo `Home` placeholder), consistente con el protocolo. La salida son hallazgos para pasarle a superpowers; no reescribí el plan.
+
+---
+
+## 🔴 Bloqueante
+
+**1. `origin_id` se autogenera como UUID, pero debe ser el código de terminal (`C1`).**
+- **Dónde:** `packages/shared/src/config/terminal.ts` (`TerminalConfig.origin_id`) y la lógica de init descrita en §"Config de terminal": *"si `userData/config.json` no existe, se genera con `generateId()` y se persiste"*.
+- **Por qué:** `generateId()` devuelve un **UUID v4**. Pero `origin_id` es, por ADR-003 y TechSpec §1.3, el **identificador de terminal** (ej. `C1`), y ese mismo token alimenta la numeración interna: TechSpec §4.1 y §2.4 definen `numero_interno = prefijo+terminal+correlativo` → `V-C1-000001`. Si `origin_id` es un UUID, la numeración queda `V-f47ac10b-…-000001`, lo que rompe una convención **cerrada**. Además contradice el comentario del propio plan (`// ej. 'C1'`). Es justo el tipo de decisión que AGENTS.md pide no improvisar ("preguntar antes de improvisar").
+- **Corrección sugerida:** separar dos conceptos que el plan funde:
+  - `generateId()` (UUID v4) → para `id` de entidades, generado en cliente (ADR-003). OK como está.
+  - `origin_id` / código de terminal → valor **corto, asignado por configuración** (instalador/Supervisor), no aleatorio. En primer arranque, pedirlo o defaultear a un código corto (ej. `C1`), nunca un UUID.
+  - El mecanismo de asignación del código de terminal **no está especificado** en el contexto: convendría confirmarlo antes de implementar en lugar de cerrarlo acá.
+
+---
+
+## 🟡 Observaciones
+
+**2. Resolución de `@ferreteria/shared` inconsistente; `client/vitest.config.ts` sin el alias.**
+- **Dónde:** `shared/package.json` (`exports`→`./dist/index.js`), `tsconfig.base.json` (paths→`src`), vite main/renderer (alias→`src`), `client/vitest.config.ts` (sin `resolve.alias`).
+- **Por qué:** tres resolvers apuntan a destinos distintos (dist vs src) y ningún script de root buildea `shared`. En P1.0 no explota porque ningún test del renderer importa shared todavía, pero el **primer test del renderer que importe `@ferreteria/shared`** caerá: Vitest no hereda el alias de `vite.renderer.config.ts` y `exports` resuelve a `dist/`, que nunca se construye. Contradice el objetivo de P1.0 ("base **testeable** para todas las fases").
+- **Corrección:** agregar `resolve.alias` de `@ferreteria/shared`→`src` también en `client/vitest.config.ts` (o construir `shared` en el pipeline de test). Dejarlo resuelto ahora evita un falso "verde" que se rompe en P1.1.
+
+**3. Migraciones: falta el paso de copiar los `.sql` al bundle.**
+- **Dónde:** `db/client.ts` → `runMigrations()` lee `path.join(__dirname, 'migrations')`; `forge.config.ts` hace `asarUnpack` de `**/migrations/**`.
+- **Por qué:** el `asarUnpack` evita que se compriman, pero **nada describe cómo los `.sql` llegan al output bundleado por Vite** junto al main. Vite no copia `.sql` arbitrarios por defecto. Afecta directamente al criterio de aceptación *"`pnpm make` genera el instalador"* + *"`runMigrations()` no lanza errores"*: en la app empaquetada, la carpeta puede no existir en `__dirname/migrations`.
+- **Corrección:** especificar el copiado (plugin de copy estático / config de Forge) y verificar la ruta en la app empaquetada, no solo en `pnpm dev`.
+
+**4. Lógica del proceso main sin cobertura de tests.**
+- **Dónde:** `loadTerminalConfig` (rama first-run: genera+persiste) y `runMigrations`; `client/vitest.config.ts` excluye `src/main/**`.
+- **Por qué:** P1.0 no tiene reglas de negocio, así que los smoke tests alcanzan para el checklist; pero AGENTS.md fija como disciplina *"no producción sin test que la cubra"*, y la rama de creación de config es lógica real sin cobertura. Importa porque **sienta el patrón de testing del proyecto**.
+- **Corrección:** extraer la decisión de config a una función pura en `shared` (ej.: dado config existente o `null`, devolver la config a persistir) y testearla ahí; dejar en main solo el I/O.
+
+**5. Verificar `crypto.randomUUID()` en el renderer empaquetado.**
+- **Dónde:** §"Regla de dependencias" de shared: *"Web Crypto API del renderer"*.
+- **Por qué:** ADR-003 exige UUID **generado en cliente**, y desde P1.1 los `id` de entidades los crea el renderer. `crypto.randomUUID()` requiere *secure context*; en Electron empaquetado (carga `file://`) eso es dependiente de versión y puede no estar disponible. No bloquea P1.0 (acá `generateId()` solo corre en main y en el test Node), pero conviene verificarlo ahora.
+- **Corrección:** validar `window.isSecureContext`/disponibilidad en el renderer empaquetado; si falla, prever fallback en `generateId()`.
+
+**Menores:**
+- Criterio de aceptación de `pnpm make` dice *"sin errores de firma"*, pero la firma está diferida — no hay firma que pueda fallar; corregir la redacción.
+- `__dirname` y las constantes mágicas (`MAIN_WINDOW_VITE_*`) dependen de que `packages/client` quede en **CJS**. Como `shared` declara `"type": "module"`, dejar explícito que client **no** lo declare, para no romper el entry de Forge ni `__dirname`.
+
+---
+
+## 🟢 OK
+
+- **ADR / stack:** Drizzle + drizzle-kit (ADR-016), pnpm workspaces, electron-forge + plugin-vite, Vitest — todo conforme; `server` correctamente diferido a R4 sin reestructurar.
+- **Convención de sync:** `SyncableEntity` (los 5 campos: `id`/`version`/`origin_id`/`sync_state`/`updated_at`) y el enum `SyncState` (`pending`|`synced`|`conflict`) coinciden exactos con TechSpec §1.3.
+- **Modelo diferido bien leído:** `activo`/auditoría sumados en maestros desde P1.1 y libros de movimientos sin `activo` por inmutables — alineado con ADR-006. Buena interpretación, sin sobre-diseño (YAGNI correcto).
+- **Seguridad Electron:** `contextIsolation: true` + `nodeIntegration: false` + preload con `contextBridge`, sin exponer `ipcRenderer` — alineado con TechSpec §7.
+- **Alcance:** no incluye nada de la lista "fuera de alcance"; difiere tablas a P1.1, sync real a R4. Sin features adelantadas.
+- **Fase desplegable:** criterios de aceptación verificables; `pnpm -r run test` corre los dos entornos.
+
+---
+
+## Veredicto: **RECHAZADO**
+
+Un único bloqueante (hallazgo 1, `origin_id` UUID vs. código de terminal) — la corrección es chica pero **debe resolverse antes de avanzar**, porque P1.0 fija el contrato de terminal del que dependen numeración y sync de todas las fases siguientes. Resuelto eso, y atendidas idealmente las observaciones 2 y 3 (que tocan los criterios de aceptación), queda listo para implementación.

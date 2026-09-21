@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auditoría 2026-07-23 · Ferretería · foco=todo</title>
+<style>
+  :root{
+    --bg:#F4F2EE; --surface:#FFFFFF; --surface-2:#FAF8F4; --line:#E3DED5;
+    --ink:#1C1A17; --ink-2:#5C564D; --ink-3:#8A8479;
+    --ok:#2E7D52; --danger:#C0392B; --warn:#B26B00;
+    --accent:#E8730A; --accent-strong:#C85E00; --accent-soft:#FBE6D2;
+    --radius:10px; --pad:16px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#15140F; --surface:#1E1C16; --surface-2:#262319; --line:#322E24;
+      --ink:#F2EFE8; --ink-2:#B7B0A3; --ink-3:#7C766B;
+      --ok:#5FD699; --danger:#F0746A; --warn:#E0A44A; --accent-soft:#3A2A17;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:15px/1.6 "Hanken Grotesk","Segoe UI",system-ui,sans-serif;}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 20px 80px}
+  h1{font-size:1.6rem;margin:0 0 4px;letter-spacing:-.01em}
+  .sub{color:var(--ink-3);font-size:.85rem;margin-bottom:24px}
+  h2{font-size:1.15rem;margin:40px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+  h3{font-size:.98rem;margin:26px 0 8px;font-weight:700}
+  .verdict{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--danger);
+           border-radius:var(--radius);padding:var(--pad);margin:20px 0}
+  .verdict strong{color:var(--danger);font-size:1.15rem}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.88rem;
+        background:var(--surface);border-radius:var(--radius);overflow:hidden}
+  .scroll{overflow-x:auto}
+  th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--surface-2);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3)}
+  tr:last-child td{border-bottom:none}
+  code{font-family:"Cascadia Mono",Consolas,monospace;font-size:.84em;
+       background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+        padding:var(--pad);margin:14px 0}
+  .card.alto{border-left:5px solid var(--danger)}
+  .card.medio{border-left:5px solid var(--warn)}
+  .card.bajo{border-left:5px solid var(--ink-3)}
+  .card h3{margin-top:0;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .id{font-family:"Cascadia Mono",Consolas,monospace;font-size:.75rem;color:var(--ink-3)}
+  .sev{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+       padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .sev.alto{background:var(--danger);color:#fff}
+  .sev.medio{background:var(--warn);color:#fff}
+  .sev.bajo{background:var(--ink-3);color:#fff}
+  .card dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;font-size:.9rem}
+  .card dt{color:var(--ink-3);font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;padding-top:3px}
+  .card dd{margin:0}
+  .card dd table{margin:6px 0}
+  ul{padding-left:20px;margin:8px 0}
+  li{margin:5px 0}
+  .ok{color:var(--ok);font-weight:700}
+  .warnx{color:var(--warn);font-weight:700}
+  .bad{color:var(--danger);font-weight:700}
+  .kpi{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}
+  .kpi div{flex:1 1 130px;background:var(--surface);border:1px solid var(--line);
+           border-radius:var(--radius);padding:10px 12px}
+  .kpi b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums}
+  .kpi span{font-size:.7rem;color:var(--ink-3);text-transform:uppercase;letter-spacing:.07em}
+  .note{background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--radius);
+        padding:var(--pad);margin:20px 0;font-size:.9rem}
+  footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--line);
+         color:var(--ink-3);font-size:.78rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Auditoría técnica — Sistema de Gestión de Ferretería</h1>
+<div class="sub">2026-07-23 (-03:00) · foco = <strong>todo</strong> · <code>feat/adr047-agenda-lote1@e6c9186</code> · protocolo AUDITOR-TECNICO v1.1 · corrida #1</div>
+
+<div class="verdict">
+  <strong>Veredicto: FAIL</strong><br>
+  0 críticos + <b>2 altos</b> (typecheck del workspace en rojo con 27 errores; <code>package.json</code> en <code>0.1.0</code> contra el tag <code>v1.0.0</code> y el mapa de versiones de ADR-044) + 11 medios + 3 bajos.<br>
+  <span style="color:var(--ink-2)">Ningún hallazgo compromete integridad fiscal, de dinero ni de datos: las transacciones de venta/caja/stock, el restore atómico y la política de secretos están correctamente implementados.</span>
+</div>
+
+<div class="kpi">
+  <div><b>1290</b><span>tests verdes</span></div>
+  <div><b>27</b><span>errores tsc</span></div>
+  <div><b>27</b><span>migraciones</span></div>
+  <div><b>28 / 17</b><span>permisos total / operador</span></div>
+  <div><b>0</b><span>artefactos versionados</span></div>
+</div>
+
+<h2>1. Checklist de cumplimiento</h2>
+<div class="scroll">
+<table>
+<thead><tr><th>Dimensión</th><th>Estado</th><th>Nota</th></tr></thead>
+<tbody>
+<tr><td>A1 ADRs</td><td class="warnx">⚠</td><td>Índice marca ADR-038 <b>Cancelada</b>; el cuerpo dice Aceptada + implementada, y el código la tiene. Referencias cruzadas rotas en 5 ADRs. Vocabulario de estados de §0 desactualizado.</td></tr>
+<tr><td>A2 Consistencia docs</td><td class="bad">✗</td><td><code>CLAUDE.md</code> §4/§7/§8 contradice el esquema real en ~12 puntos (incluye los casos conocidos <code>codigo_qr</code> / <code>pin_rapido</code>).</td></tr>
+<tr><td>B1 Invariantes</td><td class="ok">OK</td><td>Transacción atómica venta+<code>venta_pago</code>+caja+stock+CCC verificada (<code>venta.ts:151-343</code>). Libros de movimientos solo-insert. IPC namespaced. UUID + sync en todas las tablas nuevas. Soft-delete transversal. Renderer no importa <code>electron</code>.</td></tr>
+<tr><td>B2 Seguridad</td><td class="ok">OK</td><td>scrypt de <code>node:crypto</code>, sin bcrypt, sin PIN. <code>.fbk</code> cifrado AES-256-GCM, contraseña no persistida. Password SMTP en <code>safeStorage</code>, fuera de BD y backup. <code>restore</code> gated por <code>backup.restaurar</code>. Sin secretos hardcodeados. SQL siempre parametrizado.</td></tr>
+<tr><td>B3 Versionado</td><td class="bad">✗</td><td>Migraciones sin drift y aditivas (0020→0027). Backup usa <code>db.$client.backup()</code>. <b>Pero</b> la versión de <code>package.json</code> está desalineada del tag y del mapa ADR-044.</td></tr>
+<tr><td>B4 Código↔ADRs</td><td class="warnx">⚠</td><td><code>codigo_qr</code>/<code>pin_rapido</code> ausentes ✓; ADR-033 filtrado en <b>todos</b> los puntos de lectura de <code>venta</code> ✓; ADR-032 (<code>total</code> no inflado por recargo) ✓; ADR-013 sin cerrar unilateralmente ✓. Desvíos: <code>factor_a_stock</code> (ADR-040) y <code>marginsType</code> (ADR-026).</td></tr>
+<tr><td>B5 Deuda/basura</td><td class="warnx">⚠</td><td>4 módulos huérfanos, residual de ADR-034, 3 copias de <code>generarPdfConWindow</code>, <code>nodemailer</code> sin tipos. Sin <code>TODO</code>/<code>FIXME</code>/<code>HACK</code>, sin <code>console.log</code> en producción del renderer.</td></tr>
+<tr><td>B6 Pruebas</td><td class="warnx">⚠</td><td><b>1290 verdes</b> (872 node + 418 renderer, 140 archivos). Sin <code>.only</code>, sin <code>.skip</code>, sin tests vacíos. Conteos de permisos en sync. <b>Pero</b> 13 errores de tipo en tests = contratos obsoletos que vitest no detecta.</td></tr>
+<tr><td>B7 Smells</td><td class="warnx">⚠</td><td>Sin <code>catch</code> vacíos sin comentar. 19 tokens CSS usados y no declarados + 1 hex sin token.</td></tr>
+<tr><td>B8 Estructura</td><td class="ok">OK</td><td>Separación monorepo respetada, rutas en <code>routes/index.tsx</code>, <code>createMemoryRouter</code>, <code>.gitignore</code> completo, <b>cero</b> artefactos de build o <code>ferreteria.db*</code> versionados.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>2. Hallazgos priorizados</h2>
+
+<div class="card alto">
+<h3><span class="sev alto">Alto</span> <span class="id">AUD-20260723-001</span> El typecheck del workspace falla con 27 errores</h3>
+<dl>
+<dt>Dimensión</dt><dd>B5 Deuda técnica / B6 Pruebas</dd>
+<dt>Evidencia</dt><dd><code>pnpm -r exec tsc --noEmit</code> → <code>ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL</code>, 27 × <code>error TS</code>.<br>
+Producción: <code>main/agenda/canales/email.ts:1</code>, <code>main/ipc/smtp.ts:3</code> (TS7016), <code>main/ipc/etiquetas.ts:249</code>, <code>main/ipc/exportar.ts:52-53</code> (TS2352, cast inseguro), <code>main/scheduler/precios.ts:37</code>, <code>renderer/views/dashboard/DashboardView.tsx:94</code>, <code>renderer/views/shell/AppShell.tsx:191,210,249</code>, <code>renderer/views/pos/PosItemsTable.tsx:78</code> (TS18048 deref posible <code>undefined</code>), <code>renderer/views/presupuestos/PresupuestosView.tsx:61</code>, <code>renderer/views/reportes/ReporteVentasView.tsx:304</code>.</dd>
+<dt>Regla/ADR</dt><dd><code>CLAUDE.md</code> §12 — "Cada fase termina desplegable, en verde y sin romper las anteriores."</dd>
+<dt>Descripción</dt><dd>Las dos suites pasan en verde (vitest no typechequea), lo que enmascara que el proyecto <b>no compila limpio</b>. <code>PosItemsTable.tsx:78</code> es un deref potencialmente nulo en el POS; <code>exportar.ts:52-53</code> son casts que TypeScript marca como probablemente incorrectos sobre el camino de exportación. La disciplina del proyecto define "verde" como suite + tipos, no solo suite.</dd>
+<dt>Acción</dt><dd>Correr <code>tsc --noEmit</code> como gate en el mismo comando que <code>pnpm test</code>. Resolver primero los de <code>src/main</code> y los 4 de renderer que no son de test.</dd>
+</dl>
+</div>
+
+<div class="card alto">
+<h3><span class="sev alto">Alto</span> <span class="id">AUD-20260723-002</span> <code>package.json</code> en <code>0.1.0</code> en el tag <code>v1.0.0</code>, en <code>release/1.0.x</code> y en <code>main</code></h3>
+<dl>
+<dt>Dimensión</dt><dd>B3 Versionado</dd>
+<dt>Evidencia</dt><dd><code>packages/client/package.json:3</code> → <code>"version": "0.1.0"</code>. Idéntico en <code>git show v1.0.0:…</code>, <code>release/1.0.x</code> y <code>main</code>.</dd>
+<dt>Regla/ADR</dt><dd>ADR-043 §1 (<code>Ferreteria-Setup-&lt;version&gt;.exe</code>, versión leída de <code>package.json</code>), §5 (feed <code>electron-updater</code>), §6 (correspondencia versión↔rama); ADR-042 §5 (SemVer); ADR-044 (mapa vigente).</dd>
+<dt>Descripción</dt><dd>Tres consecuencias concretas: <b>(a)</b> el instalable de la rama estable se llama <code>Ferretería-Setup-0.1.0.exe</code>, no <code>1.0.0</code>; <b>(b)</b> el <code>manifest.json</code> del <code>.fbk</code> graba <code>app_version: "0.1.0"</code> (<code>backup/engine.ts:77</code> ← <code>startup.ts:36</code> ← <code>app.getVersion()</code>), rompiendo la trazabilidad backup↔release de ADR-021 §2; <b>(c)</b> <code>electron-updater</code> compara <code>0.1.0</code> contra un release <code>v1.0.0</code>, con lo que toda instalación queda permanentemente en "hay actualización disponible". La línea de desarrollo actual, además, debería ser <code>1.1.0</code> según ADR-044.</dd>
+<dt>Acción</dt><dd>Fijar <code>1.0.x</code> en <code>release/1.0.x</code> y <code>1.1.0-dev</code> (o <code>1.1.0</code>) en <code>main</code>, en los tres <code>package.json</code> del monorepo. Si <code>v1.0.0</code> ya se distribuyó con <code>0.1.0</code>, documentar el salto en el RUNBOOK.</dd>
+</dl>
+</div>
+
+<div class="card medio">
+<h3><span class="sev medio">Medio</span> <span class="id">AUD-20260723-003</span> El índice del ADR-Log marca ADR-038 como Cancelada; está aceptada e implementada</h3>
+<dl>
+<dt>Dimensión</dt><dd>A1 Cumplimiento y salud de ADRs</dd>
+<dt>Evidencia</dt><dd><code>ADR-Log:56</code> (índice: <b>Cancelada</b>) vs. <code>:1124-1126</code> (<code>Estado: Aceptada</code>) y <code>:1180-1193</code> (<code>Implementación (2026-07-14)</code>). Código: <code>main/ipc/dashboard-caja-rango.ts</code>, <code>dashboard-clientes.ts</code>, <code>dashboard-proveedores.ts</code>, migración <code>0020_adr038_dashboard_fase2.sql</code>, vistas <code>renderer/views/dashboard/{caja,proveedores}</code>.</dd>
+<dt>Regla/ADR</dt><dd>ADR-Log §0 — el índice es la entrada al registro; A1 exige coincidencia de número, título y estado.</dd>
+<dt>Descripción</dt><dd>No es cosmético: el propio protocolo de auditoría (§4) construyó su allowlist a partir del índice y suprime "Dashboard fase 2" como no exigible. Un índice desactualizado envenena a todo consumidor aguas abajo.</dd>
+<dt>Acción</dt><dd>Corregir la fila 038 a <code>Aceptada — implementada</code>. Revisar de paso la fila 037.</dd>
+</dl>
+</div>
+
+<div class="card medio">
+<h3><span class="sev medio">Medio</span> <span class="id">AUD-20260723-004</span> <code>CLAUDE.md</code> contradice el esquema real en modelo de datos y matriz de permisos</h3>
+<dl>
+<dt>Dimensión</dt><dd>A2 Consistencia documental cruzada</dd>
+<dt>Evidencia</dt><dd>
+<div class="scroll">
+<table>
+<thead><tr><th><code>CLAUDE.md</code></th><th>Esquema real</th><th>ADR</th></tr></thead>
+<tbody>
+<tr><td>§4 y §7 <code>Producto.codigo_qr</code> (único)</td><td>columna inexistente</td><td>ADR-025</td></tr>
+<tr><td>§7 <code>Usuario.pin_rapido</code> (hasheado)</td><td>inexistente; hay <code>hash_password</code></td><td>ADR-027</td></tr>
+<tr><td>§7 <code>Venta.estado</code> = <code>borrador|confirmada|anulada</code></td><td><code>ventas.ts:62</code> suma <code>en_espera|descartada</code></td><td>ADR-033</td></tr>
+<tr><td>§7 <code>Venta.forma_pago</code> como modelo de pago</td><td><code>venta_pago</code> (N filas) + <code>vuelto_centavos</code></td><td>ADR-032</td></tr>
+<tr><td>§7 <code>CuentaCorriente.saldo</code>/<code>limite_credito</code></td><td><code>saldo_centavos</code>/<code>limite_credito_centavos</code></td><td>—</td></tr>
+<tr><td>§7 <code>VentaDetalle</code></td><td>suma <code>presentacion_id</code>, <code>factor_a_stock_aplicado</code></td><td>ADR-040</td></tr>
+<tr><td>§7 modelo completo</td><td>faltan <code>venta_pago</code>, <code>producto_presentacion</code>, <code>unidad</code>, <code>producto_proveedor</code>, <code>lista_precio_valor</code>, <code>remito</code>, <code>remito_linea</code>, <code>presupuesto</code>, <code>presupuesto_detalle</code>, <code>rutina</code>, <code>agenda_evento</code>, <code>aviso</code>, <code>transportista</code></td><td>032/036/040/041/045/046/047/048</td></tr>
+<tr><td>§8 permisos post-R1</td><td>faltan <code>transportista.gestionar</code>, <code>presupuesto.crear/emitir/anular</code> (<code>auth/seed.ts:37,41-43</code>)</td><td>ADR-045 it.2 / ADR-046</td></tr>
+</tbody>
+</table>
+</div>
+</dd>
+<dt>Regla/ADR</dt><dd>Protocolo §1 regla 7 — la contradicción doc↔esquema es en sí un hallazgo.</dd>
+<dt>Descripción</dt><dd><code>CLAUDE.md</code> se carga en cada sesión de trabajo. Un modelo de datos con 13 tablas de menos y tres columnas fantasma induce a planificar contra un esquema que no existe — el modo de falla que el propio <code>CLAUDE.md</code> §12 advierte.</dd>
+<dt>Acción</dt><dd>Regenerar §7 desde el esquema Drizzle y §8 desde <code>PERMISOS</code> de <code>auth/seed.ts</code>; borrar <code>codigo_qr</code> de §4.</dd>
+</dl>
+</div>
+
+<div class="card medio">
+<h3><span class="sev medio">Medio</span> <span class="id">AUD-20260723-005</span> <code>etiquetas.ts</code> usa <code>marginsType</code>, opción eliminada de la API de Electron 32</h3>
+<dl>
+<dt>Dimensión</dt><dd>B4 Código↔ADRs / B7 Smells</dd>
+<dt>Evidencia</dt><dd><code>main/ipc/etiquetas.ts:249</code> → <code>printToPDF({ marginsType: 1, printBackground: true })</code>. <code>tsc</code>: <code>TS2353: 'marginsType' does not exist in type 'PrintToPDFOptions'</code>.</dd>
+<dt>Regla/ADR</dt><dd>ADR-026 §2 (geometría —incluido <code>margen_mm</code>— configurable por perfil) y §Negativas (calibración de márgenes como riesgo conocido).</dd>
+<dt>Descripción</dt><dd><code>marginsType: 1</code> era la API de Electron ≤20; en 32 se reemplazó por <code>margins: { marginType: 'none' }</code>. Una opción desconocida se descarta en silencio: el PDF de la plancha sale con los márgenes por defecto del motor. No falla ni tira error — desalinea la grilla contra la hoja Avery, que es el punto delicado del módulo. Los hermanos <code>presupuesto.ts:587</code> y <code>remito.ts:473</code> no pasan márgenes; solo etiquetas está afectado.</dd>
+<dt>Acción</dt><dd>Migrar a <code>margins: { marginType: 'none' }</code> y verificar imprimiendo una plancha real (los tests no cubren el driver).</dd>
+</dl>
+</div>
+
+<div class="card medio">
+<h3><span class="sev medio">Medio</span> <span class="id">AUD-20260723-006</span> Referencias cruzadas a ADRs equivocados, propagadas al código</h3>
+<dl>
+<dt>Dimensión</dt><dd>A1 / A2</dd>
+<dt>Evidencia</dt><dd>
+<div class="scroll">
+<table>
+<thead><tr><th>Ubicación</th><th>Cita</th><th>Debería ser</th></tr></thead>
+<tbody>
+<tr><td><code>ADR-Log:1088,1128,1133</code></td><td>"ADR-036" para los tabs del dashboard</td><td>ADR-037</td></tr>
+<tr><td><code>ADR-Log:1086,1206,1214</code></td><td>"<code>comprobante_fiscal</code> (ADR-034)"</td><td>ADR-034 es Motor de Precios; lo fiscal es R2 / ADR-013</td></tr>
+<tr><td><code>ADR-Log:1831</code> (047 §13)</td><td>"extensión de ADR-030" para el sidebar</td><td>ADR-028</td></tr>
+<tr><td><code>ADR-Log:1900</code> (048 §6)</td><td>"<code>email</code> a <code>usuario</code> (ADR-029 no lo incluía)"</td><td>ADR-027</td></tr>
+<tr><td><code>ADR-Log:743,750</code> (025) y <code>:1734</code> (046)</td><td>"capa de impresión de etiqueta (ADR-027)"</td><td>ADR-026</td></tr>
+<tr><td><code>main/ipc/print.ts:14</code></td><td>comentario "ADR-025 + ADR-027"</td><td>ADR-025 + ADR-026</td></tr>
+</tbody>
+</table>
+</div>
+</dd>
+<dt>Regla/ADR</dt><dd>A2 — "referencias entre docs no rotas".</dd>
+<dt>Descripción</dt><dd>El error ADR-026→ADR-027 se copió del ADR-Log al comentario de <code>print.ts</code>: señal de que las referencias se arrastran sin verificar. ADR-027 es autenticación; nada de impresión vive ahí.</dd>
+<dt>Acción</dt><dd>Corregir las citas. Los ADRs aceptados son inmutables en su <i>decisión</i>; una errata de numeración es fe de erratas — dejar constancia en la bitácora del ADR-Log.</dd>
+</dl>
+</div>
+
+<div class="card medio">
+<h3><span class="sev medio">Medio</span> <span class="id">AUD-20260723-007</span> Tests con contrato desactualizado respecto de la API que prueban</h3>
+<dl>
+<dt>Dimensión</dt><dd>B6 Higiene de pruebas</dd>
+<dt>Evidencia</dt><dd>13 de los 27 errores de tipo están en tests:
+<ul>
+<li><code>renderer/views/pos/__tests__/PosClienteSelector.test.tsx:36,49,62,87,120,139,163</code> — pasa la prop <code>clienteId</code>, que <b>no existe</b> en <code>Props</code> (TS2322, ×7).</li>
+<li><code>renderer/views/pos/__tests__/PosBottomBar.test.tsx:14</code> — omite <code>cantidadEnEspera</code>, hoy requerida (ADR-033).</li>
+<li><code>renderer/views/caja/__tests__/CajaDashboard.test.tsx:52</code> — fixture sin <code>observaciones</code>.</li>
+<li><code>renderer/views/caja/__tests__/AperturaForm.test.tsx:53</code> — <code>'value' does not exist on type 'HTMLElement'</code>.</li>
+<li><code>main/ipc/__tests__/presentacion.handlers.test.ts:275,336</code> — pasa <code>usuario_id</code> a <code>cajaAbrirHandler</code>, que ya no lo acepta.</li>
+<li><code>main/ipc/__tests__/venta-espera.handlers.test.ts:53</code> — payload incompatible con <code>PausarPayload</code>.</li>
+<li><code>renderer/__tests__/etiquetas-layout.test.ts:5</code> — fixture sin <code>gtin_barcode</code>.</li>
+</ul></dd>
+<dt>Regla/ADR</dt><dd>B6 (fixtures desactualizados vs esquema actual); <code>CLAUDE.md</code> §12 (TDD).</dd>
+<dt>Descripción</dt><dd>Los 418 tests de renderer pasan porque vitest transpila sin chequear tipos. <code>PosClienteSelector.test.tsx</code> es el caso más claro: siete assertions montan el componente con una prop que React ignora, o sea que verifican un comportamiento que el componente ya no expone. Es la variante silenciosa del problema que <code>CLAUDE.md</code> §Navegación describe para componentes huérfanos: verde y sin valor probatorio.</dd>
+<dt>Acción</dt><dd>Actualizar los siete casos de <code>PosClienteSelector.test.tsx</code> a la firma real y revisar qué asertaban. El resto son fixtures a completar.</dd>
+</dl>
+</div>
+
+<div class="card medio">
+<h3><span class="sev medio">Medio</span> <span class="id">AUD-20260723-008</span> Código muerto: 4 módulos sin ninguna referencia</h3>
+<dl>
+<dt>Dimensión</dt><dd>B5 Deuda técnica y basura</dd>
+<dt>Evidencia</dt><dd>Ninguna referencia fuera del propio archivo:
+<ul>
+<li><code>renderer/views/config/ConfigShell.tsx</code> — ya documentado como trampa en <code>CLAUDE.md</code> §Navegación (ADR-048 perdió tiempo ahí).</li>
+<li><code>main/dev-seed/_diagPV2.ts</code> — diagnóstico one-off de la migración de precios v2; ejecuta <code>console.log</code> de consultas al importarse.</li>
+<li><code>renderer/hooks/useListaPrecioDetalle.ts</code> — hook del modelo de precios anterior a ADR-034.</li>
+<li><code>renderer/views/placeholders/PlaceholderView.tsx</code></li>
+</ul></dd>
+<dt>Regla/ADR</dt><dd>B5 — exports/componentes no referenciados; scripts one-off.</dd>
+<dt>Descripción</dt><dd><code>ConfigShell.tsx</code> ya costó un ciclo de trabajo; documentarlo evitó la repetición pero no eliminó la causa. <code>_diagPV2.ts</code> no es inerte: su cuerpo son sentencias de nivel superior.</dd>
+<dt>Acción</dt><dd>Borrar los cuatro. Si <code>ConfigShell</code> describe una intención de navegación anidada que se quiere conservar, moverla a un comentario en <code>AppShell.tsx</code>.</dd>
+</dl>
+</div>
+
+<div class="card medio">
+<h3><span class="sev medio">Medio</span> <span class="id">AUD-20260723-009</span> Tokens de color usados y no declarados; hex hardcodeado sin token</h3>
+<dl>
+<dt>Dimensión</dt><dd>B7 Smells / A2</dd>
+<dt>Evidencia</dt><dd><code>styles/global.css</code> es el único CSS del renderer y declara 18 custom properties. El renderer consume <b>19 nombres que nadie declara</b> (~40 usos): <code>--border</code> (8), <code>--success</code> (8), <code>--color-success</code> (4), <code>--color-warning</code> (2), <code>--error</code> (2), y uno cada uno: <code>--accent-subtle --bg-1 --bg-2 --bg-hover --color-danger-bg --color-info-bg --color-warning-bg --color-warning-text --error-subtle --font-mono --ink-1 --row-selected-bg --warn-bg --warn-text</code>.<br>
+Ejemplos: <code>config/ListasPreciosView.tsx:70,281,288</code>, <code>pos/PosItemsTable.tsx:53,62</code>, <code>pos/VentaEsperaDrawer.tsx:74</code>.<br>
+Hex sin token ni fallback: <code>dashboard/stock/StockPanel.tsx:38</code> → <code>'#c62828' : '#e65100'</code>; <code>color: '#fff'</code> en <code>PosItemsTable.tsx:53,62</code>.</dd>
+<dt>Regla/ADR</dt><dd><code>Sistema-Diseno-ferreteria.md</code> §12 ("nada de colores hardcodeados en componentes") y §2 (paleta canónica: <code>--ok</code>, <code>--danger</code>, no <code>--success</code>/<code>--error</code>).</dd>
+<dt>Descripción</dt><dd>Como todos los usos llevan fallback hex, la UI se ve bien y el problema es invisible: el fallback es lo que realmente pinta, siempre. El efecto práctico es que ~40 puntos de la interfaz quedan fuera del cambio de tema claro/oscuro y del selector de acento, y que existen tres vocabularios paralelos (<code>--ok</code>/<code>--success</code>/<code>--color-success</code>) para el mismo concepto.</dd>
+<dt>Acción</dt><dd>Mapear los 19 alias a los tokens canónicos de §2 (o declararlos como alias en <code>global.css</code>) y eliminar los hex de <code>StockPanel.tsx:38</code>.</dd>
+</dl>
+</div>
+
+<div class="card medio">
+<h3><span class="sev medio">Medio</span> <span class="id">AUD-20260723-010</span> <code>producto_presentacion.factor_a_stock</code> no respeta la escala fijada en ADR-040</h3>
+<dl>
+<dt>Dimensión</dt><dd>B4 Consistencia código↔ADRs</dd>
+<dt>Evidencia</dt><dd><code>db/schema/catalog.ts:165</code> → <code>real('factor_a_stock').notNull().default(1.0)</code>. <code>db/schema/ventas.ts:93</code> → <code>factor_a_stock_aplicado: real(...)</code>. Cálculo <code>cantidad * factor</code> sin dividir: <code>ipc/venta.ts:102,275,384</code>.</dd>
+<dt>Regla/ADR</dt><dd>ADR-040 — "<code>factor_a_stock</code>: <b>INTEGER</b> en milésimas (default <code>1000</code> = 1)" y "Descuento de stock = <code>cantidad × factor_a_stock_aplicado / 1000</code>".</dd>
+<dt>Descripción</dt><dd>La implementación es internamente coherente (guarda <code>1.0</code>, multiplica sin dividir) y encaja con que <code>existencias.stock_fisico</code> sea <code>real</code>. El problema es documental: ADR-040 dejó la escala como "a confirmar" y la confirmación nunca se registró, a diferencia de ADR-045, que sí abrió una sección "Correcciones de implementación" para este tipo exacto de desvío. Hoy el ADR aceptado describe una aritmética que el código no ejecuta.</dd>
+<dt>Acción</dt><dd>Agregar a ADR-040 una sección "Correcciones de implementación" que fije <code>REAL</code> como escala definitiva y la razón, siguiendo el patrón de ADR-045.</dd>
+</dl>
+</div>
+
+<div class="card medio">
+<h3><span class="sev medio">Medio</span> <span class="id">AUD-20260723-011</span> <code>nodemailer</code> incorporado sin sus tipos</h3>
+<dl>
+<dt>Dimensión</dt><dd>B5 Deuda técnica / B2 Seguridad</dd>
+<dt>Evidencia</dt><dd><code>packages/client/package.json</code> lista <code>nodemailer</code> en <code>dependencies</code> sin <code>@types/nodemailer</code> en <code>devDependencies</code>. <code>tsc</code> → <code>TS7016</code> en <code>main/agenda/canales/email.ts:1</code> y <code>main/ipc/smtp.ts:3</code>.</dd>
+<dt>Regla/ADR</dt><dd>ADR-048 §6; <code>CLAUDE.md</code> §12 (dependencias justificadas).</dd>
+<dt>Descripción</dt><dd><code>createTransport</code> y su objeto <code>auth</code> quedan tipados como <code>any</code> implícito, justo en el camino que maneja la credencial SMTP leída de <code>safeStorage</code>. No hay fuga —la contraseña nunca toca <code>parametros_sistema</code> ni el backup, verificado en <code>seguridad/smtp-secret.ts</code>— pero el compilador no puede validar la forma del objeto de configuración.</dd>
+<dt>Acción</dt><dd>Agregar <code>@types/nodemailer</code> a <code>devDependencies</code> de <code>packages/client</code>.</dd>
+</dl>
+</div>
+
+<div class="card medio">
+<h3><span class="sev medio">Medio</span> <span class="id">AUD-20260723-012</span> Residual de ADR-034: <code>lista_precio_detalle</code> sigue vivo en esquema, IPC y preload</h3>
+<dl>
+<dt>Dimensión</dt><dd>B5 Deuda técnica</dd>
+<dt>Evidencia</dt><dd>Tabla en <code>db/schema/precios.ts:28</code>; handlers completos en <code>ipc/lista-precio-detalle.ts</code> (<code>listByProducto</code>, <code>upsert</code>, <code>remove</code>); expuesto en <code>preload/index.ts:53-55</code>. El único consumidor del renderer, <code>hooks/useListaPrecioDetalle.ts</code>, está huérfano. <code>ipc/lista-precio.ts:177</code> lo marca <code>deprecated</code>; <code>dev-seed/precios-v2.ts:178</code> imprime "confirmar el DROP después de verificar".</dd>
+<dt>Regla/ADR</dt><dd>ADR-034 (Cerrado) — el motor es <code>lista_precio_valor</code>; ADR-040 (evitar segunda fuente de verdad de precio).</dd>
+<dt>Descripción</dt><dd>Queda una superficie de escritura completa (IPC + puente de preload) sobre el modelo de precios anterior, alcanzable desde el renderer aunque ninguna pantalla la use. Es la definición de segunda fuente de verdad latente. El propio script de migración dejó pendiente la confirmación del DROP y nadie la cerró.</dd>
+<dt>Acción</dt><dd>Decidir el corte (probablemente amerita ADR breve por tocar esquema): retirar el namespace de preload y los handlers de escritura dejando la tabla como histórico read-only, o dropearla con migración aditiva-compatible. <b>No borrar sin decisión</b>: puede tener overrides históricos.</dd>
+</dl>
+</div>
+
+<div class="card medio">
+<h3><span class="sev medio">Medio</span> <span class="id">AUD-20260723-013</span> <code>generarPdfConWindow</code> triplicado, conviviendo con <code>print/ElectronPrintService</code></h3>
+<dl>
+<dt>Dimensión</dt><dd>B5 Duplicación</dd>
+<dt>Evidencia</dt><dd>Implementaciones casi idénticas en <code>ipc/etiquetas.ts:238-257</code>, <code>ipc/presupuesto.ts:581-594</code> y <code>ipc/remito.ts:~467-480</code>. En paralelo existe <code>src/print/{types.ts,ElectronPrintService.ts}</code> con la interfaz <code>IPrintService</code>.</dd>
+<dt>Regla/ADR</dt><dd>ADR-015 (la capa de impresión se abstrae detrás de una interfaz); B5 (duplicación que debería estar centralizada).</dd>
+<dt>Descripción</dt><dd>La divergencia ya se manifestó: solo una de las tres copias pasa opciones de márgenes, y es la que las pasa mal (AUD-…-005). Cada módulo nuevo que imprima va a copiar una cuarta vez.</dd>
+<dt>Acción</dt><dd>Extraer un único helper en <code>src/print/</code>, detrás de <code>IPrintService</code>, y hacer que los tres lo consuman.</dd>
+</dl>
+</div>
+
+<div class="card bajo">
+<h3><span class="sev bajo">Bajo</span> <span class="id">AUD-20260723-014</span> El vocabulario de estados del ADR-Log §0 no cubre los estados en uso</h3>
+<dl>
+<dt>Dimensión</dt><dd>A1</dd>
+<dt>Evidencia</dt><dd><code>ADR-Log:13</code> declara <code>Propuesto · Aceptado · Rechazado · Superseded · Deprecado</code>. En uso: <code>Aceptada</code>, <code>Cerrado</code>, <code>Diferida</code>, <code>Cancelada</code>, <code>Implementado</code>, <code>Aceptado — implementado</code>, <code>Aceptada — Lote 1 implementado</code>.</dd>
+<dt>Acción</dt><dd>Ampliar la enumeración de §0 y unificar género (<code>Aceptado</code>/<code>Aceptada</code>).</dd>
+</dl>
+</div>
+
+<div class="card bajo">
+<h3><span class="sev bajo">Bajo</span> <span class="id">AUD-20260723-015</span> ADR-035 anidado como subsección de ADR-034</h3>
+<dl>
+<dt>Dimensión</dt><dd>A1</dd>
+<dt>Evidencia</dt><dd><code>ADR-Log:975</code> → <code>### ADR-035</code> dentro del bloque de ADR-034; todos los demás usan <code>##</code>.</dd>
+<dt>Acción</dt><dd>Promover a <code>##</code>.</dd>
+</dl>
+</div>
+
+<div class="card bajo">
+<h3><span class="sev bajo">Bajo</span> <span class="id">AUD-20260723-016</span> <code>Sistema-Diseno-ferreteria.md</code> sin bitácora de cambios</h3>
+<dl>
+<dt>Dimensión</dt><dd>A2</dd>
+<dt>Evidencia</dt><dd>El documento termina en §12 (<code>:325</code>) sin bitácora, pese a que <code>global.css</code> incorporó tokens no documentados en §2 (<code>--pad</code>, <code>--radius</code>, <code>--rowpad</code>, <code>--shadow</code>, <code>--warn</code>, <code>--ui-font</code>).</dd>
+<dt>Acción</dt><dd>Agregar bitácora y documentar los seis tokens estructurales.</dd>
+</dl>
+</div>
+
+<h2>3. Supresiones aplicadas (deuda aceptada — no son hallazgos)</h2>
+<ul>
+<li><b>Dinero legacy en <code>real</code></b> en <code>venta</code>, <code>caja</code>, <code>comprobante</code> y <code>venta_detalle</code>. <b>No se detectó ninguna columna de dinero nueva en <code>real</code></b>: <code>presupuesto</code>/<code>presupuesto_detalle</code> (migración 0025) usan <code>*_centavos</code> INTEGER, igual que <code>venta_pago</code>, <code>producto_proveedor</code> y <code>lista_precio_valor</code>. Los <code>real</code> de <code>presupuestos.ts:25,49</code> son porcentajes (<code>_pct</code>), no montos — coherente con ADR-046 §GATE 0.</li>
+<li><b><code>venta.forma_pago</code> conviviendo con <code>venta_pago</code></b> — migración del histórico abierta en ADR-032. Se observa que <code>venta.ts:131-134</code> la deriva del primer medio y mapea <code>cheque → efectivo</code>, consistente con "campo legado solo-lectura".</li>
+<li><b><code>PRAGMA user_version</code> en 0</b> — ADR-021 §3 / ADR-022. No reportado.</li>
+<li><b>Integración fiscal ARCA/AFIP no construida</b> — R2 / <code>1.2.0</code>; ADR-013 sigue Propuesto. Verificado que <b>ningún código cierra el ADR unilateralmente</b>: no hay <code>arcasdk</code>, <code>wsaa</code>, <code>wsfe</code> ni lógica de CAE. <code>comprobante</code> se usa solo para <code>ticket_interno</code>.</li>
+<li><b>Cuenta corriente de proveedores</b> — ADR-019 (Diferida). Confirmado: el tab Proveedores omite el KPI de deuda, como pide ADR-038 §4.</li>
+<li><b>Google Drive nativo</b> diferido a R4 — ADR-023.</li>
+<li><b><code>localidad</code> texto libre sin migrar</b> a <code>localidad_id</code> — ADR-024.</li>
+<li><b>Prefijo multi-tipo de SKU</b> y <b>sync single-node del correlativo</b> — ADR-025. Aplica igual a <code>remito_proximo_secuencial</code> y <code>presupuesto_proximo_secuencial</code>.</li>
+<li><b>ZPL/ESC-POS nativo</b> fuera de alcance — ADR-026.</li>
+<li><b><code>stock_reservado</code>/<code>stock_en_transito</code></b> nullable sin uso — ADR-033 (reserva diferida).</li>
+<li><b>Grilla mensual de agenda, feed <code>.ics</code> servido, WhatsApp, read/unread de <code>in_app</code></b> — ADR-047 §Decisiones abiertas derivadas.</li>
+<li><b>Firma de código del instalador</b> diferida — ADR-043 §7.</li>
+</ul>
+<p style="font-size:.88rem;color:var(--ink-2)"><b>Nota de vencimiento (§4, regla final):</b> ninguna de estas postergaciones venció. R2/<code>1.2.0</code> no arrancó y R4 tampoco, que son las condiciones de reevaluación.</p>
+
+<h2>4. Observaciones / sospechas (sin evidencia dura)</h2>
+<ul>
+<li><b>Usuario <code>admin</code> / <code>admin1234</code> sembrado sin forzar cambio de contraseña</b> (<code>auth/seed.ts:127-129</code>). Es el seed inicial que ADR-043 §3 prevé y no viola ninguna regla escrita, pero en producción deja una credencial conocida indefinidamente. Vale una decisión explícita.</li>
+<li><b>Validación de stock fuera de la transacción de venta</b> (<code>ipc/venta.ts:96-104</code> usa <code>db</code>, no <code>tx</code>). Hoy inocuo: <code>better-sqlite3</code> es síncrono y no hay <code>await</code> entre el chequeo y <code>db.transaction</code>, así que no hay ventana TOCTOU en proceso único. Deja de serlo en R4/multi-terminal.</li>
+<li><b>El total de la venta llega calculado desde el renderer</b> y el main lo persiste sin recomputar. Coherente con que el motor de precios sea puro, pero el redondeo ADR-010 y el IVA no tienen validación server-side. No hay test que verifique que un payload con total manipulado sea rechazado.</li>
+<li><b>IPC de agenda sin permiso</b> (<code>ipc/agenda.ts:20-21</code> solo exige sesión). Los 13 canales <code>rutina:*</code>/<code>agenda:*</code>/<code>aviso:*</code> son accesibles por cualquier rol. ADR-047 no define permisos, así que no es incumplimiento — pero es la única familia de IPC de escritura sin código de permiso, y la matriz RBAC de <code>CLAUDE.md</code> §8 no tiene fila para Agenda.</li>
+<li><b><code>agenda_evento.origen</code> incluye <code>cierre_caja</code></b> (<code>schema/agenda.ts:52</code>) aunque ADR-047 §5 clasifica el cierre como notificación de hecho, no evento de agenda. El productor emite al outbox sin crear evento, así que el valor del enum está sin usar. ¿Reserva deliberada o residuo?</li>
+<li><b><code>docs/ADR-047 - ….txt</code>, <code>docs/ADR-048 - ….txt</code> y <code>docs/Auditoria/</code> sin versionar</b> (<code>git status</code>). Los ADR fuente de los dos últimos lotes solo existen en el working tree. Riesgo de pérdida.</li>
+<li><b><code>docs/ESTADO-2026-07-03-pre-merge.md</code></b> quedó tres semanas atrás de ADR-045/046/047/048. Conviene un ESTADO nuevo al cerrar <code>1.1.0</code>.</li>
+<li><b>287 usos de <code>any</code></b> en código no-test (solo 17 son el patrón sancionado <code>(window as any).ferreteria</code>). <b>Cero</b> <code>@ts-ignore</code> y <code>@ts-expect-error</code> en todo el repo, lo que es buena señal: el <code>any</code> acá es tipado flojo de payloads IPC, no supresión de errores. Candidato a tipar el puente <code>window.ferreteria</code> de una vez.</li>
+<li><b>ADR-039 dejó abierta</b> la pregunta de si agregar el grupo "Reportes" al sidebar requiere excepción de phase-gate sobre ADR-028; el grupo ya está implementado y la pregunta sigue sin responder.</li>
+</ul>
+
+<h2>5. Comparación con corrida anterior</h2>
+<p>Primera corrida del protocolo — no hay informe previo en <code>docs/Auditoria/</code>.</p>
+<ul>
+<li><b>Cerrados:</b> —</li>
+<li><b>Regresiones:</b> —</li>
+<li><b>Nuevos:</b> AUD-20260723-001 a 016 (2 Altos · 11 Medios · 3 Bajos).</li>
+</ul>
+<p><b>Línea de base para la próxima corrida:</b> 1290 tests verdes (872 node / 418 renderer, 140 archivos) · 27 errores de <code>tsc --noEmit</code> · 27 migraciones aplicadas (última <code>0027_adr048_cierre_email</code>) · 28 permisos / 17 al Operador · 0 artefactos versionados por error.</p>
+
+<div class="note">
+<b>Nota para el protocolo</b> (bitácora sugerida de <code>AUDITOR-TECNICO-v1.1.md</code>) — §4 lista <i>"ADR-038 (Cancelada) — Dashboard fase 2: no exigir esas vistas"</i> en la allowlist. El cuerpo del ADR-Log y el código dicen lo contrario (ver AUD-20260723-003). Al corregir el índice, <b>quitar esa entrada de la allowlist del protocolo</b>, o el auditor va a seguir suprimiendo hallazgos sobre un módulo que está en producción.
+</div>
+
+<footer>
+Generado por el protocolo AUDITOR-TÉCNICO v1.1 · corrida read-only · 2026-07-23 · <code>feat/adr047-agenda-lote1@e6c9186</code><br>
+Tooling ejecutado: <code>pnpm -r exec tsc --noEmit</code> · <code>vitest run --config vitest.config.ts</code> · <code>node scripts/test-node.cjs</code> · sondas ripgrep §8 · <code>git ls-files</code>. Sin migraciones, seeds, builds ni instalaciones.
+</footer>
+
+</div>
+</body>
+</html>

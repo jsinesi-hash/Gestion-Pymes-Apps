@@ -1,0 +1,45 @@
+CONTEXTO
+Ferretería-app, POS (R1/P1.8, extendido en P3.5). Implementar ADR-032 (ver 
+DECISIONES.md / ADR-Log). Convenciones vigentes: centavos enteros en toda la lógica, 
+soft-delete, IPC namespaced, movimientos inversos para anulación (no tocar), guard 
+doble renderer+IPC por permiso.
+
+PASO 0 — HARD GATE. Antes de cualquier migración o código: relevar schema actual de 
+`venta` (campo forma_pago: nombre exacto, tipo, valores incluyendo CCC) y el 
+componente POS actual (layout, dónde vive hoy el selector de forma de pago y el 
+botón de confirmar venta). Reportar y ESPERAR confirmación. No asumir nombres de 
+columna.
+
+PASO 1 — Layout POS (solo renderer, sin tocar modelo de datos):
+- Barra superior fija: Cliente (ya existe) + Forma de pago (ahora informativo/default, 
+  sin lógica de bloqueo — pre-completa el popup del paso 3).
+- Zona media: lista de artículos, ancho completo (remover columna lateral).
+- Barra inferior fija: Total, Descuento (reutilizar descuento por ítem + global ya 
+  implementados, no crear nada nuevo), botón "ACEPTAR".
+
+PASO 2 — HARD GATE antes de migración. Diseñar migración para `venta_pago` (venta_id 
+FK, medio_pago enum['efectivo','tarjeta','cta_cte','cheque'], monto_centavos, 
+recargo_pct nullable default 0, recargo_centavos nullable, campos cheque: numero/
+banco/fecha/titular nullable) + `vuelto_centavos` en `venta`. Proponer estrategia para 
+`venta.forma_pago` existente (deprecar vs. migrar histórico) y ESPERAR confirmación 
+antes de correr drizzle-kit generate.
+
+PASO 3 — Popup "CONFIRMAR VENTA":
+- Se abre al presionar ACEPTAR, sin persistir nada todavía (estado en memoria).
+- Preselecciona medio según default de la barra superior, permite cambiar a "Pago 
+  combinado" y agregar N filas.
+- Tarjeta: input opcional recargo_pct (default 0), calcula recargo_centavos, lo suma 
+  al total a cobrar (NO al total_venta de productos).
+- Vuelto en vivo si hay componente efectivo, aplicando redondeo a $1 (ADR-010) SOLO 
+  sobre ese componente.
+- Botón "Confirmar": persiste venta + N filas venta_pago + vuelto_centavos + impacto 
+  de caja, atómico (misma transacción que el cobro actual).
+- Botón "Volver": cierra sin efectos colaterales, artículos intactos.
+
+PASO 4 — Tests obligatorios: pago único efectivo con vuelto (con y sin redondeo 
+$1) · combinado efectivo+tarjeta con recargo · combinado con CCC · cheque · 
+validación de saldo pendiente > 0 bloquea · redondeo de recargo con decimales .5 · 
+"Volver" no deja registros huérfanos · venta 100% electrónica sin vuelto.
+
+HARD GATES generales: no instalar dependencias nuevas, no escribir en 
+parametros_sistema sin confirmar, confirmar antes de correr la migración.

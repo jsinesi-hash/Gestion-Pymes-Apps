@@ -1,0 +1,38 @@
+Cinco cambios a implementar, cada uno con ADR ya cerrado (ADR-029 a ADR-033). 
+Fase-gate: tocan pantallas aprobadas de R1 (Login, Caja, sidebar, ficha de Cliente). 
+PARÁ ANTES de: migraciones de schema, instalar dependencias nuevas, guardar cambios 
+en disco — confirmá conmigo antes de aplicar.
+
+1. AUTENTICACIÓN (ADR-027)
+   - Eliminar pin_rapido de Usuario. Agregar contraseña_hash (scrypt nativo de 
+     node:crypto, NO agregar bcryptjs).
+   - Login: reemplazar dots de PIN por campo contraseña. Selección de rol se 
+     mantiene igual (condicional si el usuario tiene más de un rol).
+   - Caja — cierre de turno: cuando diferencia > umbral_diferencia_caja, modal de 
+     reautenticación pide usuario+contraseña de un supervisor (reemplaza el PIN actual).
+
+2. NAVEGACIÓN (ADR-028)
+   Sidebar a grupos colapsables:
+   POS | Caja | Catálogo(Productos, Ubicaciones) | Stock | Abastecimiento(Compras, 
+   Proveedores, Reposición sugerida) | Clientes(Clientes, Cuenta Corriente) | 
+   Reportes | Configuración(Categorías, Marcas, Importar datos, Listas de precios, 
+   Etiquetas, Backup/Restore, Parámetros del sistema al final).
+   Reabastecimiento pasa a "Reposición sugerida" dentro de Abastecimiento. 
+   Importar pasa a Configuración. Ubicaciones NO se mueve, queda en Catálogo. 
+   Clientes suma entrada de ABM propia junto a Cuenta Corriente.
+
+3. ABM CATEGORÍAS (ADR-029)
+   Nueva ruta /config/categorias. CRUD + baja lógica. Baja bloqueada si hay 
+   productos activos con esa categoría (mostrar cantidad). Mantener alta rápida 
+   inline ya existente en selector de rubro de producto.
+
+4. ABM MARCAS (ADR-030)
+   Mismo patrón que 3 pero para marcas: /config/marcas. Baja bloqueada si hay 
+   productos activos con esa marca. Mantener alta rápida inline en formulario 
+   de producto.
+
+5. BAJA LÓGICA DE CLIENTES (ADR-031)
+   Agregar activo boolean a Cliente (falta hoy — solo tiene alta/edición). 
+   Baja lógica bloqueada si saldo_cc ≠ 0 (mostrar el saldo en el mensaje de 
+   error). Clientes inactivos se excluyen de selectores de POS y alta de OC. 
+   No afecta historial de ventas/movimientos existentes.
