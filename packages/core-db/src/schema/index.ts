@@ -1,0 +1,5 @@
+export * from './seguridad';
+export * from './personas';
+export * from './geo';
+export * from './credito';
+export * from './config';

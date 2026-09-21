@@ -1,6 +1,5 @@
 import { sqliteTable, text, integer, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
-import { usuario } from './seguridad';
-import { proveedor } from './personas';
+import { usuario, proveedor } from '@core/db';
 import { orden_compra } from './compras';
 import { producto } from './catalog';
 

@@ -8,7 +8,7 @@ import {
   proveedorUpsertHandler,
   proveedorDeactivateHandler,
 } from '../proveedor';
-import { provincia as provinciaTable, localidad as localidadTable } from '../../db/schema/geo';
+import { provincia as provinciaTable, localidad as localidadTable } from '@core/db';
 import { runCatalogSeed } from '../../catalog/seed';
 import { categoriaCreateHandler } from '../categoria';
 import { productoCreateHandler } from '../producto';
