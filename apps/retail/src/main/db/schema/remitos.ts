@@ -1,7 +1,7 @@
 import { sqliteTable, text, real, integer } from 'drizzle-orm/sqlite-core';
-import { venta, venta_detalle, comprobante } from './ventas';
+import { venta_detalle } from './ventas';
 import { producto } from './catalog';
-import { usuario } from '@core/db';
+import { usuario, venta, comprobante } from '@core/db';
 
 // ADR-045 (iteracion 2): catalogo de transportistas. Sin campos fiscales:
 // el transportista no le factura a la ferreteria, es un dato operativo.
