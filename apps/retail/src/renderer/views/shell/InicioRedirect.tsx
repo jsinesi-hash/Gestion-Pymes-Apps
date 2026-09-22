@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { resolverPantallaInicio, INICIO_FALLBACK } from '@ferreteria/shared';
+import { navegacionRetail } from '../../../common/navegacion';
 import { useAuth } from '../../context/AuthContext';
 
 /**
@@ -22,8 +22,8 @@ export function InicioRedirect() {
         habilitado = v === 'true';
       } catch { habilitado = false; }
       if (!vigente) return;
-      if (!habilitado || !session) { setDestino(INICIO_FALLBACK); return; }
-      setDestino(resolverPantallaInicio(session.rolNombre, session.preferencias.pantalla_inicio, can));
+      if (!habilitado || !session) { setDestino(navegacionRetail.inicioFallback); return; }
+      setDestino(navegacionRetail.resolverPantallaInicio(session.rolNombre, session.preferencias.pantalla_inicio, can));
     })();
     return () => { vigente = false; };
   }, [session, can]);

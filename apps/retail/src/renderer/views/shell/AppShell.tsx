@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { NavLink, Link, Outlet, useLocation } from 'react-router-dom';
 import { buildBreadcrumb } from '../../lib/breadcrumb';
 import type { ResumenDepuracion } from '@ferreteria/shared';
-import { esRutaNavegable } from '@ferreteria/shared';
+import { navegacionRetail } from '../../../common/navegacion';
 import { useAuth } from '../../context/AuthContext';
 import { useInicioPersonalizableHabilitado } from '../../hooks/useInicioPersonalizable';
 import { usePreferencias } from '../../hooks/usePreferencias';
@@ -309,7 +309,7 @@ export function AppShell() {
   const favoritos: string[] = session?.preferencias?.favoritos ?? [];
   const favItems: NavItem[] = inicioPersonalizable
     ? favoritos
-        .filter(p => esRutaNavegable(p))
+        .filter(p => navegacionRetail.esRutaNavegable(p))
         .map(p => encontrarNavItem(navGroups, p))
         .filter((i): i is NavItem => Boolean(i))
     : [];
@@ -352,7 +352,7 @@ export function AppShell() {
   // ADR-080 (PERF-1): estrella de favorito junto a un ítem navegable (no dentro del propio
   // grupo Favoritos). Devuelve null cuando el flag está apagado → sidebar idéntico a hoy.
   function renderStar(item: NavItem, groupKey: string) {
-    if (!inicioPersonalizable || groupKey === 'favoritos' || !item.to || !esRutaNavegable(item.to)) return null;
+    if (!inicioPersonalizable || groupKey === 'favoritos' || !item.to || !navegacionRetail.esRutaNavegable(item.to)) return null;
     const to = item.to;
     const on = favoritos.includes(to);
     return (
@@ -465,7 +465,7 @@ export function AppShell() {
                             <span className="nav-txt">{item.label}</span>
                           </span>
                         )
-                        : (inicioPersonalizable && group.key !== 'favoritos' && item.to && esRutaNavegable(item.to))
+                        : (inicioPersonalizable && group.key !== 'favoritos' && item.to && navegacionRetail.esRutaNavegable(item.to))
                         ? (
                           <div key={item.to} className="nav-fav-row">
                             <NavLink to={item.to} end={item.end ?? false}

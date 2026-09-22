@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { RUTAS_NAVEGABLES, permisoDeRuta } from '@ferreteria/shared';
+import { navegacionRetail } from '../../../common/navegacion';
 import { useAuth } from '../../context/AuthContext';
 import { useInicioPersonalizableHabilitado } from '../../hooks/useInicioPersonalizable';
 import { usePreferencias } from '../../hooks/usePreferencias';
@@ -53,7 +53,7 @@ export function ConfigMiCuenta() {
   const inicioPersonalizable = useInicioPersonalizableHabilitado();
   const { guardarInicio } = usePreferencias();
   // ADR-080 (PERF-1): rutas que el rol puede elegir como inicio (filtradas por permiso).
-  const opcionesInicio = RUTAS_NAVEGABLES.filter(r => { const p = permisoDeRuta(r.path); return !p || can(p); });
+  const opcionesInicio = navegacionRetail.rutas.filter(r => !r.permiso || can(r.permiso));
   const [profile, setProfile] = useState<{ id: string; nombre_completo: string; nombre_usuario: string; email: string | null } | null>(null);
   const [nombreCompleto, setNombreCompleto] = useState('');
   const [email, setEmail] = useState('');
