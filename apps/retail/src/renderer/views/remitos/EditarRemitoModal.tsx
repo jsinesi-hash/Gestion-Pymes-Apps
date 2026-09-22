@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { remitoApi } from '../../hooks/useRemitos';
 import { useTransportistas } from '../../hooks/useTransportistas';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
-import { useCallIpc } from '../../hooks/useCallIpc';
+import { useCallIpc } from '@core/ui';
 
 // ADR-085 (SEC-2): campos de cabecera con control propio en este form, mapeados al
 // `id` de su input (distinto del nombre de campo del backend para no colisionar con

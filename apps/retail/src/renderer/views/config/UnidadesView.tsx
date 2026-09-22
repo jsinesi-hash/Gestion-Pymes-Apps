@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 import { rutearCampoError } from '../../lib/rutearCampoError';
-import { useToast } from '../../components/toast/useToast';
+import { useToast } from '@core/ui';
 import { ExportarButton } from '../../components/export/ExportarButton';
 import { exportUnidades } from '@ferreteria/shared';
 

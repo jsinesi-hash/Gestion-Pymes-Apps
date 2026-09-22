@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AperturaForm } from '../AperturaForm';
-import { ToastProvider } from '../../../components/toast/ToastProvider';
+import { ToastProvider } from '@core/ui';
 
 const mockAbrir = vi.fn();
 const mockOnSuccess = vi.fn();

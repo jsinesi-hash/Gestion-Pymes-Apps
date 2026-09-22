@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ImportacionCostoWizardProvider } from './context/ImportacionCostoWizardContext';
-import { ToastProvider } from './components/toast/ToastProvider';
+import { ToastProvider } from '@core/ui';
 import { routes } from './routes';
 
 export default function App() {

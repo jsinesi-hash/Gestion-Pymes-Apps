@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEscapeAction } from '../../../hooks/useEscapeAction';
-import { useCallIpc } from '../../../hooks/useCallIpc';
+import { useCallIpc } from '@core/ui';
 import { AltaExpressModal } from '../../productos/AltaExpressModal';
 
 // ADR-085 (SEC-2): "Agregar ítem" y "Editar ítem" llaman a handlers distintos

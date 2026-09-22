@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { DireccionGeo, type DireccionGeoValue } from '../../components/DireccionGeo';
 import { formatDocumento, validarDocumento, validarTelefono, validarCodigoPostal } from '../../utils/documento';
-import { useCallIpc } from '../../hooks/useCallIpc';
+import { useCallIpc } from '@core/ui';
 
 // ADR-082 (SEC-2): campos del form que pueden mostrar un error inline. Sus inputs llevan
 // un `id` igual a la clave, para poder enfocar el control cuando el backend rechaza por él.

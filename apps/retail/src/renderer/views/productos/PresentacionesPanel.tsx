@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
-import { useCallIpc } from '../../hooks/useCallIpc';
+import { useCallIpc } from '@core/ui';
 
 type Presentacion = {
   id: string;

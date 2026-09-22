@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useFormErrors } from './useFormErrors';
+import { useFormErrors } from '@core/ui';
 
 describe('useFormErrors (ADR-082)', () => {
   it('valida onBlur y guarda el error del campo', () => {

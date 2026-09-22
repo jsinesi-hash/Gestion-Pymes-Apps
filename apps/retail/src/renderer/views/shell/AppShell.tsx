@@ -19,8 +19,7 @@ import { DepuracionBackupsModal, depuracionPospuestaVigente } from '../config/De
 import { ActualizacionPropuestaModal } from './ActualizacionPropuestaModal';
 import { NovedadesVersionModal } from './NovedadesVersionModal';
 import { PantallaBloqueo } from './PantallaBloqueo';
-import { useIdleLock } from '../../hooks/useIdleLock';
-import { useBloqueoInactividad } from '../../hooks/useBloqueoInactividad';
+import { useIdleLock, useBloqueoInactividad } from '@core/ui';
 
 // ADR-076 Tarea 11: "Ahora no" pospone la consulta de depuración por el resto de la
 // sesión (hasta reiniciar la app) — flag a nivel de módulo, no de componente, para que

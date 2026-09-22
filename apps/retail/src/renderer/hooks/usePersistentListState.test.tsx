@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { usePersistentListState } from './usePersistentListState';
+import { usePersistentListState } from '@core/ui';
 
 function Harness({ clave }: { clave: string }) {
   const [texto, setTexto] = usePersistentListState(clave, '');

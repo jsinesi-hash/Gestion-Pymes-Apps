@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useCallIpc } from '../../hooks/useCallIpc';
-import { useToast } from '../../components/toast/useToast';
+import { useCallIpc, useToast } from '@core/ui';
 
 const f = () => (globalThis as any).ferreteria;
 

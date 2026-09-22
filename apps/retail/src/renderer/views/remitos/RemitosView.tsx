@@ -5,10 +5,8 @@ import { useRemitos, remitoApi, type RemitoListado } from '../../hooks/useRemito
 import { RemitoDetalleModal } from './RemitoDetalleModal';
 import { EditarRemitoModal } from './EditarRemitoModal';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
-import { SearchBox } from '../../components/SearchBox';
-import { usePersistentListState } from '../../hooks/usePersistentListState';
+import { SearchBox, usePersistentListState, useCallIpc } from '@core/ui';
 import { resaltarCoincidencia } from '../../lib/resaltar';
-import { useCallIpc } from '../../hooks/useCallIpc';
 
 // ADR-085 (SEC-2): el modal inline de conformar/anular comparte un único input
 // ("accion-valor") para recibido_por y motivo — nunca se muestran a la vez, así que

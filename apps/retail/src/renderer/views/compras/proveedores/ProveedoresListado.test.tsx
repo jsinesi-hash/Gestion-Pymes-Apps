@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { ProveedoresListado } from './ProveedoresListado';
-import { __resetPersistentListState } from '../../../hooks/usePersistentListState';
+import { __resetPersistentListState } from '@core/ui';
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { RemitosView } from './RemitosView';
-import { __resetPersistentListState } from '../../hooks/usePersistentListState';
+import { __resetPersistentListState } from '@core/ui';
 
 const listar = vi.fn();
 const anular = vi.fn();

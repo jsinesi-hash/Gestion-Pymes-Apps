@@ -9,7 +9,7 @@ import {
 import { useMotorPreciosV2Habilitado } from '../../hooks/useMotorPrecios';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 import { useAuth } from '../../context/AuthContext';
-import { useCallIpc } from '../../hooks/useCallIpc';
+import { useCallIpc } from '@core/ui';
 
 // ADR-085 (SEC-2): campos de cada form que pueden recibir un error de validación del
 // backend, mapeados al `id` del control focoable correspondiente (los dos forms usan

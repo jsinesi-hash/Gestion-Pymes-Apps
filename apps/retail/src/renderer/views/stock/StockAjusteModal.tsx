@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useExistencias } from '../../hooks/useExistencias';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 import { rutearCampoError } from '../../lib/rutearCampoError';
-import { useToast } from '../../components/toast/useToast';
+import { useToast } from '@core/ui';
 
 export type StockAjusteModalProps = {
   productoId: string;

@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { fmtARS, badgeEstado } from './utils';
 import { ExportarButton } from '../../components/export/ExportarButton';
 import { exportCtaCte } from '@ferreteria/shared';
-import { SearchBox } from '../../components/SearchBox';
-import { usePersistentListState } from '../../hooks/usePersistentListState';
+import { SearchBox, usePersistentListState } from '@core/ui';
 import { resaltarCoincidencia } from '../../lib/resaltar';
 
 type CtaCteRow = {

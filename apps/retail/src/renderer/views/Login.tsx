@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { PasswordInput } from '../components/PasswordInput';
+import { PasswordInput } from '@core/ui';
 
 export default function Login() {
   const { login } = useAuth();

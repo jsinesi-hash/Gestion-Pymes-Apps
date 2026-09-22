@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useState } from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { SearchBox } from './SearchBox';
+import { SearchBox } from '@core/ui';
 
 // Wrapper controlado que refleja el valor tipeado, como lo haría un listado real.
 function Controlado(props: { onDebounced?: (v: string) => void; debounceMs?: number }) {

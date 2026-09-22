@@ -1,4 +1,4 @@
-import { traducirError } from './errores';
+import { traducirError } from '@core/ui';
 
 // ADR-082 (SEC-2): rutea un error del backend al campo del formulario que lo generó.
 // El main rechaza validaciones con `VALIDATION:<campo>:<detalle>`; `traducirError` extrae

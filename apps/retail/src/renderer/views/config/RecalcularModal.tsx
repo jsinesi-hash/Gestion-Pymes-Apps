@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useMotorPreciosV2Habilitado } from '../../hooks/useMotorPrecios';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
-import { useCallIpc } from '../../hooks/useCallIpc';
+import { useCallIpc } from '@core/ui';
 
 const f = () => (globalThis as any).ferreteria;
 

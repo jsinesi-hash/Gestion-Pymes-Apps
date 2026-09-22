@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useCallIpc } from '../../hooks/useCallIpc';
+import { useCallIpc } from '@core/ui';
 
 type FeatureFlagInfo = { clave: string; valor: string; descripcion: string | null };
 
