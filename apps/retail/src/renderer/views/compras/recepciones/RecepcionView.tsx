@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useCallIpc } from '../../../hooks/useCallIpc';
+import { useCallIpc } from '@core/ui';
 
 // ADR-085 (SEC-2): campos del header que pueden enfocarse cuando el backend rechaza por
 // ellos. `orden_compra_id` no tiene input propio (viene de la ruta) y los errores de

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { costoNeto } from '@ferreteria/shared';
 import { useMotorPreciosV2Habilitado } from '../../../hooks/useMotorPrecios';
 import { useFilaNavegable } from '../../../hooks/useFilaNavegable';
-import { useCallIpc } from '../../../hooks/useCallIpc';
+import { useCallIpc } from '@core/ui';
 import { ProveedorAgregarProductosPanel } from './ProveedorAgregarProductosPanel';
 
 // ADR-085 (SEC-2): campos del form de edición inline que pueden recibir un error de

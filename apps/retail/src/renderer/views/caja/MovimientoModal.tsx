@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 import { rutearCampoError } from '../../lib/rutearCampoError';
-import { useToast } from '../../components/toast/useToast';
+import { useToast } from '@core/ui';
 
 type Props = {
   cajaId: string;

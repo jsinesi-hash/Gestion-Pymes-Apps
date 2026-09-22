@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useCallIpc } from '../../hooks/useCallIpc';
+import { useCallIpc } from '@core/ui';
 import { ExportarButton } from '../../components/export/ExportarButton';
 import { exportSinonimos } from '@ferreteria/shared';
 

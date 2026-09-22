@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCajaActiva } from '../../hooks/useCajaActiva';
 import { useCajaCierre } from '../../hooks/useCajaCierre';
 import { SupervisorAuthModal } from './SupervisorAuthModal';
-import { useToast } from '../../components/toast/useToast';
-import { useCallIpc } from '../../hooks/useCallIpc';
+import { useToast, useCallIpc } from '@core/ui';
 import { rutearCampoError } from '../../lib/rutearCampoError';
 
 // ADR-085 (SEC-2, Task 14): mapa de código de error de dominio → id del campo del form,

@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { ToastProvider } from './ToastProvider';
-import { useToast } from './useToast';
+import { ToastProvider, useToast } from '@core/ui';
 
 function Harness() {
   const toast = useToast();

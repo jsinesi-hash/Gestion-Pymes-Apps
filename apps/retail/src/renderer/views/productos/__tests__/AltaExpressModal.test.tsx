@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AltaExpressModal } from '../AltaExpressModal';
-import { ToastProvider } from '../../../components/toast/ToastProvider';
+import { ToastProvider } from '@core/ui';
 
 function wrap(ui: React.ReactNode) { return <ToastProvider>{ui}</ToastProvider>; }
 

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { CajaCierreView } from '../CajaCierreView';
-import { ToastProvider } from '../../../components/toast/ToastProvider';
+import { ToastProvider } from '@core/ui';
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {

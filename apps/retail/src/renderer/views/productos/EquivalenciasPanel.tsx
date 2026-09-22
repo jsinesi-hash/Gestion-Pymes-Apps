@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSustitutosHabilitado } from '../../hooks/useSustitutosHabilitado';
 import { useEquivalencias, type EquivalenciaItem } from '../../hooks/useEquivalencias';
-import { useCallIpc } from '../../hooks/useCallIpc';
+import { useCallIpc } from '@core/ui';
 
 // ADR-085 (SEC-2): campos que pueden recibir un error de validación del backend.
 // `producto_relacionado_id` se elige mediante el buscador (no hay un input de id propio),

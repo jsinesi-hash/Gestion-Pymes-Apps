@@ -7,7 +7,7 @@ import { useImpuestos } from '../../hooks/useImpuestos';
 import { useUbicaciones } from '../../hooks/useUbicaciones';
 import { useUnidades } from '../../hooks/useUnidades';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
-import { useCallIpc } from '../../hooks/useCallIpc';
+import { useCallIpc } from '@core/ui';
 
 type FormState = {
   nombre_corto: string; nombre_largo: string; descripcion_tecnica: string;

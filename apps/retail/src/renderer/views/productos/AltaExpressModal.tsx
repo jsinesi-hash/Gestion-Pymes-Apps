@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useCallIpc } from '../../hooks/useCallIpc';
+import { useCallIpc } from '@core/ui';
 
 // PROD-3 (ADR-079): alta rápida de producto desde puntos de captura (POS, OC) que no
 // tienen el producto todavía. Sólo nombre + precio; el resto (categoría, unidad, IVA)

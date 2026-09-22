@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ExportarButton } from '../../components/export/ExportarButton';
 import { exportClientes, nombreCompletoCliente } from '@ferreteria/shared';
-import { SearchBox } from '../../components/SearchBox';
-import { usePersistentListState } from '../../hooks/usePersistentListState';
+import { SearchBox, usePersistentListState } from '@core/ui';
 import { resaltarCoincidencia } from '../../lib/resaltar';
 import { VistosRecientesPanel } from '../../components/VistosRecientesPanel';
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { traducirError } from './errores';
+import { traducirError } from '@core/ui';
 
 describe('traducirError (ERR-2 / ADR-077)', () => {
   it('EAN/GTIN duplicado → mensaje sobre código de barras', () => {

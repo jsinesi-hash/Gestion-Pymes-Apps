@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCallIpc } from '../../../hooks/useCallIpc';
+import { useCallIpc } from '@core/ui';
 
 // ADR-085 (SEC-2): campos con input propio en este form; `tipo` va fijo en 'manual' y no
 // tiene control editable, así que un rechazo por ese campo cae en la región general.
