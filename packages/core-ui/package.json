@@ -1,0 +1,32 @@
+{
+  "name": "@core/ui",
+  "version": "1.1.1",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./styles/global.css": "./src/styles/global.css",
+    "./styles/fonts.css": "./src/styles/fonts.css"
+  },
+  "types": "dist/index.d.ts",
+  "files": ["dist", "src/styles"],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm run typecheck && vitest run --passWithNoTests"
+  },
+  "peerDependencies": {
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
+  "dependencies": {
+    "@ferreteria/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

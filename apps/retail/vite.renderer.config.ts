@@ -13,6 +13,7 @@ export default defineConfig({
     alias: {
       '@ferreteria/shared': path.resolve(__dirname, '../../packages/shared/src/index.ts'),
       '@core/db': path.resolve(__dirname, '../../packages/core-db/src/index.ts'),
+      '@core/ui': path.resolve(__dirname, '../../packages/core-ui/src/index.ts'),
     },
   },
   build: {
