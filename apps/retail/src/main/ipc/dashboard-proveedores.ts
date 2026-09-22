@@ -3,7 +3,7 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { eq, and, gte, lte, sql, desc, inArray, notInArray } from 'drizzle-orm';
 import * as schema from '../db/schema';
-import { requirePermission } from '../auth/guard';
+import { requirePermission } from '@core/main';
 
 type Db = BetterSQLite3Database<typeof schema>;
 

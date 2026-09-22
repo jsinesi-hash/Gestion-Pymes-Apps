@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { eq } from 'drizzle-orm';
 import * as schema from '../../db/schema';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
-import { verificarSupervisor } from '../../auth/verificarSupervisor';
+import { verificarSupervisor } from '@core/main';
 
 describe('verificarSupervisor', () => {
   let db: ReturnType<typeof setupDb>;

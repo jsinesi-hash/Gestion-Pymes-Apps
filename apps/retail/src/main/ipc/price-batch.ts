@@ -2,12 +2,11 @@ import { eq, inArray, desc } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
-import { getSession } from '../auth/session';
+import { getSession, oneOf, id as vId } from '@core/main';
 import { crearBatch, revalidarBatch, type CrearBatchParams } from '../precios/motor';
 import {
   aprobarBatch, publicarBatch, revertirBatch, excluirFila, excluirErrores,
 } from '../precios/publicacion';
-import { oneOf, id as vId } from '../validation/core';
 
 type Db = BetterSQLite3Database<typeof schema>;
 

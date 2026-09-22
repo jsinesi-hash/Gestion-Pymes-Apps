@@ -3,13 +3,10 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId, inicioDelDia, finDelDia, nombreCompletoCliente } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession } from '../auth/session';
-import { getOriginId } from '../context';
-import { verificarSupervisor } from '../auth/verificarSupervisor';
+import { getSession, getOriginId, verificarSupervisor, optId, arr, num, centavos, oneOf, id as vId } from '@core/main';
 import { marcarPresupuestoConvertido } from './presupuesto';
 import { getPrecioEnListaHandler, resolverListaEfectiva } from './lista-precio-valor';
 import { resolverCostoNetoProducto } from '../precios/motor';
-import { optId, arr, num, centavos, oneOf, id as vId } from '../validation/core';
 
 type Db = BetterSQLite3Database<typeof schema>;
 

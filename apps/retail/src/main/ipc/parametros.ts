@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
-import { getSession } from '../auth/session';
+import { getSession } from '@core/main';
 import { getCachedParametro, setCachedParametro, invalidateCachedParametro } from './parametros-cache';
 
 type Db = BetterSQLite3Database<typeof schema>;

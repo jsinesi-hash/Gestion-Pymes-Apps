@@ -2,7 +2,7 @@ import { eq, and, isNull } from 'drizzle-orm';
 import { generateId } from '@ferreteria/shared';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
-import { getOriginId } from '../context';
+import { getOriginId } from '@core/main';
 
 type Db = BetterSQLite3Database<typeof schema>;
 

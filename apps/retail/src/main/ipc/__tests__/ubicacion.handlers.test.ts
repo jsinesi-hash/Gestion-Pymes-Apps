@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
 import * as schema from '../../db/schema';
 import { generateId } from '@ferreteria/shared';
-import { getOriginId } from '../../context';
+import { getOriginId } from '@core/main';
 import {
   ubicacionListHandler, ubicacionGetHandler, ubicacionCreateHandler,
   ubicacionUpdateHandler, ubicacionDeleteHandler, ubicacionListAllHandler,

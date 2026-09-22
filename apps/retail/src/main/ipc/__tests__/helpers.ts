@@ -24,4 +24,4 @@ export function loginAsAdmin(db: ReturnType<typeof setupDb>) {
   return loginHandler(db, { nombreUsuario: 'admin', password: 'admin1234' }); // NOSONAR
 }
 
-export { clearSession } from '../../auth/session';
+export { clearSession } from '@core/main';

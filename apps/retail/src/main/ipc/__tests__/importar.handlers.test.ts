@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { formatSku } from '@ferreteria/shared';
-import { setSession } from '../../auth/session';
-import { requirePermission } from '../../auth/guard';
+import { setSession, requirePermission } from '@core/main';
 import { csvToRows, validarProductos, confirmarProductos, validarClientes, confirmarClientes, validarProveedores, confirmarProveedores, validarUbicaciones, confirmarUbicaciones, validarStockInicial, confirmarStockInicial, getPlantilla, validarFilaUnica, plantillaInfoHandler } from '../importar';
 import { categoriaCreateHandler } from '../categoria';
 import { productoCreateHandler } from '../producto';

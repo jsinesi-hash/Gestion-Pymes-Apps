@@ -10,7 +10,7 @@ import {
 } from '@ferreteria/shared';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
-import { getOriginId } from '../context';
+import { getOriginId } from '@core/main';
 import { getDefaultPresentacionId } from '../ipc/presentacion';
 import { resolveProductosAfectados } from '../ipc/lista-precio-valor';
 import { validarFila, type Umbrales } from './validacion';

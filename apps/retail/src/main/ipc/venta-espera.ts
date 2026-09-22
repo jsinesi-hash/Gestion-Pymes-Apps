@@ -3,10 +3,8 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession } from '../auth/session';
-import { getOriginId } from '../context';
+import { getSession, getOriginId, arr, num, id as vId } from '@core/main';
 import type { LineaPayload } from './venta';
-import { arr, num, id as vId } from '../validation/core';
 
 type Db = BetterSQLite3Database<typeof schema>;
 

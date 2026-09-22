@@ -3,12 +3,10 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession } from '../auth/session';
-import { getOriginId } from '../context';
+import { getSession, getOriginId, str, optStr, id, arr } from '@core/main';
 import { normalizarTermino } from '../sinonimos/normalizar';
 import { parsearCsvSinonimos } from '../sinonimos/csv';
 import { validarSinonimos, type ProblemaSinonimo } from '../sinonimos/validar';
-import { str, optStr, id, arr } from '../validation/core';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
