@@ -1,7 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import './styles/fonts.css';
-import './styles/global.css';
+import '@core/ui/styles/fonts.css';
+import '@core/ui/styles/global.css';
 import App from './App';
 
 // Red de seguridad recomendada para Electron: sin esto, soltar un archivo FUERA de una
