@@ -5,11 +5,12 @@ import path from 'node:path';
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: {
-      '@ferreteria/shared': path.resolve(__dirname, '../../packages/shared/src/index.ts'),
-      '@core/db': path.resolve(__dirname, '../../packages/core-db/src/index.ts'),
-      '@core/ui': path.resolve(__dirname, '../../packages/core-ui/src/index.ts'),
-    },
+    // '@core/ui' como regex EXACTA para no romper subpaths (CSS) — ver nota en vite.renderer.config.ts.
+    alias: [
+      { find: /^@core\/ui$/, replacement: path.resolve(__dirname, '../../packages/core-ui/src/index.ts') },
+      { find: '@core/db', replacement: path.resolve(__dirname, '../../packages/core-db/src/index.ts') },
+      { find: '@ferreteria/shared', replacement: path.resolve(__dirname, '../../packages/shared/src/index.ts') },
+    ],
   },
   test: {
     environment: 'jsdom',
