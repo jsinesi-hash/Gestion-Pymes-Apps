@@ -9,9 +9,12 @@ import { CambiosProgramadosPanel } from './CambiosProgramadosPanel';
 // promesa sin rechazar, no significa que se haya cancelado.
 
 const mockToastSuccess = vi.fn();
-vi.mock('../../components/toast/useToast', () => ({
-  useToast: () => ({ success: mockToastSuccess, error: vi.fn(), info: vi.fn() }),
-}));
+// useToast se movió a @core/ui (Slice 3). Mockeamos el barrel preservando el resto de sus
+// exports (useCallIpc real, etc.) y sólo pisamos useToast.
+vi.mock('@core/ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@core/ui')>();
+  return { ...actual, useToast: () => ({ success: mockToastSuccess, error: vi.fn(), info: vi.fn() }) };
+});
 
 const ROWS = [
   { id: 'cp1', lista_precio_id: 'l1', fecha_aplicacion: new Date().toISOString(),
