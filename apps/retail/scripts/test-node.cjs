@@ -17,9 +17,18 @@ const vitestPkg      = JSON.parse(fs.readFileSync(vitestPkgPath, 'utf8'));
 const vitestBinEntry = typeof vitestPkg.bin === 'string' ? vitestPkg.bin : vitestPkg.bin.vitest;
 const vitestCli      = path.resolve(path.dirname(vitestPkgPath), vitestBinEntry);
 
+// --serial: corre en un único fork, sin paralelismo de archivos. El runner es flaky en
+// paralelo en Windows con carga alta (ver ADR-091, aprendizaje 4). Cualquier otro argumento
+// se reenvía a vitest (p. ej. la ruta de un archivo de test puntual).
+const serial = process.argv.includes('--serial');
+const extra = process.argv.slice(2).filter(a => a !== '--serial');
+const args = [vitestCli, 'run', '--config', 'vitest.node.config.ts', '--passWithNoTests',
+  ...(serial ? ['--pool=forks', '--poolOptions.forks.singleFork=true', '--no-file-parallelism'] : []),
+  ...extra];
+
 const result = spawnSync(
   electronExe,
-  [vitestCli, 'run', '--config', 'vitest.node.config.ts', '--passWithNoTests'],
+  args,
   {
     cwd: clientDir,
     stdio: 'inherit',
