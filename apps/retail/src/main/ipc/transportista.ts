@@ -3,9 +3,7 @@ import { generateId } from '@ferreteria/shared';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
-import { getSession } from '../auth/session';
-import { getOriginId } from '../context';
-import { str, optStr, optId } from '../validation/core';
+import { getSession, getOriginId, str, optStr, optId } from '@core/main';
 
 type Db = BetterSQLite3Database<typeof schema>;
 

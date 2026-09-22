@@ -10,7 +10,7 @@ import {
   exportTransportistas, exportRemitos, exportPresupuestos,
 } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession } from '../auth/session';
+import { getSession } from '@core/main';
 import { buildCsv } from '../export/csv-writer';
 import { buildXlsx } from '../export/xlsx-writer';
 import { productoQueryAll } from './producto';

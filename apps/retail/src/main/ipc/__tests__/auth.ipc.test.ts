@@ -6,8 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import * as schema from '../../db/schema';
 import { runSeed } from '../../auth/seed';
-import { clearSession, getSession } from '../../auth/session';
-import { hashPassword } from '../../auth/hash';
+import { clearSession, getSession, hashPassword } from '@core/main';
 import {
   loginHandler,
   logoutHandler,

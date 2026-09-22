@@ -1,7 +1,6 @@
 ﻿import { describe, it, expect, beforeEach } from 'vitest';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
-import { setSession } from '../../auth/session';
-import { requirePermission } from '../../auth/guard';
+import { setSession, requirePermission } from '@core/main';
 import {
   proveedorListHandler,
   proveedorGetHandler,

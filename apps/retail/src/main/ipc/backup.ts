@@ -4,7 +4,7 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import type * as schema from '../db/schema';
 import type { BackupListItem, PoliticaRetencion, ResumenDepuracion } from '@ferreteria/shared';
-import { getSession } from '../auth/session';
+import { getSession } from '@core/main';
 import { crearBackup, listarBackups, calcularCandidatosDepuracion, leerManifestBackup } from '../backup/engine';
 import { parametrosGetHandler } from './parametros';
 

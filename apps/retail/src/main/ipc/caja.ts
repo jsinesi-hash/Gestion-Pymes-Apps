@@ -3,14 +3,11 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession } from '../auth/session';
-import { getOriginId } from '../context';
-import { verificarSupervisor } from '../auth/verificarSupervisor';
+import { getSession, getOriginId, verificarSupervisor, num, optStr, oneOf, id as vId } from '@core/main';
 import { triggerAutoBackup } from './backup';
 import { parametrosGetHandler } from './parametros';
 import { insertarAvisos, despacharAviso } from '../agenda/aviso-servicio';
 import { construirComandoCierre } from './caja-cierre-aviso';
-import { num, optStr, oneOf, id as vId } from '../validation/core';
 
 type Db = BetterSQLite3Database<typeof schema>;
 

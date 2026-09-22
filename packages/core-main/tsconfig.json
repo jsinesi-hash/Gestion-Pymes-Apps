@@ -4,7 +4,16 @@
     "lib": ["ES2022"],
     "outDir": "dist",
     "rootDir": "src",
-    "types": ["node"]
+    "types": ["node"],
+    // Anula el `paths` heredado de tsconfig.base.json: ese mapeo apunta a los `.ts`
+    // fuente de los otros paquetes `@core/*` para conveniencia de edición cross-package
+    // (los consumidores como apps/retail compilan con `noEmit`, así que no importa).
+    // @core/main SÍ emite (tsc real, sin noEmit) y depende de @core/db como paquete de
+    // verdad: si se resuelve contra el fuente, TS intenta emitir esos archivos también
+    // y falla con TS6059 (quedan fuera de `rootDir`). Con `paths` vacío, `@core/db`
+    // (y cualquier otro `@core/*`/`@ferreteria/*` que se sume) resuelve por resolución
+    // normal de Node contra el `dist` publicado en package.json (symlink de pnpm).
+    "paths": {}
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

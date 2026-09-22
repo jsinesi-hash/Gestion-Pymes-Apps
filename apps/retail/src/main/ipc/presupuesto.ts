@@ -6,11 +6,9 @@ import { app, dialog, BrowserWindow, type IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId, resolverPrecio, nombreCompletoCliente, type LineaPrecioInput } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession } from '../auth/session';
-import { getOriginId } from '../context';
+import { getSession, getOriginId, id, optId, num, optStr, arr } from '@core/main';
 import { getPrecioEnListaHandler } from './lista-precio-valor';
 import { renderPresupuestoHtml } from '../print/presupuesto-template';
-import { id, optId, num, optStr, arr } from '../validation/core';
 
 type Db = BetterSQLite3Database<typeof schema>;
 type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];

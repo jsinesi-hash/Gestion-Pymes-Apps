@@ -66,8 +66,7 @@ import { drenarReintentos } from './agenda/worker-reintentos';
 import { applyPendingCambiosProgramados } from './scheduler/precios';
 import { ElectronPrintService } from '../print/ElectronPrintService';
 import { installAppMenu } from './menu/appMenu';
-import { getSession } from './auth/session';
-import { aplicarSeguridadVentana } from './security/webSecurity';
+import { getSession, aplicarSeguridadVentana } from '@core/main';
 
 async function createWindow(): Promise<void> {
   loadTerminalConfig();

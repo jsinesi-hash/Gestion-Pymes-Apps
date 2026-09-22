@@ -2,9 +2,7 @@ import { eq } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
-import { getSession } from '../auth/session';
-import { getOriginId } from '../context';
-import { num, id as vId } from '../validation/core';
+import { getSession, getOriginId, num, id as vId } from '@core/main';
 
 type Db = BetterSQLite3Database<typeof schema>;
 

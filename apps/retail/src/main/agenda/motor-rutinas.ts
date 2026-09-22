@@ -2,7 +2,7 @@ import { eq, and, lte } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getOriginId } from '../context';
+import { getOriginId } from '@core/main';
 import { calcularProximoDisparo, type FrecuenciaDef } from './frecuencia';
 import { insertarAvisos, despacharAviso } from './aviso-servicio';
 import type { Canal } from './canales/tipos';

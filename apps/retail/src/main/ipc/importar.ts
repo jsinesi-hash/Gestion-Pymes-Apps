@@ -2,9 +2,7 @@
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { eq, and } from 'drizzle-orm';
 import { generateId, formatSku, canonicalizarUbicacion, canonicalizarCodigoUbicacion, parseBooleanoImport } from '@ferreteria/shared';
-import { getOriginId } from '../context';
-import { getSession } from '../auth/session';
-import { requirePermission } from '../auth/guard';
+import { getOriginId, getSession, requirePermission } from '@core/main';
 import * as schema from '../db/schema';
 import { clienteUpsertHandler } from './cliente';
 import { proveedorUpsertHandler } from './proveedor';

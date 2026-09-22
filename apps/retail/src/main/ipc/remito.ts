@@ -6,10 +6,8 @@ import { app, dialog, BrowserWindow, type IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId, nombreCompletoCliente } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession } from '../auth/session';
-import { getOriginId } from '../context';
+import { getSession, getOriginId, id, optId, str, optStr, num, arr } from '@core/main';
 import { renderRemitoHtml } from '../print/remito-template';
-import { id, optId, str, optStr, num, arr } from '../validation/core';
 
 type Db = BetterSQLite3Database<typeof schema>;
 type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];

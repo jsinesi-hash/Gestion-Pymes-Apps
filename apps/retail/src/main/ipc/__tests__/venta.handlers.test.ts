@@ -16,7 +16,7 @@ import {
   type VentaConfirmarPayload,
   type VentaPagoPayload,
 } from '../venta';
-import { hashPassword } from '../../auth/hash';
+import { hashPassword } from '@core/main';
 import { loginHandler } from '../auth';
 import {
   presupuestoCrearHandler, presupuestoEmitirHandler, presupuestoAnularHandler,

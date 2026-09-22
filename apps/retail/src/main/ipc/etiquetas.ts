@@ -2,7 +2,7 @@ import { eq, and, or, like, gt, sql, asc } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
-import { getSession } from '../auth/session';
+import { getSession } from '@core/main';
 import type { PerfilEtiqueta, EtiquetaItem } from '@ferreteria/shared';
 import fs from 'node:fs';
 import os from 'node:os';

@@ -10,8 +10,7 @@ import { stockEntradaHandler } from '../stock';
 import { cajaAbrirHandler } from '../caja';
 import { ventaConfirmarHandler, type VentaConfirmarPayload } from '../venta';
 import { dashboardVentasHandler, dashboardStockHandler, dashboardCajaHandler } from '../dashboard';
-import { requirePermission } from '../../auth/guard';
-import { setSession } from '../../auth/session';
+import { requirePermission, setSession } from '@core/main';
 
 const CF_ID = 'cf000000-0000-0000-0000-000000000001';
 type Db = ReturnType<typeof setupDb>;

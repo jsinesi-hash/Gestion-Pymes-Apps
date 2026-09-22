@@ -1,6 +1,7 @@
 import { eq, and } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import * as schema from '../db/schema';
+import * as schema from '@core/db';
+import { usuario, rol } from '@core/db';
 import { verifyPassword } from './hash';
 
 type Db = BetterSQLite3Database<typeof schema>;
@@ -10,19 +11,19 @@ export function verificarSupervisor(
   creds: { nombre_usuario: string; password: string },
 ): string {
   const supervisorRol = db
-    .select({ id: schema.rol.id })
-    .from(schema.rol)
-    .where(and(eq(schema.rol.nombre, 'SUPERVISOR'), eq(schema.rol.activo, true)))
+    .select({ id: rol.id })
+    .from(rol)
+    .where(and(eq(rol.nombre, 'SUPERVISOR'), eq(rol.activo, true)))
     .get();
   if (!supervisorRol) throw new Error('SUPERVISOR_INVALIDO');
 
   const user = db
-    .select({ id: schema.usuario.id, hash_password: schema.usuario.hash_password })
-    .from(schema.usuario)
+    .select({ id: usuario.id, hash_password: usuario.hash_password })
+    .from(usuario)
     .where(and(
-      eq(schema.usuario.nombre_usuario, creds.nombre_usuario),
-      eq(schema.usuario.activo, true),
-      eq(schema.usuario.rol_id, supervisorRol.id),
+      eq(usuario.nombre_usuario, creds.nombre_usuario),
+      eq(usuario.activo, true),
+      eq(usuario.rol_id, supervisorRol.id),
     ))
     .get();
 

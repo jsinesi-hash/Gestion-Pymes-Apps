@@ -4,14 +4,12 @@ import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId, formatSku } from '@ferreteria/shared';
 export { parseSku } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession } from '../auth/session';
-import { getOriginId } from '../context';
+import { getSession, getOriginId, str, optStr, num, bool, id as vId, optId } from '@core/main';
 import { crearPresentacionDefault } from './presentacion';
 import { esSinonimosHabilitado, expandirTerminos } from '../sinonimos/buscar';
 import { normalizarTermino } from '../sinonimos/normalizar';
 import { crearMatcher } from '../matching/producto-matcher';
 import { getPrecioEnListaHandler } from './lista-precio-valor';
-import { str, optStr, num, bool, id as vId, optId } from '../validation/core';
 
 type Db = BetterSQLite3Database<typeof schema>;
 

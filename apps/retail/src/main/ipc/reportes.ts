@@ -3,7 +3,7 @@ import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import type Database from 'better-sqlite3';
 import { inicioDelDia, finDelDia, nombreCompletoCliente } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession } from '../auth/session';
+import { getSession } from '@core/main';
 
 type Db = BetterSQLite3Database<typeof schema>;
 type SqliteDb = Database.Database;

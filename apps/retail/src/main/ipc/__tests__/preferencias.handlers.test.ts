@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
 import { preferenciasGetHandler, preferenciasGuardarHandler } from '../preferencias';
-import { getSessionData } from '../../auth/session';
+import { getSessionData } from '@core/main';
 
 describe('preferencias handlers', () => {
   let db: ReturnType<typeof setupDb>;

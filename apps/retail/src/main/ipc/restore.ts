@@ -4,7 +4,7 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import type * as schema from '../db/schema';
 import type { RestoreValidationResult } from '@ferreteria/shared';
-import { getSession } from '../auth/session';
+import { getSession } from '@core/main';
 import { validarBackup, ejecutarRestoreAtomico } from '../backup/restore-engine';
 
 type Db = BetterSQLite3Database<typeof schema>;

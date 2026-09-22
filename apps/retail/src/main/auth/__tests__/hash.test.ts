@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { hashPassword, verifyPassword } from '../hash';
+import { hashPassword, verifyPassword } from '@core/main';
 
 describe('hashPassword / verifyPassword', () => {
   it('hashPassword devuelve string con prefijo scrypt$', () => {

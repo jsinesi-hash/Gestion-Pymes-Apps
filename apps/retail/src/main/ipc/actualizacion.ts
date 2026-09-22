@@ -2,7 +2,7 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { eq } from 'drizzle-orm';
 import * as schema from '../db/schema';
-import { getSession } from '../auth/session';
+import { getSession } from '@core/main';
 import { obtenerEstado, instalarYReiniciar, type EstadoActualizacion } from '../actualizacion/estado';
 import { obtenerNotas } from '../actualizacion/changelog';
 

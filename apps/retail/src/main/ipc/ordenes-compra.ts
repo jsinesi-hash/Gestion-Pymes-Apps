@@ -3,10 +3,7 @@ import { generateId } from '@ferreteria/shared';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
-import { getSession } from '../auth/session';
-import { getOriginId } from '../context';
-import { requirePermission } from '../auth/guard';
-import { id, optStr, str, num, centavos, oneOf } from '../validation/core';
+import { getSession, getOriginId, requirePermission, id, optStr, str, num, centavos, oneOf } from '@core/main';
 
 const OC_TIPO = ['manual', 'sugerida'] as const;
 

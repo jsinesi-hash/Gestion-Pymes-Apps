@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { eq, and } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
-import { hashPassword } from './hash';
+import { hashPassword } from '@core/main';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
