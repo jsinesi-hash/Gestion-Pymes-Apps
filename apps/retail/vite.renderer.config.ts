@@ -10,11 +10,15 @@ export default defineConfig({
   root: 'src/renderer',
   plugins: [react()],
   resolve: {
-    alias: {
-      '@ferreteria/shared': path.resolve(__dirname, '../../packages/shared/src/index.ts'),
-      '@core/db': path.resolve(__dirname, '../../packages/core-db/src/index.ts'),
-      '@core/ui': path.resolve(__dirname, '../../packages/core-ui/src/index.ts'),
-    },
+    // Array form: '@core/ui' va como regex EXACTA (^@core/ui$) para que el barrel JS use
+    // el source, pero los subpaths (p.ej. '@core/ui/styles/global.css') NO matcheen el alias
+    // y caigan a la resolución por el mapa `exports` del package (un alias string es greedy y
+    // reescribiría el subpath a '.../src/index.ts/styles/global.css').
+    alias: [
+      { find: /^@core\/ui$/, replacement: path.resolve(__dirname, '../../packages/core-ui/src/index.ts') },
+      { find: '@core/db', replacement: path.resolve(__dirname, '../../packages/core-db/src/index.ts') },
+      { find: '@ferreteria/shared', replacement: path.resolve(__dirname, '../../packages/shared/src/index.ts') },
+    ],
   },
   build: {
     outDir: path.join(__dirname, '.vite/renderer/main_window'),
