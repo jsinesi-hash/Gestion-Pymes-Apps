@@ -17,6 +17,9 @@ importers:
       '@core/db':
         specifier: workspace:*
         version: link:../../packages/core-db
+      '@core/main':
+        specifier: workspace:*
+        version: link:../../packages/core-main
       '@core/ui':
         specifier: workspace:*
         version: link:../../packages/core-ui
@@ -157,6 +160,34 @@ importers:
       better-sqlite3:
         specifier: ^12.0.0
         version: 12.10.0
+      typescript:
+        specifier: ^5.6.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@25.9.1)(jsdom@29.1.1)(terser@5.48.0)
+
+  packages/core-main:
+    dependencies:
+      '@core/db':
+        specifier: workspace:*
+        version: link:../core-db
+      '@ferreteria/shared':
+        specifier: workspace:*
+        version: link:../shared
+      drizzle-orm:
+        specifier: ^0.38.0
+        version: 0.38.4(@types/better-sqlite3@7.6.13)(@types/react@18.3.30)(better-sqlite3@12.10.0)(react@18.3.1)
+    devDependencies:
+      '@types/better-sqlite3':
+        specifier: ^7.6.0
+        version: 7.6.13
+      better-sqlite3:
+        specifier: ^12.0.0
+        version: 12.10.0
+      electron:
+        specifier: ^32.2.0
+        version: 32.3.3
       typescript:
         specifier: ^5.6.0
         version: 5.9.3

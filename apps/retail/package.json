@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@core/db": "workspace:*",
+    "@core/main": "workspace:*",
     "@core/ui": "workspace:*",
     "@ferreteria/shared": "workspace:*",
     "better-sqlite3": "^12.0.0",
