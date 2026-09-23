@@ -27,6 +27,13 @@ export { default as ProtectedRoute } from './auth/ProtectedRoute';
 export * from './shell/PantallaBloqueo';
 export * from './shell/AppearanceDrawer';
 export * from './shell/InicioRedirect';
+// Shell genérico (B5)
+export * from './shell/AppShell';
+export * from './shell/CommandPalette';
+export * from './shell/breadcrumb';
+export * from './shell/comandos';
+export * from './shell/DepuracionBackupsModal';
+export * from './shell/buscadorClientes';
 // Preferencias e inicio (B3)
 export * from './hooks/usePreferencias';
 export * from './hooks/useInicioPersonalizable';

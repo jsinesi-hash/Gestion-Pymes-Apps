@@ -1,8 +1,8 @@
 // Elaborados E1 (Task B4): secciones de breadcrumb y keywords de leaf propias de Retail.
-// La mecánica pura vive en renderer/lib/breadcrumb.ts; acá sólo la configuración de Retail
-// que RetailShell le pasa al AppShell (props `crumbs` y `leafKeywords`).
+// La mecánica pura vive en @core/ui (shell/breadcrumb.ts); acá sólo la configuración de
+// Retail que RetailShell le pasa al AppShell (props `crumbs` y `leafKeywords`).
 
-import { LEAF_KEYWORDS_DEFAULT, type Seccion } from '../lib/breadcrumb';
+import { LEAF_KEYWORDS_DEFAULT, type Seccion } from '@core/ui';
 
 // Secciones del breadcrumb de Retail (antes SECCIONES en lib/breadcrumb.ts).
 export const CRUMBS_RETAIL: readonly Seccion[] = [

@@ -1,9 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
-import { AuthContext, AppProfileProvider } from '@core/ui';
+import { AuthContext, AppProfileProvider, AppShell } from '@core/ui';
 import { crearNavegacion } from '@ferreteria/shared';
-import { AppShell } from './AppShell';
 
 // Task B4: AppShell es genérico y no conoce nada de Retail. Se lo monta con un NAV, crumbs,
 // comandos y buscadores INVENTADOS y se verifica que renderiza sólo eso y respeta permisos.

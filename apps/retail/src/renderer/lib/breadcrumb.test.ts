@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildBreadcrumb as buildBreadcrumbRaw } from './breadcrumb';
+import { buildBreadcrumb as buildBreadcrumbRaw } from '@core/ui';
 import { CRUMBS_RETAIL, LEAF_KEYWORDS_RETAIL } from '../shell/crumbsRetail';
 
 // Task B4: buildBreadcrumb es genérico; Retail le pasa sus secciones y keywords.

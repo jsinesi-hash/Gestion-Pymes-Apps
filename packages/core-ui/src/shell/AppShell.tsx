@@ -1,17 +1,19 @@
 import { useState, useEffect, type ReactNode } from 'react';
 import { NavLink, Link, Outlet, useLocation } from 'react-router-dom';
-import { buildBreadcrumb, type Seccion } from '../../lib/breadcrumb';
-import type { Comando } from '../../lib/comandos';
+import { buildBreadcrumb, type Seccion } from './breadcrumb';
+import type { Comando } from './comandos';
 import type { ResumenDepuracion } from '@ferreteria/shared';
-import { useAuth } from '@core/ui';
-import { useAppProfile } from '@core/ui';
-import { useInicioPersonalizableHabilitado } from '@core/ui';
-import { usePreferencias } from '@core/ui';
-import { AppearanceDrawer } from '@core/ui';
+import { useAuth } from '../auth/AuthContext';
+import { useAppProfile } from '../AppProfile';
+import { useInicioPersonalizableHabilitado } from '../hooks/useInicioPersonalizable';
+import { usePreferencias } from '../hooks/usePreferencias';
+import { AppearanceDrawer } from './AppearanceDrawer';
 import { CommandPalette, type Buscador } from './CommandPalette';
-import { DepuracionBackupsModal, depuracionPospuestaVigente } from '../config/DepuracionBackupsModal';
-import { PantallaBloqueo } from '@core/ui';
-import { useIdleLock, useBloqueoInactividad } from '@core/ui';
+import { DepuracionBackupsModal, depuracionPospuestaVigente } from './DepuracionBackupsModal';
+import { PantallaBloqueo } from './PantallaBloqueo';
+import { useIdleLock } from '../hooks/useIdleLock';
+import { useBloqueoInactividad } from '../hooks/useBloqueoInactividad';
+import { bridge } from '../bridge';
 
 // ADR-076 Tarea 11: "Ahora no" pospone la consulta de depuración por el resto de la
 // sesión (hasta reiniciar la app) — flag a nivel de módulo, no de componente, para que
@@ -88,7 +90,7 @@ export function AppShell(props: Readonly<AppShellProps>) {
     let vivo = true;
     (async () => {
       try {
-        const r: ResumenDepuracion = await (globalThis as any).ferreteria.backup.evaluarDepuracion();
+        const r: ResumenDepuracion = await bridge().backup.evaluarDepuracion();
         if (vivo && r.candidatos.length > 0) setDepResumen(r);
       } catch {
         // silencioso: sin candidatos, sin permiso, o backend no disponible todavía.

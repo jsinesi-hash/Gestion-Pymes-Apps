@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@core/ui';
-import { useEscapeAction } from '@core/ui';
-import { filtrarPorTexto, type Comando } from '../../lib/comandos';
+import { useAuth } from '../auth/AuthContext';
+import { useEscapeAction } from '../hooks/useEscapeAction';
+import { filtrarPorTexto, type Comando } from './comandos';
 
 /**
  * Una fuente de resultados de la paleta. `buscar` recibe el texto y devuelve comandos;

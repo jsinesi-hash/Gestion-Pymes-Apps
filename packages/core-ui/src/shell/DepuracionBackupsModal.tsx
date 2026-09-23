@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ResumenDepuracion } from '@ferreteria/shared';
-import { useEscapeToClose } from '@core/ui';
+import { useEscapeToClose } from '../hooks/useEscapeToClose';
+import { bridge } from '../bridge';
 
 // Postergación persistente del aviso de depuración, por terminal (es un recordatorio sobre
 // archivos de backup locales de esta máquina). Guarda el epoch-ms hasta el que no se vuelve
@@ -57,7 +58,7 @@ export function DepuracionBackupsModal({ resumen, onClose, onDone }: Readonly<Pr
     setError(null);
     try {
       const rutas = resumen.candidatos.map(c => c.ruta);
-      const r = await (globalThis as any).ferreteria.backup.depurar({ rutas });
+      const r = await bridge().backup.depurar({ rutas });
       onDone(r);
     } catch (e: any) {
       setError(e?.message ?? 'Error al depurar');

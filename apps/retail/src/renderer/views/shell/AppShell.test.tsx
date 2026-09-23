@@ -1,28 +1,32 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, within, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { AppProfileProvider } from '@core/ui';
+import { AppProfileProvider, AuthContext } from '@core/ui';
 import { navegacionRetail } from '../../../common/navegacion';
 import { RetailShell } from './RetailShell';
 
+// B5: AppShell (y las hooks useInicioPersonalizableHabilitado/usePreferencias) viven ahora en
+// @core/ui y leen useAuth / bridge() por import relativo, así que un vi.mock del barrel
+// '@core/ui' NO los intercepta (lección B3). En su lugar:
+//  - la sesión se provee con el AuthContext real (AuthContext.Provider),
+//  - el flag inicio_personalizable_habilitado y las preferencias se manejan por el bridge
+//    stub (globalThis.ferreteria) que ya usa el resto del archivo.
 const mockCan = vi.fn(() => true);
 let mockRolNombre = 'SUPERVISOR';
 let mockFavoritos: string[] = [];
 let inicioPersonalizable = false;
-const toggleFavorito = vi.fn();
-// AuthContext, useInicioPersonalizable y usePreferencias viven ahora en @core/ui: se
-// overridean sobre el barrel real (spread) en un único vi.mock del módulo.
-vi.mock('@core/ui', async (importOriginal) => ({
-  ...(await importOriginal<any>()),
-  useAuth: () => ({
+const saveSpy = vi.fn().mockResolvedValue(undefined);
+const actualizarPreferencias = vi.fn();
+
+function authValue() {
+  return {
     can: mockCan,
-    session: { nombreCompleto: 'Admin', rolNombre: mockRolNombre, preferencias: { favoritos: mockFavoritos, pantalla_inicio: null } },
+    session: { id: 'u1', nombreCompleto: 'Admin', rolNombre: mockRolNombre, preferencias: { favoritos: mockFavoritos, pantalla_inicio: null } },
+    login: vi.fn(),
     logout: vi.fn(),
-    actualizarPreferencias: vi.fn(),
-  }),
-  useInicioPersonalizableHabilitado: () => inicioPersonalizable,
-  usePreferencias: () => ({ preferencias: null, guardar: vi.fn(), guardarInicio: vi.fn(), toggleFavorito }),
-}));
+    actualizarPreferencias,
+  } as any;
+}
 
 let remitosHabilitado = true;
 vi.mock('../../hooks/useRemitos', () => ({
@@ -39,15 +43,32 @@ vi.mock('../../hooks/useHubPrecios', () => ({
   useHubPreciosHabilitado: () => hubPrecios,
 }));
 
-vi.mock('./AppearanceDrawer', () => ({ AppearanceDrawer: () => null }));
+// Bridge base: el flag de inicio personalizable se lee de `inicioPersonalizable` y las
+// preferencias se guardan en `saveSpy`. Los tests de depuración/actualización re-asignan
+// globalThis.ferreteria con spread, conservando estas claves.
+beforeEach(() => {
+  (globalThis as any).ferreteria = {
+    parametros: {
+      get: ({ clave }: { clave: string }) =>
+        Promise.resolve(clave === 'inicio_personalizable_habilitado' ? (inicioPersonalizable ? 'true' : 'false') : null),
+    },
+    preferencias: { get: () => Promise.resolve(null), save: saveSpy },
+  };
+});
+
+afterEach(() => {
+  delete (globalThis as any).ferreteria;
+});
 
 function renderEn(ruta: string) {
   return render(
-    <AppProfileProvider value={{ nombreApp: 'Ferretería', navegacion: navegacionRetail }}>
-      <MemoryRouter initialEntries={[ruta]}>
-        <RetailShell />
-      </MemoryRouter>
-    </AppProfileProvider>,
+    <AuthContext.Provider value={authValue()}>
+      <AppProfileProvider value={{ nombreApp: 'Ferretería', navegacion: navegacionRetail }}>
+        <MemoryRouter initialEntries={[ruta]}>
+          <RetailShell />
+        </MemoryRouter>
+      </AppProfileProvider>
+    </AuthContext.Provider>,
   );
 }
 
@@ -479,19 +500,23 @@ describe('AppShell — actualización propuesta al login del Supervisor', () => 
 });
 
 describe('AppShell — favoritos (PERF-1, ADR-080)', () => {
-  afterEach(() => { inicioPersonalizable = false; mockFavoritos = []; toggleFavorito.mockClear(); });
+  afterEach(() => { inicioPersonalizable = false; mockFavoritos = []; saveSpy.mockClear(); });
 
-  it('con el flag apagado no se renderiza el grupo Favoritos ni estrellas', () => {
+  it('con el flag apagado no se renderiza el grupo Favoritos ni estrellas', async () => {
     inicioPersonalizable = false; mockFavoritos = ['/pos'];
     renderEn('/productos');
+    // El flag se resuelve por el bridge (async); esperamos un tick para descartar que se
+    // encienda, y verificamos que sigue apagado.
+    await new Promise((r) => setTimeout(r, 20));
     expect(side().queryByText('Favoritos')).not.toBeInTheDocument();
     expect(side().queryByRole('button', { name: /quitar de favoritos|agregar a favoritos/i })).not.toBeInTheDocument();
   });
 
-  it('con el flag encendido y un favorito, aparece el grupo Favoritos al tope', () => {
+  it('con el flag encendido y un favorito, aparece el grupo Favoritos al tope', async () => {
     inicioPersonalizable = true; mockFavoritos = ['/pos'];
     renderEn('/productos');
-    const fav = groupHeader('Favoritos');
+    // El flag inicio_personalizable_habilitado se resuelve por el bridge (async).
+    const fav = await waitFor(() => groupHeader('Favoritos'));
     const catalogo = groupHeader('Catálogo');
     expect(fav).toBeInTheDocument();
     // Favoritos va antes que el primer grupo real (Catálogo).
@@ -499,12 +524,16 @@ describe('AppShell — favoritos (PERF-1, ADR-080)', () => {
     expect(fav.compareDocumentPosition(catalogo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('con el flag encendido, cada ítem muestra una estrella que llama a toggleFavorito', () => {
+  it('con el flag encendido, cada ítem muestra una estrella que persiste el favorito', async () => {
     inicioPersonalizable = true; mockFavoritos = [];
     renderEn('/productos');
-    const estrellas = side().getAllByRole('button', { name: /agregar a favoritos/i });
-    expect(estrellas.length).toBeGreaterThan(0);
+    const estrellas = await waitFor(() => {
+      const e = side().getAllByRole('button', { name: /agregar a favoritos/i });
+      expect(e.length).toBeGreaterThan(0);
+      return e;
+    });
     fireEvent.click(estrellas[0]);
-    expect(toggleFavorito).toHaveBeenCalled();
+    // toggleFavorito (real, de usePreferencias) persiste vía bridge().preferencias.save.
+    expect(saveSpy).toHaveBeenCalled();
   });
 });

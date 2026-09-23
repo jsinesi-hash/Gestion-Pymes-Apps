@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { BackupListItem, ResumenDepuracion } from '@ferreteria/shared';
 import { RestoreWizard } from './RestoreWizard';
-import { DepuracionBackupsModal } from './DepuracionBackupsModal';
+import { DepuracionBackupsModal } from '@core/ui';
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;

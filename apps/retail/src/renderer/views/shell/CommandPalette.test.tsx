@@ -1,16 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { CommandPalette } from './CommandPalette';
+import { CommandPalette, buscadorClientes, AuthContext } from '@core/ui';
 import {
   COMANDOS_ACCION, COMANDOS_NAV,
-  buscadorProductos, buscadorClientes, buscadorProveedores,
+  buscadorProductos, buscadorProveedores,
 } from '../../shell/comandosRetail';
 
+// B5: CommandPalette vive en @core/ui y lee useAuth por import relativo; un vi.mock del
+// barrel NO lo intercepta (lección B3). Se provee la sesión con el AuthContext real.
 let mockCan = vi.fn(() => true);
-vi.mock('@core/ui', async (importOriginal) => ({ ...(await importOriginal<any>()),
-  useAuth: () => ({ can: mockCan, session: { id: 'u1' } }),
-}));
+function authValue() {
+  return { can: mockCan, session: { id: 'u1' }, login: vi.fn(), logout: vi.fn(), actualizarPreferencias: vi.fn() } as any;
+}
 
 // Task B4: CommandPalette es genérico; se le pasan los comandos y buscadores de Retail.
 const comandosRetail = { accion: COMANDOS_ACCION, nav: COMANDOS_NAV };
@@ -18,12 +20,14 @@ const buscadoresRetail = [buscadorProductos, buscadorClientes, buscadorProveedor
 
 function renderPalette() {
   return render(
-    <MemoryRouter initialEntries={['/inicio']}>
-      <Routes>
-        <Route path="/inicio" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-inicio</div></>} />
-        <Route path="/productos/nuevo" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-nuevo-producto</div></>} />
-      </Routes>
-    </MemoryRouter>,
+    <AuthContext.Provider value={authValue()}>
+      <MemoryRouter initialEntries={['/inicio']}>
+        <Routes>
+          <Route path="/inicio" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-inicio</div></>} />
+          <Route path="/productos/nuevo" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-nuevo-producto</div></>} />
+        </Routes>
+      </MemoryRouter>
+    </AuthContext.Provider>,
   );
 }
 
@@ -108,13 +112,15 @@ describe('CommandPalette', () => {
       total: 2,
     });
     render(
-      <MemoryRouter initialEntries={['/inicio']}>
-        <Routes>
-          <Route path="/inicio" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-inicio</div></>} />
-          <Route path="/productos/p1" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-producto-p1</div></>} />
-          <Route path="/productos/p2" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-producto-p2</div></>} />
-        </Routes>
-      </MemoryRouter>,
+      <AuthContext.Provider value={authValue()}>
+        <MemoryRouter initialEntries={['/inicio']}>
+          <Routes>
+            <Route path="/inicio" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-inicio</div></>} />
+            <Route path="/productos/p1" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-producto-p1</div></>} />
+            <Route path="/productos/p2" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-producto-p2</div></>} />
+          </Routes>
+        </MemoryRouter>
+      </AuthContext.Provider>,
     );
     fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
     const dialog = await screen.findByRole('dialog', { name: 'Buscar' });
@@ -143,12 +149,14 @@ describe('CommandPalette', () => {
       total: 2,
     });
     render(
-      <MemoryRouter initialEntries={['/inicio']}>
-        <Routes>
-          <Route path="/inicio" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-inicio</div></>} />
-          <Route path="/productos/p1" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-producto-p1</div></>} />
-        </Routes>
-      </MemoryRouter>,
+      <AuthContext.Provider value={authValue()}>
+        <MemoryRouter initialEntries={['/inicio']}>
+          <Routes>
+            <Route path="/inicio" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-inicio</div></>} />
+            <Route path="/productos/p1" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-producto-p1</div></>} />
+          </Routes>
+        </MemoryRouter>
+      </AuthContext.Provider>,
     );
     fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
     const dialog = await screen.findByRole('dialog', { name: 'Buscar' });
@@ -235,11 +243,13 @@ describe('CommandPalette', () => {
 
   it('no abre con Ctrl+K cuando está disabled', () => {
     render(
-      <MemoryRouter initialEntries={['/inicio']}>
-        <Routes>
-          <Route path="/inicio" element={<><CommandPalette disabled comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-inicio</div></>} />
-        </Routes>
-      </MemoryRouter>,
+      <AuthContext.Provider value={authValue()}>
+        <MemoryRouter initialEntries={['/inicio']}>
+          <Routes>
+            <Route path="/inicio" element={<><CommandPalette disabled comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-inicio</div></>} />
+          </Routes>
+        </MemoryRouter>
+      </AuthContext.Provider>,
     );
 
     fireEvent.keyDown(window, { key: 'k', ctrlKey: true });

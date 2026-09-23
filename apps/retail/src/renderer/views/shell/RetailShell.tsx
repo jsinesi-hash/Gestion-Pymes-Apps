@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useAuth } from '@core/ui';
-import { AppShell } from './AppShell';
+import { useAuth, AppShell, buscadorClientes } from '@core/ui';
 import { buildNavRetail } from '../../shell/navRetail';
 import { CRUMBS_RETAIL, LEAF_KEYWORDS_RETAIL } from '../../shell/crumbsRetail';
 import {
   COMANDOS_ACCION, COMANDOS_NAV,
-  buscadorProductos, buscadorClientes, buscadorProveedores,
+  buscadorProductos, buscadorProveedores,
 } from '../../shell/comandosRetail';
 import { useRemitosHabilitado } from '../../hooks/useRemitos';
 import { usePresupuestosHabilitado } from '../../hooks/usePresupuestos';

@@ -2,7 +2,7 @@
 // de AppShell.tsx y vive acá. AppShell es genérico y recibe `nav` ya filtrado por flags;
 // el shell sólo filtra por permiso. RetailShell arma este nav con buildNavRetail(flags).
 
-import type { NavGroup, NavItem } from '../views/shell/AppShell';
+import type { NavGroup, NavItem } from '@core/ui';
 
 const SVG_POS = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3h2l2 13h11l2-9H6"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/></svg>);
 const SVG_CAJA = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>);

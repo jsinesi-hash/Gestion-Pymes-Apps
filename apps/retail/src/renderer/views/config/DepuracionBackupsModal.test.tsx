@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DepuracionBackupsModal } from './DepuracionBackupsModal';
+import { DepuracionBackupsModal } from '@core/ui';
 import type { ResumenDepuracion } from '@ferreteria/shared';
 
 const resumen: ResumenDepuracion = {
