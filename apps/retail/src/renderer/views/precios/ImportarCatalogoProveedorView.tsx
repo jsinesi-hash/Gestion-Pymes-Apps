@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useImportacionCatalogo } from '../../hooks/useImportacionCatalogo';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
-import { formatCurrency } from '../../utils/format';
+import { useEscapeToClose } from '@core/ui';
+import { formatCurrency } from '@core/ui';
 
 type Proveedor = { id: string; razon_social: string; codigo: string | null };
 

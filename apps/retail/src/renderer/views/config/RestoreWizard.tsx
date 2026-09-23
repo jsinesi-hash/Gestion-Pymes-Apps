@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { BackupManifest, RestoreValidationResult } from '@ferreteria/shared';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 
 type Paso = 'seleccionar' | 'validando' | 'comparar' | 'confirmar' | 'ejecutando' | 'resultado';
 

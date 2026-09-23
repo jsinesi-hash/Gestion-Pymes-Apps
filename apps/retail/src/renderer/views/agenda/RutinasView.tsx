@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useRutinas, agendaApi, toDate, type Rutina, type FrecuenciaTipo } from '../../hooks/useAgenda';
 import { RutinaFormModal } from './RutinaFormModal';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 
 const FREC_LABEL: Record<FrecuenciaTipo, string> = {
   unica: 'Única', diaria: 'Diaria', semanal: 'Semanal', mensual: 'Mensual', cada_n_dias: 'Cada N días',

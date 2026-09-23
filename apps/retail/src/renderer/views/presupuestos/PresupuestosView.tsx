@@ -8,9 +8,9 @@ import {
 } from '../../hooks/usePresupuestos';
 import { PresupuestoFormModal } from './PresupuestoFormModal';
 import { PresupuestoDetalleModal } from './PresupuestoDetalleModal';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 import { SearchBox, usePersistentListState, useCallIpc } from '@core/ui';
-import { resaltarCoincidencia } from '../../lib/resaltar';
+import { resaltarCoincidencia } from '@core/ui';
 
 // ADR-085 (SEC-2): único campo de cabecera con control propio en los modales de
 // emisión/anulación de esta vista (ambos operan por `id`, sin exponer un control editable

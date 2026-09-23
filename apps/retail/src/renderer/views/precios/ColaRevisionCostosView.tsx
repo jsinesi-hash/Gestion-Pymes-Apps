@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useImportacionCosto } from '../../hooks/useImportacionCosto';
-import { formatCurrency } from '../../utils/format';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { formatCurrency } from '@core/ui';
+import { useEscapeToClose } from '@core/ui';
 
 type Candidato = { producto_id: string; sku: string; nombre_corto: string; score: number };
 

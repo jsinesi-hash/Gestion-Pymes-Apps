@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fmtARS, badgeEstado } from './utils';
+import { fmtARS, badgeEstado } from '@core/ui';
 import { RegistrarCobroModal } from './RegistrarCobroModal';
 
 type Cuenta = {

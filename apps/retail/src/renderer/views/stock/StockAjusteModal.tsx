@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useExistencias } from '../../hooks/useExistencias';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
-import { rutearCampoError } from '../../lib/rutearCampoError';
+import { useEscapeToClose } from '@core/ui';
+import { rutearCampoError } from '@core/ui';
 import { useToast } from '@core/ui';
 
 export type StockAjusteModalProps = {

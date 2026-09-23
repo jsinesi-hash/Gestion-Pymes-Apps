@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fmtARS, badgeEstado } from './utils';
+import { fmtARS, badgeEstado } from '@core/ui';
 import { ExportarButton } from '../../components/export/ExportarButton';
 import { exportCtaCte } from '@ferreteria/shared';
 import { SearchBox, usePersistentListState } from '@core/ui';
-import { resaltarCoincidencia } from '../../lib/resaltar';
+import { resaltarCoincidencia } from '@core/ui';
 
 type CtaCteRow = {
   id: string;

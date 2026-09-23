@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useFilaNavegable } from '../../../hooks/useFilaNavegable';
 import { SearchBox, usePersistentListState } from '@core/ui';
-import { resaltarCoincidencia } from '../../../lib/resaltar';
+import { resaltarCoincidencia } from '@core/ui';
 import { ExportarButton } from '../../../components/export/ExportarButton';
 import { exportTransportistas } from '@ferreteria/shared';
 

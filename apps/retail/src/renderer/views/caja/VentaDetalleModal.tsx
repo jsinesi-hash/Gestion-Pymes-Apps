@@ -3,7 +3,7 @@ import { AnulacionModal } from '../pos/AnulacionModal';
 import { useAuth } from '../../context/AuthContext';
 import { GenerarRemitoModal } from '../remitos/GenerarRemitoModal';
 import { useRemitosHabilitado } from '../../hooks/useRemitos';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 
 type VentaData = {
   venta: any;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { rutearCampoError } from '../../lib/rutearCampoError';
+import { rutearCampoError } from '@core/ui';
 import { useToast } from '@core/ui';
 
 type Props = { onSuccess: () => void };

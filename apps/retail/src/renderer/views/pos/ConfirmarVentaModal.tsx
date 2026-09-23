@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import type { MedioPago, VentaPagoPayload } from '../../hooks/usePosSession';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 
 type PagoRow = {
   key: string;

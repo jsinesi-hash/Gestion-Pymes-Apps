@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { ymdLocal, hoyYmd } from '@ferreteria/shared';
 import { agendaApi, toDate, type Rutina, type FrecuenciaTipo } from '../../hooks/useAgenda';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 
 const FRECUENCIAS: Array<{ valor: FrecuenciaTipo; label: string }> = [
   { valor: 'unica', label: 'Única vez' },

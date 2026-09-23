@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ExportarButton } from '../../components/export/ExportarButton';
 import { exportClientes, nombreCompletoCliente } from '@ferreteria/shared';
 import { SearchBox, usePersistentListState } from '@core/ui';
-import { resaltarCoincidencia } from '../../lib/resaltar';
+import { resaltarCoincidencia } from '@core/ui';
 import { VistosRecientesPanel } from '../../components/VistosRecientesPanel';
 
 type ClienteRow = {

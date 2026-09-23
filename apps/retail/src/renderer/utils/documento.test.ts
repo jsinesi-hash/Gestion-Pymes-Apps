@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatDocumento, validarDocumento, validarTelefono, validarCodigoPostal } from './documento';
+import { formatDocumento, validarDocumento, validarTelefono, validarCodigoPostal } from '@core/ui';
 
 describe('formatDocumento', () => {
   describe('CUIT / CUIL', () => {

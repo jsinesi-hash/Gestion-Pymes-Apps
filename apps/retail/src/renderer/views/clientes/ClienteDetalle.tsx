@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEscapeAction } from '../../hooks/useEscapeAction';
+import { useEscapeAction } from '@core/ui';
 import { nombreCompletoCliente } from '@ferreteria/shared';
 import { CtaCteResumenCard } from '../credito/CtaCteResumenCard';
 import { useAuth } from '../../context/AuthContext';

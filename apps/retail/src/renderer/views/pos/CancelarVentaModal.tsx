@@ -1,4 +1,4 @@
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 
 type Props = {
   onDescartar: () => void;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, type CSSProperties } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useImportacionCosto } from '../../hooks/useImportacionCosto';
-import { formatCurrency } from '../../utils/format';
+import { formatCurrency } from '@core/ui';
 import { useImportacionCostoWizard } from '../../context/ImportacionCostoWizardContext';
 import { descargarReporteImportacion, type ColumnaReporte } from '../../lib/reporteImportacion';
 

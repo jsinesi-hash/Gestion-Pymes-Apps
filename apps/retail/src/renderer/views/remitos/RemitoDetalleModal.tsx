@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { remitoApi } from '../../hooks/useRemitos';
 import { VentaDetalleModal } from '../caja/VentaDetalleModal';
 import { EditarRemitoModal } from './EditarRemitoModal';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 
 type Props = {
   remitoId: string;

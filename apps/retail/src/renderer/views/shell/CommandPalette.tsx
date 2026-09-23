@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { nombreCompletoCliente } from '@ferreteria/shared';
 import { useAuth } from '../../context/AuthContext';
-import { useEscapeAction } from '../../hooks/useEscapeAction';
+import { useEscapeAction } from '@core/ui';
 import { COMANDOS_ACCION, COMANDOS_NAV, filtrarPorTexto, type Comando } from '../../lib/comandos';
 
 type ClienteRow = {

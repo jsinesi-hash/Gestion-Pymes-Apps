@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEscapeAction } from '../../../hooks/useEscapeAction';
+import { useEscapeAction } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 import { AltaExpressModal } from '../../productos/AltaExpressModal';
 

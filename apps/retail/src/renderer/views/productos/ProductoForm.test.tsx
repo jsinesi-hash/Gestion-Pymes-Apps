@@ -16,7 +16,7 @@ vi.mock('../../hooks/useMarcas', () => ({ useMarcas: () => ({ marcas: [], create
 vi.mock('../../hooks/useImpuestos', () => ({ useImpuestos: () => [{ id: 'i1', nombre: 'IVA 21%' }] }));
 vi.mock('../../hooks/useUbicaciones', () => ({ useUbicaciones: () => [] }));
 vi.mock('../../hooks/useUnidades', () => ({ useUnidades: () => [{ id: 'u1', nombre: 'Unidad', abreviatura: 'un' }] }));
-vi.mock('../../hooks/useEscapeToClose', () => ({ useEscapeToClose: () => {} }));
+vi.mock('@core/ui', async (orig) => ({ ...(await orig<any>()), useEscapeToClose: () => {} }));
 
 const mockCreate = vi.fn();
 

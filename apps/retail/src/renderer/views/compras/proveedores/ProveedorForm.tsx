@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { DireccionGeo, type DireccionGeoValue } from '../../../components/DireccionGeo';
-import { formatDocumento, validarDocumento, validarTelefono, validarCodigoPostal } from '../../../utils/documento';
+import { DireccionGeo, type DireccionGeoValue } from '@core/ui';
+import { formatDocumento, validarDocumento, validarTelefono, validarCodigoPostal } from '@core/ui';
 import { useMotorPreciosV2Habilitado } from '../../../hooks/useMotorPrecios';
 import { useCallIpc } from '@core/ui';
 

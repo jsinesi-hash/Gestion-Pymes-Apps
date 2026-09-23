@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { fmtARS } from './utils';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { fmtARS } from '@core/ui';
+import { useEscapeToClose } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 
 // ADR-085 (SEC-2): campos de este modal que pueden mostrar un error inline; sus inputs

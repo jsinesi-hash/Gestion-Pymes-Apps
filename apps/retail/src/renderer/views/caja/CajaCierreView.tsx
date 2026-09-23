@@ -4,7 +4,7 @@ import { useCajaActiva } from '../../hooks/useCajaActiva';
 import { useCajaCierre } from '../../hooks/useCajaCierre';
 import { SupervisorAuthModal } from './SupervisorAuthModal';
 import { useToast, useCallIpc } from '@core/ui';
-import { rutearCampoError } from '../../lib/rutearCampoError';
+import { rutearCampoError } from '@core/ui';
 
 // ADR-085 (SEC-2, Task 14): mapa de código de error de dominio → id del campo del form,
 // usado por rutearCampoError para decidir si el mensaje va inline (monto/obs) o al

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { presupuestoApi, type PresupuestoEstado } from '../../hooks/usePresupuestos';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 
 type LineaDet = {
   id: string;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useEscapeAction } from '../../hooks/useEscapeAction';
+import { useEscapeAction } from '@core/ui';
 import { useProducto } from '../../hooks/useProducto';
 import { useRegistrarVisto } from '../../hooks/useVistosRecientes';
 import { useExistencias } from '../../hooks/useExistencias';

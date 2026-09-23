@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAvisos, agendaApi, parsePayload, toDate, type Aviso, type AvisoCanal, type AvisoEstado } from '../../hooks/useAgenda';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 
 const CANALES: Array<{ valor: string; label: string }> = [
   { valor: '', label: 'Todos los canales' },

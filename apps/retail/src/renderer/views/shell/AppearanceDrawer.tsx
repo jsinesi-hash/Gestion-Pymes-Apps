@@ -1,6 +1,6 @@
 import { useAuth } from '../../context/AuthContext';
 import { usePreferencias } from '../../hooks/usePreferencias';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 
 type Tema = 'claro' | 'oscuro';
 type Acento = 'amber' | 'blue' | 'green' | 'violet' | 'brick';

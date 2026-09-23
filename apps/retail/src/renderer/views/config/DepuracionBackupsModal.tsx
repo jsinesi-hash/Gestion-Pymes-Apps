@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ResumenDepuracion } from '@ferreteria/shared';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 
 // Postergación persistente del aviso de depuración, por terminal (es un recordatorio sobre
 // archivos de backup locales de esta máquina). Guarda el epoch-ms hasta el que no se vuelve

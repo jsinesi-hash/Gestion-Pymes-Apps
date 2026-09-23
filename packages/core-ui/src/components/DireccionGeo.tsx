@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { bridge } from '../bridge';
 
 type Provincia = { id: string; nombre: string };
 type Localidad = { id: string; nombre: string; codigoPostal: string | null };
@@ -28,14 +29,14 @@ export function DireccionGeo({ value, onChange }: Readonly<Props>) {
   const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
-    (globalThis as any).ferreteria.geo.provincias().then(setProvincias);
+    bridge().geo.provincias().then(setProvincias);
   }, []);
 
   const provinciaId = provincias.find((p) => p.nombre === value.provincia)?.id ?? '';
 
   useEffect(() => {
     if (!provinciaId) { setLocalidades([]); return; }
-    (globalThis as any).ferreteria.geo.localidades(provinciaId, '').then(setLocalidades);
+    bridge().geo.localidades(provinciaId, '').then(setLocalidades);
   }, [provinciaId]);
 
   const filtered = query.trim()

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 
 type Props = {
   loading: boolean;

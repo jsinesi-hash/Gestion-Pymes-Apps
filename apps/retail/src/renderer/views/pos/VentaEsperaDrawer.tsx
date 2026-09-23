@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { VentaEsperaItem } from '../../hooks/usePosSession';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 
 type Props = {
   ventas: VentaEsperaItem[];

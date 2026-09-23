@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { resolverPrecio, nombreCompletoCliente } from '@ferreteria/shared';
 import { presupuestoApi } from '../../hooks/usePresupuestos';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 
 // ADR-085 (SEC-2): campos de cabecera con control propio en este form. `lineas.*` y

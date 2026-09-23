@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEscapeAction } from '../../hooks/useEscapeAction';
+import { useEscapeAction } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 import { RegistrarCobroModal } from './RegistrarCobroModal';
-import { fmtARS, badgeEstado } from './utils';
+import { fmtARS, badgeEstado } from '@core/ui';
 
 // ADR-085 (SEC-2): campos con control propio en esta vista, mapeados a su `id` (el resto
 // de un error de validación —p. ej. `cuentaId`, que no es editable acá— cae en la región

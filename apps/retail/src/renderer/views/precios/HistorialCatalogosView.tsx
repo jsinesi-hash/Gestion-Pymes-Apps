@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useImportacionCatalogo } from '../../hooks/useImportacionCatalogo';
-import { formatCurrency } from '../../utils/format';
+import { formatCurrency } from '@core/ui';
 
 type HistorialItem = {
   id: string;

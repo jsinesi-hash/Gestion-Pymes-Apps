@@ -6,7 +6,7 @@ import { useMotorPreciosV2Habilitado } from '../../hooks/useMotorPrecios';
 import { RecalcularModal } from './RecalcularModal';
 import { CambiosProgramadosPanel } from './CambiosProgramadosPanel';
 import { ReglasTab } from './ReglasTab';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 
 type ModoCalculo = 'margen_costo' | 'pct_sobre_lista' | 'manual';
 

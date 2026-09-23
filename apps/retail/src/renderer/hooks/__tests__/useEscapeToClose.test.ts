@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useEscapeToClose } from '../useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 
 function pressEscape() {
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));

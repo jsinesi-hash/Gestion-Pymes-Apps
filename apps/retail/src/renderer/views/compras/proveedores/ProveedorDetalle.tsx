@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useEscapeAction } from '../../../hooks/useEscapeAction';
+import { useEscapeAction } from '@core/ui';
 import { ProveedorProductosTab } from './ProveedorProductosTab';
 
 type Proveedor = {

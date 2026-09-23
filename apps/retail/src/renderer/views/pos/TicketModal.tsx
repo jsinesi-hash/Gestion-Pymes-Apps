@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnulacionModal } from './AnulacionModal';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 
 type Props = {
   result: { venta: any; detalles: any[]; comprobante: any };

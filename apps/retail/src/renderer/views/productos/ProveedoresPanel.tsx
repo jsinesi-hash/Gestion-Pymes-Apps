@@ -7,7 +7,7 @@ import {
   type DefaultsComercialProveedor,
 } from '@ferreteria/shared';
 import { useMotorPreciosV2Habilitado } from '../../hooks/useMotorPrecios';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 import { useAuth } from '../../context/AuthContext';
 import { useCallIpc } from '@core/ui';
 

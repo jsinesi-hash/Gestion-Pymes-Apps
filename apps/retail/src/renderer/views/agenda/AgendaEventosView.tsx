@@ -5,7 +5,7 @@ import {
   useAgendaEventos, agendaApi, toDate,
   type AgendaEvento, type EventoOrigen,
 } from '../../hooks/useAgenda';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 
 const ORIGENES: Array<{ valor: string; label: string }> = [
   { valor: '', label: 'Todos los orígenes' },

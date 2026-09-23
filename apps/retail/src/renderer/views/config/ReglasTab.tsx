@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { margenRealPct, precioConMargen } from '@ferreteria/shared';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 
 // ADR-049 §2 — Reglas de margen por lista (reemplaza el tab «Ajustes por producto»).

@@ -6,7 +6,7 @@ import { useMarcas } from '../../hooks/useMarcas';
 import { useImpuestos } from '../../hooks/useImpuestos';
 import { useUbicaciones } from '../../hooks/useUbicaciones';
 import { useUnidades } from '../../hooks/useUnidades';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useEscapeToClose } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 
 type FormState = {
