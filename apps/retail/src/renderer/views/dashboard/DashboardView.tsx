@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@core/ui';
 import { VentasPanel } from './ventas/VentasPanel';
 import { StockPanel } from './stock/StockPanel';
 import { CajaPanel } from './caja/CajaPanel';
@@ -10,7 +10,7 @@ import { ClientesTabView } from './clientes/ClientesTabView';
 import { ProveedoresTabView } from './proveedores/ProveedoresTabView';
 import { PeriodSelector } from './components/PeriodSelector';
 import { usePeriod } from './hooks/usePeriod';
-import { VistosRecientesPanel } from '../../components/VistosRecientesPanel';
+import { VistosRecientesPanel } from '@core/ui';
 import type { DashboardVentas, DashboardStock, DashboardCaja } from '../../../main/ipc/dashboard';
 
 type TabId = 'resumen' | 'ventas' | 'productos' | 'caja' | 'clientes' | 'proveedores';

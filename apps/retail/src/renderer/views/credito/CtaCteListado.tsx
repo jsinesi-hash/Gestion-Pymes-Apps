@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fmtARS, badgeEstado } from '@core/ui';
-import { ExportarButton } from '../../components/export/ExportarButton';
+import { ExportarButton } from '@core/ui';
 import { exportCtaCte } from '@ferreteria/shared';
 import { SearchBox, usePersistentListState } from '@core/ui';
 import { resaltarCoincidencia } from '@core/ui';

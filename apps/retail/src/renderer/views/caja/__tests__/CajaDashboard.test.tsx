@@ -4,11 +4,9 @@ import { MemoryRouter } from 'react-router-dom';
 import { CajaDashboard } from '../CajaDashboard';
 
 const mockCan = vi.fn().mockReturnValue(true);
-vi.mock('../../../context/AuthContext', () => ({
+vi.mock('@core/ui', async (importOriginal) => ({
+  ...(await importOriginal<any>()),
   useAuth: () => ({ can: mockCan }),
-}));
-
-vi.mock('../../../components/export/ExportarButton', () => ({
   ExportarButton: () => null,
 }));
 

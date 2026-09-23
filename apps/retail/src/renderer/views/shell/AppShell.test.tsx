@@ -6,22 +6,19 @@ import { AppShell } from './AppShell';
 const mockCan = vi.fn(() => true);
 let mockRolNombre = 'SUPERVISOR';
 let mockFavoritos: string[] = [];
-vi.mock('../../context/AuthContext', () => ({
+let inicioPersonalizable = false;
+const toggleFavorito = vi.fn();
+// AuthContext, useInicioPersonalizable y usePreferencias viven ahora en @core/ui: se
+// overridean sobre el barrel real (spread) en un único vi.mock del módulo.
+vi.mock('@core/ui', async (importOriginal) => ({
+  ...(await importOriginal<any>()),
   useAuth: () => ({
     can: mockCan,
     session: { nombreCompleto: 'Admin', rolNombre: mockRolNombre, preferencias: { favoritos: mockFavoritos, pantalla_inicio: null } },
     logout: vi.fn(),
     actualizarPreferencias: vi.fn(),
   }),
-}));
-
-let inicioPersonalizable = false;
-vi.mock('../../hooks/useInicioPersonalizable', () => ({
   useInicioPersonalizableHabilitado: () => inicioPersonalizable,
-}));
-
-const toggleFavorito = vi.fn();
-vi.mock('../../hooks/usePreferencias', () => ({
   usePreferencias: () => ({ preferencias: null, guardar: vi.fn(), guardarInicio: vi.fn(), toggleFavorito }),
 }));
 

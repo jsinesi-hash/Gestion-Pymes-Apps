@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { AuthContext, type SessionData } from '../context/AuthContext';
-import ProtectedRoute from './ProtectedRoute';
+import { AuthContext, type SessionData } from '@core/ui';
+import { ProtectedRoute } from '@core/ui';
 
 const mockSession: SessionData = {
   id: 'u1',

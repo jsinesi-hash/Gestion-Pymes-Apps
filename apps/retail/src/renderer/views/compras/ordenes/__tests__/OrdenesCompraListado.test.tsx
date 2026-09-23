@@ -9,7 +9,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-vi.mock('../../../context/AuthContext', () => ({
+vi.mock('@core/ui', async (importOriginal) => ({ ...(await importOriginal<any>()),
   useAuth: () => ({ can: () => true }),
 }));
 

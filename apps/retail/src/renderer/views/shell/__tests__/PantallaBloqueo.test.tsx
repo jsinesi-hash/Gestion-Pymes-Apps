@@ -1,8 +1,8 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { PantallaBloqueo } from '../PantallaBloqueo';
-import { AuthContext } from '../../../context/AuthContext';
+import { PantallaBloqueo } from '@core/ui';
+import { AuthContext } from '@core/ui';
 
 const sess = {
   id: 'u1',

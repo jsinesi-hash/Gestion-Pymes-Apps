@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from './AuthContext';
 
 export default function ProtectedRoute({ children }: Readonly<{ children: ReactNode }>) {
   const { session } = useAuth();

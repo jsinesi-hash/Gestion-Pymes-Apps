@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/react';
-import { ExportarModal } from './ExportarModal';
-import { AuthContext } from '../../context/AuthContext';
+import { ExportarModal } from '@core/ui';
+import { AuthContext } from '@core/ui';
 
 const definicion = {
   entidad: 'productos',

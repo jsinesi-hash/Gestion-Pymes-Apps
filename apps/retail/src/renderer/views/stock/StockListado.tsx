@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { StockEntradaModal } from './StockEntradaModal';
 import { StockAjusteModal } from './StockAjusteModal';
 import { StockMermaModal } from './StockMermaModal';
-import { ExportarButton } from '../../components/export/ExportarButton';
+import { ExportarButton } from '@core/ui';
 import { useFilaNavegable } from '../../hooks/useFilaNavegable';
 import { exportStock } from '@ferreteria/shared';
 

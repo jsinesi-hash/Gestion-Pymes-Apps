@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@core/ui';
 
 type Cfg = { host: string; port: number; secure: boolean; from: string; user: string; tiene_password: boolean };
 

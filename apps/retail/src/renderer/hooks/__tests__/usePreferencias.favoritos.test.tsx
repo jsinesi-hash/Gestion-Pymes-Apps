@@ -1,12 +1,14 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { usePreferencias } from '../usePreferencias';
+import { usePreferencias, AuthContext } from '@core/ui';
 
 const actualizarPreferencias = vi.fn();
 let mockSession: any = { id: 'u1', preferencias: { favoritos: ['/pos'], pantalla_inicio: null } };
-vi.mock('../../context/AuthContext', () => ({
-  useAuth: () => ({ session: mockSession, actualizarPreferencias }),
-}));
+// usePreferencias vive en @core/ui y lee useAuth por ruta relativa interna, así que un
+// override del barrel no lo alcanza: se provee el AuthContext real vía su Provider.
+const wrapper = ({ children }: any) => (
+  <AuthContext.Provider value={{ session: mockSession, actualizarPreferencias } as any}>{children}</AuthContext.Provider>
+);
 
 describe('usePreferencias — favoritos (ADR-080)', () => {
   afterEach(() => { delete (globalThis as any).ferreteria; actualizarPreferencias.mockClear(); });
@@ -14,7 +16,7 @@ describe('usePreferencias — favoritos (ADR-080)', () => {
   it('toggleFavorito agrega si no está y persiste + actualiza sesión', async () => {
     const save = vi.fn().mockResolvedValue(undefined);
     (globalThis as any).ferreteria = { preferencias: { get: vi.fn().mockResolvedValue(null), save } };
-    const { result } = renderHook(() => usePreferencias());
+    const { result } = renderHook(() => usePreferencias(), { wrapper });
     await act(async () => { await result.current.toggleFavorito('/stock'); });
     expect(save).toHaveBeenCalledWith({ usuario_id: 'u1', favoritos: ['/pos', '/stock'] });
     expect(actualizarPreferencias).toHaveBeenCalledWith({ favoritos: ['/pos', '/stock'] });
@@ -23,7 +25,7 @@ describe('usePreferencias — favoritos (ADR-080)', () => {
   it('toggleFavorito quita si ya está', async () => {
     const save = vi.fn().mockResolvedValue(undefined);
     (globalThis as any).ferreteria = { preferencias: { get: vi.fn().mockResolvedValue(null), save } };
-    const { result } = renderHook(() => usePreferencias());
+    const { result } = renderHook(() => usePreferencias(), { wrapper });
     await act(async () => { await result.current.toggleFavorito('/pos'); });
     expect(save).toHaveBeenCalledWith({ usuario_id: 'u1', favoritos: [] });
     expect(actualizarPreferencias).toHaveBeenCalledWith({ favoritos: [] });
@@ -32,7 +34,7 @@ describe('usePreferencias — favoritos (ADR-080)', () => {
   it('guardarInicio persiste y actualiza la sesión', async () => {
     const save = vi.fn().mockResolvedValue(undefined);
     (globalThis as any).ferreteria = { preferencias: { get: vi.fn().mockResolvedValue(null), save } };
-    const { result } = renderHook(() => usePreferencias());
+    const { result } = renderHook(() => usePreferencias(), { wrapper });
     await act(async () => { await result.current.guardarInicio('/pos'); });
     expect(save).toHaveBeenCalledWith({ usuario_id: 'u1', pantalla_inicio: '/pos' });
     expect(actualizarPreferencias).toHaveBeenCalledWith({ pantalla_inicio: '/pos' });

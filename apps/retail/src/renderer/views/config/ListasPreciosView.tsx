@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useListasPrecios } from '../../hooks/useListasPrecios';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@core/ui';
 import { useMotorPreciosV2Habilitado } from '../../hooks/useMotorPrecios';
 import { RecalcularModal } from './RecalcularModal';
 import { CambiosProgramadosPanel } from './CambiosProgramadosPanel';

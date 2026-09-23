@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { navegacionRetail } from '../../../common/navegacion';
-import { useAuth } from '../../context/AuthContext';
-import { useInicioPersonalizableHabilitado } from '../../hooks/useInicioPersonalizable';
-import { usePreferencias } from '../../hooks/usePreferencias';
+import { useAuth } from '@core/ui';
+import { useInicioPersonalizableHabilitado } from '@core/ui';
+import { usePreferencias } from '@core/ui';
 
 function PasswordInput({ id, value, onChange, required, minLength, placeholder, defaultShowValue, maxLength, pattern, inputMode }: Readonly<{
   id?: string; value: string; onChange: (v: string) => void;

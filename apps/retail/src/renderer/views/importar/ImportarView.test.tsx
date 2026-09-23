@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { ImportarView } from './ImportarView';
-import { AuthContext, type SessionData } from '../../context/AuthContext';
+import { AuthContext, type SessionData } from '@core/ui';
 
 const mockSession = (permisos: string[]): SessionData => ({
   id: '1', nombreCompleto: 'Admin', rolId: 'sup', rolNombre: '',

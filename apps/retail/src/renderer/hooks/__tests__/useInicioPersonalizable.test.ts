@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { useInicioPersonalizableHabilitado } from '../useInicioPersonalizable';
+import { useInicioPersonalizableHabilitado } from '@core/ui';
 
 describe('useInicioPersonalizableHabilitado', () => {
   afterEach(() => { delete (globalThis as any).ferreteria; });

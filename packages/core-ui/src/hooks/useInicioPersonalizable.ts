@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { bridge } from '../bridge';
 
 /**
  * Feature flag inicio_personalizable_habilitado (ADR-080). Default false: si el parámetro
@@ -9,7 +10,7 @@ export function useInicioPersonalizableHabilitado(): boolean {
   const [habilitado, setHabilitado] = useState(false);
   useEffect(() => {
     let vigente = true;
-    const p = (globalThis as any).ferreteria?.parametros?.get?.({ clave: 'inicio_personalizable_habilitado' });
+    const p = bridge()?.parametros?.get?.({ clave: 'inicio_personalizable_habilitado' });
     Promise.resolve(p)
       .then((v: string | null) => { if (vigente) setHabilitado(v === 'true'); })
       .catch(() => { if (vigente) setHabilitado(false); });

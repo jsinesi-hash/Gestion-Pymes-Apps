@@ -8,7 +8,7 @@ import {
 } from '@ferreteria/shared';
 import { useMotorPreciosV2Habilitado } from '../../hooks/useMotorPrecios';
 import { useEscapeToClose } from '@core/ui';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 
 // ADR-085 (SEC-2): campos de cada form que pueden recibir un error de validación del

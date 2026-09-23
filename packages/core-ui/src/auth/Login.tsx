@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { PasswordInput } from '@core/ui';
+import { useAuth } from './AuthContext';
+import { PasswordInput } from '../components/PasswordInput';
+import { useAppProfile } from '../AppProfile';
 
 export default function Login() {
   const { login } = useAuth();
+  const { nombreApp } = useAppProfile();
   const navigate = useNavigate();
   const [nombreUsuario, setNombreUsuario] = useState('');
   const [password, setPassword] = useState('');
@@ -28,7 +30,7 @@ export default function Login() {
         <div className="login-logo-row">
           <div className="login-logo" />
           <div>
-            <div className="login-title">Ferretería</div>
+            <div className="login-title">{nombreApp}</div>
             <div className="login-sub">Sistema de gestión</div>
           </div>
         </div>

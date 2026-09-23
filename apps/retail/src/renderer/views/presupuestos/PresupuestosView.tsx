@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ymdLocal, exportPresupuestos } from '@ferreteria/shared';
-import { ExportarButton } from '../../components/export/ExportarButton';
+import { ExportarButton } from '@core/ui';
 import {
   usePresupuestos, usePresupuestoConfig, presupuestoApi,
   type PresupuestoListado, type PresupuestoEstado,

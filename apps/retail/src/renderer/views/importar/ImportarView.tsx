@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@core/ui';
 import { useImportar, type Entidad } from '../../hooks/useImportar';
 import { UploadStep } from './steps/UploadStep';
 import { PreviewStep } from './steps/PreviewStep';

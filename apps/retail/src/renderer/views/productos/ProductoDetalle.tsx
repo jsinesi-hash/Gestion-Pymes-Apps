@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useEscapeAction } from '@core/ui';
 import { useProducto } from '../../hooks/useProducto';
-import { useRegistrarVisto } from '../../hooks/useVistosRecientes';
+import { useRegistrarVisto } from '@core/ui';
 import { useExistencias } from '../../hooks/useExistencias';
 import { StockEntradaModal } from '../stock/StockEntradaModal';
 import { StockAjusteModal } from '../stock/StockAjusteModal';

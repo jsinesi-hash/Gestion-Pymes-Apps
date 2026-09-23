@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@core/ui';
 import { usePosSessionContext } from '../../context/PosSessionContext';
 import type { VentaPagoPayload } from '../../hooks/usePosSession';
 import { PosItemsTable } from './PosItemsTable';

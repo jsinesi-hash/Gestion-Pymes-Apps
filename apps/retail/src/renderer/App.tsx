@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from '@core/ui';
 import { ImportacionCostoWizardProvider } from './context/ImportacionCostoWizardContext';
 import { AppProfileProvider, ToastProvider } from '@core/ui';
 import { navegacionRetail } from '../common/navegacion';

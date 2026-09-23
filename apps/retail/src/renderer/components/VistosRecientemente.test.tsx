@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { VistosRecientemente } from './VistosRecientemente';
-import type { VistoReciente } from '../hooks/useVistosRecientes';
+import { VistosRecientemente } from '@core/ui';
+import type { VistoReciente } from '@core/ui';
 
 const P: VistoReciente = { tipo: 'producto', id: 'p1', etiqueta: 'Tornillo', ts: 2 };
 const C: VistoReciente = { tipo: 'cliente', id: 'c1', etiqueta: 'Ana Gómez', ts: 1 };

@@ -3,10 +3,10 @@ import { NavLink, Link, Outlet, useLocation } from 'react-router-dom';
 import { buildBreadcrumb } from '../../lib/breadcrumb';
 import type { ResumenDepuracion } from '@ferreteria/shared';
 import { navegacionRetail } from '../../../common/navegacion';
-import { useAuth } from '../../context/AuthContext';
-import { useInicioPersonalizableHabilitado } from '../../hooks/useInicioPersonalizable';
-import { usePreferencias } from '../../hooks/usePreferencias';
-import { AppearanceDrawer } from './AppearanceDrawer';
+import { useAuth } from '@core/ui';
+import { useInicioPersonalizableHabilitado } from '@core/ui';
+import { usePreferencias } from '@core/ui';
+import { AppearanceDrawer } from '@core/ui';
 import { CommandPalette } from './CommandPalette';
 import { useRemitosHabilitado } from '../../hooks/useRemitos';
 import { usePresupuestosHabilitado } from '../../hooks/usePresupuestos';
@@ -18,7 +18,7 @@ import { useMenuAcciones } from '../../hooks/useMenuAcciones';
 import { DepuracionBackupsModal, depuracionPospuestaVigente } from '../config/DepuracionBackupsModal';
 import { ActualizacionPropuestaModal } from './ActualizacionPropuestaModal';
 import { NovedadesVersionModal } from './NovedadesVersionModal';
-import { PantallaBloqueo } from './PantallaBloqueo';
+import { PantallaBloqueo } from '@core/ui';
 import { useIdleLock, useBloqueoInactividad } from '@core/ui';
 
 // ADR-076 Tarea 11: "Ahora no" pospone la consulta de depuración por el resto de la

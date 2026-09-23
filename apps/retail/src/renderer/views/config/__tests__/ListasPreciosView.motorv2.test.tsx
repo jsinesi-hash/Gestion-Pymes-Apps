@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { AuthContext } from '../../../context/AuthContext';
+import { AuthContext } from '@core/ui';
 import { ListasPreciosView } from '../ListasPreciosView';
 
 const LISTA = { id: 'l1', nombre: 'General', tipo: 'general', ajuste_porcentual: 0, modo_calculo: 'margen_costo', predeterminada: true, activo: true };

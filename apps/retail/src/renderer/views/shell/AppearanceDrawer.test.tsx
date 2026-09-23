@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { AuthContext } from '../../context/AuthContext';
-import { AppearanceDrawer } from './AppearanceDrawer';
+import { AuthContext } from '@core/ui';
+import { AppearanceDrawer } from '@core/ui';
 
 const mockGet = vi.fn();
 const mockSave = vi.fn();

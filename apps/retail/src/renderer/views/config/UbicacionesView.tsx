@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@core/ui';
 import { useEscapeToClose } from '@core/ui';
 import { rutearCampoError } from '@core/ui';
 import { useToast } from '@core/ui';
 import { canonicalizarUbicacion } from '@ferreteria/shared';
-import { ExportarButton } from '../../components/export/ExportarButton';
+import { ExportarButton } from '@core/ui';
 import { exportUbicaciones } from '@ferreteria/shared';
 
 type UbicacionRow = {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@core/ui';
 import { ymdLocal, hoyYmd } from '@ferreteria/shared';
 import { agendaApi, toDate, type Rutina, type FrecuenciaTipo } from '../../hooks/useAgenda';
 import { useEscapeToClose } from '@core/ui';

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useListasPrecios } from '../../hooks/useListasPrecios';
 import { useListaPrecioValor } from '../../hooks/useListaPrecioValor';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@core/ui';
 
 type Props = {
   productoId: string;

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { AuthContext } from '../../../context/AuthContext';
+import { AuthContext } from '@core/ui';
 import { PrecioPanel } from '../PrecioPanel';
 
 const mockListListas   = vi.fn();

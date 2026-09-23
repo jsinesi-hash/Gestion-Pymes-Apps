@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ExportarButton } from '../../components/export/ExportarButton';
+import { ExportarButton } from '@core/ui';
 import { exportClientes, nombreCompletoCliente } from '@ferreteria/shared';
 import { SearchBox, usePersistentListState } from '@core/ui';
 import { resaltarCoincidencia } from '@core/ui';
-import { VistosRecientesPanel } from '../../components/VistosRecientesPanel';
+import { VistosRecientesPanel } from '@core/ui';
 
 type ClienteRow = {
   id: string;

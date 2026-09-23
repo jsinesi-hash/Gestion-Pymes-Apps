@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@core/ui';
 
 // ADR-049 §4/§8 — detalle de un lote: reporte de impacto + tabla + acciones.
 

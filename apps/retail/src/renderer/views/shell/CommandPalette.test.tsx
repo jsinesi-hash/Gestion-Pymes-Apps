@@ -4,7 +4,7 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { CommandPalette } from './CommandPalette';
 
 let mockCan = vi.fn(() => true);
-vi.mock('../../context/AuthContext', () => ({
+vi.mock('@core/ui', async (importOriginal) => ({ ...(await importOriginal<any>()),
   useAuth: () => ({ can: mockCan, session: { id: 'u1' } }),
 }));
 

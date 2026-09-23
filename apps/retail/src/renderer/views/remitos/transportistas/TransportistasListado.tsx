@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useFilaNavegable } from '../../../hooks/useFilaNavegable';
 import { SearchBox, usePersistentListState } from '@core/ui';
 import { resaltarCoincidencia } from '@core/ui';
-import { ExportarButton } from '../../../components/export/ExportarButton';
+import { ExportarButton } from '@core/ui';
 import { exportTransportistas } from '@ferreteria/shared';
 
 type Transportista = {

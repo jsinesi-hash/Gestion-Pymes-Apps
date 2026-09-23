@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../auth/AuthContext';
+import { bridge } from '../bridge';
 
 type Props = { onUnlock: () => void };
 
@@ -19,7 +20,7 @@ export function PantallaBloqueo({ onUnlock }: Readonly<Props>) {
     e.preventDefault();
     setBusy(true); setError(null);
     try {
-      const ok = await (globalThis as any).ferreteria.auth.verifyPassword({ password });
+      const ok = await bridge().auth.verifyPassword({ password });
       if (ok) { setPassword(''); onUnlock(); }
       else setError('Contraseña incorrecta.');
     } catch {

@@ -7,9 +7,9 @@ import { useBusquedaSimilaresHabilitado } from '../../hooks/useBusquedaSimilares
 import { useCategorias } from '../../hooks/useCategorias';
 import { useMarcas } from '../../hooks/useMarcas';
 import { useFilaNavegable } from '../../hooks/useFilaNavegable';
-import { ExportarButton } from '../../components/export/ExportarButton';
+import { ExportarButton } from '@core/ui';
 import { exportProductos } from '@ferreteria/shared';
-import { VistosRecientesPanel } from '../../components/VistosRecientesPanel';
+import { VistosRecientesPanel } from '@core/ui';
 
 const PAGE_SIZE = 20;
 

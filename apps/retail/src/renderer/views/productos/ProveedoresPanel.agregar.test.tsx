@@ -8,7 +8,7 @@ import { ProveedoresPanel } from './ProveedoresPanel';
 // flag del motor de precios de forma global: mezclarla con los tests de
 // overrides/costo neto (que dependen del hook real + parametros.get) rompería esos.
 let canReturn = true;
-vi.mock('../../context/AuthContext', () => ({ useAuth: () => ({ can: () => canReturn }) }));
+vi.mock('@core/ui', async (importOriginal) => ({ ...(await importOriginal<any>()), useAuth: () => ({ can: () => canReturn }) }));
 vi.mock('../../hooks/useMotorPrecios', () => ({ useMotorPreciosV2Habilitado: () => false }));
 
 const mockListByProducto = vi.fn();

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@core/ui';
 import { useEscapeToClose } from '@core/ui';
 
 type Usuario = {

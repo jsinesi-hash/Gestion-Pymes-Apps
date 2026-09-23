@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import type { CajaActiva } from '../../hooks/useCajaActiva';
 import { MovimientoModal } from './MovimientoModal';
 import { VentaDetalleModal } from './VentaDetalleModal';
-import { useAuth } from '../../context/AuthContext';
-import { ExportarButton } from '../../components/export/ExportarButton';
+import { useAuth } from '@core/ui';
+import { ExportarButton } from '@core/ui';
 import { exportCaja } from '@ferreteria/shared';
 
 type Props = { caja: CajaActiva; onRefetch: () => void };

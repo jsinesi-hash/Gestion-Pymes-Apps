@@ -4,17 +4,12 @@ import { UbicacionesView } from './UbicacionesView';
 
 const mockCan = vi.fn(() => true);
 
-vi.mock('../../context/AuthContext', () => ({
+// ExportarButton vive ahora en @core/ui y usa useAuth internamente por ruta relativa
+// (no vía el barrel), así que overridear useAuth del barrel no lo alcanza; se mockea el
+// componente entero, igual que el resto de las vistas del repo que renderizan <ExportarButton>.
+vi.mock('@core/ui', async (importOriginal) => ({
+  ...(await importOriginal<any>()),
   useAuth: () => ({ can: mockCan }),
-  AuthContext: { Provider: ({ children }: any) => children },
-}));
-
-// Sigue la convención de CajaDashboard.test.tsx: ExportarButton también hace
-// useContext(AuthContext) directamente (no vía useAuth), así que un mock del módulo
-// AuthContext que solo cubra useAuth no alcanza para que ExportarButton renderice sin
-// crashear. Se mockea el componente entero, igual que el resto de las vistas del repo
-// que renderizan <ExportarButton>.
-vi.mock('../../components/export/ExportarButton', () => ({
   ExportarButton: () => null,
 }));
 

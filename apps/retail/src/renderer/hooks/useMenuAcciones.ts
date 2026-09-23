@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '@core/ui';
 import type { MenuAccion } from '../../main/menu/appMenuTemplate';
 
 // Mapa acción → ruta. Las acciones que no navegan (cerrar-sesion) se manejan aparte.

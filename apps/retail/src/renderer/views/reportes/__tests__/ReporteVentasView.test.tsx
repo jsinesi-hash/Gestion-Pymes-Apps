@@ -1,7 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { AuthContext, type SessionData } from '../../../context/AuthContext';
+import { AuthContext, type SessionData } from '@core/ui';
 import { ReporteVentasView, fmtFecha } from '../ReporteVentasView';
 
 const SESSION: SessionData = {

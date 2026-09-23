@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@core/ui';
 import { VentaDetalleModal } from '../caja/VentaDetalleModal';
-import { ExportarButton } from '../../components/export/ExportarButton';
+import { ExportarButton } from '@core/ui';
 import { exportReporteVentas, hoyYmd, inicioDelDia, finDelDia, nombreCompletoCliente } from '@ferreteria/shared';
 import type { ReporteVentasFiltros, ReporteVentasRow, ReporteVentasResult, ReporteVentasSortCol } from '../../../main/ipc/reportes';
 

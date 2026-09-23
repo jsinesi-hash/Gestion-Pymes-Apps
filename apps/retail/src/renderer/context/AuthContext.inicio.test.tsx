@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
-import { useAuth, AuthProvider } from './AuthContext';
+import { useAuth, AuthProvider } from '@core/ui';
 
 // Sonda que expone la sesión y un botón que actualiza favoritos.
 function Sonda() {

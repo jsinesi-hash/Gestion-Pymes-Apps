@@ -19,3 +19,21 @@ export * from './hooks/usePersistentListState';
 export * from './hooks/useIdleLock';
 export * from './hooks/useBloqueoInactividad';
 export * from './lib/errores';
+// Auth + sesión (B3)
+export * from './auth/AuthContext';
+export { default as Login } from './auth/Login';
+export { default as ProtectedRoute } from './auth/ProtectedRoute';
+// Shell (B3)
+export * from './shell/PantallaBloqueo';
+export * from './shell/AppearanceDrawer';
+export * from './shell/InicioRedirect';
+// Preferencias e inicio (B3)
+export * from './hooks/usePreferencias';
+export * from './hooks/useInicioPersonalizable';
+// Vistos recientes (B2 diferido → B3)
+export * from './hooks/useVistosRecientes';
+export * from './components/VistosRecientesPanel';
+export * from './components/VistosRecientemente';
+// Export (B2 diferido → B3)
+export * from './components/export/ExportarButton';
+export * from './components/export/ExportarModal';

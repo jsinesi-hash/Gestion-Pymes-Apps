@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ymdLocal, exportRemitos } from '@ferreteria/shared';
-import { ExportarButton } from '../../components/export/ExportarButton';
+import { ExportarButton } from '@core/ui';
 import { useRemitos, remitoApi, type RemitoListado } from '../../hooks/useRemitos';
 import { RemitoDetalleModal } from './RemitoDetalleModal';
 import { EditarRemitoModal } from './EditarRemitoModal';

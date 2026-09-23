@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SearchBox, usePersistentListState } from '@core/ui';
 import { resaltarCoincidencia } from '@core/ui';
-import { ExportarButton } from '../../../components/export/ExportarButton';
+import { ExportarButton } from '@core/ui';
 import { exportProveedores } from '@ferreteria/shared';
 
 type Proveedor = {

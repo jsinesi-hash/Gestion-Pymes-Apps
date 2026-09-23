@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useEscapeAction } from '@core/ui';
 import { nombreCompletoCliente } from '@ferreteria/shared';
 import { CtaCteResumenCard } from '../credito/CtaCteResumenCard';
-import { useAuth } from '../../context/AuthContext';
-import { useRegistrarVisto } from '../../hooks/useVistosRecientes';
+import { useAuth } from '@core/ui';
+import { useRegistrarVisto } from '@core/ui';
 
 type Cliente = {
   id: string;

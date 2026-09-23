@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { DashboardView } from '../DashboardView';
-import { AuthContext, type SessionData } from '../../../context/AuthContext';
+import { AuthContext, type SessionData } from '@core/ui';
 
 const mockVentas = vi.fn();
 const mockStock  = vi.fn();

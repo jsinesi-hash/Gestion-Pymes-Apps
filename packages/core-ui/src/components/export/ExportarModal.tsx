@@ -1,6 +1,7 @@
 import { useState, useContext } from 'react';
-import { AuthContext } from '../../context/AuthContext';
-import { useEscapeToClose } from '@core/ui';
+import { AuthContext } from '../../auth/AuthContext';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { bridge } from '../../bridge';
 import type { DefinicionExport, ExportFormato } from '@ferreteria/shared';
 
 type Props = {
@@ -30,7 +31,7 @@ export function ExportarModal({ definicion, filtrosActivos, onClose }: Readonly<
     setError(null);
     setLoading(true);
     try {
-      await (globalThis as any).ferreteria.exportar.ejecutar({
+      await bridge().exportar.ejecutar({
         entidad: definicion.entidad,
         perfilId,
         formato,

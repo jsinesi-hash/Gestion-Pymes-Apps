@@ -1,31 +1,36 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, beforeEach } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-import Login from './Login';
+import { MemoryRouter, useLocation } from 'react-router-dom';
+import { AuthContext, AppProfileProvider, Login } from '@core/ui';
+import { navegacionRetail } from '../../common/navegacion';
 
 const mockLogin = vi.fn();
-const mockNavigate = vi.fn();
 
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react-router-dom')>();
-  return { ...actual, useNavigate: () => mockNavigate };
-});
+// Login vive en @core/ui e importa useNavigate desde 'react-router-dom'; mockear el módulo no
+// intercepta al componente ya empaquetado en otro paquete, así que se usa un MemoryRouter real
+// y una sonda captura la ruta a la que navega tras un login exitoso.
+let ultimaRuta = '';
+function SondaRuta() {
+  ultimaRuta = useLocation().pathname;
+  return null;
+}
 
 function renderLogin(loginFn = mockLogin) {
   return render(
-    <AuthContext.Provider value={{ session: null, can: () => false, login: loginFn, logout: async () => {}, actualizarPreferencias: () => {} }}>
-      <MemoryRouter>
-        <Login />
-      </MemoryRouter>
-    </AuthContext.Provider>
+    <AppProfileProvider value={{ nombreApp: 'Ferretería', navegacion: navegacionRetail }}>
+      <AuthContext.Provider value={{ session: null, can: () => false, login: loginFn, logout: async () => {}, actualizarPreferencias: () => {} }}>
+        <MemoryRouter initialEntries={['/login']}>
+          <Login />
+          <SondaRuta />
+        </MemoryRouter>
+      </AuthContext.Provider>
+    </AppProfileProvider>
   );
 }
 
 describe('Login', () => {
   beforeEach(() => {
     mockLogin.mockReset();
-    mockNavigate.mockReset();
   });
 
   it('renderiza campo usuario y contraseña por defecto', () => {
@@ -48,7 +53,7 @@ describe('Login', () => {
     fireEvent.click(screen.getByText('Ingresar'));
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({ nombreUsuario: 'admin', password: 'admin1234' });
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(ultimaRuta).toBe('/');
     });
   });
 
@@ -67,7 +72,6 @@ describe('Login', () => {
 describe('Login — ver contraseña', () => {
   beforeEach(() => {
     mockLogin.mockReset();
-    mockNavigate.mockReset();
   });
 
   it('la contraseña arranca oculta', () => {

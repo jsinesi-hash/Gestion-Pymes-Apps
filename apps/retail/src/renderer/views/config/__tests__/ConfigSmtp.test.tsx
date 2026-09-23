@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { ConfigSmtp } from '../ConfigSmtp';
 
-vi.mock('../../../context/AuthContext', () => ({ useAuth: () => ({ can: () => true }) }));
+vi.mock('@core/ui', async (importOriginal) => ({ ...(await importOriginal<any>()), useAuth: () => ({ can: () => true }) }));
 
 const getConfig = vi.fn();
 const setConfig = vi.fn().mockResolvedValue(undefined);

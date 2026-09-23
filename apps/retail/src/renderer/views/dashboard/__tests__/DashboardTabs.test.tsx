@@ -3,8 +3,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { DashboardView } from '../DashboardView';
-import { AuthContext } from '../../../context/AuthContext';
-import type { SessionData } from '../../../context/AuthContext';
+import { AuthContext } from '@core/ui';
+import type { SessionData } from '@core/ui';
 
 // Mock recharts para evitar errores de ResizeObserver en jsdom
 vi.mock('recharts', () => ({

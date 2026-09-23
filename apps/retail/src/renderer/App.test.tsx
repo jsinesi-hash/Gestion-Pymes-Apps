@@ -1,5 +1,5 @@
 import { render, screen, waitFor, act, within } from '@testing-library/react';
-import type { SessionData } from './context/AuthContext';
+import type { SessionData } from '@core/ui';
 import App from './App';
 
 const mockSession: SessionData = {

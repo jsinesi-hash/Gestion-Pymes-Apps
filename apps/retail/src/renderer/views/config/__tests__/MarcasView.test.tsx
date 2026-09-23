@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { MarcasView } from '../MarcasView';
 
 const mockCan = vi.fn().mockReturnValue(true);
-vi.mock('../../../context/AuthContext', () => ({
+vi.mock('@core/ui', async (importOriginal) => ({ ...(await importOriginal<any>()),
   useAuth: () => ({ can: mockCan }),
 }));
 

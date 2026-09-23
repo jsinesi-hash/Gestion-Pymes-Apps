@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '@core/ui';
 import { useFilaNavegable } from '../../../hooks/useFilaNavegable';
 
 type OcRow = {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useCallIpc } from '@core/ui';
-import { ExportarButton } from '../../components/export/ExportarButton';
+import { ExportarButton } from '@core/ui';
 import { exportSinonimos } from '@ferreteria/shared';
 
 // ADR-085 (SEC-2): campos del form de grupo que pueden mostrar un error inline. Sus inputs

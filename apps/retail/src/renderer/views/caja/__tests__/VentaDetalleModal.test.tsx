@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { VentaDetalleModal } from '../VentaDetalleModal';
 
 const mockCan = vi.fn().mockReturnValue(false);
-vi.mock('../../../context/AuthContext', () => ({
+vi.mock('@core/ui', async (importOriginal) => ({ ...(await importOriginal<any>()),
   useAuth: () => ({ can: mockCan }),
 }));
 

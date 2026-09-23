@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { bridge } from '../bridge';
 
 export type SessionData = {
   id: string;
@@ -55,7 +56,7 @@ function applyPreferences(prefs: SessionData['preferencias']): void {
 
 function rebuildMenu(): void {
   // El menú nativo se reconstruye por rol; no romper si el bridge no está (tests).
-  const p = (globalThis as any).ferreteria?.menu?.rebuild?.();
+  const p = bridge().menu?.rebuild?.();
   if (p && typeof p.catch === 'function') p.catch(() => {});
 }
 
@@ -66,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Rehidratar sesión si el renderer recarga mientras main sigue corriendo
     // En entorno de prueba o si window.ferreteria no está disponible, no hacer nada
-    const ferreteria = (globalThis as any).ferreteria;
+    const ferreteria = bridge();
     if (ferreteria?.auth?.whoami) {
       ferreteria.auth.whoami().then((data: SessionData | null) => {
         if (data) {
@@ -82,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function login(creds: LoginCreds): Promise<void> {
-    const ferreteria = (globalThis as any).ferreteria;
+    const ferreteria = bridge();
     if (ferreteria?.auth?.login) {
       const data: SessionData = await ferreteria.auth.login(creds);
       setSession(data);
@@ -92,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function logout(): Promise<void> {
-    const ferreteria = (globalThis as any).ferreteria;
+    const ferreteria = bridge();
     if (ferreteria?.auth?.logout) {
       await ferreteria.auth.logout();
     }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../auth/AuthContext';
 import type { DefinicionExport } from '@ferreteria/shared';
 import { ExportarModal } from './ExportarModal';
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { registrarVisto, leerVistos, MAX_VISTOS } from './useVistosRecientes';
+import { registrarVisto, leerVistos, MAX_VISTOS } from '@core/ui';
 
 beforeEach(() => localStorage.clear());
 

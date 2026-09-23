@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../auth/AuthContext';
 import { useVistosRecientes, useVistosRecientesHabilitado, type VistoReciente } from '../hooks/useVistosRecientes';
 import { VistosRecientemente } from './VistosRecientemente';
 

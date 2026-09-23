@@ -1,25 +1,28 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { InicioRedirect } from './InicioRedirect';
+import { InicioRedirect, AuthContext, AppProfileProvider } from '@core/ui';
+import { navegacionRetail } from '../../../common/navegacion';
 
 let mockSession: any = { rolNombre: 'SUPERVISOR', permisos: ['dashboard.ver'], preferencias: { pantalla_inicio: null, favoritos: [] } };
-vi.mock('../../context/AuthContext', () => ({
-  useAuth: () => ({ session: mockSession, can: (c: string) => mockSession?.permisos.includes(c) }),
-}));
-
+// InicioRedirect vive en @core/ui y lee useAuth por ruta relativa interna; se provee el
+// AuthContext real vía Provider, y useAppProfile vía AppProfileProvider (navegación de Retail).
 function renderCon(flag: string | null) {
   (globalThis as any).ferreteria = { parametros: { get: vi.fn().mockResolvedValue(flag) } };
   return render(
-    <MemoryRouter initialEntries={['/']}>
-      <Routes>
-        <Route path="/" element={<InicioRedirect />} />
-        <Route path="/productos" element={<div>PRODUCTOS</div>} />
-        <Route path="/pos" element={<div>POS</div>} />
-        <Route path="/dashboard" element={<div>DASHBOARD</div>} />
-        <Route path="/stock" element={<div>STOCK</div>} />
-      </Routes>
-    </MemoryRouter>,
+    <AppProfileProvider value={{ nombreApp: 'Ferretería', navegacion: navegacionRetail }}>
+      <AuthContext.Provider value={{ session: mockSession, can: (c: string) => mockSession?.permisos.includes(c) } as any}>
+        <MemoryRouter initialEntries={['/']}>
+          <Routes>
+            <Route path="/" element={<InicioRedirect />} />
+            <Route path="/productos" element={<div>PRODUCTOS</div>} />
+            <Route path="/pos" element={<div>POS</div>} />
+            <Route path="/dashboard" element={<div>DASHBOARD</div>} />
+            <Route path="/stock" element={<div>STOCK</div>} />
+          </Routes>
+        </MemoryRouter>
+      </AuthContext.Provider>
+    </AppProfileProvider>,
   );
 }
 

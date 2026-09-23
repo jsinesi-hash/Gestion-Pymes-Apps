@@ -3,10 +3,13 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { ConfigMiCuenta } from './ConfigMiCuenta';
 
 let inicioPersonalizable = true;
-vi.mock('../../hooks/useInicioPersonalizable', () => ({ useInicioPersonalizableHabilitado: () => inicioPersonalizable }));
 const guardarInicio = vi.fn();
-vi.mock('../../hooks/usePreferencias', () => ({ usePreferencias: () => ({ preferencias: null, guardar: vi.fn(), guardarInicio, toggleFavorito: vi.fn() }) }));
-vi.mock('../../context/AuthContext', () => ({
+// AuthContext, useInicioPersonalizable y usePreferencias viven ahora en @core/ui: se
+// overridean sobre el barrel real (spread) en un único vi.mock del módulo.
+vi.mock('@core/ui', async (importOriginal) => ({
+  ...(await importOriginal<any>()),
+  useInicioPersonalizableHabilitado: () => inicioPersonalizable,
+  usePreferencias: () => ({ preferencias: null, guardar: vi.fn(), guardarInicio, toggleFavorito: vi.fn() }),
   useAuth: () => ({ session: { id: 'u1', rolNombre: 'OPERADOR', permisos: ['venta.crear', 'stock.entrada'], preferencias: { pantalla_inicio: null, favoritos: [] } }, can: (c: string) => ['venta.crear', 'stock.entrada'].includes(c) }),
 }));
 

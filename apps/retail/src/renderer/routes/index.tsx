@@ -1,9 +1,7 @@
 import type { RouteObject } from 'react-router-dom';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import Login from '../views/Login';
-import ProtectedRoute from '../components/ProtectedRoute';
+import { Login, ProtectedRoute, InicioRedirect } from '@core/ui';
 import { AppShell } from '../views/shell/AppShell';
-import { InicioRedirect } from '../views/shell/InicioRedirect';
 import { PosSessionProvider } from '../context/PosSessionContext';
 import { CajaView } from '../views/caja/CajaView';
 import { PosView } from '../views/pos/PosView';

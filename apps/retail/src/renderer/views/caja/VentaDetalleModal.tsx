@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AnulacionModal } from '../pos/AnulacionModal';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@core/ui';
 import { GenerarRemitoModal } from '../remitos/GenerarRemitoModal';
 import { useRemitosHabilitado } from '../../hooks/useRemitos';
 import { useEscapeToClose } from '@core/ui';

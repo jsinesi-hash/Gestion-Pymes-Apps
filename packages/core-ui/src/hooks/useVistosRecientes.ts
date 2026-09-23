@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../auth/AuthContext';
+import { bridge } from '../bridge';
 
 // Vistos recientemente (ADR-081 / PERF-2). Estado operativo LOCAL por terminal, en
 // localStorage por usuario: NO sincroniza, NO va a la BD ni al backup — mismo tratamiento que
@@ -10,7 +11,7 @@ import { useAuth } from '../context/AuthContext';
 export const MAX_VISTOS = 8;
 
 export type VistoReciente = {
-  tipo: 'producto' | 'cliente';
+  tipo: string;
   id: string;
   etiqueta: string;
   ts: number;
@@ -30,7 +31,7 @@ export function leerVistos(userId: string): VistoReciente[] {
     if (!Array.isArray(arr)) return [];
     return arr.filter(
       (v): v is VistoReciente =>
-        v && (v.tipo === 'producto' || v.tipo === 'cliente') && typeof v.id === 'string',
+        v && typeof v.tipo === 'string' && typeof v.id === 'string',
     );
   } catch {
     return [];
@@ -90,7 +91,7 @@ export function useVistosRecientesHabilitado(): boolean {
   const [habilitado, setHabilitado] = useState(false);
   useEffect(() => {
     let vigente = true;
-    Promise.resolve((globalThis as any).ferreteria?.parametros?.get?.({ clave: 'vistos_recientes_habilitado' }))
+    Promise.resolve(bridge()?.parametros?.get?.({ clave: 'vistos_recientes_habilitado' }))
       .then((v: string | null) => { if (vigente) setHabilitado(v === 'true'); })
       .catch(() => { if (vigente) setHabilitado(false); });
     return () => { vigente = false; };

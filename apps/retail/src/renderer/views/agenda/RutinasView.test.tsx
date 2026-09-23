@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { RutinasView } from './RutinasView';
 
 // AuthContext: la vista/form usan useAuth().session
-vi.mock('../../context/AuthContext', () => ({
+vi.mock('@core/ui', async (importOriginal) => ({ ...(await importOriginal<any>()),
   useAuth: () => ({ session: { id: 'admin-1', nombreCompleto: 'Admin', permisos: [] }, can: () => true }),
 }));
 
