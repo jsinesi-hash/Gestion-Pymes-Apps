@@ -1,0 +1,43 @@
+appId: com.gestionpymes.elaborados
+productName: Elaborados
+# El exe real lo nombra electron-forge vía packagerConfig.executableName = 'elaborados'
+# Debe coincidir con forge.config.ts.
+executableName: elaborados
+copyright: "Copyright © 2026"
+
+# Toma la app ya empaquetada por electron-forge (--prepackaged)
+# No re-bundlea — forge+vite ya generó el asar
+directories:
+  output: dist
+
+win:
+  icon: assets/icon.ico
+  target:
+    - target: nsis
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: false
+  artifactName: "Elaborados-Setup-${version}.${ext}"
+  shortcutName: "${productName}"
+  uninstallDisplayName: "${productName}"
+  createDesktopShortcut: always
+  deleteAppDataOnUninstall: true
+
+# Geo cache bundled en extraResources para primer arranque offline
+extraResources:
+  - from: ../../packages/core-main/geo-cache/
+    to: geo-cache/
+
+# Excluir archivos de DB y WAL — viven en userData, nunca se distribuyen
+files:
+  - "!**/*.db"
+  - "!**/*.db-wal"
+  - "!**/*.db-shm"
+
+# Módulo nativo fuera del asar (ya viene de forge, pero por si acaso)
+asarUnpack:
+  - "**/*.node"
+
+# Sin firma de código en esta etapa (ver docs/README-BUILD.md)
