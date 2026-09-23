@@ -7,7 +7,7 @@ import { runCatalogSeed } from '../../catalog/seed';
 import { categoriaCreateHandler } from '../categoria';
 import { productoCreateHandler } from '../producto';
 import { listaPrecioCreateHandler } from '../lista-precio';
-import { clienteUpsertHandler } from '../cliente';
+import { clienteUpsertHandler } from '@core/main';
 import {
   getPrecioEnListaHandler,
   setManualHandler,

@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { eq } from 'drizzle-orm';
 import * as schema from '../../db/schema';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
-import { invalidateCachedParametro } from '../parametros-cache';
-import { parametrosGetHandler, parametrosSetHandler, parametrosListFlagsHandler, limpiarReferenciasInternas } from '../parametros';
+import { invalidateCachedParametro } from '@core/main';
+import { parametrosGetHandler, parametrosSetHandler, parametrosListFlagsHandler, limpiarReferenciasInternas } from '@core/main';
 
 describe('parametros handlers', () => {
   let db: ReturnType<typeof setupDb>;

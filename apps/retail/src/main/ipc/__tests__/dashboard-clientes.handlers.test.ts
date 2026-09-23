@@ -8,7 +8,7 @@ import { productoCreateHandler } from '../producto';
 import { stockEntradaHandler } from '../stock';
 import { cajaAbrirHandler } from '../caja';
 import { ventaConfirmarHandler, type VentaConfirmarPayload } from '../venta';
-import { clienteUpsertHandler } from '../cliente';
+import { clienteUpsertHandler } from '@core/main';
 import { dashboardClientesRangoHandler, dashboardClientesEstadoHandler } from '../dashboard-clientes';
 
 const CF_ID = 'cf000000-0000-0000-0000-000000000001';

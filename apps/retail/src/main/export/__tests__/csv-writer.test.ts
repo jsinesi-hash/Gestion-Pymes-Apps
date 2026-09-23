@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildCsv } from '../csv-writer';
+import { buildCsv } from '@core/main';
 import type { ColumnaExport } from '@ferreteria/shared';
 
 const BOM = '﻿';

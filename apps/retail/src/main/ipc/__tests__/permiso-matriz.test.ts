@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
-import { permisoMatrizHandler } from '../auth';
+import { permisoMatrizHandler } from '@core/main';
 import { PERMISOS, OPERADOR_PERMISOS } from '../../auth/seed';
 
 describe('permisoMatrizHandler (ADR-087)', () => {

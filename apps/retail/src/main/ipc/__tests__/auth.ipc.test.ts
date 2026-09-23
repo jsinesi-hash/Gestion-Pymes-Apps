@@ -13,7 +13,7 @@ import {
   whoamiHandler,
   desactivarUsuarioHandler,
   verifyPasswordHandler,
-} from '../auth';
+} from '@core/main';
 import { setupDb, loginAsAdmin } from './helpers';
 
 function createTestDb() {

@@ -4,8 +4,8 @@ import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
 import * as schema from '../db/schema';
 import { getSession, getOriginId, verificarSupervisor, num, optStr, oneOf, id as vId } from '@core/main';
-import { triggerAutoBackup } from './backup';
-import { parametrosGetHandler } from './parametros';
+import { triggerAutoBackup } from '@core/main';
+import { parametrosGetHandler } from '@core/main';
 import { insertarAvisos, despacharAviso } from '../agenda/aviso-servicio';
 import { construirComandoCierre } from './caja-cierre-aviso';
 

@@ -3,7 +3,7 @@ import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import nodemailer from 'nodemailer';
 import * as schema from '../db/schema';
 import { getSession } from '@core/main';
-import { parametrosSetHandler } from './parametros';
+import { parametrosSetHandler } from '@core/main';
 import { leerSmtpConfig } from '../agenda/canales/smtp-config';
 import { guardarPasswordSmtp, borrarPasswordSmtp, tienePasswordSmtp, leerPasswordSmtp } from '../seguridad/smtp-secret';
 

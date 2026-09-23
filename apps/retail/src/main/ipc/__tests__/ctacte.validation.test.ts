@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { generateId } from '@ferreteria/shared';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
-import { clienteUpsertHandler } from '../cliente';
+import { clienteUpsertHandler } from '@core/main';
 import { cajaAbrirHandler } from '../caja';
 import {
   ctacteSetLimiteHandler,

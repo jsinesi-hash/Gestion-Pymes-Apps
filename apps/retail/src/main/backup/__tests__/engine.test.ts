@@ -7,7 +7,7 @@ import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../../db/schema';
 import { setupDb } from '../../ipc/__tests__/helpers';
-import { generarManifest, crearBackup, leerManifestBackup } from '../engine';
+import { generarManifest, crearBackup, leerManifestBackup } from '@core/main';
 
 let tmpDir: string;
 
@@ -197,7 +197,7 @@ describe('leerManifestBackup', () => {
   });
 });
 
-import { calcularCandidatosDepuracion } from '../engine';
+import { calcularCandidatosDepuracion } from '@core/main';
 import type { BackupListItem, PoliticaRetencion } from '@ferreteria/shared';
 
 function item(ruta: string, fechaISO: string, tipo: 'auto' | 'manual', bytes: number): BackupListItem {

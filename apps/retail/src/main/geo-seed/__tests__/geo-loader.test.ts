@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import Database from 'better-sqlite3';
 import path from 'node:path';
-import { runGeoSeedOffline } from '../index';
+import { runGeoSeedOffline } from '@core/main';
 
-const GEO_CACHE = path.resolve(__dirname, '../../../../geo-cache');
+const GEO_CACHE = path.resolve(__dirname, '../../../../../../packages/core-main/geo-cache');
 
 describe('runGeoSeedOffline', () => {
   it('puebla provincia/departamento/localidad desde cache', async () => {

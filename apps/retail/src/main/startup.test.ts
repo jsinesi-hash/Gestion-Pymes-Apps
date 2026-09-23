@@ -4,7 +4,7 @@ import { createTestDb } from './ipc/__tests__/helpers';
 import { isSeedBaseAplicado } from './base-seed/index';
 import { runStartup } from './startup';
 
-const GEO_CACHE = path.resolve(__dirname, '../../geo-cache');
+const GEO_CACHE = path.resolve(__dirname, '../../../../packages/core-main/geo-cache');
 
 describe('runStartup — first-run guard', () => {
   it('siembra seed:base en primer arranque y setea el flag', async () => {

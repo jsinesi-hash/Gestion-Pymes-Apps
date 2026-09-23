@@ -2,9 +2,11 @@ import { eq, and } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
-import * as schema from '../db/schema';
-import { verifyPassword, hashPassword, getSession, setSession, clearSession, getSessionData, getOriginId } from '@core/main';
-import type { SessionData } from '@core/main';
+import * as schema from '@core/db';
+import { verifyPassword, hashPassword } from '../auth/hash';
+import { getSession, setSession, clearSession, getSessionData } from '../auth/session';
+import type { SessionData } from '../auth/session';
+import { getOriginId } from '../context';
 
 type Db = BetterSQLite3Database<typeof schema>;
 

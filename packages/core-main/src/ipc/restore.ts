@@ -2,9 +2,9 @@ import path from 'node:path';
 import { app } from 'electron';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import type * as schema from '../db/schema';
+import type * as schema from '@core/db';
 import type { RestoreValidationResult } from '@ferreteria/shared';
-import { getSession } from '@core/main';
+import { getSession } from '../auth/session';
 import { validarBackup, ejecutarRestoreAtomico } from '../backup/restore-engine';
 
 type Db = BetterSQLite3Database<typeof schema>;
@@ -30,9 +30,15 @@ export interface RestoreEjecutarPayload {
   password?: string;
 }
 
+export interface RestoreOpts {
+  /** Carpeta de migraciones Drizzle de la app (la misma que usa su `db/client`). */
+  migrationsFolder: string;
+}
+
 export async function restoreEjecutarHandler(
   db: Db,
   payload: RestoreEjecutarPayload,
+  opts: RestoreOpts,
 ): Promise<{ row_counts_antes: Record<string, number>; row_counts_despues: Record<string, number> }> {
   const session = requireSupervisor();
 
@@ -41,7 +47,7 @@ export async function restoreEjecutarHandler(
     dbPath: path.join(app.getPath('userData'), 'ferreteria.db'),
     fbkPath: payload.ruta,
     usuarioId: session.userId,
-    migrationsFolder: path.join(__dirname, '../db/migrations'),
+    migrationsFolder: opts.migrationsFolder,
     ...(payload.password ? { password: payload.password } : {}),
   });
 
@@ -53,7 +59,7 @@ export async function restoreEjecutarHandler(
 
 // ─── Registro ─────────────────────────────────────────────────────────────────
 
-export function registerRestoreHandlers(ipcMain: IpcMain, db: Db): void {
+export function registerRestoreHandlers(ipcMain: IpcMain, db: Db, opts: RestoreOpts): void {
   ipcMain.handle('restore:validar',  async (_e, p) => restoreValidarHandler(db, p));
-  ipcMain.handle('restore:ejecutar', async (_e, p) => restoreEjecutarHandler(db, p));
+  ipcMain.handle('restore:ejecutar', async (_e, p) => restoreEjecutarHandler(db, p, opts));
 }

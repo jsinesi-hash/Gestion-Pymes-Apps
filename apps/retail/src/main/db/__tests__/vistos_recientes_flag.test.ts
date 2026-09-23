@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { createTestDb, setupDb, loginAsAdmin, clearSession } from '../../ipc/__tests__/helpers';
 import * as schema from '../schema';
-import { parametrosListFlagsHandler } from '../../ipc/parametros';
+import { parametrosListFlagsHandler } from '@core/main';
 
 afterEach(() => clearSession());
 

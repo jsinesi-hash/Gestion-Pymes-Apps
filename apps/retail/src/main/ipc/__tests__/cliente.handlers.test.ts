@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
-import { clienteUpsertHandler, clienteListHandler, clienteGetHandler, clienteDesactivarHandler, clienteReactivarHandler } from '../cliente';
+import { clienteUpsertHandler, clienteListHandler, clienteGetHandler, clienteDesactivarHandler, clienteReactivarHandler } from '@core/main';
 import { listaPrecioCreateHandler } from '../lista-precio';
 import * as schema from '../../db/schema';
 

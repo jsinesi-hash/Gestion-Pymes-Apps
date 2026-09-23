@@ -10,8 +10,8 @@ import {
   evaluarDepuracionCore,
   backupDepurarHandler,
   leerPolitica,
-} from '../backup';
-import { parametrosSetHandler } from '../parametros';
+} from '@core/main';
+import { parametrosSetHandler } from '@core/main';
 
 let tmpDir: string;
 

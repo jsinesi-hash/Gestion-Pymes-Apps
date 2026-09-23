@@ -3,8 +3,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { setupDb } from '../../ipc/__tests__/helpers';
-import { crearBackup } from '../engine';
-import { validarBackup, determinarCompatibilidad } from '../restore-engine';
+import { crearBackup } from '@core/main';
+import { validarBackup, determinarCompatibilidad } from '@core/main';
 
 let tmpDir: string;
 

@@ -1,8 +1,8 @@
 import { eq, asc } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import * as schema from '../db/schema';
-import { getSession } from '@core/main';
+import * as schema from '@core/db';
+import { getSession } from '../auth/session';
 
 type Db = BetterSQLite3Database<typeof schema>;
 

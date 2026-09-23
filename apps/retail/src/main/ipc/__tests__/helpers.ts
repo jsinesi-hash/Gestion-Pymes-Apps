@@ -3,7 +3,7 @@ import path from 'node:path';
 import { createDb, runMigrations } from '@core/db';
 import * as schema from '../../db/schema';
 import { runSeed } from '../../auth/seed';
-import { loginHandler } from '../auth';
+import { loginHandler } from '@core/main';
 
 const MIGRATIONS_DIR = path.resolve(__dirname, '../../db/migrations');
 

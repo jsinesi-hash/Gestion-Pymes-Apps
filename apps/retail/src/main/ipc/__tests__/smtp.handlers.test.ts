@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
-import { invalidateCachedParametro } from '../parametros-cache';
+import { invalidateCachedParametro } from '@core/main';
 import { smtpGetConfigHandler, smtpSetConfigHandler } from '../smtp';
 
 describe('smtp handlers', () => {

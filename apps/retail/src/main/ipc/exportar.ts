@@ -11,13 +11,13 @@ import {
 } from '@ferreteria/shared';
 import * as schema from '../db/schema';
 import { getSession } from '@core/main';
-import { buildCsv } from '../export/csv-writer';
-import { buildXlsx } from '../export/xlsx-writer';
+import { buildCsv } from '@core/main';
+import { buildXlsx } from '@core/main';
 import { productoQueryAll } from './producto';
 import { stockQueryAll } from './stock';
 import { ubicacionQueryAll } from './ubicacion';
 import { proveedorQueryAll } from './proveedor';
-import { clienteQueryAll } from './cliente';
+import { clienteQueryAll } from '@core/main';
 import { ventaQueryAll, ventaDetalladoQueryAll } from './venta';
 import { cajaArqueosQueryAll } from './caja';
 import { ctacteQueryAll } from './ctacte';

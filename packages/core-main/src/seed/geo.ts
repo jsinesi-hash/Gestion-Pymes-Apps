@@ -1,4 +1,4 @@
-// packages/client/src/main/geo-seed/index.ts
+// packages/core-main/src/seed/geo.ts (antes apps/retail/src/main/geo-seed/index.ts)
 //
 // seed:geo — Pobla provincia/departamento/localidad (+ código postal) para
 // validación offline de direcciones de clientes.
@@ -128,7 +128,9 @@ function resolveDbPath(): string {
 }
 
 function applyMigrations(sqlite: Database.Database): void {
-  const migrationsDir = join(__dirname, '..', 'db', 'migrations');
+  // CLI: el core no tiene carpeta de migraciones propia; el lanzador de cada app
+  // (p.ej. apps/retail/scripts/seed-geo.cjs) pasa la suya por GEO_SEED_MIGRATIONS_DIR.
+  const migrationsDir = process.env.GEO_SEED_MIGRATIONS_DIR ?? join(__dirname, '..', 'db', 'migrations');
   const files = fs.readdirSync(migrationsDir)
     .filter((f) => /^\d{4}_.*\.sql$/.test(f) && !f.endsWith('.down.sql'))
     .sort((a, b) => a.localeCompare(b));

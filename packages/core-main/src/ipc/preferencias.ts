@@ -2,9 +2,10 @@ import { eq } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
-import * as schema from '../db/schema';
-import { navegacionRetail } from '../../common/navegacion';
-import { getSession, getSessionData, setSessionData, getOriginId } from '@core/main';
+import * as schema from '@core/db';
+import type { Navegacion } from '@ferreteria/shared';
+import { getSession, getSessionData, setSessionData } from '../auth/session';
+import { getOriginId } from '../context';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
@@ -44,7 +45,7 @@ export function preferenciasGetHandler(db: Db, payload: { usuario_id: string }) 
   );
 }
 
-export function preferenciasGuardarHandler(db: Db, payload: SavePreferenciasPayload) {
+export function preferenciasGuardarHandler(db: Db, payload: SavePreferenciasPayload, navegacion: Navegacion) {
   const session = getSession();
   if (!session) throw new Error('UNAUTHENTICATED');
 
@@ -54,10 +55,10 @@ export function preferenciasGuardarHandler(db: Db, payload: SavePreferenciasPayl
 
   // Validación en el borde (lanza si es inválido, antes de tocar la BD).
   const pantalla_inicio = payload.pantalla_inicio !== undefined
-    ? navegacionRetail.normalizarPantallaInicio(payload.pantalla_inicio)
+    ? navegacion.normalizarPantallaInicio(payload.pantalla_inicio)
     : (existing?.pantalla_inicio ?? DEFAULTS.pantalla_inicio);
   const favoritosJson = payload.favoritos !== undefined
-    ? JSON.stringify(navegacionRetail.normalizarFavoritos(payload.favoritos))
+    ? JSON.stringify(navegacion.normalizarFavoritos(payload.favoritos))
     : (existing?.favoritos ?? DEFAULTS.favoritos);
 
   const merged = {
@@ -97,7 +98,7 @@ export function preferenciasGuardarHandler(db: Db, payload: SavePreferenciasPayl
   }
 }
 
-export function registerPreferenciasHandlers(ipcMain: IpcMain, db: Db): void {
+export function registerPreferenciasHandlers(ipcMain: IpcMain, db: Db, navegacion: Navegacion): void {
   ipcMain.handle('preferencias:get', async (_e, p) => preferenciasGetHandler(db, p));
-  ipcMain.handle('preferencias:save', async (_e, p) => preferenciasGuardarHandler(db, p));
+  ipcMain.handle('preferencias:save', async (_e, p) => preferenciasGuardarHandler(db, p, navegacion));
 }

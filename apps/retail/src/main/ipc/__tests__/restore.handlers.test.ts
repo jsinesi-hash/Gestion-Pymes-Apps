@@ -3,8 +3,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
-import { restoreValidarHandler } from '../restore';
-import { backupEjecutarHandler } from '../backup';
+import { restoreValidarHandler } from '@core/main';
+import { backupEjecutarHandler } from '@core/main';
 
 let tmpDir: string;
 

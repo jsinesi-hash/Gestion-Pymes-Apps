@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { eq, and } from 'drizzle-orm';
 import * as schema from '../../db/schema';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
-import { invalidateCachedParametro } from '../parametros-cache';
+import { invalidateCachedParametro } from '@core/main';
 import {
   cajaGetActivaHandler,
   cajaAbrirHandler,

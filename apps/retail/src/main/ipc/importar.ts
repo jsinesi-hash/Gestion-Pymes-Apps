@@ -4,7 +4,7 @@ import { eq, and } from 'drizzle-orm';
 import { generateId, formatSku, canonicalizarUbicacion, canonicalizarCodigoUbicacion, parseBooleanoImport } from '@ferreteria/shared';
 import { getOriginId, getSession, requirePermission } from '@core/main';
 import * as schema from '../db/schema';
-import { clienteUpsertHandler } from './cliente';
+import { clienteUpsertHandler } from '@core/main';
 import { proveedorUpsertHandler } from './proveedor';
 import { crearPresentacionDefault } from './presentacion';
 import { normalizarTermino } from '../sinonimos/normalizar';

@@ -5,7 +5,7 @@ import { createTestDb } from '../../ipc/__tests__/helpers';
 import * as schema from '../../db/schema';
 import { runBaseSeed, isSeedBaseAplicado } from '../index';
 
-const GEO_CACHE = path.resolve(__dirname, '../../../../geo-cache');
+const GEO_CACHE = path.resolve(__dirname, '../../../../../../packages/core-main/geo-cache');
 
 describe('runBaseSeed', () => {
   it('siembra roles, permisos y admin en DB vacía', async () => {

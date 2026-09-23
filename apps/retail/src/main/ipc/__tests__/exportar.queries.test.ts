@@ -12,7 +12,7 @@ import { transportistaQueryAll, transportistaUpsertHandler } from '../transporti
 import { remitoListarHandler } from '../remito';
 import { presupuestoListarHandler } from '../presupuesto';
 import { proveedorQueryAll, proveedorUpsertHandler } from '../proveedor';
-import { clienteQueryAll, clienteUpsertHandler } from '../cliente';
+import { clienteQueryAll, clienteUpsertHandler } from '@core/main';
 import { ventaQueryAll, ventaDetalladoQueryAll, ventaConfirmarHandler } from '../venta';
 import { cajaAbrirHandler, cajaCerrarHandler, cajaArqueosQueryAll } from '../caja';
 import { runCatalogSeed } from '../../catalog/seed';

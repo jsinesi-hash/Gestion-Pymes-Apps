@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { setupDb, clearSession } from './helpers';
-import { loginHandler, whoamiHandler } from '../auth';
+import { loginHandler, whoamiHandler } from '@core/main';
 import * as schema from '../../db/schema';
 import { generateId } from '@ferreteria/shared';
 

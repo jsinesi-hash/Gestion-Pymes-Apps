@@ -5,7 +5,7 @@ import type * as schema from '../db/schema';
 import { runSeed } from '../auth/seed';
 import { runCatalogSeed } from '../catalog/seed';
 import { runSinonimoSeed } from '../sinonimos/seed';
-import { runGeoSeedOffline } from '../geo-seed/index';
+import { runGeoSeedOffline } from '@core/main';
 import * as dbSchema from '../db/schema';
 
 type Db = BetterSQLite3Database<typeof schema>;
@@ -25,7 +25,7 @@ export async function runBaseSeed(db: Db, cacheDir?: string): Promise<void> {
   runSinonimoSeed(db);
 
   // 3. Geo: provincias/departamentos/localidades (offline desde geo-cache)
-  const resolvedCache = cacheDir ?? path.join(__dirname, '../../../geo-cache');
+  const resolvedCache = cacheDir ?? path.join(__dirname, '../../../../../packages/core-main/geo-cache');
   try {
     const sqlite = (db as any).$client;
     await runGeoSeedOffline(sqlite, resolvedCache);
@@ -78,7 +78,7 @@ if (require.main === module) {
     const db = drizzle(sqlite, { schema: dbSchema });
     migrate(db, { migrationsFolder: path.join(__dirname, '../db/migrations') });
 
-    const geoCache = path.join(__dirname, '../../../../geo-cache');
+    const geoCache = path.join(__dirname, '../../../../../packages/core-main/geo-cache');
     await runBaseSeed(db, geoCache);
 
     console.log('\n✓ seed:base completado.');

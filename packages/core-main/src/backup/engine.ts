@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import JSZip from 'jszip';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import type * as schema from '../db/schema';
+import type * as schema from '@core/db';
 import type { BackupManifest, BackupListItem, PoliticaRetencion, ResumenDepuracion } from '@ferreteria/shared';
 
 type Db = BetterSQLite3Database<typeof schema>;

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
-import { clienteUpsertHandler, clienteGetHandler } from '../cliente';
+import { clienteUpsertHandler, clienteGetHandler } from '@core/main';
 
 type Db = ReturnType<typeof setupDb>;
 let db: Db;

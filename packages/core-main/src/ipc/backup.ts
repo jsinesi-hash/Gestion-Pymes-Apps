@@ -2,9 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import type * as schema from '../db/schema';
+import type * as schema from '@core/db';
 import type { BackupListItem, PoliticaRetencion, ResumenDepuracion } from '@ferreteria/shared';
-import { getSession } from '@core/main';
+import { getSession } from '../auth/session';
 import { crearBackup, listarBackups, calcularCandidatosDepuracion, leerManifestBackup } from '../backup/engine';
 import { parametrosGetHandler } from './parametros';
 

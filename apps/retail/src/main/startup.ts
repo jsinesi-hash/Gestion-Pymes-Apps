@@ -7,7 +7,7 @@ import type * as schema from './db/schema';
 // ELECTRON_RUN_AS_NODE=1 donde app puede no estar inicializado.
 import { runBaseSeed, isSeedBaseAplicado } from './base-seed/index';
 import { runSeed } from './auth/seed';
-import { crearBackup } from './backup/engine';
+import { crearBackup } from '@core/main';
 import { iniciarActualizador } from './actualizacion/estado';
 
 type Db = BetterSQLite3Database<typeof schema>;
@@ -104,12 +104,10 @@ export async function runStartup(db: Db, opts: StartupOpts = {}): Promise<void> 
     let resolvedCache = geoCache;
     if (!resolvedCache) {
       const { app } = await import('electron');
-      resolvedCache = path.join(
-        app.isPackaged
-          ? process.resourcesPath            // producción: bundled en extraResources
-          : path.join(__dirname, '../../'),  // dev: packages/client/
-        'geo-cache'
-      );
+      resolvedCache = app.isPackaged
+        ? path.join(process.resourcesPath, 'geo-cache')  // producción: bundled en extraResources
+        // dev: __dirname = apps/retail/.vite/build → el geo-cache vive en @core/main
+        : path.resolve(__dirname, '../../../../packages/core-main/geo-cache');
     }
     await runBaseSeed(db, resolvedCache);
   }

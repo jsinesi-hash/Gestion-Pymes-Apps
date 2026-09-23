@@ -34,7 +34,7 @@ nsis:
 
 # Geo cache bundled en extraResources para primer arranque offline
 extraResources:
-  - from: geo-cache/
+  - from: ../../packages/core-main/geo-cache/
     to: geo-cache/
 # NOTA: app-update.yml (feed de electron-updater) NO se inyecta acá. Con el flujo
 # --prepackaged, dist.cjs lo copia a resources/ del paquete de forge antes de
