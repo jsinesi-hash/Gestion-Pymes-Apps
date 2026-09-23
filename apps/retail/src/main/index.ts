@@ -36,7 +36,8 @@ import { registerDashboardRangoHandlers } from './ipc/dashboard-rango';
 import { registerDashboardCajaRangoHandlers } from './ipc/dashboard-caja-rango';
 import { registerDashboardClientesHandlers }   from './ipc/dashboard-clientes';
 import { registerDashboardProveedoresHandlers } from './ipc/dashboard-proveedores';
-import { registerExportarHandlers } from './ipc/exportar';
+import { registerExportarHandlers } from '@core/main';
+import { exportarEjecutar } from './ipc/exportar';
 import { registerReportesHandlers } from './ipc/reportes';
 import { registerProveedorHandlers } from './ipc/proveedor';
 import { registerProductoProveedorHandlers } from './ipc/producto-proveedor';
@@ -104,7 +105,7 @@ async function createWindow(): Promise<void> {
   registerDashboardCajaRangoHandlers(ipcMain, db);
   registerDashboardClientesHandlers(ipcMain, db);
   registerDashboardProveedoresHandlers(ipcMain, db);
-  registerExportarHandlers(ipcMain, db);
+  registerExportarHandlers(ipcMain, db, exportarEjecutar);
   registerReportesHandlers(ipcMain, db);
   registerProveedorHandlers(ipcMain, db);
   registerProductoProveedorHandlers(ipcMain, db);
