@@ -1,8 +1,11 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { configurarBridge } from '@core/ui';
 import '@core/ui/styles/fonts.css';
 import '@core/ui/styles/global.css';
 import App from './App';
+
+configurarBridge('ferreteria');
 
 // Red de seguridad recomendada para Electron: sin esto, soltar un archivo FUERA de una
 // zona de drop propia (aunque sea por un par de píxeles) hace que Chromium navegue la

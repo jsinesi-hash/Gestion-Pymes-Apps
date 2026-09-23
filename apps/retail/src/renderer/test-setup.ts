@@ -1,5 +1,8 @@
 // packages/client/src/renderer/test-setup.ts
 import '@testing-library/jest-dom';
+import { configurarBridge } from '@core/ui';
+
+configurarBridge('ferreteria');
 
 // Fix AbortSignal mismatch between jsdom and Node's undici.
 // React Router's data router (createMemoryRouter) creates Request objects during

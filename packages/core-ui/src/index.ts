@@ -1,4 +1,6 @@
 // @core/ui — design system + primitivos de framework (renderer).
+export * from './bridge';
+export * from './AppProfile';
 export * from './components/toast/ToastProvider';
 export * from './components/toast/useToast';
 export * from './components/PasswordInput';

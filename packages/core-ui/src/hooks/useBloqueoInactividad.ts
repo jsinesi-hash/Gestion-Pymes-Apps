@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { bridge } from '../bridge';
 
 // SEC-3 (ADR-079): minutos efectivos de auto-bloqueo. 0 = desactivado (sin cambio de
 // comportamiento). Requiere el flag `bloqueo_inactividad_habilitado` === 'true'; si está
@@ -8,7 +9,7 @@ export function useBloqueoInactividad(): number {
   const [minutos, setMinutos] = useState(0);
   useEffect(() => {
     let vigente = true;
-    const p = (globalThis as any).ferreteria?.parametros;
+    const p = bridge().parametros;
     Promise.all([
       Promise.resolve(p?.get?.({ clave: 'bloqueo_inactividad_habilitado' })).catch(() => null),
       Promise.resolve(p?.get?.({ clave: 'bloqueo_inactividad_minutos' })).catch(() => null),

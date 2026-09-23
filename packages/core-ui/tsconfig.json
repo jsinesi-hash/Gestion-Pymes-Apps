@@ -5,7 +5,12 @@
     "jsx": "react-jsx",
     "outDir": "dist",
     "rootDir": "src",
-    "types": ["node"]
+    "types": ["node"],
+    // Anula el `paths` heredado de tsconfig.base.json — mismo motivo que @core/main:
+    // @core/ui SÍ emite (tsc real) y depende de @ferreteria/shared como paquete de
+    // verdad; resolver contra el fuente rompe con TS6059 (fuera de `rootDir`). Con
+    // `paths` vacío resuelve por resolución normal de Node contra el `dist` publicado.
+    "paths": {}
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
