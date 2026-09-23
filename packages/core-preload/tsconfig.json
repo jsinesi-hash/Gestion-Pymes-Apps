@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["node"],
+    // Anula el `paths` heredado de tsconfig.base.json (mismo motivo que @core/main):
+    // este paquete emite (tsc real) y resuelve @ferreteria/shared contra su `dist`
+    // publicado por resolución normal de Node (symlink de pnpm), no contra el fuente.
+    "paths": {}
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

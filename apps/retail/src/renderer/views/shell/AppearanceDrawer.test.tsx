@@ -60,7 +60,7 @@ beforeEach(() => {
     }
   });
   (window as any).ferreteria = {
-    catalogo: { preferencias: { get: mockGet, save: mockSave } },
+    preferencias: { get: mockGet, save: mockSave },
   };
 });
 

@@ -13,7 +13,7 @@ describe('usePreferencias — favoritos (ADR-080)', () => {
 
   it('toggleFavorito agrega si no está y persiste + actualiza sesión', async () => {
     const save = vi.fn().mockResolvedValue(undefined);
-    (globalThis as any).ferreteria = { catalogo: { preferencias: { get: vi.fn().mockResolvedValue(null), save } } };
+    (globalThis as any).ferreteria = { preferencias: { get: vi.fn().mockResolvedValue(null), save } };
     const { result } = renderHook(() => usePreferencias());
     await act(async () => { await result.current.toggleFavorito('/stock'); });
     expect(save).toHaveBeenCalledWith({ usuario_id: 'u1', favoritos: ['/pos', '/stock'] });
@@ -22,7 +22,7 @@ describe('usePreferencias — favoritos (ADR-080)', () => {
 
   it('toggleFavorito quita si ya está', async () => {
     const save = vi.fn().mockResolvedValue(undefined);
-    (globalThis as any).ferreteria = { catalogo: { preferencias: { get: vi.fn().mockResolvedValue(null), save } } };
+    (globalThis as any).ferreteria = { preferencias: { get: vi.fn().mockResolvedValue(null), save } };
     const { result } = renderHook(() => usePreferencias());
     await act(async () => { await result.current.toggleFavorito('/pos'); });
     expect(save).toHaveBeenCalledWith({ usuario_id: 'u1', favoritos: [] });
@@ -31,7 +31,7 @@ describe('usePreferencias — favoritos (ADR-080)', () => {
 
   it('guardarInicio persiste y actualiza la sesión', async () => {
     const save = vi.fn().mockResolvedValue(undefined);
-    (globalThis as any).ferreteria = { catalogo: { preferencias: { get: vi.fn().mockResolvedValue(null), save } } };
+    (globalThis as any).ferreteria = { preferencias: { get: vi.fn().mockResolvedValue(null), save } };
     const { result } = renderHook(() => usePreferencias());
     await act(async () => { await result.current.guardarInicio('/pos'); });
     expect(save).toHaveBeenCalledWith({ usuario_id: 'u1', pantalla_inicio: '/pos' });

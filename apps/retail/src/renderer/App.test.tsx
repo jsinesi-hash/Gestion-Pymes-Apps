@@ -35,8 +35,8 @@ describe('App', () => {
         marca: { list: async () => [] },
         impuesto: { list: async () => [] },
         ubicacion: { list: async () => [] },
-        preferencias: { get: async () => null },
       },
+      preferencias: { get: async () => null },
     };
     await act(async () => { render(<App />); });
     await waitFor(() => {
