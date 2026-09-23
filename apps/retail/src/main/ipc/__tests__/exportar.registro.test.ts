@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import fs from 'node:fs'; import os from 'node:os'; import path from 'node:path';
 import { crearExportarEjecutar, EXPORTADORES_CORE, type Exportador } from '@core/main';
+import { exportClientes } from '@ferreteria/shared';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
 
 const fake: Exportador = {
@@ -13,6 +14,9 @@ describe('crearExportarEjecutar', () => {
   beforeEach(() => clearSession());
   it('el core registra clientes, caja y ctacte', () => {
     expect(EXPORTADORES_CORE.map(e => e.definicion.entidad).sort()).toEqual(['caja', 'clientes', 'ctacte']);
+  });
+  it('definicionDe expone el label de la entidad para el diálogo de guardado', () => {
+    expect(crearExportarEjecutar([...EXPORTADORES_CORE]).definicionDe('clientes')?.label).toBe(exportClientes.label);
   });
   it('ejecuta un exportador de app registrado', async () => {
     const db = setupDb(); loginAsAdmin(db);

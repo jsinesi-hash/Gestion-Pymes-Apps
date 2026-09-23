@@ -18,7 +18,9 @@ export type Exportador = {
   fetch: (db: Db, req: ExportRequest) => Record<string, unknown>[];
 };
 
-export type ExportarEjecutar = (db: Db, req: ExportRequest, filePath: string) => Promise<void>;
+export type ExportarEjecutar = ((db: Db, req: ExportRequest, filePath: string) => Promise<void>) & {
+  definicionDe(entidad: string): DefinicionExport<any> | undefined;
+};
 
 export const EXPORTADORES_CORE: readonly Exportador[] = [
   { definicion: exportClientes, fetch: (db) => clienteQueryAll(db) as Record<string, unknown>[] },
@@ -32,7 +34,7 @@ export function crearExportarEjecutar(exportadores: readonly Exportador[]): Expo
     if (porEntidad.has(e.definicion.entidad)) throw new Error('EXPORTADOR_DUPLICADO');
     porEntidad.set(e.definicion.entidad, e);
   }
-  return async (db, req, filePath) => {
+  const fn = async (db: Db, req: ExportRequest, filePath: string) => {
     const session = getSession();
     if (!session) throw new Error('UNAUTHENTICATED');
     const exp = porEntidad.get(req.entidad);
@@ -47,16 +49,20 @@ export function crearExportarEjecutar(exportadores: readonly Exportador[]): Expo
     if (req.formato === 'csv') fs.writeFileSync(filePath, buildCsv(perfil.columnas as any, filas), 'utf8');
     else fs.writeFileSync(filePath, await buildXlsx(perfil.columnas as any, filas, def.label));
   };
+  return Object.assign(fn, {
+    definicionDe: (entidad: string) => porEntidad.get(entidad)?.definicion,
+  });
 }
 
 export function registerExportarHandlers(ipcMain: IpcMain, db: Db, ejecutar: ExportarEjecutar): void {
   ipcMain.handle('exportar:ejecutar', async (_e, req: ExportRequest) => {
     const session = getSession();
     if (!session) throw new Error('UNAUTHENTICATED');
+    const label = ejecutar.definicionDe(req.entidad)?.label ?? 'export';
     const { dialog } = await import('electron');
     const ext = req.formato === 'csv' ? 'csv' : 'xlsx';
     const result = await dialog.showSaveDialog({
-      defaultPath: `export.${ext}`,
+      defaultPath: `${label}.${ext}`,
       filters: req.formato === 'csv'
         ? [{ name: 'CSV', extensions: ['csv'] }]
         : [{ name: 'Excel', extensions: ['xlsx'] }],
