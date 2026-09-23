@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { buildBreadcrumb } from './breadcrumb';
+import { buildBreadcrumb as buildBreadcrumbRaw } from './breadcrumb';
+import { CRUMBS_RETAIL, LEAF_KEYWORDS_RETAIL } from '../shell/crumbsRetail';
+
+// Task B4: buildBreadcrumb es genérico; Retail le pasa sus secciones y keywords.
+const buildBreadcrumb = (pathname: string) =>
+  buildBreadcrumbRaw(pathname, CRUMBS_RETAIL, LEAF_KEYWORDS_RETAIL);
 
 describe('buildBreadcrumb (NAV-1 / ADR-077)', () => {
   it('página lista: grupo + página actual, sin links (nada arriba)', () => {

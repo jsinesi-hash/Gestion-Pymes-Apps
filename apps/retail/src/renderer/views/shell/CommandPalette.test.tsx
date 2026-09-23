@@ -2,18 +2,26 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { CommandPalette } from './CommandPalette';
+import {
+  COMANDOS_ACCION, COMANDOS_NAV,
+  buscadorProductos, buscadorClientes, buscadorProveedores,
+} from '../../shell/comandosRetail';
 
 let mockCan = vi.fn(() => true);
 vi.mock('@core/ui', async (importOriginal) => ({ ...(await importOriginal<any>()),
   useAuth: () => ({ can: mockCan, session: { id: 'u1' } }),
 }));
 
+// Task B4: CommandPalette es genérico; se le pasan los comandos y buscadores de Retail.
+const comandosRetail = { accion: COMANDOS_ACCION, nav: COMANDOS_NAV };
+const buscadoresRetail = [buscadorProductos, buscadorClientes, buscadorProveedores];
+
 function renderPalette() {
   return render(
     <MemoryRouter initialEntries={['/inicio']}>
       <Routes>
-        <Route path="/inicio" element={<><CommandPalette /><div>pagina-inicio</div></>} />
-        <Route path="/productos/nuevo" element={<><CommandPalette /><div>pagina-nuevo-producto</div></>} />
+        <Route path="/inicio" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-inicio</div></>} />
+        <Route path="/productos/nuevo" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-nuevo-producto</div></>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -102,9 +110,9 @@ describe('CommandPalette', () => {
     render(
       <MemoryRouter initialEntries={['/inicio']}>
         <Routes>
-          <Route path="/inicio" element={<><CommandPalette /><div>pagina-inicio</div></>} />
-          <Route path="/productos/p1" element={<><CommandPalette /><div>pagina-producto-p1</div></>} />
-          <Route path="/productos/p2" element={<><CommandPalette /><div>pagina-producto-p2</div></>} />
+          <Route path="/inicio" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-inicio</div></>} />
+          <Route path="/productos/p1" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-producto-p1</div></>} />
+          <Route path="/productos/p2" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-producto-p2</div></>} />
         </Routes>
       </MemoryRouter>,
     );
@@ -137,8 +145,8 @@ describe('CommandPalette', () => {
     render(
       <MemoryRouter initialEntries={['/inicio']}>
         <Routes>
-          <Route path="/inicio" element={<><CommandPalette /><div>pagina-inicio</div></>} />
-          <Route path="/productos/p1" element={<><CommandPalette /><div>pagina-producto-p1</div></>} />
+          <Route path="/inicio" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-inicio</div></>} />
+          <Route path="/productos/p1" element={<><CommandPalette comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-producto-p1</div></>} />
         </Routes>
       </MemoryRouter>,
     );
@@ -229,7 +237,7 @@ describe('CommandPalette', () => {
     render(
       <MemoryRouter initialEntries={['/inicio']}>
         <Routes>
-          <Route path="/inicio" element={<><CommandPalette disabled /><div>pagina-inicio</div></>} />
+          <Route path="/inicio" element={<><CommandPalette disabled comandos={comandosRetail} buscadores={buscadoresRetail} /><div>pagina-inicio</div></>} />
         </Routes>
       </MemoryRouter>,
     );

@@ -1,7 +1,7 @@
 import type { RouteObject } from 'react-router-dom';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { Login, ProtectedRoute, InicioRedirect } from '@core/ui';
-import { AppShell } from '../views/shell/AppShell';
+import { RetailShell } from '../views/shell/RetailShell';
 import { PosSessionProvider } from '../context/PosSessionContext';
 import { CajaView } from '../views/caja/CajaView';
 import { PosView } from '../views/pos/PosView';
@@ -67,7 +67,7 @@ export const routes: RouteObject[] = [
             (que no se desmonta al navegar). Así la "venta en curso" persiste al cambiar de
             opción de menú y volver a /pos, sin tocar la BD. */}
         <PosSessionProvider>
-          <AppShell />
+          <RetailShell />
         </PosSessionProvider>
       </ProtectedRoute>
     ),

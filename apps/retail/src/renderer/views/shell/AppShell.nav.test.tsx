@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { NAV_GROUPS } from './AppShell';
+import { NAV_GROUPS } from '../../shell/navRetail';
 
 describe('ADR-083 — nav: Importar datos en Configuración', () => {
   const grupo = (k: string) => NAV_GROUPS.find(g => g.key === k)!;

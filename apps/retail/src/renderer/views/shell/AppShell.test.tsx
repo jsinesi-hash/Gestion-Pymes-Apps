@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, waitFor, within, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { AppShell } from './AppShell';
+import { AppProfileProvider } from '@core/ui';
+import { navegacionRetail } from '../../../common/navegacion';
+import { RetailShell } from './RetailShell';
 
 const mockCan = vi.fn(() => true);
 let mockRolNombre = 'SUPERVISOR';
@@ -41,9 +43,11 @@ vi.mock('./AppearanceDrawer', () => ({ AppearanceDrawer: () => null }));
 
 function renderEn(ruta: string) {
   return render(
-    <MemoryRouter initialEntries={[ruta]}>
-      <AppShell />
-    </MemoryRouter>,
+    <AppProfileProvider value={{ nombreApp: 'Ferretería', navegacion: navegacionRetail }}>
+      <MemoryRouter initialEntries={[ruta]}>
+        <RetailShell />
+      </MemoryRouter>
+    </AppProfileProvider>,
   );
 }
 

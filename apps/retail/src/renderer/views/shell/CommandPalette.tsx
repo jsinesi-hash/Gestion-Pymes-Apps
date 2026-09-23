@@ -1,27 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { nombreCompletoCliente } from '@ferreteria/shared';
 import { useAuth } from '@core/ui';
 import { useEscapeAction } from '@core/ui';
-import { COMANDOS_ACCION, COMANDOS_NAV, filtrarPorTexto, type Comando } from '../../lib/comandos';
+import { filtrarPorTexto, type Comando } from '../../lib/comandos';
 
-type ClienteRow = {
-  id: string;
-  nombre?: string | null;
-  apellido?: string | null;
-  razon_social?: string | null;
-  nombre_fantasia?: string | null;
+/**
+ * Una fuente de resultados de la paleta. `buscar` recibe el texto y devuelve comandos;
+ * puede cachear internamente (p. ej. la lista de clientes) o hacer IPC por consulta (p. ej.
+ * productos). `permiso`, si está presente, gatea la ejecución: sin ese permiso la paleta no
+ * llama a `buscar` (evita disparar un IPC que el rol no puede hacer).
+ */
+export type Buscador = {
+  key: string;
+  titulo: string;
+  permiso?: string;
+  /** Devuelve resultados para el texto; puede cachear internamente. */
+  buscar: (q: string) => Promise<Comando[]>;
 };
 
-type ProveedorRow = {
-  id: string;
-  razon_social: string;
+export type CommandPaletteProps = {
+  disabled?: boolean;
+  comandos: { accion: Comando[]; nav: Comando[] };
+  buscadores: Buscador[];
 };
-
-function labelCliente(c: ClienteRow): string {
-  if (c.nombre) return nombreCompletoCliente({ nombre: c.nombre, apellido: c.apellido ?? null });
-  return c.razon_social || c.nombre_fantasia || '(sin nombre)';
-}
 
 const RECIENTES_MAX = 6;
 
@@ -49,19 +50,21 @@ function guardarReciente(key: string, c: Comando, max: number): Comando[] {
 /**
  * SRCH-1 (ADR-078): paleta de comandos global, Ctrl/Cmd+K. Componente autónomo: no
  * depende de un Context propio, maneja su `open` en estado local y se monta una sola
- * vez en AppShell. Busca en paralelo sobre productos (IPC debounced), clientes y
- * proveedores (cargados una vez y filtrados en cliente), más las acciones/navegación
- * de `lib/comandos.ts` filtradas por permiso.
+ * vez en el shell. No conoce ninguna fuente concreta: recibe los `buscadores` (productos,
+ * clientes, proveedores… en Retail) y los `comandos` (acciones/navegación) por props, y los
+ * recorre en paralelo conservando el orden de secciones que definió la app. Guarda de
+ * carrera (`reqIdRef`): una respuesta lenta de una búsqueda anterior no pisa una más
+ * reciente.
  */
-export function CommandPalette({ disabled = false }: Readonly<{ disabled?: boolean }>) {
+export function CommandPalette({ disabled = false, comandos, buscadores }: Readonly<CommandPaletteProps>) {
   const { can, session } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const [idx, setIdx] = useState(0);
-  const [productos, setProductos] = useState<Comando[]>([]);
-  const [clientesTodos, setClientesTodos] = useState<ClienteRow[] | null>(null);
-  const [proveedoresTodos, setProveedoresTodos] = useState<ProveedorRow[] | null>(null);
+  // Resultados por buscador (mismo índice que `buscadores`), para conservar el orden de
+  // secciones al aplanar.
+  const [resultados, setResultados] = useState<Comando[][]>(() => buscadores.map(() => []));
   const [recientes, setRecientes] = useState<Comando[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const mountedRef = useRef(true);
@@ -110,70 +113,42 @@ export function CommandPalette({ disabled = false }: Readonly<{ disabled?: boole
     }
   }, [open, recientesKey]);
 
-  // Clientes: se cargan una sola vez, la primera vez que se abre la paleta. Requiere
-  // `ctacte.cobrar` (el mismo permiso que gatea el IPC del lado main); sin él, se deja
-  // la lista vacía en vez de disparar una llamada que el Operador no puede hacer.
+  // Sweep de buscadores: query vacía → sin resultados (se muestran recientes/acciones/nav).
+  // Debounce ~200ms + guarda de request (`myReq !== reqIdRef.current` descarta la obsoleta),
+  // igual que la búsqueda IPC de productos previa, ahora extendida a todos los buscadores.
+  // Los buscadores con `permiso` que el rol no tiene no se llaman (no dispara su IPC).
   useEffect(() => {
-    if (!open || clientesTodos !== null) return;
-    if (!can('ctacte.cobrar')) { setClientesTodos([]); return; }
-    let vivo = true;
-    Promise.resolve((globalThis as any).ferreteria?.cliente?.list?.())
-      .then((data: ClienteRow[]) => { if (vivo) setClientesTodos(data ?? []); })
-      .catch(() => { if (vivo) setClientesTodos([]); });
-    return () => { vivo = false; };
-  }, [open, clientesTodos, can]);
-
-  // Proveedores: mismo patrón que clientes, gateado por `proveedor.gestionar`
-  // (Supervisor-only del lado main).
-  useEffect(() => {
-    if (!open || proveedoresTodos !== null) return;
-    if (!can('proveedor.gestionar')) { setProveedoresTodos([]); return; }
-    let vivo = true;
-    Promise.resolve((globalThis as any).ferreteria?.compras?.proveedor?.list?.())
-      .then((data: ProveedorRow[]) => { if (vivo) setProveedoresTodos(data ?? []); })
-      .catch(() => { if (vivo) setProveedoresTodos([]); });
-    return () => { vivo = false; };
-  }, [open, proveedoresTodos, can]);
-
-  // Productos: búsqueda IPC debounced ~200ms. Query vacía → sin resultados.
-  // Guarda de request: una respuesta lenta de una búsqueda anterior no debe pisar el
-  // resultado de una más reciente (myReq !== reqIdRef.current descarta la obsoleta).
-  useEffect(() => {
-    if (!open || q.trim() === '') { setProductos([]); return; }
+    if (!open) return;
+    if (q.trim() === '') { setResultados(buscadores.map(() => [])); return; }
     const t = setTimeout(() => {
       const myReq = ++reqIdRef.current;
-      Promise.resolve(
-        (globalThis as any).ferreteria?.catalogo?.producto?.list?.({
-          busqueda: q, activo: true, page: 1, pageSize: 8,
-        }),
-      )
-        .then((r: any) => {
-          if (!mountedRef.current || myReq !== reqIdRef.current) return;
-          setProductos((r?.items ?? []).map((p: any) => ({
-            label: p.nombre_corto, to: `/productos/${p.id}`, hint: p.sku,
-          })));
-        })
-        .catch(() => { if (mountedRef.current && myReq === reqIdRef.current) setProductos([]); });
+      const asignar = (i: number, res: Comando[]) => {
+        if (!mountedRef.current || myReq !== reqIdRef.current) return;
+        setResultados(prev => {
+          const next = prev.slice();
+          next[i] = res;
+          return next;
+        });
+      };
+      buscadores.forEach((b, i) => {
+        if (b.permiso && !can(b.permiso)) { asignar(i, []); return; }
+        Promise.resolve(b.buscar(q))
+          .then((res) => asignar(i, res ?? []))
+          .catch(() => asignar(i, []));
+      });
     }, 200);
     return () => clearTimeout(t);
-  }, [q, open]);
+  }, [q, open, buscadores, can]);
 
   if (!open) return null;
 
   const texto = q.trim();
-  const clientes: Comando[] = texto === '' ? [] : filtrarPorTexto(
-    (clientesTodos ?? []).map(c => ({ label: labelCliente(c), to: `/clientes/${c.id}` })),
-    q,
-  );
-  const proveedores: Comando[] = texto === '' ? [] : filtrarPorTexto(
-    (proveedoresTodos ?? []).map(p => ({ label: p.razon_social, to: `/compras/proveedores/${p.id}` })),
-    q,
-  );
-  const acciones = filtrarPorTexto(COMANDOS_ACCION.filter(c => !c.permiso || can(c.permiso)), q);
-  const navegacion = filtrarPorTexto(COMANDOS_NAV.filter(c => !c.permiso || can(c.permiso)), q);
+  const resultadosBuscadores: Comando[] = texto === '' ? [] : resultados.flat();
+  const acciones = filtrarPorTexto(comandos.accion.filter(c => !c.permiso || can(c.permiso)), q);
+  const navegacion = filtrarPorTexto(comandos.nav.filter(c => !c.permiso || can(c.permiso)), q);
   const items: Comando[] = texto === ''
     ? [...recientes, ...acciones, ...navegacion]
-    : [...productos, ...clientes, ...proveedores, ...acciones, ...navegacion];
+    : [...resultadosBuscadores, ...acciones, ...navegacion];
   const idxSeguro = Math.min(idx, Math.max(items.length - 1, 0));
 
   function ejecutar(c?: Comando) {

@@ -1,4 +1,6 @@
-import { COMANDOS_ACCION, COMANDOS_NAV, filtrarPorTexto } from './comandos';
+import { filtrarPorTexto } from './comandos';
+// Task B4: los comandos concretos de Retail se mudaron a shell/comandosRetail.ts.
+import { COMANDOS_ACCION, COMANDOS_NAV } from '../shell/comandosRetail';
 
 it('acciones y navegación exponen ruta y permiso', () => {
   expect(COMANDOS_ACCION.find(a => a.label === 'Nuevo producto')?.to).toBe('/productos/nuevo');
