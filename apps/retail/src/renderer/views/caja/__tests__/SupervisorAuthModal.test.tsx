@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { SupervisorAuthModal } from '../SupervisorAuthModal';
+import { SupervisorAuthModal } from '@core/ui';
 
 const mockOnConfirm = vi.fn();
 const mockOnCancel = vi.fn();

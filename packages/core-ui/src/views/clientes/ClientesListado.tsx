@@ -1,10 +1,12 @@
+import { bridge } from '../../bridge';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ExportarButton } from '@core/ui';
+import { ExportarButton } from '../../components/export/ExportarButton';
 import { exportClientes, nombreCompletoCliente } from '@ferreteria/shared';
-import { SearchBox, usePersistentListState } from '@core/ui';
-import { resaltarCoincidencia } from '@core/ui';
-import { VistosRecientesPanel } from '@core/ui';
+import { SearchBox } from '../../components/SearchBox';
+import { usePersistentListState } from '../../hooks/usePersistentListState';
+import { resaltarCoincidencia } from '../../lib/resaltar';
+import { VistosRecientesPanel } from '../../components/VistosRecientesPanel';
 
 type ClienteRow = {
   id: string;
@@ -30,7 +32,7 @@ export function ClientesListado() {
 
   function cargar(filtro: FiltroActivo) {
     const incluirInactivos = filtro !== 'activos';
-    (globalThis as any).ferreteria.cliente.list({ incluirInactivos })
+    bridge().cliente.list({ incluirInactivos })
       .then((data: ClienteRow[]) => {
         const filtrados = filtro === 'inactivos' ? data.filter(c => !c.activo) : data;
         setClientes(filtrados);

@@ -1,3 +1,4 @@
+import { bridge } from '../../bridge';
 import { useEffect, useMemo, useState } from 'react';
 import { etiquetaPermiso } from '@ferreteria/shared';
 
@@ -18,7 +19,7 @@ export function RolesPermisosView() {
     let vivo = true;
     (async () => {
       try {
-        const m = await (window as any).ferreteria.permisos.matriz();
+        const m = await bridge().permisos.matriz();
         if (vivo) setData(m);
       } catch (e: any) {
         if (vivo) setError(e?.message ?? 'No se pudo cargar la matriz de permisos.');

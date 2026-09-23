@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { ClienteDetalle } from './ClienteDetalle';
+import { ClienteDetalle } from '@core/ui';
 
 // ADR-083 (Task 7) — el detalle de cliente muestra la lista de precios asignada,
 // resuelta por nombre contra `precios.lista.list()` (cliente.get sólo trae el id).
@@ -10,7 +10,7 @@ function renderDetalle(id = 'c1') {
   return render(
     <MemoryRouter initialEntries={[`/clientes/${id}`]}>
       <Routes>
-        <Route path="/clientes/:id" element={<ClienteDetalle />} />
+        <Route path="/clientes/:id" element={<ClienteDetalle cargarListasPrecio={() => mockListaList()} />} />
       </Routes>
     </MemoryRouter>,
   );

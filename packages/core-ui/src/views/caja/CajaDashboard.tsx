@@ -1,13 +1,17 @@
-import { useState, useEffect, useMemo } from 'react';
+import { bridge } from '../../bridge';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { CajaActiva } from '../../hooks/useCajaActiva';
 import { MovimientoModal } from './MovimientoModal';
-import { VentaDetalleModal } from './VentaDetalleModal';
-import { useAuth } from '@core/ui';
-import { ExportarButton } from '@core/ui';
+import { useAuth } from '../../auth/AuthContext';
+import { ExportarButton } from '../../components/export/ExportarButton';
 import { exportCaja } from '@ferreteria/shared';
 
-type Props = { caja: CajaActiva; onRefetch: () => void };
+type Props = {
+  caja: CajaActiva;
+  onRefetch: () => void;
+  renderVentaDetalle?: (ventaId: string, onClose: () => void) => ReactNode;
+};
 
 function fmt(n: number) { return n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function fmtHora(v: any) {
@@ -32,7 +36,7 @@ function SortIcon({ active, dir }: { active: boolean; dir: 'asc' | 'desc' }) {
   return <span style={{ fontSize: 10, marginLeft: 4 }}>{dir === 'asc' ? '↑' : '↓'}</span>;
 }
 
-export function CajaDashboard({ caja, onRefetch }: Readonly<Props>) {
+export function CajaDashboard({ caja, onRefetch, renderVentaDetalle }: Readonly<Props>) {
   const navigate = useNavigate();
   const { can } = useAuth();
   const [movModal, setMovModal] = useState(false);
@@ -52,7 +56,7 @@ export function CajaDashboard({ caja, onRefetch }: Readonly<Props>) {
   const duracionM = duracionMin % 60;
 
   async function cargarDatos() {
-    const f = (globalThis as any).ferreteria;
+    const f = bridge();
     const [v, m] = await Promise.all([
       f.venta.listByCaja({ caja_id: caja.id }).catch(() => []),
       f.caja.listMovimientos({ caja_id: caja.id }).catch(() => []),
@@ -289,13 +293,7 @@ export function CajaDashboard({ caja, onRefetch }: Readonly<Props>) {
       )}
 
       {movModal && <MovimientoModal cajaId={caja.id} onClose={() => { setMovModal(false); cargarDatos(); onRefetch(); }} />}
-      {detalleVentaId && (
-        <VentaDetalleModal
-          ventaId={detalleVentaId}
-          onClose={() => setDetalleVentaId(null)}
-          onAnulada={() => { setDetalleVentaId(null); cargarDatos(); }}
-        />
-      )}
+      {detalleVentaId && renderVentaDetalle?.(detalleVentaId, () => { setDetalleVentaId(null); cargarDatos(); })}
     </div>
   );
 }

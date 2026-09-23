@@ -1,17 +1,25 @@
 import type { RouteObject } from 'react-router-dom';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { Login, ProtectedRoute, InicioRedirect } from '@core/ui';
+import { Login, ProtectedRoute, InicioRedirect, bridge } from '@core/ui';
+import {
+  CajaView,
+  CajaCierreView,
+  ConfigMiCuenta,
+  ConfigUsuarios,
+  RolesPermisosView,
+  ConfigBackupRestore,
+  CtaCteListado,
+  CtaCteDetalle,
+  ClientesListado,
+  ClienteDetalle,
+  ClienteForm,
+} from '@core/ui';
+import { VentaDetalleModal } from '../views/caja/VentaDetalleModal';
 import { RetailShell } from '../views/shell/RetailShell';
 import { PosSessionProvider } from '../context/PosSessionContext';
-import { CajaView } from '../views/caja/CajaView';
 import { PosView } from '../views/pos/PosView';
-import { CajaCierreView } from '../views/caja/CajaCierreView';
 import { ListasPreciosView } from '../views/config/ListasPreciosView';
-import { ConfigMiCuenta } from '../views/config/ConfigMiCuenta';
-import { ConfigUsuarios } from '../views/config/ConfigUsuarios';
-import { RolesPermisosView } from '../views/config/RolesPermisosView';
 import { ConfigSmtp } from '../views/config/ConfigSmtp';
-import { ConfigBackupRestore } from '../views/config/ConfigBackupRestore';
 import { ConfigDatosDemo } from '../views/config/ConfigDatosDemo';
 import { ConfigSinonimos } from '../views/config/ConfigSinonimos';
 import { FuncionalidadesView } from '../views/config/FuncionalidadesView';
@@ -33,17 +41,12 @@ import { OrdenCompraDetalle } from '../views/compras/ordenes/OrdenCompraDetalle'
 import { NuevaOcForm } from '../views/compras/ordenes/NuevaOcForm';
 import { OcSugeridaView } from '../views/compras/ordenes/OcSugeridaView';
 import { RecepcionView } from '../views/compras/recepciones/RecepcionView';
-import { CtaCteListado } from '../views/credito/CtaCteListado';
-import { CtaCteDetalle } from '../views/credito/CtaCteDetalle';
-import { ClientesListado } from '../views/clientes/ClientesListado';
 import { ImportarCostosView } from '../views/precios/ImportarCostosView';
 import { ImportarCatalogoProveedorView } from '../views/precios/ImportarCatalogoProveedorView';
 import { RevisionHistorialView } from '../views/precios/RevisionHistorialView';
 import { LotesPreciosView } from '../views/precios/LotesPreciosView';
 import { LoteDetalleView } from '../views/precios/LoteDetalleView';
 import { PreciosHub } from '../views/precios/PreciosHub';
-import { ClienteDetalle } from '../views/clientes/ClienteDetalle';
-import { ClienteForm } from '../views/clientes/ClienteForm';
 import { EtiquetasView } from '../views/etiquetas/EtiquetasView';
 import { ReporteVentasView } from '../views/reportes/ReporteVentasView';
 import { UnidadesView } from '../views/config/UnidadesView';
@@ -55,6 +58,12 @@ import { PresupuestosView } from '../views/presupuestos/PresupuestosView';
 import { AgendaEventosView } from '../views/agenda/AgendaEventosView';
 import { BandejaAvisosView } from '../views/agenda/BandejaAvisosView';
 import { RutinasView } from '../views/agenda/RutinasView';
+
+// Seam B6: las listas de precios son de Retail; el core recibe sólo el catálogo a mostrar.
+const cargarListasRetail = () =>
+  bridge().precios.lista.list().then((rows: { id: string; nombre: string; activo: boolean }[]) =>
+    rows.filter((r) => r.activo),
+  );
 
 // Centralized route tree. Routes are never defined inline in components.
 export const routes: RouteObject[] = [
@@ -81,7 +90,7 @@ export const routes: RouteObject[] = [
       { path: 'stock', element: <StockListado /> },
       { path: 'stock/:id/kardex', element: <Kardex /> },
       { path: 'pos', element: <PosView /> },
-      { path: 'caja', element: <CajaView /> },
+      { path: 'caja', element: <CajaView renderVentaDetalle={(id, onClose) => <VentaDetalleModal ventaId={id} onClose={onClose} onAnulada={onClose} />} /> },
       { path: 'caja/cerrar', element: <CajaCierreView /> },
       { path: 'dashboard', element: <DashboardView /> },
       { path: 'reportes/ventas', element: <ReporteVentasView /> },
@@ -106,9 +115,9 @@ export const routes: RouteObject[] = [
       { path: 'credito', element: <CtaCteListado /> },
       { path: 'credito/:clienteId', element: <CtaCteDetalle /> },
       { path: 'clientes', element: <ClientesListado /> },
-      { path: 'clientes/nuevo', element: <ClienteForm /> },
-      { path: 'clientes/:id', element: <ClienteDetalle /> },
-      { path: 'clientes/:id/editar', element: <ClienteForm /> },
+      { path: 'clientes/nuevo', element: <ClienteForm cargarListasPrecio={cargarListasRetail} /> },
+      { path: 'clientes/:id', element: <ClienteDetalle cargarListasPrecio={cargarListasRetail} /> },
+      { path: 'clientes/:id/editar', element: <ClienteForm cargarListasPrecio={cargarListasRetail} /> },
       { path: 'config', element: <Navigate to="/config/mi-cuenta" replace /> },
       { path: 'config/mi-cuenta', element: <ConfigMiCuenta /> },
       { path: 'config/categorias', element: <CategoriasView /> },

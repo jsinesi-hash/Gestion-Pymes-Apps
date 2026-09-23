@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { CtaCteDetalle } from './CtaCteDetalle';
+import { CtaCteDetalle } from '@core/ui';
 
 const getByCliente = vi.fn();
 const setLimite = vi.fn();

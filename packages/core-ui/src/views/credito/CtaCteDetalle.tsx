@@ -1,9 +1,10 @@
+import { bridge } from '../../bridge';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEscapeAction } from '@core/ui';
-import { useCallIpc } from '@core/ui';
+import { useEscapeAction } from '../../hooks/useEscapeAction';
+import { useCallIpc } from '../../hooks/useCallIpc';
 import { RegistrarCobroModal } from './RegistrarCobroModal';
-import { fmtARS, badgeEstado } from '@core/ui';
+import { fmtARS, badgeEstado } from '../../lib/credito';
 
 // ADR-085 (SEC-2): campos con control propio en esta vista, mapeados a su `id` (el resto
 // de un error de validación —p. ej. `cuentaId`, que no es editable acá— cae en la región
@@ -55,7 +56,7 @@ export function CtaCteDetalle() {
 
   const refresh = useCallback(() => {
     if (!clienteId) return;
-    (globalThis as any).ferreteria.ctacte.getByCliente(clienteId)
+    bridge().ctacte.getByCliente(clienteId)
       .then((data: { cuenta: Cuenta; movimientos: Movimiento[] }) => {
         setCuenta(data.cuenta);
         setMovimientos(data.movimientos);
@@ -71,7 +72,7 @@ export function CtaCteDetalle() {
     setLimiteError(null);
     const centavos = Math.round(Number.parseFloat(limiteInput.replace(',', '.') || '0') * 100);
     const r = await callIpc(
-      () => (globalThis as any).ferreteria.ctacte.setLimite({ cuentaId: cuenta.id, limite_centavos: centavos }),
+      () => bridge().ctacte.setLimite({ cuentaId: cuenta.id, limite_centavos: centavos }),
       { success: 'Límite actualizado' },
     );
     setSavingLimite(false);
@@ -96,7 +97,7 @@ export function CtaCteDetalle() {
     setSavingSaldoInicial(true);
     setSaldoInicialError(null);
     const r = await callIpc(
-      () => (globalThis as any).ferreteria.ctacte.registrarSaldoInicial({
+      () => bridge().ctacte.registrarSaldoInicial({
         cuentaId: cuenta.id, monto_centavos: centavos, tipo: saldoInicialTipo,
       }),
       { success: 'Saldo inicial registrado' },

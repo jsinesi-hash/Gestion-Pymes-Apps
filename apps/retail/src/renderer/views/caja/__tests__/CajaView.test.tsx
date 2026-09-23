@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { CajaView } from '../CajaView';
+import { CajaView } from '@core/ui';
 
 const mockGetActiva = vi.fn();
 

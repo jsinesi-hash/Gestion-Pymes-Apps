@@ -1,6 +1,7 @@
+import { bridge } from '../../bridge';
 import { useState } from 'react';
 import type { BackupManifest, RestoreValidationResult } from '@ferreteria/shared';
-import { useEscapeToClose } from '@core/ui';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 
 type Paso = 'seleccionar' | 'validando' | 'comparar' | 'confirmar' | 'ejecutando' | 'resultado';
 
@@ -34,7 +35,7 @@ export function RestoreWizard({ onClose, onSuccess }: Readonly<Props>) {
     setError(null);
     setPaso('validando');
     try {
-      const result: RestoreValidationResult = await (globalThis as any).ferreteria.restore.validar({
+      const result: RestoreValidationResult = await bridge().restore.validar({
         ruta: rutaFbk.trim(),
         ...(password ? { password } : {}),
       });
@@ -56,7 +57,7 @@ export function RestoreWizard({ onClose, onSuccess }: Readonly<Props>) {
     setError(null);
     setPaso('ejecutando');
     try {
-      const res = await (globalThis as any).ferreteria.restore.ejecutar({
+      const res = await bridge().restore.ejecutar({
         ruta: rutaFbk.trim(),
         ...(password ? { password } : {}),
       });
@@ -72,7 +73,7 @@ export function RestoreWizard({ onClose, onSuccess }: Readonly<Props>) {
   const manifest = validacion?.manifest as BackupManifest | undefined;
 
   async function handleExaminarArchivo() {
-    const ruta = await (globalThis as any).ferreteria.dialog.seleccionarArchivo();
+    const ruta = await bridge().dialog.seleccionarArchivo();
     if (ruta) setRutaFbk(ruta);
   }
 

@@ -1,10 +1,11 @@
+import { bridge } from '../../bridge';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEscapeAction } from '@core/ui';
+import { useEscapeAction } from '../../hooks/useEscapeAction';
 import { nombreCompletoCliente } from '@ferreteria/shared';
 import { CtaCteResumenCard } from '../credito/CtaCteResumenCard';
-import { useAuth } from '@core/ui';
-import { useRegistrarVisto } from '@core/ui';
+import { useAuth } from '../../auth/AuthContext';
+import { useRegistrarVisto } from '../../hooks/useVistosRecientes';
 
 type Cliente = {
   id: string;
@@ -29,7 +30,11 @@ type Cliente = {
   lista_precio_id: string | null;
 };
 
-export function ClienteDetalle() {
+type Props = {
+  cargarListasPrecio?: () => Promise<{ id: string; nombre: string }[]>;
+};
+
+export function ClienteDetalle({ cargarListasPrecio }: Readonly<Props>) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   // Escape hace lo mismo que el botón «Volver» de más abajo.
@@ -41,7 +46,7 @@ export function ClienteDetalle() {
 
   async function cargar() {
     if (!id) return;
-    const data = await (globalThis as any).ferreteria.cliente.get(id);
+    const data = await bridge().cliente.get(id);
     setCliente(data);
   }
 
@@ -53,10 +58,11 @@ export function ClienteDetalle() {
   // sólo trae `lista_precio_id`, no el nombre.
   const [listas, setListas] = useState<{ id: string; nombre: string }[]>([]);
   useEffect(() => {
-    (globalThis as any).ferreteria.precios.lista.list()
-      .then((rows: { id: string; nombre: string; activo: boolean }[]) => setListas(rows.filter((r) => r.activo)))
+    if (!cargarListasPrecio) return;
+    cargarListasPrecio()
+      .then((rows) => setListas(rows))
       .catch(() => {});
-  }, []);
+  }, [cargarListasPrecio]);
 
   // PERF-2: registrar el cliente como "visto recientemente" (no-op si el flag está off).
   const registrarVisto = useRegistrarVisto();
@@ -67,7 +73,7 @@ export function ClienteDetalle() {
   async function handleDesactivar() {
     setBajaError(null);
     try {
-      await (globalThis as any).ferreteria.cliente.desactivar({ id });
+      await bridge().cliente.desactivar({ id });
       await cargar();
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error';
@@ -84,7 +90,7 @@ export function ClienteDetalle() {
   async function handleReactivar() {
     setBajaError(null);
     try {
-      await (globalThis as any).ferreteria.cliente.reactivar({ id });
+      await bridge().cliente.reactivar({ id });
       await cargar();
     } catch (e) {
       setBajaError(e instanceof Error ? e.message : 'Error');
@@ -129,9 +135,11 @@ export function ClienteDetalle() {
           <div className="kv"><span className="k">Documento</span><span className="v">{cliente.tipo_documento} {cliente.numero_documento}</span></div>
           {cliente.nombre_fantasia && <div className="kv"><span className="k">Nombre fantasía</span><span className="v">{cliente.nombre_fantasia}</span></div>}
           <div className="kv"><span className="k">Condición fiscal</span><span className="v">{cliente.condicion_fiscal}</span></div>
-          <div className="kv"><span className="k">Lista de precios</span><span className="v">
-            {cliente.lista_precio_id ? (listas.find((l) => l.id === cliente.lista_precio_id)?.nombre ?? cliente.lista_precio_id) : 'Predeterminada'}
-          </span></div>
+          {cargarListasPrecio && (
+            <div className="kv"><span className="k">Lista de precios</span><span className="v">
+              {cliente.lista_precio_id ? (listas.find((l) => l.id === cliente.lista_precio_id)?.nombre ?? cliente.lista_precio_id) : 'Predeterminada'}
+            </span></div>
+          )}
           {cliente.telefono && <div className="kv"><span className="k">Teléfono</span><span className="v">{cliente.telefono}</span></div>}
           {cliente.telefono_adicional && <div className="kv"><span className="k">Teléfono adicional</span><span className="v">{cliente.telefono_adicional}</span></div>}
           {cliente.email && <div className="kv"><span className="k">Email</span><span className="v">{cliente.email}</span></div>}

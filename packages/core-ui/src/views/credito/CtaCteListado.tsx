@@ -1,10 +1,12 @@
+import { bridge } from '../../bridge';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fmtARS, badgeEstado } from '@core/ui';
-import { ExportarButton } from '@core/ui';
+import { fmtARS, badgeEstado } from '../../lib/credito';
+import { ExportarButton } from '../../components/export/ExportarButton';
 import { exportCtaCte } from '@ferreteria/shared';
-import { SearchBox, usePersistentListState } from '@core/ui';
-import { resaltarCoincidencia } from '@core/ui';
+import { SearchBox } from '../../components/SearchBox';
+import { usePersistentListState } from '../../hooks/usePersistentListState';
+import { resaltarCoincidencia } from '../../lib/resaltar';
 
 type CtaCteRow = {
   id: string;
@@ -56,7 +58,7 @@ export function CtaCteListado() {
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
   useEffect(() => {
-    (globalThis as any).ferreteria.ctacte.list()
+    bridge().ctacte.list()
       .then((data: CtaCteRow[]) => setRows(data))
       .finally(() => setLoading(false));
   }, []);

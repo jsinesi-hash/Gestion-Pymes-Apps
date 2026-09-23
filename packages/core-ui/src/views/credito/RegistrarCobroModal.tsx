@@ -1,7 +1,8 @@
+import { bridge } from '../../bridge';
 import { useState } from 'react';
-import { fmtARS } from '@core/ui';
-import { useEscapeToClose } from '@core/ui';
-import { useCallIpc } from '@core/ui';
+import { fmtARS } from '../../lib/credito';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { useCallIpc } from '../../hooks/useCallIpc';
 
 // ADR-085 (SEC-2): campos de este modal que pueden mostrar un error inline; sus inputs
 // llevan un `id` igual a la clave, para poder enfocar el control cuando el backend
@@ -35,7 +36,7 @@ export function RegistrarCobroModal({ cuentaId, saldoActual, onClose, onSuccess 
     setSaving(true);
     setError(null);
     setFieldErrors({});
-    const r = await callIpc(() => (globalThis as any).ferreteria.ctacte.registrarCobro({
+    const r = await callIpc(() => bridge().ctacte.registrarCobro({
       cuentaId, monto_centavos: montoCentavos, forma_pago: formaPago,
       observaciones: observaciones || undefined,
     }), { success: 'Cobro registrado' });

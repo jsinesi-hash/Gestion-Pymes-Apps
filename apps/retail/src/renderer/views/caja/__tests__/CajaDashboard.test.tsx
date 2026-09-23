@@ -1,14 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { CajaDashboard } from '../CajaDashboard';
+import { CajaDashboard, AuthContext } from '@core/ui';
+import { VentaDetalleModal } from '../VentaDetalleModal';
 
 const mockCan = vi.fn().mockReturnValue(true);
-vi.mock('@core/ui', async (importOriginal) => ({
-  ...(await importOriginal<any>()),
-  useAuth: () => ({ can: mockCan }),
-  ExportarButton: () => null,
-}));
+const authValue = {
+  session: null,
+  can: (codigo: string) => mockCan(codigo),
+  login: async () => {},
+  logout: async () => {},
+  actualizarPreferencias: () => {},
+} as any;
 
 const mockCaja = {
   id: 'caja-1',
@@ -47,9 +50,17 @@ beforeEach(() => {
 
 function renderDashboard() {
   return render(
-    <MemoryRouter>
-      <CajaDashboard caja={mockCaja} onRefetch={vi.fn()} />
-    </MemoryRouter>
+    <AuthContext.Provider value={authValue}>
+      <MemoryRouter>
+        <CajaDashboard
+          caja={mockCaja}
+          onRefetch={vi.fn()}
+          renderVentaDetalle={(id, onClose) => (
+            <VentaDetalleModal ventaId={id} onClose={onClose} onAnulada={onClose} />
+          )}
+        />
+      </MemoryRouter>
+    </AuthContext.Provider>
   );
 }
 

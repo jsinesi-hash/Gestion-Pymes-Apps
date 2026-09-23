@@ -1,20 +1,23 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { ClienteForm } from './ClienteForm';
+import { ClienteForm } from '@core/ui';
 
 // ADR-050 — cliente.razon_social se separó en nombre/apellido (ambos NOT NULL).
 // El formulario pasa a tener dos inputs editables en vez del único de razón social.
 
 const mockUpsert = vi.fn();
 const mockGet = vi.fn();
+// Seam B6: la lista de precios que antes venía de ferreteria.precios.lista.list ahora
+// llega por prop; el selector sólo se renderiza si se pasa cargarListasPrecio.
+const cargarListas = () => Promise.resolve([{ id: 'l1', nombre: 'Mayorista' }]);
 
 function renderForm(initialPath = '/clientes/nuevo') {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
       <Routes>
-        <Route path="/clientes/nuevo" element={<ClienteForm />} />
-        <Route path="/clientes/:id/editar" element={<ClienteForm />} />
+        <Route path="/clientes/nuevo" element={<ClienteForm cargarListasPrecio={cargarListas} />} />
+        <Route path="/clientes/:id/editar" element={<ClienteForm cargarListasPrecio={cargarListas} />} />
         <Route path="/clientes/:id" element={<div>detalle</div>} />
       </Routes>
     </MemoryRouter>,

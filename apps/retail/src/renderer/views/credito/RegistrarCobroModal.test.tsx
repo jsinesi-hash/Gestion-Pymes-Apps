@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { RegistrarCobroModal } from './RegistrarCobroModal';
+import { RegistrarCobroModal } from '@core/ui';
 
 const registrarCobro = vi.fn();
 

@@ -1,10 +1,12 @@
+import { bridge } from '../../bridge';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCajaActiva } from '../../hooks/useCajaActiva';
 import { useCajaCierre } from '../../hooks/useCajaCierre';
 import { SupervisorAuthModal } from './SupervisorAuthModal';
-import { useToast, useCallIpc } from '@core/ui';
-import { rutearCampoError } from '@core/ui';
+import { useToast } from '../../components/toast/useToast';
+import { useCallIpc } from '../../hooks/useCallIpc';
+import { rutearCampoError } from '../../lib/rutearCampoError';
 
 // ADR-085 (SEC-2, Task 14): mapa de código de error de dominio → id del campo del form,
 // usado por rutearCampoError para decidir si el mensaje va inline (monto/obs) o al
@@ -62,7 +64,7 @@ export function CajaCierreView() {
   }
 
   function cerrarCaja(supervisor_credenciales?: { nombre_usuario: string; password: string }) {
-    return (globalThis as any).ferreteria.caja.cerrar({
+    return bridge().caja.cerrar({
       caja_id: caja!.id,
       monto_contado: montoDeclarado,
       observaciones: obs || undefined,

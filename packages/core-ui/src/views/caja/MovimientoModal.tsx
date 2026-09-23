@@ -1,7 +1,8 @@
+import { bridge } from '../../bridge';
 import { useState } from 'react';
-import { useEscapeToClose } from '@core/ui';
-import { rutearCampoError } from '@core/ui';
-import { useToast } from '@core/ui';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { rutearCampoError } from '../../lib/rutearCampoError';
+import { useToast } from '../../components/toast/useToast';
 
 type Props = {
   cajaId: string;
@@ -28,7 +29,7 @@ export function MovimientoModal({ cajaId, onClose }: Readonly<Props>) {
     setError(null);
     setCampoError(null);
     try {
-      await (globalThis as any).ferreteria.caja.addMovimiento({
+      await bridge().caja.addMovimiento({
         caja_id: cajaId,
         tipo,
         motivo,

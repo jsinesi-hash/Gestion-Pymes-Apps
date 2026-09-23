@@ -1,8 +1,13 @@
+import { type ReactNode } from 'react';
 import { useCajaActiva } from '../../hooks/useCajaActiva';
 import { AperturaForm } from './AperturaForm';
 import { CajaDashboard } from './CajaDashboard';
 
-export function CajaView() {
+type Props = {
+  renderVentaDetalle?: (ventaId: string, onClose: () => void) => ReactNode;
+};
+
+export function CajaView({ renderVentaDetalle }: Readonly<Props>) {
   const { caja, isLoading, refetch } = useCajaActiva();
 
   if (isLoading) return null;
@@ -13,7 +18,11 @@ export function CajaView() {
 
   return (
     <div className="flex-col gap-4">
-      <CajaDashboard caja={caja} onRefetch={refetch} />
+      <CajaDashboard
+        caja={caja}
+        onRefetch={refetch}
+        {...(renderVentaDetalle !== undefined ? { renderVentaDetalle } : {})}
+      />
     </div>
   );
 }

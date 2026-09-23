@@ -1,6 +1,7 @@
+import { bridge } from '../../bridge';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fmtARS, badgeEstado } from '@core/ui';
+import { fmtARS, badgeEstado } from '../../lib/credito';
 import { RegistrarCobroModal } from './RegistrarCobroModal';
 
 type Cuenta = {
@@ -18,7 +19,7 @@ export function CtaCteResumenCard({ clienteId }: Readonly<{ clienteId: string }>
   const [showCobro, setShowCobro] = useState(false);
 
   function load() {
-    (globalThis as any).ferreteria.ctacte.getByCliente(clienteId)
+    bridge().ctacte.getByCliente(clienteId)
       .then((data: { cuenta: Cuenta; movimientos: Movimiento[] }) => {
         setCuenta(data.cuenta);
         setMovimientosCount(data.movimientos.length);

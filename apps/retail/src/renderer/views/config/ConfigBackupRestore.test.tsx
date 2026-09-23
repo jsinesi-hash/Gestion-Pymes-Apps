@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ConfigBackupRestore } from './ConfigBackupRestore';
+import { ConfigBackupRestore } from '@core/ui';
 
 beforeEach(() => {
   (globalThis as any).ferreteria = {

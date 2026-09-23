@@ -1,14 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { CajaCierreView } from '../CajaCierreView';
-import { ToastProvider } from '@core/ui';
+import { MemoryRouter, useLocation } from 'react-router-dom';
+import { CajaCierreView, ToastProvider } from '@core/ui';
 
-const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react-router-dom')>();
-  return { ...actual, useNavigate: () => mockNavigate };
-});
+// CajaCierreView vive en @core/ui: un vi.mock('react-router-dom') de este test NO
+// interceptaría su useNavigate. Sonda de ubicación real sobre MemoryRouter en su lugar.
+let ubicacionActual = '';
+function SondaRuta() {
+  ubicacionActual = useLocation().pathname;
+  return null;
+}
 
 const RESUMEN = {
   caja_id: 'c-1',
@@ -31,6 +32,7 @@ const mockGetParam = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
+  ubicacionActual = '';
   mockGetActiva.mockResolvedValue({ id: 'c-1', usuario_id: 'u-1', fecha_apertura: new Date(), monto_inicial: 10000, estado: 'abierta' });
   mockCalcCierre.mockResolvedValue(RESUMEN);
   mockCerrar.mockResolvedValue({ id: 'c-1', estado: 'cerrada' });
@@ -95,12 +97,12 @@ describe('CajaCierreView', () => {
   });
 
   it('camino sin autorización, monto válido: cerrar resuelve, navega y muestra el toast de cierre', async () => {
-    render(<ToastProvider><MemoryRouter><CajaCierreView /></MemoryRouter></ToastProvider>);
+    render(<ToastProvider><MemoryRouter initialEntries={['/caja/cerrar']}><CajaCierreView /><SondaRuta /></MemoryRouter></ToastProvider>);
     await waitFor(() => screen.getByLabelText(/efectivo declarado/i));
     fireEvent.change(screen.getByLabelText(/efectivo declarado/i), { target: { value: '15000' } });
     fireEvent.click(screen.getByRole('button', { name: /confirmar cierre/i }));
 
-    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/caja', { replace: true }));
+    await waitFor(() => expect(ubicacionActual).toBe('/caja'));
     expect(screen.getByText('Caja cerrada')).toBeInTheDocument();
   });
 });
@@ -187,7 +189,7 @@ describe('CajaCierreView — ruteo de errores (ADR-085 Task 14)', () => {
   });
 
   it('camino con autorización: éxito navega y muestra el toast de cierre', async () => {
-    render(<ToastProvider><MemoryRouter><CajaCierreView /></MemoryRouter></ToastProvider>);
+    render(<ToastProvider><MemoryRouter initialEntries={['/caja/cerrar']}><CajaCierreView /><SondaRuta /></MemoryRouter></ToastProvider>);
     await waitFor(() => screen.getByLabelText(/efectivo declarado/i));
     fireEvent.change(screen.getByLabelText(/efectivo declarado/i), { target: { value: '75000' } });
     fireEvent.click(screen.getByRole('button', { name: /confirmar cierre/i }));
@@ -204,7 +206,7 @@ describe('CajaCierreView — ruteo de errores (ADR-085 Task 14)', () => {
       })
     ));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/caja', { replace: true }));
+    await waitFor(() => expect(ubicacionActual).toBe('/caja'));
     expect(screen.getByText('Caja cerrada')).toBeInTheDocument();
   });
 });

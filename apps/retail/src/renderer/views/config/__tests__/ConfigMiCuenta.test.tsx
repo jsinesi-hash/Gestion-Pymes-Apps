@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { AuthContext } from '@core/ui';
-import { ConfigMiCuenta } from '../ConfigMiCuenta';
+import { AuthContext, AppProfileProvider } from '@core/ui';
+import { ConfigMiCuenta } from '@core/ui';
+import { navegacionRetail } from '../../../../common/navegacion';
 
 const mockWhoami = vi.fn();
 const mockUpdate = vi.fn();
@@ -35,11 +36,13 @@ function buildAuth() {
 
 function renderView() {
   return render(
-    <AuthContext.Provider value={buildAuth()}>
-      <MemoryRouter>
-        <ConfigMiCuenta />
-      </MemoryRouter>
-    </AuthContext.Provider>
+    <AppProfileProvider value={{ nombreApp: 'Ferretería', navegacion: navegacionRetail }}>
+      <AuthContext.Provider value={buildAuth()}>
+        <MemoryRouter>
+          <ConfigMiCuenta />
+        </MemoryRouter>
+      </AuthContext.Provider>
+    </AppProfileProvider>
   );
 }
 

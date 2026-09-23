@@ -1,6 +1,7 @@
+import { bridge } from '../../bridge';
 import { useState, useEffect } from 'react';
-import { useAuth } from '@core/ui';
-import { useEscapeToClose } from '@core/ui';
+import { useAuth } from '../../auth/AuthContext';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 
 type Usuario = {
   id: string; nombre_usuario: string; nombre_completo: string;
@@ -67,7 +68,7 @@ export function ConfigUsuarios() {
   async function cargar() {
     setLoading(true);
     try {
-      const f = (globalThis as any).ferreteria;
+      const f = bridge();
       const [u, r] = await Promise.all([f.usuario.list(), f.rol.list()]);
       setUsuarios(u ?? []);
       setRoles(r ?? []);
@@ -86,7 +87,7 @@ export function ConfigUsuarios() {
   async function handleDesactivar(u: Usuario) {
     if (!confirm(`¿Desactivar a ${u.nombre_completo}?`)) return;
     try {
-      await (globalThis as any).ferreteria.usuario.desactivar({ userId: u.id });
+      await bridge().usuario.desactivar({ userId: u.id });
       cargar();
     } catch (e: any) {
       setError(e?.message === 'LAST_SUPERVISOR' ? 'No se puede desactivar el último supervisor activo.' : (e?.message ?? 'Error'));
@@ -95,7 +96,7 @@ export function ConfigUsuarios() {
 
   async function handleReactivar(u: Usuario) {
     try {
-      await (globalThis as any).ferreteria.usuario.reactivar({ userId: u.id });
+      await bridge().usuario.reactivar({ userId: u.id });
       cargar();
     } catch (e: any) { setError(e?.message ?? 'Error'); }
   }
@@ -172,7 +173,7 @@ export function ConfigUsuarios() {
           onDesactivar={async () => {
             if (!confirm(`¿Desactivar a ${(modal as any).user.nombre_completo}?`)) return;
             try {
-              await (globalThis as any).ferreteria.usuario.desactivar({ userId: (modal as any).user.id });
+              await bridge().usuario.desactivar({ userId: (modal as any).user.id });
               setModal(null); cargar();
             } catch (e: any) {
               setError(e?.message === 'LAST_SUPERVISOR' ? 'No se puede desactivar el último supervisor activo.' : (e?.message ?? 'Error'));
@@ -212,7 +213,7 @@ function UsuarioModal({ roles, user, onClose, onSuccess, onDesactivar }: Readonl
     }
     setSaving(true); setError(null);
     try {
-      const f = (globalThis as any).ferreteria;
+      const f = bridge();
       if (isEdit) {
         await f.usuario.update({ id: user!.id, nombre_completo: nombre.trim(), email: email.trim() || undefined, rol_id: rolId });
       } else {
@@ -298,7 +299,7 @@ function ChangePasswordModal({ user, onClose, onSuccess }: Readonly<{ user: Usua
     if (newPassword.length < 4) { setError('Mínimo 4 caracteres.'); return; }
     setSaving(true); setError(null);
     try {
-      await (globalThis as any).ferreteria.usuario.changePassword({ target_user_id: user.id, new_password: newPassword });
+      await bridge().usuario.changePassword({ target_user_id: user.id, new_password: newPassword });
       onSuccess();
     } catch (err: any) {
       setError(err?.message ?? 'Error');

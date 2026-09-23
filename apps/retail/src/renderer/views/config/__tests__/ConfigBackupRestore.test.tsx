@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { ConfigBackupRestore } from '../ConfigBackupRestore';
+import { ConfigBackupRestore } from '@core/ui';
 
 const mockGetParam = vi.fn();
 const mockSetParam = vi.fn();

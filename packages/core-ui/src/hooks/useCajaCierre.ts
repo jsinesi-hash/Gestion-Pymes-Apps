@@ -1,3 +1,4 @@
+import { bridge } from '../bridge';
 import { useState, useEffect } from 'react';
 
 export type ResumenCierre = {
@@ -17,7 +18,7 @@ export function useCajaCierre(cajaId: string) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    (globalThis as any).ferreteria.parametros.get({ clave: 'umbral_diferencia_caja' })
+    bridge().parametros.get({ clave: 'umbral_diferencia_caja' })
       .then((val: string | null) => { if (val) setUmbral(Number.parseFloat(val)); })
       .catch(() => {});
   }, []);
@@ -25,7 +26,7 @@ export function useCajaCierre(cajaId: string) {
   useEffect(() => {
     if (!cajaId) return;
     setIsLoading(true);
-    (globalThis as any).ferreteria.caja.calcularCierre({ caja_id: cajaId })
+    bridge().caja.calcularCierre({ caja_id: cajaId })
       .then((r: ResumenCierre) => { setResumen(r); setMontoDeclarado(Math.round(r.esperado_efectivo * 100) / 100); })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Error'))
       .finally(() => setIsLoading(false));

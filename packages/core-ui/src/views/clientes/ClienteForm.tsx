@@ -1,8 +1,9 @@
+import { bridge } from '../../bridge';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { DireccionGeo, type DireccionGeoValue } from '@core/ui';
-import { formatDocumento, validarDocumento, validarTelefono, validarCodigoPostal } from '@core/ui';
-import { useCallIpc } from '@core/ui';
+import { DireccionGeo, type DireccionGeoValue } from '../../components/DireccionGeo';
+import { formatDocumento, validarDocumento, validarTelefono, validarCodigoPostal } from '../../lib/documento';
+import { useCallIpc } from '../../hooks/useCallIpc';
 
 // ADR-082 (SEC-2): campos del form que pueden mostrar un error inline. Sus inputs llevan
 // un `id` igual a la clave, para poder enfocar el control cuando el backend rechaza por él.
@@ -44,7 +45,11 @@ const initialForm: FormState = {
   lista_precio_id: '',
 };
 
-export function ClienteForm() {
+type Props = {
+  cargarListasPrecio?: () => Promise<{ id: string; nombre: string }[]>;
+};
+
+export function ClienteForm({ cargarListasPrecio }: Readonly<Props>) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const modoEdicion = !!id;
@@ -56,7 +61,7 @@ export function ClienteForm() {
 
   useEffect(() => {
     if (!id) return;
-    (globalThis as any).ferreteria.cliente.get(id).then((c: any) => {
+    bridge().cliente.get(id).then((c: any) => {
       if (!c) return;
       setForm({
         tipo_documento:            c.tipo_documento            ?? 'DNI',
@@ -85,10 +90,11 @@ export function ClienteForm() {
 
   const [listas, setListas] = useState<{ id: string; nombre: string }[]>([]);
   useEffect(() => {
-    (globalThis as any).ferreteria.precios.lista.list()
-      .then((rows: { id: string; nombre: string; activo: boolean }[]) => setListas(rows.filter(r => r.activo)))
+    if (!cargarListasPrecio) return;
+    cargarListasPrecio()
+      .then((rows) => setListas(rows))
       .catch(() => {});
-  }, []);
+  }, [cargarListasPrecio]);
 
   function setField<K extends keyof FormState>(field: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -160,7 +166,7 @@ export function ClienteForm() {
     };
     // ERR-1: callIpc traduce y muestra el error por toast; sólo navegamos si salió bien.
     const r = await callIpc<{ id: string }>(
-      () => (globalThis as any).ferreteria.cliente.upsert(payload),
+      () => bridge().cliente.upsert(payload),
       { success: modoEdicion ? 'Cliente actualizado' : 'Cliente creado' },
     );
     setSaving(false);
@@ -248,13 +254,15 @@ export function ClienteForm() {
                 <option value="Exento">Exento</option>
               </select>
             </label>
-            <label className="form-label" style={{ maxWidth: 260 }}>
-              Lista de precios{' '}
-              <select className="input" value={form.lista_precio_id} onChange={(e) => setField('lista_precio_id', e.target.value)}>
-                <option value="">(Predeterminada)</option>
-                {listas.map(l => <option key={l.id} value={l.id}>{l.nombre}</option>)}
-              </select>
-            </label>
+            {cargarListasPrecio && (
+              <label className="form-label" style={{ maxWidth: 260 }}>
+                Lista de precios{' '}
+                <select className="input" value={form.lista_precio_id} onChange={(e) => setField('lista_precio_id', e.target.value)}>
+                  <option value="">(Predeterminada)</option>
+                  {listas.map(l => <option key={l.id} value={l.id}>{l.nombre}</option>)}
+                </select>
+              </label>
+            )}
           </div>
         </div>
 

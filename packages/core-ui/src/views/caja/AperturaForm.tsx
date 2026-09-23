@@ -1,6 +1,7 @@
+import { bridge } from '../../bridge';
 import { useState } from 'react';
-import { rutearCampoError } from '@core/ui';
-import { useToast } from '@core/ui';
+import { rutearCampoError } from '../../lib/rutearCampoError';
+import { useToast } from '../../components/toast/useToast';
 
 type Props = { onSuccess: () => void };
 
@@ -29,7 +30,7 @@ export function AperturaForm({ onSuccess }: Readonly<Props>) {
     setError(null);
     setCampoError(null);
     try {
-      await (globalThis as any).ferreteria.caja.abrir({
+      await bridge().caja.abrir({
         monto_inicial: parsedMonto,
         observaciones: obs || undefined,
       });

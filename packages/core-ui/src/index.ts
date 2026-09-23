@@ -44,3 +44,25 @@ export * from './components/VistosRecientemente';
 // Export (B2 diferido → B3)
 export * from './components/export/ExportarButton';
 export * from './components/export/ExportarModal';
+// Hooks de caja (B6)
+export * from './hooks/useCajaActiva';
+export * from './hooks/useCajaCierre';
+// Vistas universales (B6)
+export { ClientesListado } from './views/clientes/ClientesListado';
+export { ClienteDetalle } from './views/clientes/ClienteDetalle';
+export { ClienteForm } from './views/clientes/ClienteForm';
+export { CtaCteListado } from './views/credito/CtaCteListado';
+export { CtaCteDetalle } from './views/credito/CtaCteDetalle';
+export { CtaCteResumenCard } from './views/credito/CtaCteResumenCard';
+export { RegistrarCobroModal } from './views/credito/RegistrarCobroModal';
+export { CajaView } from './views/caja/CajaView';
+export { AperturaForm } from './views/caja/AperturaForm';
+export { CajaDashboard } from './views/caja/CajaDashboard';
+export { CajaCierreView } from './views/caja/CajaCierreView';
+export { MovimientoModal } from './views/caja/MovimientoModal';
+export { SupervisorAuthModal } from './views/caja/SupervisorAuthModal';
+export { ConfigUsuarios } from './views/config/ConfigUsuarios';
+export { ConfigMiCuenta } from './views/config/ConfigMiCuenta';
+export { RolesPermisosView } from './views/config/RolesPermisosView';
+export { ConfigBackupRestore } from './views/config/ConfigBackupRestore';
+export { RestoreWizard } from './views/config/RestoreWizard';

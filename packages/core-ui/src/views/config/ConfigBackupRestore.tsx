@@ -1,7 +1,8 @@
+import { bridge } from '../../bridge';
 import { useState, useEffect, useCallback } from 'react';
 import type { BackupListItem, ResumenDepuracion } from '@ferreteria/shared';
 import { RestoreWizard } from './RestoreWizard';
-import { DepuracionBackupsModal } from '@core/ui';
+import { DepuracionBackupsModal } from '../../shell/DepuracionBackupsModal';
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -35,17 +36,17 @@ export function ConfigBackupRestore() {
   const [sizeMb, setSizeMb]             = useState('0');
 
   const cargarParametros = useCallback(async () => {
-    const destino = await (globalThis as any).ferreteria.parametros.get({ clave: 'backup_destino_local' });
-    const auto    = await (globalThis as any).ferreteria.parametros.get({ clave: 'backup_auto_habilitado' });
-    const ret     = await (globalThis as any).ferreteria.parametros.get({ clave: 'backup_retencion_dias' });
-    const certs   = await (globalThis as any).ferreteria.parametros.get({ clave: 'backup_incluir_certs' });
-    const cant    = await (globalThis as any).ferreteria.parametros.get({ clave: 'backup_retencion_cantidad' });
-    const pisoV   = await (globalThis as any).ferreteria.parametros.get({ clave: 'backup_retencion_piso' });
-    const smb     = await (globalThis as any).ferreteria.parametros.get({ clave: 'backup_retencion_size_mb' });
+    const destino = await bridge().parametros.get({ clave: 'backup_destino_local' });
+    const auto    = await bridge().parametros.get({ clave: 'backup_auto_habilitado' });
+    const ret     = await bridge().parametros.get({ clave: 'backup_retencion_dias' });
+    const certs   = await bridge().parametros.get({ clave: 'backup_incluir_certs' });
+    const cant    = await bridge().parametros.get({ clave: 'backup_retencion_cantidad' });
+    const pisoV   = await bridge().parametros.get({ clave: 'backup_retencion_piso' });
+    const smb     = await bridge().parametros.get({ clave: 'backup_retencion_size_mb' });
     if (destino) {
       setDirectorio(destino);
     } else {
-      const rutaDefault: string | null = await (globalThis as any).ferreteria.dialog
+      const rutaDefault: string | null = await bridge().dialog
         .getDefaultBackupPath()
         .catch(() => null);
       setDirectorio(rutaDefault ?? '');
@@ -61,14 +62,14 @@ export function ConfigBackupRestore() {
   const cargarBackups = useCallback(async () => {
     if (!directorio) { setBackups([]); return; }
     try {
-      const lista = await (globalThis as any).ferreteria.backup.listar({ directorio });
+      const lista = await bridge().backup.listar({ directorio });
       setBackups(lista);
     } catch { setBackups([]); }
   }, [directorio]);
 
   const evaluarDep = useCallback(async () => {
     try {
-      const r: ResumenDepuracion = await (globalThis as any).ferreteria.backup.evaluarDepuracion();
+      const r: ResumenDepuracion = await bridge().backup.evaluarDepuracion();
       setResumenDep(r.candidatos.length > 0 ? r : null);
     } catch { setResumenDep(null); }
   }, []);
@@ -78,12 +79,12 @@ export function ConfigBackupRestore() {
   useEffect(() => { evaluarDep(); }, [evaluarDep]);
 
   async function handleExaminarCarpeta() {
-    const ruta = await (globalThis as any).ferreteria.dialog.seleccionarCarpeta();
+    const ruta = await bridge().dialog.seleccionarCarpeta();
     if (ruta) {
       setDirectorio(ruta);
       setError(null);
       try {
-        await (globalThis as any).ferreteria.parametros.set({ clave: 'backup_destino_local', valor: ruta });
+        await bridge().parametros.set({ clave: 'backup_destino_local', valor: ruta });
         setOk('Carpeta guardada.');
       } catch {
         // silencioso: el estado se actualiza igual
@@ -101,7 +102,7 @@ export function ConfigBackupRestore() {
     setError(null);
     setOk(null);
     try {
-      await (globalThis as any).ferreteria.backup.ejecutar({
+      await bridge().backup.ejecutar({
         tipo: 'manual',
         destino: directorio,
         appVersion: '1.0.0',
@@ -119,7 +120,7 @@ export function ConfigBackupRestore() {
   async function handleEliminar(ruta: string) {
     if (!confirm('¿Eliminar este backup? Esta acción no se puede deshacer.')) return;
     try {
-      await (globalThis as any).ferreteria.backup.eliminar({ ruta });
+      await bridge().backup.eliminar({ ruta });
       await cargarBackups();
     } catch (e: any) {
       setError(e?.message ?? 'Error al eliminar');
@@ -127,13 +128,13 @@ export function ConfigBackupRestore() {
   }
 
   async function guardarParametros() {
-    await (globalThis as any).ferreteria.parametros.set({ clave: 'backup_destino_local',   valor: directorio });
-    await (globalThis as any).ferreteria.parametros.set({ clave: 'backup_auto_habilitado', valor: autoHabilitado });
-    await (globalThis as any).ferreteria.parametros.set({ clave: 'backup_retencion_dias',  valor: retencionDias });
-    await (globalThis as any).ferreteria.parametros.set({ clave: 'backup_incluir_certs',   valor: incluirCerts });
-    await (globalThis as any).ferreteria.parametros.set({ clave: 'backup_retencion_cantidad', valor: cantCand });
-    await (globalThis as any).ferreteria.parametros.set({ clave: 'backup_retencion_piso',     valor: piso });
-    await (globalThis as any).ferreteria.parametros.set({ clave: 'backup_retencion_size_mb',  valor: sizeMb });
+    await bridge().parametros.set({ clave: 'backup_destino_local',   valor: directorio });
+    await bridge().parametros.set({ clave: 'backup_auto_habilitado', valor: autoHabilitado });
+    await bridge().parametros.set({ clave: 'backup_retencion_dias',  valor: retencionDias });
+    await bridge().parametros.set({ clave: 'backup_incluir_certs',   valor: incluirCerts });
+    await bridge().parametros.set({ clave: 'backup_retencion_cantidad', valor: cantCand });
+    await bridge().parametros.set({ clave: 'backup_retencion_piso',     valor: piso });
+    await bridge().parametros.set({ clave: 'backup_retencion_size_mb',  valor: sizeMb });
     setOk('Parámetros guardados.');
     await cargarBackups();
     await evaluarDep();

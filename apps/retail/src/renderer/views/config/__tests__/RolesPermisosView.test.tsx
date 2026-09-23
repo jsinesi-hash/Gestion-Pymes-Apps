@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
-import { RolesPermisosView } from '../RolesPermisosView';
+import { RolesPermisosView } from '@core/ui';
 
 const mockMatriz = vi.fn();
 

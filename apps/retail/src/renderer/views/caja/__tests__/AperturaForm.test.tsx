@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { AperturaForm } from '../AperturaForm';
+import { AperturaForm } from '@core/ui';
 import { ToastProvider } from '@core/ui';
 
 const mockAbrir = vi.fn();

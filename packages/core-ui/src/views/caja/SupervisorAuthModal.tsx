@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useEscapeToClose } from '@core/ui';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 
 type Creds = { nombre_usuario: string; password: string };
 

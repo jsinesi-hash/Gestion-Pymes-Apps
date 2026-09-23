@@ -1,3 +1,4 @@
+import { bridge } from '../bridge';
 import { useState, useEffect, useCallback } from 'react';
 
 export type CajaActiva = {
@@ -17,7 +18,7 @@ export function useCajaActiva() {
   const refetch = useCallback(async () => {
     try {
       setIsLoading(true);
-      const result = await (globalThis as any).ferreteria.caja.getActiva();
+      const result = await bridge().caja.getActiva();
       setCaja(result ?? null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error');
