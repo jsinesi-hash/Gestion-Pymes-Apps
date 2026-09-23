@@ -1,9 +1,12 @@
 import { eq, and, gt, lte, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
+import type { OnCajaCerrada } from '@core/main';
 import type { ComandoAviso } from '../agenda/aviso-servicio';
+import { insertarAvisos, despacharAviso } from '../agenda/aviso-servicio';
 
 type Db = BetterSQLite3Database<typeof schema>;
+type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
 
 interface ResumenCierre {
   caja_id: string; monto_inicial: number;
@@ -94,3 +97,15 @@ export function construirComandoCierre(db: Db, args: {
     dedupe_clave: `cierre_caja:${cajaRow.id}`,
   };
 }
+
+/**
+ * Hook de cierre de caja de Retail (ADR-047 §6): el aviso se inserta en la MISMA transacción
+ * del cierre; el envío (email) va después del commit, best-effort.
+ * El core tipa `db`/`tx` con su esquema; en Retail son la BD compuesta (superset), de ahí el cast.
+ */
+export const avisoCierreCaja: OnCajaCerrada = ({ db, tx, cajaRow, resumen, diferencia, monto_contado, usuarioCierreId, now }) => {
+  const rdb = db as unknown as Db;
+  const cmd = construirComandoCierre(rdb, { cajaRow, resumen, diferencia, monto_contado, usuarioCierreId, now });
+  const ids = insertarAvisos(tx as unknown as Tx, cmd, now);
+  return () => { for (const id of ids) void despacharAviso(rdb, id); };
+};

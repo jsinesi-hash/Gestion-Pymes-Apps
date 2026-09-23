@@ -3,13 +3,14 @@ import { eq, and } from 'drizzle-orm';
 import * as schema from '../../db/schema';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
 import { invalidateCachedParametro } from '@core/main';
+import { avisoCierreCaja } from '../caja-cierre-aviso';
 import {
   cajaGetActivaHandler,
   cajaAbrirHandler,
   cajaAddMovimientoHandler,
   cajaCalcularCierreHandler,
   cajaCerrarHandler,
-} from '../caja';
+} from '@core/main';
 
 describe('caja handlers — apertura y movimientos', () => {
   let db: ReturnType<typeof setupDb>;
@@ -224,7 +225,7 @@ describe('cajaCerrarHandler — productor de aviso de cierre (ADR-048)', () => {
   it('emite un aviso in_app de origen cierre_caja al cerrar (sin descuadre)', () => {
     loginAsAdmin(db);
     const caja = cajaAbrirHandler(db, { monto_inicial: 5000 });
-    cajaCerrarHandler(db, { caja_id: caja.id, monto_contado: 5000 });
+    cajaCerrarHandler(db, { caja_id: caja.id, monto_contado: 5000 }, { onCajaCerrada: avisoCierreCaja });
     const avisos = db.select().from(schema.aviso).where(eq(schema.aviso.origen_tipo, 'cierre_caja')).all();
     expect(avisos.length).toBeGreaterThanOrEqual(1);
     expect(avisos.some((a) => a.canal === 'in_app')).toBe(true);
@@ -238,7 +239,7 @@ describe('cajaCerrarHandler — productor de aviso de cierre (ADR-048)', () => {
     // ingreso efectivo de 10000 -> esperado_efectivo = 15000
     cajaAddMovimientoHandler(db, { caja_id: caja.id, tipo: 'ingreso', motivo: 'aporte', monto: 10000, forma_pago: 'efectivo' });
     // contado 12000 -> diferencia -3000 ( > $2.000, pero < umbral_diferencia_caja 50000, no requiere supervisor )
-    cajaCerrarHandler(db, { caja_id: caja.id, monto_contado: 12000 });
+    cajaCerrarHandler(db, { caja_id: caja.id, monto_contado: 12000 }, { onCajaCerrada: avisoCierreCaja });
     const inApp = db.select().from(schema.aviso).where(and(eq(schema.aviso.origen_tipo, 'cierre_caja'), eq(schema.aviso.canal, 'in_app'))).get();
     expect(inApp!.severidad).toBe('alerta');
   });

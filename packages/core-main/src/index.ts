@@ -16,6 +16,8 @@ export * from './ipc/geo';
 export * from './ipc/cliente';
 export * from './ipc/backup';
 export * from './ipc/restore';
+export * from './ipc/caja';
+export * from './ipc/ctacte';
 export * from './backup/engine';
 export * from './backup/restore-engine';
 export * from './export/csv-writer';

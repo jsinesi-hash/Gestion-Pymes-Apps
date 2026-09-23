@@ -7,7 +7,7 @@ import { runCatalogSeed } from '../../catalog/seed';
 import { categoriaCreateHandler } from '../categoria';
 import { productoCreateHandler } from '../producto';
 import { stockEntradaHandler } from '../stock';
-import { cajaAbrirHandler } from '../caja';
+import { cajaAbrirHandler } from '@core/main';
 import { ventaConfirmarHandler, type VentaConfirmarPayload } from '../venta';
 import { dashboardVentasHandler, dashboardStockHandler, dashboardCajaHandler } from '../dashboard';
 import { requirePermission, setSession } from '@core/main';

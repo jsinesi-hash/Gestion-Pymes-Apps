@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
-import { cajaAbrirHandler, cajaAddMovimientoHandler, cajaCerrarHandler } from '../caja';
+import { cajaAbrirHandler, cajaAddMovimientoHandler, cajaCerrarHandler } from '@core/main';
 
 describe('caja validación (ADR-082)', () => {
   beforeEach(() => clearSession());

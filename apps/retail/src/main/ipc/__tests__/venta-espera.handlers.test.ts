@@ -6,7 +6,7 @@ import { runCatalogSeed } from '../../catalog/seed';
 import { categoriaCreateHandler } from '../categoria';
 import { productoCreateHandler } from '../producto';
 import { stockEntradaHandler } from '../stock';
-import { cajaAbrirHandler, cajaCerrarHandler } from '../caja';
+import { cajaAbrirHandler, cajaCerrarHandler } from '@core/main';
 import { ventaConfirmarHandler, ventaListByCajaHandler, type VentaConfirmarPayload } from '../venta';
 import {
   ventaEsperaPausarHandler,

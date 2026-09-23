@@ -2,14 +2,31 @@ import { eq, and, desc, asc } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
-import * as schema from '../db/schema';
-import { getSession, getOriginId, verificarSupervisor, num, optStr, oneOf, id as vId } from '@core/main';
-import { triggerAutoBackup } from '@core/main';
-import { parametrosGetHandler } from '@core/main';
-import { insertarAvisos, despacharAviso } from '../agenda/aviso-servicio';
-import { construirComandoCierre } from './caja-cierre-aviso';
+import * as schema from '@core/db';
+import { getSession } from '../auth/session';
+import { getOriginId } from '../context';
+import { verificarSupervisor } from '../auth/verificarSupervisor';
+import { num, optStr, oneOf, id as vId } from '../validation/core';
+import { triggerAutoBackup } from './backup';
+import { parametrosGetHandler } from './parametros';
 
 type Db = BetterSQLite3Database<typeof schema>;
+
+export type CajaRow = typeof schema.caja.$inferSelect;
+export type CierreResumen = ReturnType<typeof cajaCalcularCierreHandler>;
+export type CajaCierreCtx = {
+  db: Db;
+  tx: Parameters<Parameters<Db['transaction']>[0]>[0];
+  cajaRow: CajaRow;
+  resumen: CierreResumen;
+  diferencia: number;
+  monto_contado: number;
+  usuarioCierreId: string;
+  now: Date;
+};
+/** Corre DENTRO de la transacción del cierre. Puede devolver un post-commit (best-effort). */
+export type OnCajaCerrada = (ctx: CajaCierreCtx) => (() => void) | void;
+export type CajaHooks = { onCajaCerrada?: OnCajaCerrada };
 
 function requireSession() {
   const session = getSession();
@@ -158,6 +175,7 @@ export function cajaCalcularCierreHandler(db: Db, payload: { caja_id: string }):
 export function cajaCerrarHandler(
   db: Db,
   payload: unknown,
+  hooks: CajaHooks = {},
 ) {
   const session = requireSession();
   const p = (payload ?? {}) as Record<string, unknown>;
@@ -187,12 +205,7 @@ export function cajaCerrarHandler(
   }
 
   const now = new Date();
-  const cmd = construirComandoCierre(db, {
-    cajaRow, resumen, diferencia,
-    monto_contado: monto_contado,
-    usuarioCierreId: session.userId, now,
-  });
-  const avisoIds = db.transaction((tx) => {
+  const postCommit = db.transaction((tx) => {
     tx.update(schema.caja).set({
       estado: 'cerrada',
       fecha_cierre: now,
@@ -206,11 +219,15 @@ export function cajaCerrarHandler(
       updated_at: now,
       sync_state: 'pending',
     }).where(eq(schema.caja.id, caja_id)).run();
-    // ADR-047 §6: el INSERT de aviso va DENTRO de la transaccion del hecho de negocio.
-    return insertarAvisos(tx, cmd, now);
+    // El hook corre DENTRO de la transacción del cierre (p. ej. Retail inserta el aviso,
+    // ADR-047 §6): si lanza, el cierre se revierte.
+    return hooks.onCajaCerrada?.({
+      db, tx, cajaRow, resumen, diferencia, monto_contado,
+      usuarioCierreId: session.userId, now,
+    });
   });
-  // Envio best-effort FUERA de la transaccion; no bloquea el cierre.
-  for (const aid of avisoIds) { void despacharAviso(db, aid); }
+  // Post-commit best-effort FUERA de la transacción (p. ej. despacho del aviso).
+  if (postCommit) postCommit();
 
   return db.select().from(schema.caja).where(eq(schema.caja.id, caja_id)).get()!;
 }
@@ -240,13 +257,13 @@ export function cajaArqueosQueryAll(db: Db) {
   return rows.map((r, i) => ({ turno: i + 1, ...r }));
 }
 
-export function registerCajaHandlers(ipcMain: IpcMain, db: Db): void {
+export function registerCajaHandlers(ipcMain: IpcMain, db: Db, hooks: CajaHooks = {}): void {
   ipcMain.handle('caja:getActiva',        async ()       => cajaGetActivaHandler(db));
   ipcMain.handle('caja:abrir',            async (_e, p)  => cajaAbrirHandler(db, p));
   ipcMain.handle('caja:addMovimiento',    async (_e, p)  => cajaAddMovimientoHandler(db, p));
   ipcMain.handle('caja:calcularCierre',   async (_e, p)  => cajaCalcularCierreHandler(db, p));
   ipcMain.handle('caja:cerrar', async (_e, p) => {
-    const result = cajaCerrarHandler(db, p);
+    const result = cajaCerrarHandler(db, p, hooks);
     const autoHabilitado = parametrosGetHandler(db, { clave: 'backup_auto_habilitado' });
     const destino = parametrosGetHandler(db, { clave: 'backup_destino_local' });
     if (autoHabilitado === 'true' && destino) {

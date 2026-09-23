@@ -14,7 +14,7 @@ import { presupuestoListarHandler } from '../presupuesto';
 import { proveedorQueryAll, proveedorUpsertHandler } from '../proveedor';
 import { clienteQueryAll, clienteUpsertHandler } from '@core/main';
 import { ventaQueryAll, ventaDetalladoQueryAll, ventaConfirmarHandler } from '../venta';
-import { cajaAbrirHandler, cajaCerrarHandler, cajaArqueosQueryAll } from '../caja';
+import { cajaAbrirHandler, cajaCerrarHandler, cajaArqueosQueryAll } from '@core/main';
 import { runCatalogSeed } from '../../catalog/seed';
 import { eq } from 'drizzle-orm';
 import * as schema from '../../db/schema';

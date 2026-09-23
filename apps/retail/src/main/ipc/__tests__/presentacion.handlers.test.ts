@@ -17,7 +17,7 @@ import {
   presentacionReactivarHandler,
 } from '../presentacion';
 import { ventaConfirmarHandler } from '../venta';
-import { cajaAbrirHandler } from '../caja';
+import { cajaAbrirHandler } from '@core/main';
 
 function setupProducto(db: ReturnType<typeof setupDb>, unidadVenta = 'u') {
   runCatalogSeed(db);

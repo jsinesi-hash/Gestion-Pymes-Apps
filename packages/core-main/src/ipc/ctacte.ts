@@ -2,8 +2,11 @@ import { eq, desc, asc, sql, and } from 'drizzle-orm';
 import { generateId, nombreCompletoCliente } from '@ferreteria/shared';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import * as schema from '../db/schema';
-import { getSession, getOriginId, requirePermission, id, centavos, oneOf, optStr } from '@core/main';
+import * as schema from '@core/db';
+import { getSession } from '../auth/session';
+import { getOriginId } from '../context';
+import { requirePermission } from '../auth/guard';
+import { id, centavos, oneOf, optStr } from '../validation/core';
 import { cajaGetActivaHandler } from './caja';
 
 type Db = BetterSQLite3Database<typeof schema>;

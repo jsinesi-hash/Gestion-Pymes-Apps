@@ -3,12 +3,12 @@ import { eq } from 'drizzle-orm';
 import { generateId } from '@ferreteria/shared';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
 import { clienteUpsertHandler } from '@core/main';
-import { cajaAbrirHandler } from '../caja';
+import { cajaAbrirHandler } from '@core/main';
 import {
   ctacteSetLimiteHandler,
   ctacteRegistrarSaldoInicialHandler,
   ctacteRegistrarCobroHandler,
-} from '../ctacte';
+} from '@core/main';
 import * as schema from '../../db/schema';
 
 type Db = ReturnType<typeof setupDb>;
