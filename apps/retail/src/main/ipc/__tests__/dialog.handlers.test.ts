@@ -7,7 +7,7 @@ vi.mock('electron', () => ({
 }));
 
 import { dialog } from 'electron';
-import { seleccionarCarpetaHandler, seleccionarArchivoHandler } from '../dialog';
+import { seleccionarCarpetaHandler, seleccionarArchivoHandler } from '@core/main';
 
 beforeEach(() => {
   vi.resetAllMocks();

@@ -9,7 +9,7 @@ if (started) app.quit();
 import { loadTerminalConfig } from './config';
 import { db } from './db/client';
 import { runStartup } from './startup';
-import { registerAuthHandlers } from '@core/main';
+import { registerCoreHandlers } from '@core/main';
 import { navegacionRetail } from '../common/navegacion';
 import { registerImpuestoHandlers } from './ipc/impuesto';
 import { registerMarcaHandlers } from './ipc/marca';
@@ -19,15 +19,12 @@ import { registerExistenciasHandlers } from './ipc/existencias';
 import { registerMovimientoStockHandlers } from './ipc/movimiento-stock';
 import { registerProductoHandlers } from './ipc/producto';
 import { registerEquivalenciaHandlers } from './ipc/equivalencia';
-import { registerPreferenciasHandlers } from '@core/main';
 import { registerPrintHandlers } from './ipc/print';
 import { registerStockHandlers } from './ipc/stock';
 import { registerListaPrecioHandlers } from './ipc/lista-precio';
 import { registerReglaPrecioHandlers } from './ipc/regla-precio';
 import { registerPriceBatchHandlers } from './ipc/price-batch';
-import { registerCajaHandlers } from '@core/main';
 import { avisoCierreCaja } from './ipc/caja-cierre-aviso';
-import { registerParametrosHandlers } from '@core/main';
 import { registerSmtpHandlers } from './ipc/smtp';
 import { registerVentaHandlers } from './ipc/venta';
 import { registerImportarHandlers } from './ipc/importar';
@@ -36,19 +33,13 @@ import { registerDashboardRangoHandlers } from './ipc/dashboard-rango';
 import { registerDashboardCajaRangoHandlers } from './ipc/dashboard-caja-rango';
 import { registerDashboardClientesHandlers }   from './ipc/dashboard-clientes';
 import { registerDashboardProveedoresHandlers } from './ipc/dashboard-proveedores';
-import { registerExportarHandlers } from '@core/main';
-import { exportarEjecutar } from './ipc/exportar';
+import { EXPORTADORES_RETAIL } from './ipc/exportar';
 import { registerReportesHandlers } from './ipc/reportes';
 import { registerProveedorHandlers } from './ipc/proveedor';
 import { registerProductoProveedorHandlers } from './ipc/producto-proveedor';
 import { registerOcHandlers } from './ipc/ordenes-compra';
 import { registerRecepcionHandlers } from './ipc/recepcion';
-import { registerCtaCteHandlers } from '@core/main';
-import { registerClienteHandlers } from '@core/main';
-import { registerBackupHandlers } from '@core/main';
-import { registerRestoreHandlers } from '@core/main';
-import { registerDialogHandlers } from './ipc/dialog';
-import { registerGeoHandlers } from '@core/main';
+import { registerDialogRetailHandlers } from './ipc/dialog';
 import { registerEtiquetasHandlers } from './ipc/etiquetas';
 import { registerVentaEsperaHandlers } from './ipc/venta-espera';
 import { registerCambioProgramadoHandlers } from './ipc/cambio-programado';
@@ -74,7 +65,13 @@ import { getSession, aplicarSeguridadVentana } from '@core/main';
 async function createWindow(): Promise<void> {
   loadTerminalConfig();
   await runStartup(db);
-  registerAuthHandlers(ipcMain, db);
+  registerCoreHandlers(ipcMain, db, {
+    migrationsFolder: path.join(__dirname, 'migrations'),
+    navegacion: navegacionRetail,
+    exportadores: EXPORTADORES_RETAIL,
+    caja: { onCajaCerrada: avisoCierreCaja },
+  });
+  registerDialogRetailHandlers(ipcMain);
 
   const printService = new ElectronPrintService(() => new BrowserWindow({
     show: false,
@@ -89,14 +86,11 @@ async function createWindow(): Promise<void> {
   registerMovimientoStockHandlers(ipcMain, db);
   registerProductoHandlers(ipcMain, db);
   registerEquivalenciaHandlers(ipcMain, db);
-  registerPreferenciasHandlers(ipcMain, db, navegacionRetail);
   registerPrintHandlers(ipcMain, db, printService);
   registerStockHandlers(ipcMain, db);
   registerListaPrecioHandlers(ipcMain, db);
   registerReglaPrecioHandlers(ipcMain, db);
   registerPriceBatchHandlers(ipcMain, db);
-  registerCajaHandlers(ipcMain, db, { onCajaCerrada: avisoCierreCaja });
-  registerParametrosHandlers(ipcMain, db);
   registerSmtpHandlers(ipcMain, db);
   registerVentaHandlers(ipcMain, db);
   registerImportarHandlers(ipcMain, db);
@@ -105,20 +99,11 @@ async function createWindow(): Promise<void> {
   registerDashboardCajaRangoHandlers(ipcMain, db);
   registerDashboardClientesHandlers(ipcMain, db);
   registerDashboardProveedoresHandlers(ipcMain, db);
-  registerExportarHandlers(ipcMain, db, exportarEjecutar);
   registerReportesHandlers(ipcMain, db);
   registerProveedorHandlers(ipcMain, db);
   registerProductoProveedorHandlers(ipcMain, db);
   registerOcHandlers(ipcMain, db);
   registerRecepcionHandlers(ipcMain, db);
-  registerCtaCteHandlers(ipcMain, db);
-  registerClienteHandlers(ipcMain, db);
-  registerBackupHandlers(ipcMain, db);
-  // Misma carpeta que usa db/client.ts: vite.main copia src/main/db/migrations a
-  // `migrations/` junto al bundle (.vite/build).
-  registerRestoreHandlers(ipcMain, db, { migrationsFolder: path.join(__dirname, 'migrations') });
-  registerDialogHandlers(ipcMain);
-  registerGeoHandlers(ipcMain, db);
   registerEtiquetasHandlers(ipcMain, db);
   registerVentaEsperaHandlers(ipcMain, db);
   registerCambioProgramadoHandlers(ipcMain, db);
