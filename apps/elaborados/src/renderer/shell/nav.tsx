@@ -1,0 +1,39 @@
+// E1: solo pantallas del core. E2+ suma Venta, Producción, Stock, Carta, Compras…
+import type { NavGroup } from '@core/ui';
+
+const I = (d: string) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d={d} />
+  </svg>
+);
+
+export const NAV_ELABORADOS: NavGroup[] = [
+  {
+    key: 'caja',
+    label: 'Caja',
+    icon: I('M2 5h20v14H2zM2 10h20'),
+    standalone: true,
+    items: [{ label: 'Caja', to: '/caja', icon: I('M2 5h20v14H2zM2 10h20') }],
+  },
+  {
+    key: 'clientes',
+    label: 'Clientes',
+    icon: I('M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'),
+    permiso: 'ctacte.cobrar',
+    items: [
+      { label: 'Clientes', to: '/clientes', icon: I('M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2'), permiso: 'ctacte.cobrar' },
+      { label: 'Cuentas corrientes', to: '/credito', icon: I('M1 4h22v16H1zM1 10h22'), permiso: 'ctacte.cobrar' },
+    ],
+  },
+  {
+    key: 'sistema',
+    label: 'Sistema',
+    icon: I('M12 15a3 3 0 100-6 3 3 0 000 6z'),
+    items: [
+      { label: 'Mi cuenta', to: '/config/mi-cuenta', icon: I('M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2') },
+      { label: 'Usuarios', to: '/config/usuarios', icon: I('M17 21v-2a4 4 0 00-4-4H5'), permiso: 'usuario.administrar' },
+      { label: 'Roles y permisos', to: '/config/roles-permisos', icon: I('M17 21v-2a4 4 0 00-4-4H5'), permiso: 'usuario.administrar' },
+      { label: 'Backup/Restore', to: '/config/backup-restore', icon: I('M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5'), permiso: 'backup.crear' },
+    ],
+  },
+];
