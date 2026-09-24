@@ -8,6 +8,7 @@ import type * as schema from './db/schema';
 // donde app puede no estar inicializado.
 import { runSeed, crearBackup, runGeoSeedOffline } from '@core/main';
 import { PERMISOS_ELABORADOS, OPERADOR_PERMISOS_ELABORADOS } from './auth/seed';
+import { runCatalogSeedElaborados } from './catalog/seed';
 import * as dbSchema from './db/schema';
 
 type Db = BetterSQLite3Database<typeof schema>;
@@ -100,6 +101,7 @@ export async function runStartup(db: Db, opts: StartupOpts = {}): Promise<void> 
     } catch (e) {
       console.warn('[startup] geo seed falló (no bloqueante):', (e as Error).message);
     }
+    runCatalogSeedElaborados(db);
     marcarSeedBaseAplicado(db);
   }
 }

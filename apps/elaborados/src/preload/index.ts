@@ -1,6 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { createBridge } from '@core/preload';
 
-// E1: solo canales universales del core. Los namespaces propios de Elaborados (articulo,
-// produccion, producto_venta, …) se suman vía `app:` en E2+.
-createBridge({ exposeAs: 'elaborados' }, { contextBridge, ipcRenderer });
+// E2 suma los namespaces propios de Elaborados. Cada slice agrega los suyos acá.
+createBridge({
+  exposeAs: 'elaborados',
+  app: (invoke) => ({
+    impuesto: {
+      list: () => invoke('impuesto:list'),
+    },
+  }),
+}, { contextBridge, ipcRenderer });

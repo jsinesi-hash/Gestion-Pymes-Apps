@@ -11,6 +11,7 @@ import { db } from './db/client';
 import { runStartup } from './startup';
 import { registerCoreHandlers, aplicarSeguridadVentana } from '@core/main';
 import { navegacionElaborados } from '../common/navegacion';
+import { registerImpuestoHandlers } from './ipc/impuesto';
 
 async function createWindow(): Promise<void> {
   loadTerminalConfig();
@@ -19,6 +20,7 @@ async function createWindow(): Promise<void> {
     migrationsFolder: path.join(__dirname, 'migrations'),
     navegacion: navegacionElaborados,
   });
+  registerImpuestoHandlers(ipcMain, db);
 
   const win = new BrowserWindow({
     width: 1280,
