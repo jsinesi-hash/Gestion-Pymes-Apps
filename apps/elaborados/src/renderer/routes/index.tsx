@@ -17,6 +17,7 @@ import {
   ConfigBackupRestore,
 } from '@core/ui';
 import { ElaboradosShell } from '../shell/ElaboradosShell';
+import { ArticulosView } from '../views/stock/ArticulosView';
 
 // Centralized route tree. Routes are never defined inline in components.
 // E1: solo pantallas del core (sin renderVentaDetalle en CajaView — llega en E3; sin
@@ -40,6 +41,7 @@ export const routes: RouteObject[] = [
       { path: 'clientes/:id/editar', element: <ClienteForm /> },
       { path: 'credito', element: <CtaCteListado /> },
       { path: 'credito/:clienteId', element: <CtaCteDetalle /> },
+      { path: 'stock/articulos', element: <ArticulosView /> },
       { path: 'config/mi-cuenta', element: <ConfigMiCuenta /> },
       { path: 'config/usuarios', element: <ConfigUsuarios /> },
       { path: 'config/roles-permisos', element: <RolesPermisosView /> },

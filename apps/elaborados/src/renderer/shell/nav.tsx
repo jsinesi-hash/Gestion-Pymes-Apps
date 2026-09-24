@@ -26,6 +26,15 @@ export const NAV_ELABORADOS: NavGroup[] = [
     ],
   },
   {
+    key: 'stock',
+    label: 'Stock',
+    icon: I('M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'),
+    permiso: 'articulo.gestionar',
+    items: [
+      { label: 'Artículos', to: '/stock/articulos', icon: I('M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'), permiso: 'articulo.gestionar' },
+    ],
+  },
+  {
     key: 'sistema',
     label: 'Sistema',
     icon: I('M12 15a3 3 0 100-6 3 3 0 000 6z'),
