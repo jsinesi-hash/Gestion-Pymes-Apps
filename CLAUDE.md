@@ -50,29 +50,64 @@ cd packages/shared && pnpm build
 
 ### Estructura del monorepo
 
+Monorepo multi-app (ADR-091 + ADR-092): un núcleo `@core/*` + `@ferreteria/shared` compartido, y una
+app por familia de negocio. **El core NUNCA depende de una app** (invariante protegida por barandas
+automáticas — B4 en `shared`, boundary core↛app por paquete).
+
 ```
 packages/
-  shared/        # TypeScript puro — motor de precios, SKU utils, tipos de exportación y sync
-  client/
+  shared/          # TypeScript puro (browser-safe) — precios, SKU, navegación (crearNavegacion),
+                    #   tipos de exportación y sync. Sin Electron/Node.
+  core-db/         # @core/db     — esquema Drizzle universal + factory createDb/runMigrations
+  core-ui/         # @core/ui     — design system + AppShell/vistas universales (renderer-only)
+  core-main/       # @core/main   — plomería del main: auth/RBAC, runSeed, registerCoreHandlers,
+                    #   caja/cta-cte/cliente/backup/restore/export/geo (main-only)
+  core-preload/    # @core/preload — createBridge (único contextBridge.exposeInMainWorld universal)
+apps/
+  retail/          # ferreteria-client — 1er perfil de familia Retail (kiosco/librería/limpieza)
+  elaborados/      # elaborados-client — familia Elaborados (heladería/gastronomía), 2º consumidor
     src/
-      main/      # Proceso principal de Electron (Node.js + SQLite)
-      preload/   # contextBridge — único punto que importa 'electron' del lado renderer
-      renderer/  # SPA React (contexto browser/jsdom)
-      print/     # Interfaz IPrintService + implementación ElectronPrintService
+      main/        # Proceso principal de Electron de la app (Node.js + SQLite)
+      preload/     # llama a createBridge({ exposeAs, app }) — único punto que importa 'electron'
+                    #   del lado renderer
+      renderer/    # SPA React; shell/ compone AppShell del core con NAV/CRUMBS/comandos propios
+      print/       # Interfaz IPrintService + implementación ElectronPrintService
 ```
+
+Cada app tiene su propio `main/db/migrations/` (secuencia sobre el esquema compuesto core+app) y su
+propia clave de bridge (`window.ferreteria` en Retail, `window.elaborados` en Elaborados).
 
 ### Puente IPC de Electron
 
-El renderer **nunca** importa de `'electron'` directamente. Toda comunicación pasa por `window.ferreteria`, expuesto por `src/preload/index.ts` vía `contextBridge.exposeInMainWorld`. Los handlers se registran en `src/main/index.ts` al arrancar mediante `ipcMain.handle(canal, handler)`. Cada módulo de dominio exporta una función `register*Handlers(ipcMain, db)`.
+El renderer **nunca** importa de `'electron'` directamente. Toda comunicación pasa por la clave de
+bridge de la app (`window.ferreteria` en Retail, `window.elaborados` en Elaborados), expuesta por
+`src/preload/index.ts` de la app vía **una única** llamada a `createBridge({ exposeAs, app },
+deps)` (`@core/preload`): mezcla los canales universales del core con el namespace que arma la app,
+y lanza `BRIDGE_COLISION: <ns>[.<metodo>]` si la app pisa una clave que el core ya define. El
+renderer accede a esa API con `bridge()` (`@core/ui`; requiere haber llamado `configurarBridge
+(exposeAs)` al arrancar) — nunca escribiendo `globalThis.<clave>` a mano.
 
-Patrón para un dominio nuevo:
-1. Crear `src/main/ipc/<dominio>.ts` con las funciones handler + `register<Dominio>Handlers`.
-2. Agregar el namespace en `src/preload/index.ts` bajo `window.ferreteria`.
-3. Llamar a `register<Dominio>Handlers(ipcMain, db)` en `src/main/index.ts`.
-4. Crear hooks React en `src/renderer/hooks/use<Dominio>.ts` que llamen a `(window as any).ferreteria.<dominio>.*`.
-5. Si el dominio tiene pantalla propia: declarar la ruta en `src/renderer/routes/index.tsx` **y**
-   darle entrada de navegación en `src/renderer/views/shell/AppShell.tsx` (ver §Navegación).
-   Una ruta sin entrada en `AppShell` es inalcanzable para el usuario.
+Los handlers universales (auth, preferencias, parámetros, geo, cliente, cta-cte, caja, backup,
+restore, dialog, exportar) se registran con un solo llamado a `registerCoreHandlers(ipcMain, db,
+{ migrationsFolder, navegacion, exportadores?, caja? })` (`@core/main`) desde `src/main/index.ts` de
+cada app. Los handlers propios de un dominio de la app exportan su propia función `register*
+Handlers(ipcMain, db)`, llamada al lado de `registerCoreHandlers`.
+
+Patrón para un dominio nuevo **de una app** (no universal):
+1. Crear `apps/<app>/src/main/ipc/<dominio>.ts` con las funciones handler + `register<Dominio>Handlers`.
+2. Agregar el namespace en `apps/<app>/src/preload/index.ts`, dentro del `app` que recibe `createBridge`.
+3. Llamar a `register<Dominio>Handlers(ipcMain, db)` en `apps/<app>/src/main/index.ts`, junto a
+   `registerCoreHandlers(...)`.
+4. Crear hooks React en `apps/<app>/src/renderer/hooks/use<Dominio>.ts` que llamen a
+   `bridge().<dominio>.*`.
+5. Si el dominio tiene pantalla propia: declarar la ruta en `apps/<app>/src/renderer/routes/index.tsx`
+   **y** darle entrada de navegación en `apps/<app>/src/renderer/shell/` (ver §Navegación).
+   Una ruta sin entrada de nav es inalcanzable para el usuario.
+
+Si el dominio es **universal** (lo necesitan o lo necesitarán ambas apps sin variar de forma — regla
+de tres, ver ADR-091/ADR-092), va a `@core/main` (handler) + `@core/preload` (`coreCanales`) +
+`@core/ui` (vista/hook) en vez de a la app, con el mismo patrón de seams que ya usan caja/exportar/
+navegación: opts inyectadas en el registrador del core, cada app decide el contenido.
 
 ### Dos runners de test (crítico — NMV)
 
@@ -107,14 +142,23 @@ Todas las rutas se declaran en `src/renderer/routes/index.tsx` — nunca inline 
 
 ### Navegación (leer antes de agregar una pantalla)
 
-**El único menú que se renderiza es el sidebar de `src/renderer/views/shell/AppShell.tsx`.**
-Agregar una pantalla requiere **tres** cosas, no una:
+**`AppShell` (`@core/ui`) es 100% por props — no tiene NAV ni CRUMBS propios.** El NAV/CRUMBS/
+comandos/buscadores de cada app viven en `apps/<app>/src/renderer/shell/` (`nav.ts`, `crumbs.ts`,
+`comandos.ts`) y ese shell (`RetailShell`/`ElaboradosShell`) es quien compone `<AppShell nav={...}
+crumbs={...} comandos={...} .../>`. Agregar una pantalla requiere **tres** cosas, no una:
 
-1. La ruta en `routes/index.tsx`.
-2. El ítem en el array `NAV` de `AppShell.tsx`, dentro del grupo que corresponda, con su
-   `permiso` si es restringida (el sidebar filtra por permiso: si el rol no lo tiene, el
-   ítem no aparece — eso es correcto, pero verificá con qué usuario estás probando).
-3. La entrada en el mapa `CRUMBS` de `AppShell.tsx`, o el breadcrumb queda vacío.
+1. La ruta en `apps/<app>/src/renderer/routes/index.tsx`.
+2. El ítem en el array `NAV_<APP>` de `apps/<app>/src/renderer/shell/nav.ts`, dentro del grupo que
+   corresponda, con su `permiso` si es restringida (el shell filtra por permiso: si el rol no lo
+   tiene, el ítem no aparece — eso es correcto, pero verificá con qué usuario estás probando).
+3. La entrada en el mapa `CRUMBS_<APP>` de `apps/<app>/src/renderer/shell/crumbs.ts`, o el
+   breadcrumb queda vacío.
+
+Elaborados automatiza la verificación de 1↔2↔3 con un test (`apps/elaborados/src/renderer/shell/
+nav.test.tsx`): por cada item de `NAV_ELABORADOS` con `to`, comprueba con `matchRoutes` que existe
+una ruta real y que `buildBreadcrumb` no cae al fallback "Inicio". Un ítem de NAV sin ruta o sin
+crumb hace fallar ese test — **replicar el mismo test al agregar pantallas en Retail** (hoy Retail
+no lo tiene) en vez de confiar solo en abrir la app a mano.
 
 > ⚠️ **Regla general (lección de `ConfigShell.tsx`, ya eliminado en ADR-081).** Ese archivo
 > era un menú de Configuración huérfano —tenía `NavLink` + `<Outlet/>` pero no lo importaba
@@ -588,8 +632,20 @@ Leyenda: ✔ permitido · ✱ con autorización del Supervisor · — no permiti
 
 ### Permisos reales
 
-**Fuente de verdad: `PERMISOS` y `OPERADOR_PERMISOS` en `src/main/auth/seed.ts:9-53`.**
+**Fuente de verdad: `PERMISOS` y `OPERADOR_PERMISOS` en `apps/retail/src/main/auth/seed.ts`.**
 Son **28 permisos**, **17 de ellos al Operador**. El Supervisor los tiene todos.
+
+> **Desde ADR-092 (Elaborados E1), el seed de permisos está partido core + app.**
+> `runSeed(db, opts: { permisos, operador })` (`@core/main`) siembra primero `PERMISOS_CORE` (12
+> permisos universales — ventas, caja, cta-cte, dashboard, admin, export) y `OPERADOR_PERMISOS_CORE`,
+> y les suma `[...opts.permisos]`/`[...opts.operador]` deduplicando por `codigo`. Retail delega:
+> `runSeed(db) { runSeedCore(db, { permisos: PERMISOS, operador: [...OPERADOR_PERMISOS] }) }`, y la
+> tabla de abajo (los 28 de Retail) **ya incluye** los 12 del core — no son una lista aparte. Cada
+> app nueva pasa su propia lista de permisos de dominio; si no tiene ninguno todavía, `{ permisos: [],
+> operador: [] }` alcanza (caso de Elaborados en E1). **Al agregar un permiso universal** (lo
+> necesitan o lo necesitarán todas las apps) va a `PERMISOS_CORE`/`OPERADOR_PERMISOS_CORE`
+> (`packages/core-main/src/auth/permisos-core.ts`); si es específico de una app, a su propio
+> `PERMISOS` local, igual que antes.
 
 | Módulo | Permiso | Operador |
 |--------|---------|:--------:|

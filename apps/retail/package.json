@@ -10,7 +10,7 @@
     "dist:full": "pnpm rebuild:electron && pnpm dist",
     "release": "node scripts/dist.cjs --publish always",
     "typecheck": "tsc --noEmit",
-    "test": "pnpm run typecheck && vitest run && node scripts/test-node.cjs",
+    "test": "pnpm run typecheck && vitest run && node scripts/test-node.cjs --serial",
     "seed:base": "node scripts/seed-base.cjs",
     "seed:dev": "node scripts/seed-dev.cjs",
     "seed:geo": "node scripts/seed-geo.cjs",
