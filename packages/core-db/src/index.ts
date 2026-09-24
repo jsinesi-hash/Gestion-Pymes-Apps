@@ -5,3 +5,4 @@
 // el namespace lo importa con `import * as coreSchema from '@core/db'`.
 export * from './schema';
 export { createDb, runMigrations } from './factory';
+export { verificarCamposSync, CAMPOS_SYNC } from './__boundary__/sync-fields';
