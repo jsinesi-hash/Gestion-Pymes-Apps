@@ -8,15 +8,17 @@ import {
   preferenciasGuardarHandler,
   PERMISOS_CORE,
 } from '@core/main';
+import { PERMISOS_ELABORADOS } from '../auth/seed';
 import { navegacionElaborados } from '../../common/navegacion';
 
 describe('Elaborados E1 — plataforma del core sobre su propia BD', () => {
   beforeEach(() => clearSession());
 
-  it('seed: admin Supervisor con exactamente los permisos del core', () => {
+  it('seed: admin Supervisor con los permisos del core + los propios de Elaborados', () => {
     const db = setupDb();
     const s = loginAsAdmin(db);
-    expect([...s.permisos].sort()).toEqual(PERMISOS_CORE.map((p) => p.codigo).sort());
+    const esperados = [...PERMISOS_CORE, ...PERMISOS_ELABORADOS].map((p) => p.codigo).sort();
+    expect([...s.permisos].sort()).toEqual(esperados);
   });
 
   it('clientes: alta y listado', () => {
