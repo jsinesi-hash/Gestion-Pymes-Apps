@@ -12,6 +12,8 @@ import { runStartup } from './startup';
 import { registerCoreHandlers, aplicarSeguridadVentana } from '@core/main';
 import { navegacionElaborados } from '../common/navegacion';
 import { registerImpuestoHandlers } from './ipc/impuesto';
+import { registerArticuloHandlers } from './ipc/articulo';
+import { registerMovimientoArticuloHandlers } from './ipc/movimiento-articulo';
 
 async function createWindow(): Promise<void> {
   loadTerminalConfig();
@@ -21,6 +23,8 @@ async function createWindow(): Promise<void> {
     navegacion: navegacionElaborados,
   });
   registerImpuestoHandlers(ipcMain, db);
+  registerArticuloHandlers(ipcMain, db);
+  registerMovimientoArticuloHandlers(ipcMain, db);
 
   const win = new BrowserWindow({
     width: 1280,
