@@ -75,9 +75,14 @@ export function ArticulosView() {
           onClose={() => setModal(null)}
           onSave={async (payload) => {
             if (modal.mode === 'edit') {
-              await actualizar({ id: modal.articulo.id, ...payload });
+              await actualizar({
+                id: modal.articulo.id,
+                nombre: payload.nombre,
+                bloquea_sin_stock: payload.bloquea_sin_stock,
+                stock_minimo: payload.stock_minimo,
+              });
             } else {
-              await crear(payload as any);
+              await crear(payload);
             }
           }}
         />
@@ -89,8 +94,12 @@ export function ArticulosView() {
 function ArticuloModal({ initial, onClose, onSave }: {
   initial: ArticuloRow | null;
   onClose: () => void;
+  // Siempre manda la forma completa (tipo/unidad incluidos, con los valores de estado
+  // actuales como placeholder en modo edición): así ArticulosView puede rutear a
+  // `crear`/`actualizar` con tipos correctamente angostos, sin `as any`. En modo edición
+  // el padre descarta tipo/unidad del payload — no se leen.
   onSave: (payload: {
-    nombre: string; tipo?: ArticuloRow['tipo']; unidad?: ArticuloRow['unidad'];
+    nombre: string; tipo: ArticuloRow['tipo']; unidad: ArticuloRow['unidad'];
     bloquea_sin_stock: boolean; stock_minimo: number | null;
   }) => Promise<void>;
 }) {
@@ -113,7 +122,8 @@ function ArticuloModal({ initial, onClose, onSave }: {
     try {
       await onSave({
         nombre: nombre.trim(),
-        ...(initial ? {} : { tipo, unidad }),
+        tipo,
+        unidad,
         bloquea_sin_stock: bloqueaSinStock,
         stock_minimo: stockMinimo.trim() === '' ? null : Number(stockMinimo),
       });
