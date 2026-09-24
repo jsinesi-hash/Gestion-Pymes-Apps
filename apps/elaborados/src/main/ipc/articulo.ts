@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
-import { getSession, getOriginId, requirePermission, str, num, bool, oneOf } from '@core/main';
+import { getSession, getOriginId, requirePermission, str, num, bool, oneOf, id as vId } from '@core/main';
 import * as schema from '../db/schema';
 
 type Db = BetterSQLite3Database<typeof schema>;
@@ -96,7 +96,7 @@ export function articuloCreateHandler(db: Db, payload: unknown): ArticuloRow {
 export function articuloUpdateHandler(db: Db, payload: unknown): ArticuloRow {
   const session = requireSession();
   const p = (payload ?? {}) as Record<string, unknown>;
-  const v_id = str(p['id'], 'id');
+  const v_id = vId(p['id'], 'id');
   const existing = db.select().from(schema.articulo).where(eq(schema.articulo.id, v_id)).get();
   if (!existing) throw new Error('NOT_FOUND');
 
