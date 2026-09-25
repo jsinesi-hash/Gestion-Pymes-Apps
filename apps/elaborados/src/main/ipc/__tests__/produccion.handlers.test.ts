@@ -43,6 +43,41 @@ describe('produccion handlers', () => {
     expect(exChoco.stock).toBe(12);
   });
 
+  it('crear con consumos override usa las cantidades dadas en vez de escalar la receta', () => {
+    loginAsAdmin(db);
+    const { choco, leche, cacao } = armarLoteChocolate(db);
+
+    // La receta escalada a 12 pediría leche:10, cacao:2 — el override pide otra cosa.
+    const prod = produccionCrearHandler(db, {
+      articulo_id: choco.id, cantidad_producida: 12,
+      consumos: [{ articulo_id: leche.id, cantidad: 20 }, { articulo_id: cacao.id, cantidad: 5 }],
+    });
+    expect(prod.cantidad_producida).toBe(12);
+
+    const exLeche = db.select().from(schema.existencia_articulo).where(eq(schema.existencia_articulo.articulo_id, leche.id)).get()!;
+    expect(exLeche.stock).toBe(80);
+    const exCacao = db.select().from(schema.existencia_articulo).where(eq(schema.existencia_articulo.articulo_id, cacao.id)).get()!;
+    expect(exCacao.stock).toBe(95);
+  });
+
+  it('crear con un consumo override malformado lanza VALIDATION sin escribir nada', () => {
+    loginAsAdmin(db);
+    const { choco, leche } = armarLoteChocolate(db);
+
+    expect(() => produccionCrearHandler(db, {
+      articulo_id: choco.id, cantidad_producida: 12,
+      consumos: [{ articulo_id: leche.id, cantidad: 'nope' }],
+    })).toThrow(/VALIDATION/);
+
+    expect(() => produccionCrearHandler(db, {
+      articulo_id: choco.id, cantidad_producida: 12,
+      consumos: [{ articulo_id: leche.id, cantidad: -5 }],
+    })).toThrow(/VALIDATION/);
+
+    const exLeche = db.select().from(schema.existencia_articulo).where(eq(schema.existencia_articulo.articulo_id, leche.id)).get()!;
+    expect(exLeche.stock).toBe(100);
+  });
+
   it('crear sin receta definida lanza RECETA_NO_DEFINIDA', () => {
     loginAsAdmin(db);
     const choco = articuloCreateHandler(db, { nombre: 'Chocolate', tipo: 'elaborado', unidad: 'kg', bloquea_sin_stock: false });

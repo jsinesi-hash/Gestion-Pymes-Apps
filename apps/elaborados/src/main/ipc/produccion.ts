@@ -2,7 +2,7 @@ import { eq, desc } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
-import { getSession, getOriginId, requirePermission, verificarSupervisor, str, num, optStr, id as vId } from '@core/main';
+import { getSession, getOriginId, requirePermission, verificarSupervisor, str, num, optStr, arr, id as vId } from '@core/main';
 import * as schema from '../db/schema';
 import { escalarReceta } from '../domain/receta';
 import { costoDeLote, costoPromedioEntrada } from '../domain/costo';
@@ -15,16 +15,21 @@ function requireSession() {
   return session;
 }
 
-function nextNumeroProduccion(db: Db, terminal: string): string {
+/**
+ * Lee e incrementa produccion_correlativo_<terminal> dentro de la transaccion de creacion, para
+ * que un throw posterior (p. ej. STOCK_INSUFICIENTE) no "queme" un numero sin producir nada.
+ * Mismo patron que nextNumeroInterno (venta.ts) / nextNumeroRemitoAtomico (remito.ts).
+ */
+function nextNumeroProduccion(tx: Db, terminal: string): string {
   const clave = `produccion_correlativo_${terminal}`;
-  const param = db.select().from(schema.parametros_sistema)
+  const param = tx.select().from(schema.parametros_sistema)
     .where(eq(schema.parametros_sistema.clave, clave)).get();
   const correlativo = (param ? Number.parseInt(param.valor) : 0) + 1;
   if (param) {
-    db.update(schema.parametros_sistema).set({ valor: String(correlativo), actualizado_en: new Date() })
+    tx.update(schema.parametros_sistema).set({ valor: String(correlativo), actualizado_en: new Date() })
       .where(eq(schema.parametros_sistema.clave, clave)).run();
   } else {
-    db.insert(schema.parametros_sistema).values({
+    tx.insert(schema.parametros_sistema).values({
       clave, valor: String(correlativo), tipo: 'number',
       descripcion: 'Correlativo de números de producción', actualizado_en: new Date(),
     }).run();
@@ -43,7 +48,15 @@ export function produccionCrearHandler(db: Db, payload: unknown) {
   const v_articulo_id = vId(p['articulo_id'], 'articulo_id');
   const v_cantidad_producida = num(p['cantidad_producida'], 'cantidad_producida', { min: 0.001 });
   const v_observaciones = optStr(p['observaciones'], 'observaciones', 500);
-  const consumosOverride = p['consumos'] as { articulo_id: string; cantidad: number }[] | undefined;
+  const consumosOverride = p['consumos'] != null
+    ? arr(p['consumos'], 'consumos', (x) => {
+        const o = x as Record<string, unknown>;
+        return {
+          articulo_id: vId(o['articulo_id'], 'consumos.articulo_id'),
+          cantidad: num(o['cantidad'], 'consumos.cantidad', { min: 0.001 }),
+        };
+      })
+    : undefined;
 
   const receta = db.select().from(schema.receta_produccion)
     .where(eq(schema.receta_produccion.articulo_id, v_articulo_id)).get();
@@ -56,9 +69,10 @@ export function produccionCrearHandler(db: Db, payload: unknown) {
   const now = new Date();
   const terminal = getOriginId();
   const sync = { version: 1 as const, origin_id: terminal, sync_state: 'pending' as const, updated_at: now };
-  const numero = nextNumeroProduccion(db, terminal);
 
   const produccionId = db.transaction((tx) => {
+    const numero = nextNumeroProduccion(tx, terminal);
+
     const consumosConCosto = consumos.map((c) => {
       const art = tx.select().from(schema.articulo).where(eq(schema.articulo.id, c.articulo_id)).get();
       if (!art) throw new Error('NOT_FOUND');
