@@ -18,6 +18,7 @@ import {
 } from '@core/ui';
 import { ElaboradosShell } from '../shell/ElaboradosShell';
 import { ArticulosView } from '../views/stock/ArticulosView';
+import { ConteoView } from '../views/stock/ConteoView';
 import { ProduccionView } from '../views/produccion/ProduccionView';
 
 // Centralized route tree. Routes are never defined inline in components.
@@ -43,6 +44,7 @@ export const routes: RouteObject[] = [
       { path: 'credito', element: <CtaCteListado /> },
       { path: 'credito/:clienteId', element: <CtaCteDetalle /> },
       { path: 'stock/articulos', element: <ArticulosView /> },
+      { path: 'stock/conteo', element: <ConteoView /> },
       { path: 'produccion', element: <ProduccionView /> },
       { path: 'config/mi-cuenta', element: <ConfigMiCuenta /> },
       { path: 'config/usuarios', element: <ConfigUsuarios /> },
