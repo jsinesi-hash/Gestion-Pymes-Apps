@@ -9,6 +9,7 @@ export function ModificadoresView() {
   const { articulos } = useArticulos();
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [editando, setEditando] = useState<string | null>(null);
+  const [errorCrear, setErrorCrear] = useState<string | null>(null);
 
   if (loading) return <div style={{ padding: '2rem', opacity: 0.5 }}>Cargando...</div>;
   const puedeGestionar = can('producto_venta.gestionar');
@@ -16,17 +17,25 @@ export function ModificadoresView() {
   async function handleCrear(e: React.FormEvent) {
     e.preventDefault();
     if (!nuevoNombre.trim()) return;
-    await crear(nuevoNombre.trim());
-    setNuevoNombre('');
+    setErrorCrear(null);
+    try {
+      await crear(nuevoNombre.trim());
+      setNuevoNombre('');
+    } catch (e) {
+      setErrorCrear(traducirError(e).mensaje);
+    }
   }
 
   return (
     <div className="panel" style={{ flex: 1 }}>
       {puedeGestionar && (
-        <form className="toolbar" onSubmit={handleCrear}>
-          <input className="input" placeholder="Nombre del grupo (ej. Sabores)" value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} />
-          <button type="submit" className="btn-primary" disabled={!nuevoNombre.trim()}>+ Nuevo grupo</button>
-        </form>
+        <>
+          <form className="toolbar" onSubmit={handleCrear}>
+            <input className="input" placeholder="Nombre del grupo (ej. Sabores)" value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} />
+            <button type="submit" className="btn-primary" disabled={!nuevoNombre.trim()}>+ Nuevo grupo</button>
+          </form>
+          {errorCrear && <div className="alert-danger" role="alert">{errorCrear}</div>}
+        </>
       )}
       <div className="table-wrap">
         <table>

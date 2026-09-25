@@ -77,6 +77,18 @@ describe('ModificadoresView', () => {
     await waitFor(() => expect(mockCreate).toHaveBeenCalledWith({ nombre: 'Toppings' }));
   });
 
+  it('muestra el mensaje traducido cuando crear el grupo falla, sin limpiar el input', async () => {
+    mockCreate.mockRejectedValueOnce(new Error('ALGO_INESPERADO'));
+    renderView();
+    await waitFor(() => expect(screen.getByText('Sabores')).toBeInTheDocument());
+
+    fireEvent.change(screen.getByPlaceholderText(/nombre del grupo/i), { target: { value: 'Toppings' } });
+    fireEvent.click(screen.getByRole('button', { name: /nuevo grupo/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/no se pudo completar la operación/i);
+    expect(screen.getByPlaceholderText(/nombre del grupo/i)).toHaveValue('Toppings');
+  });
+
   it('al abrir "Opciones" y guardar, llama a grupoModificador.opcionSet con el payload correcto', async () => {
     renderView();
     await waitFor(() => expect(screen.getByText('Sabores')).toBeInTheDocument());
