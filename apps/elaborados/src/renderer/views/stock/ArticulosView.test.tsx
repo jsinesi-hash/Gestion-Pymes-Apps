@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { ArticulosView } from './ArticulosView';
 
@@ -16,6 +16,8 @@ const ARTICULOS_BASE = [
 const mockList = vi.fn();
 const mockCreate = vi.fn().mockResolvedValue(undefined);
 const mockUpdate = vi.fn().mockResolvedValue(undefined);
+const mockRecetaGet = vi.fn();
+const mockRecetaSet = vi.fn().mockResolvedValue(undefined);
 
 vi.stubGlobal('elaborados', {
   articulo: {
@@ -27,6 +29,10 @@ vi.stubGlobal('elaborados', {
   movimientoArticulo: {
     list: vi.fn(),
     create: vi.fn(),
+  },
+  recetaProduccion: {
+    get: mockRecetaGet,
+    set: mockRecetaSet,
   },
 });
 
@@ -41,6 +47,8 @@ describe('ArticulosView', () => {
     mockList.mockResolvedValue(ARTICULOS_BASE.map((a) => ({ ...a })));
     mockCreate.mockResolvedValue(undefined);
     mockUpdate.mockResolvedValue(undefined);
+    mockRecetaGet.mockResolvedValue(null);
+    mockRecetaSet.mockResolvedValue(undefined);
   });
 
   it('muestra los articulos cargados', async () => {
@@ -135,5 +143,74 @@ describe('ArticulosView', () => {
 
     expect(screen.queryByRole('button', { name: /nuevo artículo/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /editar/i })).not.toBeInTheDocument();
+  });
+
+  describe('edición de receta', () => {
+    it('muestra el botón "Receta" solo para artículos elaborados y con el permiso receta.gestionar', async () => {
+      renderView();
+      await waitFor(() => expect(screen.getByText('Harina 000')).toBeInTheDocument());
+
+      // Harina 000 (insumo) no tiene botón Receta; Torta de chocolate (elaborado) sí.
+      const filaHarina = screen.getByText('Harina 000').closest('tr')!;
+      const filaTorta = screen.getByText('Torta de chocolate').closest('tr')!;
+      expect(within(filaHarina).queryByRole('button', { name: /receta/i })).not.toBeInTheDocument();
+      expect(within(filaTorta).getByRole('button', { name: /receta/i })).toBeInTheDocument();
+    });
+
+    it('oculta el botón "Receta" cuando el usuario no tiene el permiso receta.gestionar', async () => {
+      mockCan.mockImplementation((codigo: string) => codigo !== 'receta.gestionar');
+      renderView();
+      await waitFor(() => expect(screen.getByText('Torta de chocolate')).toBeInTheDocument());
+
+      expect(screen.queryByRole('button', { name: /receta/i })).not.toBeInTheDocument();
+    });
+
+    it('al abrir "Receta" sin receta previa, muestra un ítem vacío para completar', async () => {
+      mockRecetaGet.mockResolvedValue(null);
+      renderView();
+      await waitFor(() => expect(screen.getByText('Torta de chocolate')).toBeInTheDocument());
+
+      fireEvent.click(screen.getByRole('button', { name: /receta/i }));
+
+      await waitFor(() => expect(mockRecetaGet).toHaveBeenCalledWith({ articulo_id: '2' }));
+      expect(await screen.findByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByLabelText(/rinde/i)).toHaveValue(12);
+      expect(screen.getByPlaceholderText(/cantidad/i)).toHaveValue(null);
+      // El select de insumo default es "Harina 000" (único insumo disponible).
+      expect(screen.getByRole('combobox')).toHaveValue('1');
+    });
+
+    it('al abrir "Receta" con receta existente, precarga rinde e ítems', async () => {
+      mockRecetaGet.mockResolvedValue({
+        rinde_cantidad: 24,
+        items: [{ articulo_id: '1', cantidad: 2.5 }],
+      });
+      renderView();
+      await waitFor(() => expect(screen.getByText('Torta de chocolate')).toBeInTheDocument());
+
+      fireEvent.click(screen.getByRole('button', { name: /receta/i }));
+
+      await waitFor(() => expect(screen.getByLabelText(/rinde/i)).toHaveValue(24));
+      expect(screen.getByPlaceholderText(/cantidad/i)).toHaveValue(2.5);
+    });
+
+    it('al guardar la receta llama a recetaProduccion.set con el payload correcto', async () => {
+      mockRecetaGet.mockResolvedValue(null);
+      renderView();
+      await waitFor(() => expect(screen.getByText('Torta de chocolate')).toBeInTheDocument());
+
+      fireEvent.click(screen.getByRole('button', { name: /receta/i }));
+      await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+
+      fireEvent.change(screen.getByLabelText(/rinde/i), { target: { value: '10' } });
+      fireEvent.change(screen.getByPlaceholderText(/cantidad/i), { target: { value: '3' } });
+      fireEvent.click(screen.getByRole('button', { name: /guardar receta/i }));
+
+      await waitFor(() => expect(mockRecetaSet).toHaveBeenCalledWith({
+        articulo_id: '2',
+        rinde_cantidad: 10,
+        items: [{ articulo_id: '1', cantidad: 3 }],
+      }));
+    });
   });
 });

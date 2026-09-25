@@ -16,6 +16,9 @@ import { registerArticuloHandlers } from './ipc/articulo';
 import { registerMovimientoArticuloHandlers } from './ipc/movimiento-articulo';
 import { registerRecetaProduccionHandlers } from './ipc/receta-produccion';
 import { registerProduccionHandlers } from './ipc/produccion';
+import { registerCategoriaVentaHandlers } from './ipc/categoria-venta';
+import { registerGrupoModificadorHandlers } from './ipc/grupo-modificador';
+import { registerProductoVentaHandlers } from './ipc/producto-venta';
 
 async function createWindow(): Promise<void> {
   loadTerminalConfig();
@@ -29,6 +32,9 @@ async function createWindow(): Promise<void> {
   registerMovimientoArticuloHandlers(ipcMain, db);
   registerRecetaProduccionHandlers(ipcMain, db);
   registerProduccionHandlers(ipcMain, db);
+  registerCategoriaVentaHandlers(ipcMain, db);
+  registerGrupoModificadorHandlers(ipcMain, db);
+  registerProductoVentaHandlers(ipcMain, db);
 
   const win = new BrowserWindow({
     width: 1280,

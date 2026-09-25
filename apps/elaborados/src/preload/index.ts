@@ -27,5 +27,20 @@ createBridge({
       crear:  (p: unknown) => invoke('produccion:crear', p),
       anular: (p: unknown) => invoke('produccion:anular', p),
     },
+    categoriaVenta: {
+      list:   () => invoke('categoria-venta:list'),
+      create: (p: unknown) => invoke('categoria-venta:create', p),
+    },
+    grupoModificador: {
+      list:      () => invoke('grupo-modificador:list'),
+      get:       (p: { id: string }) => invoke('grupo-modificador:get', p),
+      create:    (p: unknown) => invoke('grupo-modificador:create', p),
+      opcionSet: (p: unknown) => invoke('grupo-modificador:opcion-set', p),
+    },
+    productoVenta: {
+      list:   () => invoke('producto-venta:list'),
+      get:    (p: { id: string }) => invoke('producto-venta:get', p),
+      create: (p: unknown) => invoke('producto-venta:create', p),
+    },
   }),
 }, { contextBridge, ipcRenderer });

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth, useEscapeToClose, rutearCampoError, useToast } from '@core/ui';
 import { useArticulos, type ArticuloRow } from '../../hooks/useArticulos';
 
@@ -10,9 +10,10 @@ type ModalState = { mode: 'create' } | { mode: 'edit'; articulo: ArticuloRow } |
 
 export function ArticulosView() {
   const { can } = useAuth();
-  const { articulos, loading, crear, actualizar } = useArticulos();
+  const { articulos, loading, crear, actualizar, obtenerReceta, guardarReceta } = useArticulos();
   const [modal, setModal] = useState<ModalState>(null);
   const [soloNegativos, setSoloNegativos] = useState(false);
+  const [recetaDe, setRecetaDe] = useState<ArticuloRow | null>(null);
 
   if (loading) return <div style={{ padding: '2rem', opacity: 0.5 }}>Cargando...</div>;
 
@@ -62,6 +63,11 @@ export function ArticulosView() {
                       Editar
                     </button>
                   )}
+                  {a.tipo === 'elaborado' && can('receta.gestionar') && (
+                    <button className="btn-secondary btn-sm" onClick={() => setRecetaDe(a)}>
+                      Receta
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -85,6 +91,16 @@ export function ArticulosView() {
               await crear(payload);
             }
           }}
+        />
+      )}
+
+      {recetaDe && (
+        <RecetaModal
+          articulo={recetaDe}
+          articulos={articulos}
+          onClose={() => setRecetaDe(null)}
+          obtenerReceta={obtenerReceta}
+          guardarReceta={guardarReceta}
         />
       )}
     </div>
@@ -187,6 +203,83 @@ function ArticuloModal({ initial, onClose, onSave }: {
           <button type="submit" className="btn-primary" disabled={!nombre.trim() || saving}>
             {saving ? 'Guardando…' : 'Guardar'}
           </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function RecetaModal({ articulo, articulos, onClose, obtenerReceta, guardarReceta }: {
+  articulo: ArticuloRow;
+  articulos: ArticuloRow[];
+  onClose: () => void;
+  obtenerReceta: (id: string) => Promise<{ rinde_cantidad: number; items: { articulo_id: string; cantidad: number }[] } | null>;
+  guardarReceta: (p: { articulo_id: string; rinde_cantidad: number; items: { articulo_id: string; cantidad: number }[] }) => Promise<void>;
+}) {
+  const toast = useToast();
+  const [rinde, setRinde] = useState('12');
+  const [items, setItems] = useState<{ articulo_id: string; cantidad: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const insumos = articulos.filter((a) => a.tipo === 'insumo');
+
+  useEscapeToClose(onClose, !saving);
+
+  useEffect(() => {
+    obtenerReceta(articulo.id).then((r) => {
+      if (r) {
+        setRinde(String(r.rinde_cantidad));
+        setItems(r.items.map((i) => ({ articulo_id: i.articulo_id, cantidad: String(i.cantidad) })));
+      } else if (insumos[0]) {
+        setItems([{ articulo_id: insumos[0].id, cantidad: '' }]);
+      }
+      setLoading(false);
+    });
+  }, [articulo.id]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await guardarReceta({
+        articulo_id: articulo.id,
+        rinde_cantidad: Number(rinde),
+        items: items.filter((i) => i.cantidad.trim() !== '').map((i) => ({ articulo_id: i.articulo_id, cantidad: Number(i.cantidad) })),
+      });
+      toast.success('Receta guardada');
+      onClose();
+    } finally { setSaving(false); }
+  }
+
+  if (loading) return null;
+
+  return (
+    <div role="dialog" className="modal-overlay">
+      <form className="modal" onSubmit={handleSubmit}>
+        <div className="modal-header"><span className="modal-title">Receta — {articulo.nombre}</span></div>
+        <div className="modal-body">
+          <div className="field">
+            <label htmlFor="receta-rinde">Rinde (en {articulo.unidad}) *</label>
+            <input id="receta-rinde" className="input" type="number" step="any" required value={rinde} onChange={(e) => setRinde(e.target.value)} />
+          </div>
+          {items.map((item, i) => (
+            <div key={i} className="flex-row gap-2">
+              <select className="input" value={item.articulo_id}
+                onChange={(e) => setItems(items.map((it, idx) => idx === i ? { ...it, articulo_id: e.target.value } : it))}>
+                {insumos.map((ins) => <option key={ins.id} value={ins.id}>{ins.nombre}</option>)}
+              </select>
+              <input className="input" type="number" step="any" placeholder="Cantidad" value={item.cantidad}
+                onChange={(e) => setItems(items.map((it, idx) => idx === i ? { ...it, cantidad: e.target.value } : it))} />
+            </div>
+          ))}
+          <button type="button" className="btn-secondary btn-sm"
+            onClick={() => setItems([...items, { articulo_id: insumos[0]?.id ?? '', cantidad: '' }])}>
+            + Agregar insumo
+          </button>
+        </div>
+        <div className="modal-footer">
+          <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+          <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar receta'}</button>
         </div>
       </form>
     </div>

@@ -45,5 +45,13 @@ export function useArticulos() {
     await load();
   }
 
-  return { articulos, loading, crear, actualizar, ajustarStock, reload: load };
+  async function obtenerReceta(articulo_id: string) {
+    return (globalThis as any).elaborados.recetaProduccion.get({ articulo_id });
+  }
+
+  async function guardarReceta(payload: { articulo_id: string; rinde_cantidad: number; items: { articulo_id: string; cantidad: number }[] }) {
+    await (globalThis as any).elaborados.recetaProduccion.set(payload);
+  }
+
+  return { articulos, loading, crear, actualizar, ajustarStock, obtenerReceta, guardarReceta, reload: load };
 }
