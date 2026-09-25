@@ -97,7 +97,16 @@ function NuevaProduccionModal({ elaborados, onClose, onCrear }: {
       onClose();
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error';
-      setError(msg.startsWith('RECETA_NO_DEFINIDA') ? 'Este artículo no tiene receta definida' : msg);
+      if (msg.startsWith('RECETA_NO_DEFINIDA')) {
+        setError('Este artículo no tiene receta definida');
+      } else if (msg.startsWith('STOCK_INSUFICIENTE')) {
+        const nombre = msg.split(':')[1];
+        setError(nombre ? `Stock insuficiente de: ${nombre}` : 'Stock insuficiente de un insumo');
+      } else if (msg === 'NOT_FOUND') {
+        setError('El artículo ya no existe');
+      } else {
+        setError(msg);
+      }
     } finally { setSaving(false); }
   }
 
