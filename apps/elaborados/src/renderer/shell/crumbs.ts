@@ -5,6 +5,7 @@ export const CRUMBS_ELABORADOS: Seccion[] = [
   { grupo: 'Clientes', base: '/clientes', baseLabel: 'Clientes' },
   { grupo: 'Clientes', base: '/credito', baseLabel: 'Cuentas corrientes' },
   { grupo: 'Stock', base: '/stock/articulos', baseLabel: 'Artículos' },
+  { grupo: 'Producción', base: '/produccion', baseLabel: 'Producción' },
   { grupo: 'Sistema', base: '/config/mi-cuenta', baseLabel: 'Mi cuenta' },
   { grupo: 'Sistema', base: '/config/usuarios', baseLabel: 'Usuarios' },
   { grupo: 'Sistema', base: '/config/roles-permisos', baseLabel: 'Roles y permisos' },

@@ -35,6 +35,14 @@ export const NAV_ELABORADOS: NavGroup[] = [
     ],
   },
   {
+    key: 'produccion',
+    label: 'Producción',
+    icon: I('M3 3h18v18H3zM3 9h18M9 21V9'),
+    standalone: true,
+    permiso: 'produccion.registrar',
+    items: [{ label: 'Producción', to: '/produccion', icon: I('M3 3h18v18H3zM3 9h18M9 21V9'), permiso: 'produccion.registrar' }],
+  },
+  {
     key: 'sistema',
     label: 'Sistema',
     icon: I('M12 15a3 3 0 100-6 3 3 0 000 6z'),
