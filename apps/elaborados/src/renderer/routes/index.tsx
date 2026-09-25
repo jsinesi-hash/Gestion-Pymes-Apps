@@ -20,6 +20,9 @@ import { ElaboradosShell } from '../shell/ElaboradosShell';
 import { ArticulosView } from '../views/stock/ArticulosView';
 import { ConteoView } from '../views/stock/ConteoView';
 import { ProduccionView } from '../views/produccion/ProduccionView';
+import { CategoriasVentaView } from '../views/carta/CategoriasVentaView';
+import { ModificadoresView } from '../views/carta/ModificadoresView';
+import { ProductosVentaView } from '../views/carta/ProductosVentaView';
 
 // Centralized route tree. Routes are never defined inline in components.
 // E1: solo pantallas del core (sin renderVentaDetalle en CajaView — llega en E3; sin
@@ -46,6 +49,9 @@ export const routes: RouteObject[] = [
       { path: 'stock/articulos', element: <ArticulosView /> },
       { path: 'stock/conteo', element: <ConteoView /> },
       { path: 'produccion', element: <ProduccionView /> },
+      { path: 'carta/categorias', element: <CategoriasVentaView /> },
+      { path: 'carta/modificadores', element: <ModificadoresView /> },
+      { path: 'carta/productos', element: <ProductosVentaView /> },
       { path: 'config/mi-cuenta', element: <ConfigMiCuenta /> },
       { path: 'config/usuarios', element: <ConfigUsuarios /> },
       { path: 'config/roles-permisos', element: <RolesPermisosView /> },

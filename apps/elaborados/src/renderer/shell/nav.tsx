@@ -44,6 +44,17 @@ export const NAV_ELABORADOS: NavGroup[] = [
     items: [{ label: 'Producción', to: '/produccion', icon: I('M3 3h18v18H3zM3 9h18M9 21V9'), permiso: 'produccion.registrar' }],
   },
   {
+    key: 'carta',
+    label: 'Carta',
+    icon: I('M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5v15z'),
+    permiso: 'producto_venta.gestionar',
+    items: [
+      { label: 'Categorías', to: '/carta/categorias', icon: I('M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5v15z'), permiso: 'producto_venta.gestionar' },
+      { label: 'Modificadores', to: '/carta/modificadores', icon: I('M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z'), permiso: 'producto_venta.gestionar' },
+      { label: 'Productos de venta', to: '/carta/productos', icon: I('M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'), permiso: 'producto_venta.gestionar' },
+    ],
+  },
+  {
     key: 'sistema',
     label: 'Sistema',
     icon: I('M12 15a3 3 0 100-6 3 3 0 000 6z'),
