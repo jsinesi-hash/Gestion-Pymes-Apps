@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth, useEscapeToClose, rutearCampoError, useToast } from '@core/ui';
+import { useAuth, useEscapeToClose, rutearCampoError, useToast, traducirError } from '@core/ui';
 import { useArticulos, type ArticuloRow } from '../../hooks/useArticulos';
 
 const TIPO_LABEL: Record<ArticuloRow['tipo'], string> = {
@@ -221,6 +221,7 @@ function RecetaModal({ articulo, articulos, onClose, obtenerReceta, guardarRecet
   const [items, setItems] = useState<{ articulo_id: string; cantidad: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const insumos = articulos.filter((a) => a.tipo === 'insumo');
 
   useEscapeToClose(onClose, !saving);
@@ -239,7 +240,7 @@ function RecetaModal({ articulo, articulos, onClose, obtenerReceta, guardarRecet
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSaving(true);
+    setSaving(true); setError(null);
     try {
       await guardarReceta({
         articulo_id: articulo.id,
@@ -248,6 +249,8 @@ function RecetaModal({ articulo, articulos, onClose, obtenerReceta, guardarRecet
       });
       toast.success('Receta guardada');
       onClose();
+    } catch (e) {
+      setError(traducirError(e).mensaje);
     } finally { setSaving(false); }
   }
 
@@ -276,6 +279,7 @@ function RecetaModal({ articulo, articulos, onClose, obtenerReceta, guardarRecet
             onClick={() => setItems([...items, { articulo_id: insumos[0]?.id ?? '', cantidad: '' }])}>
             + Agregar insumo
           </button>
+          {error && <div className="alert-danger" role="alert">{error}</div>}
         </div>
         <div className="modal-footer">
           <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>

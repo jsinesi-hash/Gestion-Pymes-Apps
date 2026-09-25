@@ -212,5 +212,22 @@ describe('ArticulosView', () => {
         items: [{ articulo_id: '1', cantidad: 3 }],
       }));
     });
+
+    it('muestra el mensaje traducido y no cierra el modal cuando guardar la receta falla', async () => {
+      mockRecetaGet.mockResolvedValue(null);
+      mockRecetaSet.mockRejectedValueOnce(new Error('ARTICULO_NO_ELABORADO'));
+      renderView();
+      await waitFor(() => expect(screen.getByText('Torta de chocolate')).toBeInTheDocument());
+
+      fireEvent.click(screen.getByRole('button', { name: /receta/i }));
+      await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+
+      fireEvent.change(screen.getByPlaceholderText(/cantidad/i), { target: { value: '3' } });
+      fireEvent.click(screen.getByRole('button', { name: /guardar receta/i }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(/no se pudo completar la operación/i);
+      // El modal sigue abierto: no se llamó a onClose.
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
   });
 });
