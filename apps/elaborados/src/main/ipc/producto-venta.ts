@@ -81,7 +81,7 @@ export function productoVentaCreateHandler(db: Db, payload: unknown) {
     }
   });
 
-  return db.select().from(schema.producto_venta).where(eq(schema.producto_venta.id, id)).get()!;
+  return productoVentaGetHandler(db, { id })!;
 }
 
 export function registerProductoVentaHandlers(ipcMain: IpcMain, db: Db): void {

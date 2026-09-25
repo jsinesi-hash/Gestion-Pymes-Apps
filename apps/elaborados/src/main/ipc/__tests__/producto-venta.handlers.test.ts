@@ -53,6 +53,15 @@ describe('producto-venta handlers', () => {
     })).toThrow('IMPUESTO_NO_ENCONTRADO');
   });
 
+  it('create con categoria_venta_id inexistente lanza CATEGORIA_NO_ENCONTRADA', () => {
+    loginAsAdmin(db);
+    const { impuesto, vasito } = base(db);
+    expect(() => productoVentaCreateHandler(db, {
+      nombre: 'Vasito', categoria_venta_id: 'nope', precio_centavos: 100, impuesto_id: impuesto.id,
+      componentes: [{ articulo_id: vasito.id, cantidad: 1 }], grupos: [],
+    })).toThrow('CATEGORIA_NO_ENCONTRADA');
+  });
+
   it('list devuelve los productos de venta activos', () => {
     loginAsAdmin(db);
     const { impuesto, cat, vasito } = base(db);
