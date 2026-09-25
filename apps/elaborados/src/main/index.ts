@@ -14,6 +14,8 @@ import { navegacionElaborados } from '../common/navegacion';
 import { registerImpuestoHandlers } from './ipc/impuesto';
 import { registerArticuloHandlers } from './ipc/articulo';
 import { registerMovimientoArticuloHandlers } from './ipc/movimiento-articulo';
+import { registerRecetaProduccionHandlers } from './ipc/receta-produccion';
+import { registerProduccionHandlers } from './ipc/produccion';
 
 async function createWindow(): Promise<void> {
   loadTerminalConfig();
@@ -25,6 +27,8 @@ async function createWindow(): Promise<void> {
   registerImpuestoHandlers(ipcMain, db);
   registerArticuloHandlers(ipcMain, db);
   registerMovimientoArticuloHandlers(ipcMain, db);
+  registerRecetaProduccionHandlers(ipcMain, db);
+  registerProduccionHandlers(ipcMain, db);
 
   const win = new BrowserWindow({
     width: 1280,

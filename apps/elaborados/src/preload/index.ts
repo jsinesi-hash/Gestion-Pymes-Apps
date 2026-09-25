@@ -18,5 +18,14 @@ createBridge({
       list:   (p: { articulo_id: string }) => invoke('movimiento-articulo:list', p),
       create: (p: unknown) => invoke('movimiento-articulo:create', p),
     },
+    recetaProduccion: {
+      get: (p: { articulo_id: string }) => invoke('receta-produccion:get', p),
+      set: (p: unknown) => invoke('receta-produccion:set', p),
+    },
+    produccion: {
+      list:   () => invoke('produccion:list'),
+      crear:  (p: unknown) => invoke('produccion:crear', p),
+      anular: (p: unknown) => invoke('produccion:anular', p),
+    },
   }),
 }, { contextBridge, ipcRenderer });
