@@ -1,21 +1,37 @@
 import { useState } from 'react';
-import { useToast, useEscapeToClose } from '@core/ui';
+import { useAuth, useToast, useEscapeToClose, rutearCampoError, traducirError } from '@core/ui';
 import { useArticulos, type ArticuloRow } from '../../hooks/useArticulos';
 
 export function ConteoView() {
+  const { can } = useAuth();
   const { articulos, loading, ajustarStock } = useArticulos();
+  const toast = useToast();
   const [busqueda, setBusqueda] = useState('');
   const [ajustando, setAjustando] = useState<ArticuloRow | null>(null);
+  const [procesandoTacho, setProcesandoTacho] = useState<Set<string>>(new Set());
 
   if (loading) return <div style={{ padding: '2rem', opacity: 0.5 }}>Cargando...</div>;
 
+  const puedeAjustar = can('stock.ajustar');
   const visibles = articulos.filter((a) =>
     !busqueda.trim() || a.nombre.toLowerCase().includes(busqueda.trim().toLowerCase())
   );
 
   async function tachoVacio(a: ArticuloRow) {
-    if ((a.stock ?? 0) === 0) return;
-    await ajustarStock({ articulo_id: a.id, motivo: 'conteo', cantidad: -(a.stock ?? 0), observaciones: 'Tacho vacío' });
+    if ((a.stock ?? 0) === 0 || procesandoTacho.has(a.id)) return;
+    setProcesandoTacho((prev) => new Set(prev).add(a.id));
+    try {
+      await ajustarStock({ articulo_id: a.id, motivo: 'conteo', cantidad: -(a.stock ?? 0), observaciones: 'Tacho vacío' });
+      toast.success('Stock puesto en 0');
+    } catch (e) {
+      toast.error(traducirError(e).mensaje);
+    } finally {
+      setProcesandoTacho((prev) => {
+        const next = new Set(prev);
+        next.delete(a.id);
+        return next;
+      });
+    }
   }
 
   return (
@@ -32,18 +48,24 @@ export function ConteoView() {
             <tr><th>Nombre</th><th>Unidad</th><th className="c">Stock actual</th><th>Acciones</th></tr>
           </thead>
           <tbody>
+            {visibles.length === 0 && (
+              <tr><td colSpan={4} style={{ textAlign: 'center', padding: '1.5rem', opacity: 0.5 }}>Sin resultados</td></tr>
+            )}
             {visibles.map((a) => (
               <tr key={a.id}>
                 <td>{a.nombre}</td>
                 <td>{a.unidad}</td>
                 <td className="c">{a.stock ?? 0}</td>
                 <td>
-                  <div className="flex-row gap-2">
-                    <button className="btn-secondary btn-sm" onClick={() => setAjustando(a)}>Ajustar</button>
-                    <button className="btn-secondary btn-sm" onClick={() => tachoVacio(a)} disabled={(a.stock ?? 0) === 0}>
-                      Tacho vacío
-                    </button>
-                  </div>
+                  {puedeAjustar && (
+                    <div className="flex-row gap-2">
+                      <button className="btn-secondary btn-sm" onClick={() => setAjustando(a)}>Ajustar</button>
+                      <button className="btn-secondary btn-sm" onClick={() => tachoVacio(a)}
+                        disabled={(a.stock ?? 0) === 0 || procesandoTacho.has(a.id)}>
+                        Tacho vacío
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
@@ -88,8 +110,7 @@ function AjusteModal({ articulo, onClose, onAjustar }: {
       toast.success('Stock ajustado');
       onClose();
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Error';
-      setError(msg.startsWith('STOCK_INSUFICIENTE') ? 'Este artículo bloquea la venta sin stock: no puede quedar en negativo' : msg);
+      setError(rutearCampoError(e, { cantidad: 'conteo-stock' }).mensaje);
     } finally { setSaving(false); }
   }
 

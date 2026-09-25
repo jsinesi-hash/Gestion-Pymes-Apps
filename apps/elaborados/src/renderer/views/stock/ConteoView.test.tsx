@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { ConteoView } from './ConteoView';
 
@@ -58,25 +58,38 @@ describe('ConteoView', () => {
     expect(screen.queryByText('Tacho vacío ejemplo')).not.toBeInTheDocument();
   });
 
+  it('muestra "Sin resultados" cuando el filtro no matchea ningún artículo', async () => {
+    renderView();
+    await waitFor(() => expect(screen.getByText('Harina 000')).toBeInTheDocument());
+
+    fireEvent.change(screen.getByPlaceholderText(/buscar artículo/i), { target: { value: 'inexistente' } });
+
+    expect(screen.getByText('Sin resultados')).toBeInTheDocument();
+  });
+
+  it('oculta los botones "Ajustar"/"Tacho vacío" cuando el usuario no tiene el permiso', async () => {
+    mockCan.mockReturnValue(false);
+    renderView();
+    await waitFor(() => expect(screen.getByText('Harina 000')).toBeInTheDocument());
+
+    expect(screen.queryByRole('button', { name: /^ajustar$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /tacho vacío/i })).not.toBeInTheDocument();
+  });
+
   it('"Tacho vacío" está deshabilitado cuando el stock es 0', async () => {
     renderView();
     await waitFor(() => expect(screen.getByText('Harina 000')).toBeInTheDocument());
 
-    const filas = screen.getAllByRole('row');
-    // fila 0 = encabezado, fila 1 = Harina 000 (stock 20), fila 2 = Tacho vacío ejemplo (stock 0)
-    const botonesFilaCero = filas[2].querySelectorAll('button');
-    const botonTachoVacio = Array.from(botonesFilaCero).find((b) => /tacho vacío/i.test(b.textContent ?? ''));
-    expect(botonTachoVacio).toBeDisabled();
+    const fila = screen.getByText('Tacho vacío ejemplo').closest('tr')!;
+    expect(within(fila).getByRole('button', { name: /tacho vacío/i })).toBeDisabled();
   });
 
   it('"Tacho vacío" llama a movimientoArticulo.create con cantidad = -stock actual cuando hay stock', async () => {
     renderView();
     await waitFor(() => expect(screen.getByText('Harina 000')).toBeInTheDocument());
 
-    const filas = screen.getAllByRole('row');
-    const botonesFilaHarina = filas[1].querySelectorAll('button');
-    const botonTachoVacio = Array.from(botonesFilaHarina).find((b) => /tacho vacío/i.test(b.textContent ?? '')) as HTMLElement;
-    fireEvent.click(botonTachoVacio);
+    const fila = screen.getByText('Harina 000').closest('tr')!;
+    fireEvent.click(within(fila).getByRole('button', { name: /tacho vacío/i }));
 
     await waitFor(() => expect(mockMovimientoCreate).toHaveBeenCalledWith({
       articulo_id: '1',
@@ -90,7 +103,8 @@ describe('ConteoView', () => {
     renderView();
     await waitFor(() => expect(screen.getByText('Harina 000')).toBeInTheDocument());
 
-    fireEvent.click(screen.getAllByRole('button', { name: /^ajustar$/i })[0]);
+    const fila = screen.getByText('Harina 000').closest('tr')!;
+    fireEvent.click(within(fila).getByRole('button', { name: /^ajustar$/i }));
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
 
@@ -103,5 +117,22 @@ describe('ConteoView', () => {
       motivo: 'conteo',
       cantidad: -5,
     }));
+  });
+
+  it('muestra el mensaje traducido cuando el ajuste falla por STOCK_INSUFICIENTE', async () => {
+    mockMovimientoCreate.mockRejectedValueOnce(new Error('STOCK_INSUFICIENTE'));
+    renderView();
+    await waitFor(() => expect(screen.getByText('Harina 000')).toBeInTheDocument());
+
+    const fila = screen.getByText('Harina 000').closest('tr')!;
+    fireEvent.click(within(fila).getByRole('button', { name: /^ajustar$/i }));
+
+    const inputStock = screen.getByLabelText(/nuevo stock/i);
+    fireEvent.change(inputStock, { target: { value: '-5' } });
+    fireEvent.click(screen.getByRole('button', { name: /^guardar$/i }));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(
+      'No hay stock suficiente para completar la operación.'
+    ));
   });
 });
