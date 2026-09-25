@@ -29,6 +29,13 @@
       "when": 1790293277396,
       "tag": "0003_add_produccion",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1790364295192,
+      "tag": "0004_add_venta_catalogo",
+      "breakpoints": true
     }
   ]
 }
