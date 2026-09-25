@@ -12,6 +12,7 @@ export function ProductosVentaView() {
   const { articulos } = useArticulos();
   const { grupos } = useGruposModificador();
   const [modal, setModal] = useState(false);
+  const toast = useToast();
 
   if (loading) return <div style={{ padding: '2rem', opacity: 0.5 }}>Cargando...</div>;
   const puedeGestionar = can('producto_venta.gestionar');
@@ -21,6 +22,18 @@ export function ProductosVentaView() {
     <div className="panel" style={{ flex: 1 }}>
       <div className="toolbar">
         <div className="ml-auto" />
+        {puedeGestionar && productos.length === 0 && (
+          <button className="btn-secondary" onClick={async () => {
+            try {
+              await (globalThis as any).elaborados.demoCatalog.seedHeladeria();
+              window.location.reload();
+            } catch (e) {
+              toast.error(traducirError(e).mensaje);
+            }
+          }}>
+            Cargar catálogo demo de heladería
+          </button>
+        )}
         {puedeGestionar && <button className="btn-primary" onClick={() => setModal(true)}>+ Nuevo producto</button>}
       </div>
       <div className="table-wrap">

@@ -42,5 +42,8 @@ createBridge({
       get:    (p: { id: string }) => invoke('producto-venta:get', p),
       create: (p: unknown) => invoke('producto-venta:create', p),
     },
+    demoCatalog: {
+      seedHeladeria: () => invoke('demo-catalog:seed-heladeria'),
+    },
   }),
 }, { contextBridge, ipcRenderer });
