@@ -1,4 +1,5 @@
 import { sqliteTable, text, real, integer } from 'drizzle-orm/sqlite-core';
+import { impuesto } from '@core/db';
 import { articulo } from './stock';
 
 export const categoria_venta = sqliteTable('categoria_venta', {
@@ -17,7 +18,7 @@ export const producto_venta = sqliteTable('producto_venta', {
   nombre:             text('nombre').notNull(),
   categoria_venta_id: text('categoria_venta_id').notNull().references(() => categoria_venta.id),
   precio_centavos:    integer('precio_centavos').notNull(),
-  impuesto_id:        text('impuesto_id').notNull(),
+  impuesto_id:        text('impuesto_id').notNull().references(() => impuesto.id),
   activo:             integer('activo', { mode: 'boolean' }).notNull().default(true),
   version:    integer('version').notNull().default(1),
   origin_id:  text('origin_id').notNull(),

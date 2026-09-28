@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "aee0e18f-66fb-4b30-bac0-edde4b996377",
+  "id": "3961ebb6-d636-4386-b2b6-2f2fcb05712f",
   "prevId": "173d60c7-ff1e-427f-8f2c-79e9c9cd338c",
   "tables": {
     "permiso": {
@@ -3468,6 +3468,19 @@
           "tableTo": "categoria_venta",
           "columnsFrom": [
             "categoria_venta_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "producto_venta_impuesto_id_impuesto_id_fk": {
+          "name": "producto_venta_impuesto_id_impuesto_id_fk",
+          "tableFrom": "producto_venta",
+          "tableTo": "impuesto",
+          "columnsFrom": [
+            "impuesto_id"
           ],
           "columnsTo": [
             "id"

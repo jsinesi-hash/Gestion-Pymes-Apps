@@ -45,7 +45,8 @@ CREATE TABLE `producto_venta` (
 	`origin_id` text NOT NULL,
 	`sync_state` text DEFAULT 'pending' NOT NULL,
 	`updated_at` integer NOT NULL,
-	FOREIGN KEY (`categoria_venta_id`) REFERENCES `categoria_venta`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`categoria_venta_id`) REFERENCES `categoria_venta`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`impuesto_id`) REFERENCES `impuesto`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `producto_venta_componente` (
