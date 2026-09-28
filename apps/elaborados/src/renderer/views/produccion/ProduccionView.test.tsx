@@ -109,16 +109,37 @@ describe('ProduccionView', () => {
     const filaConfirmada = screen.getByText('PR-C1-000001').closest('tr')!;
     fireEvent.click(within(filaConfirmada).getByRole('button', { name: /anular/i }));
 
-    const dialog = screen.getByRole('dialog');
-    fireEvent.change(screen.getByLabelText(/motivo/i), { target: { value: 'Error de carga' } });
-    fireEvent.change(screen.getByLabelText(/usuario supervisor/i), { target: { value: 'admin' } });
-    fireEvent.change(screen.getByLabelText(/contraseña/i), { target: { value: 'secreta123' } });
-    fireEvent.click(within(dialog).getByRole('button', { name: /^anular$/i }));
+    const dialogMotivo = screen.getByRole('dialog');
+    fireEvent.change(within(dialogMotivo).getByLabelText(/motivo/i), { target: { value: 'Error de carga' } });
+    fireEvent.click(within(dialogMotivo).getByRole('button', { name: /continuar/i }));
+
+    const dialogAuth = screen.getByRole('dialog');
+    fireEvent.change(within(dialogAuth).getByLabelText(/usuario supervisor/i), { target: { value: 'admin' } });
+    fireEvent.change(within(dialogAuth).getByLabelText(/contraseña supervisor/i), { target: { value: 'secreta123' } });
+    fireEvent.click(within(dialogAuth).getByRole('button', { name: /^autorizar$/i }));
 
     await waitFor(() => expect(mockAnular).toHaveBeenCalledWith({
       id: '1',
       motivo: 'Error de carga',
       supervisor_credenciales: { nombre_usuario: 'admin', password: 'secreta123' },
     }));
+  });
+
+  it('cancelar en el paso de credenciales de "Anular" vuelve al paso motivo preservando el valor', async () => {
+    renderView();
+    await waitFor(() => expect(screen.getByText('PR-C1-000001')).toBeInTheDocument());
+
+    const filaConfirmada = screen.getByText('PR-C1-000001').closest('tr')!;
+    fireEvent.click(within(filaConfirmada).getByRole('button', { name: /anular/i }));
+
+    fireEvent.change(screen.getByLabelText(/motivo/i), { target: { value: 'Error de carga' } });
+    fireEvent.click(screen.getByRole('button', { name: /continuar/i }));
+
+    expect(screen.getByLabelText(/usuario supervisor/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /cancelar/i }));
+
+    expect(mockAnular).not.toHaveBeenCalled();
+    expect(screen.getByLabelText(/motivo/i)).toHaveValue('Error de carga');
+    expect(screen.queryByLabelText(/usuario supervisor/i)).not.toBeInTheDocument();
   });
 });
