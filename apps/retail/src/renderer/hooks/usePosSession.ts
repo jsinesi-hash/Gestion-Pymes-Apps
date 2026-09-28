@@ -487,6 +487,7 @@ export function usePosSession() {
 
   async function retomarVenta(venta_id: string): Promise<AvisosRetomar> {
     setLoading(true);
+    setError(null);
     try {
       const result = await f().venta.espera.retomar({ venta_id });
 
@@ -514,6 +515,9 @@ export function usePosSession() {
 
       await cargarVentasEnEspera();
       return result.avisos;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al retomar la venta');
+      throw e;
     } finally {
       setLoading(false);
     }
@@ -521,9 +525,13 @@ export function usePosSession() {
 
   async function descartarVenta(venta_id: string) {
     setLoading(true);
+    setError(null);
     try {
       await f().venta.espera.descartar({ venta_id });
       await cargarVentasEnEspera();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al descartar la venta');
+      throw e;
     } finally {
       setLoading(false);
     }

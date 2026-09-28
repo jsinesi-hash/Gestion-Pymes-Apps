@@ -22,7 +22,14 @@ function makeFerreteria(overrides: Record<string, unknown> = {}) {
       producto: { get: vi.fn().mockResolvedValue(mockProd) },
       existencias: { get: vi.fn().mockResolvedValue(mockEx) },
     },
-    venta: { confirmar: vi.fn().mockResolvedValue({ venta: { id: 'v-1' }, detalles: [], comprobante: {} }) },
+    venta: {
+      confirmar: vi.fn().mockResolvedValue({ venta: { id: 'v-1' }, detalles: [], comprobante: {} }),
+      espera: {
+        listar: vi.fn().mockResolvedValue([]),
+        retomar: vi.fn(),
+        descartar: vi.fn(),
+      },
+    },
     ...overrides,
   };
 }
@@ -234,5 +241,32 @@ describe('usePosSession', () => {
 
     expect(result.current.error).toMatch(/STOCK_INSUFICIENTE/);
     expect(result.current.lines[0].cantidad).toBe(1); // no incrementó
+  });
+
+  // ── Ventas en espera: error debe quedar en session.error, nunca silencioso ────
+
+  it('retomarVenta con falla de IPC deja el error en session.error y relanza', async () => {
+    (window as any).ferreteria.venta.espera.retomar = vi.fn().mockRejectedValue(new Error('VENTA_NO_ENCONTRADA'));
+    const { result } = renderHook(() => usePosSession());
+    await waitFor(() => expect(result.current.cajaActiva).not.toBeUndefined());
+
+    await act(async () => {
+      await expect(result.current.retomarVenta('v-en-espera')).rejects.toThrow('VENTA_NO_ENCONTRADA');
+    });
+
+    expect(result.current.error).toBe('VENTA_NO_ENCONTRADA');
+    expect(result.current.lines).toHaveLength(0);
+  });
+
+  it('descartarVenta con falla de IPC deja el error en session.error y relanza', async () => {
+    (window as any).ferreteria.venta.espera.descartar = vi.fn().mockRejectedValue(new Error('VENTA_NO_ENCONTRADA'));
+    const { result } = renderHook(() => usePosSession());
+    await waitFor(() => expect(result.current.cajaActiva).not.toBeUndefined());
+
+    await act(async () => {
+      await expect(result.current.descartarVenta('v-en-espera')).rejects.toThrow('VENTA_NO_ENCONTRADA');
+    });
+
+    expect(result.current.error).toBe('VENTA_NO_ENCONTRADA');
   });
 });

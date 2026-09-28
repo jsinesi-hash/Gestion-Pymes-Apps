@@ -51,6 +51,7 @@ export function BandejaAvisosView() {
   const [ordenDir, setOrdenDir] = useState<'asc' | 'desc'>('desc');
   const [traza, setTraza] = useState<Aviso | null>(null);
   const [procesando, setProcesando] = useState(false);
+  const [accionError, setAccionError] = useState<string | null>(null);
 
   useEscapeToClose(() => setTraza(null), !!traza);
 
@@ -93,7 +94,10 @@ export function BandejaAvisosView() {
 
   async function accion(fn: () => Promise<unknown>) {
     setProcesando(true);
-    try { await fn(); await recargar(); } finally { setProcesando(false); }
+    setAccionError(null);
+    try { await fn(); await recargar(); }
+    catch (e) { setAccionError(e instanceof Error ? e.message : 'Error al procesar el aviso.'); }
+    finally { setProcesando(false); }
   }
 
   function abrirOrigen(a: Aviso) {
@@ -126,7 +130,7 @@ export function BandejaAvisosView() {
         </label>
       </div>
 
-      {error && <div className="alert-danger" role="alert">{error}</div>}
+      {(error || accionError) && <div className="alert-danger" role="alert">{error || accionError}</div>}
       {cargando && <div className="text-muted" style={{ padding: 'var(--pad)' }}>Cargando…</div>}
 
       {!cargando && !error && filtrados.length === 0 && (

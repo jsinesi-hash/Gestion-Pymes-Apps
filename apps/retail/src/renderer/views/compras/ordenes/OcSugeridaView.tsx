@@ -57,6 +57,7 @@ export function OcSugeridaView() {
   const [proveedores, setProveedores]     = useState<Proveedor[]>([]);
   const [asignForm, setAsignForm]         = useState<AsignForm>({ proveedor_id: '', costo_str: '', codigo_proveedor: '' });
   const [asignando, setAsignando]         = useState(false);
+  const [error, setError]                 = useState<string | null>(null);
 
   function cargar() {
     setLoading(true);
@@ -69,6 +70,7 @@ export function OcSugeridaView() {
 
   async function handleCrearOC(grupo: GrupoSugerida) {
     setCreando(grupo.proveedor_id);
+    setError(null);
     try {
       const { id: ocId } = await f().compras.oc.crear({ proveedor_id: grupo.proveedor_id, tipo: 'sugerida' });
       for (const item of grupo.items) {
@@ -82,6 +84,8 @@ export function OcSugeridaView() {
         });
       }
       navigate(`/compras/ordenes/${ocId}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al crear la orden de compra.');
     } finally {
       setCreando(null);
     }
@@ -100,6 +104,7 @@ export function OcSugeridaView() {
   async function handleAsignar(productoId: string) {
     if (!asignForm.proveedor_id) return;
     setAsignando(true);
+    setError(null);
     try {
       const costo_centavos = Math.round(parseFloat(asignForm.costo_str.replace(',', '.') || '0') * 100);
       const { id } = await f().compras.pp.upsert({
@@ -111,6 +116,8 @@ export function OcSugeridaView() {
       await f().compras.pp.setPreferido(id);
       setAsignandoId(null);
       cargar();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al asignar el proveedor.');
     } finally {
       setAsignando(false);
     }
@@ -152,6 +159,8 @@ export function OcSugeridaView() {
         </button>
         <h1>OC Sugerida</h1>
       </div>
+
+      {error && <div className="alert-danger" role="alert">{error}</div>}
 
       {!sinDatos && (
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>

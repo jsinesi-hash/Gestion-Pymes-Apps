@@ -29,6 +29,7 @@ export function RutinasView() {
   const [editar, setEditar] = useState<Rutina | null>(null);
   const [eliminar, setEliminar] = useState<Rutina | null>(null);
   const [procesando, setProcesando] = useState(false);
+  const [accionError, setAccionError] = useState<string | null>(null);
 
   useEscapeToClose(() => setEliminar(null), !!eliminar && !procesando);
 
@@ -60,7 +61,10 @@ export function RutinasView() {
 
   async function accion(fn: () => Promise<unknown>) {
     setProcesando(true);
-    try { await fn(); await recargar(); setEliminar(null); } finally { setProcesando(false); }
+    setAccionError(null);
+    try { await fn(); await recargar(); setEliminar(null); }
+    catch (e) { setAccionError(e instanceof Error ? e.message : 'Error al procesar la rutina.'); }
+    finally { setProcesando(false); }
   }
 
   const th = (campo: CampoOrden, label: string) => (
@@ -86,7 +90,7 @@ export function RutinasView() {
         </label>
       </div>
 
-      {error && <div className="alert-danger" role="alert">{error}</div>}
+      {(error || (accionError && !eliminar)) && <div className="alert-danger" role="alert">{error || accionError}</div>}
       {cargando && <div className="text-muted" style={{ padding: 'var(--pad)' }}>Cargando…</div>}
       {!cargando && !error && filtradas.length === 0 && (
         <div className="text-muted" style={{ padding: 'var(--pad)', textAlign: 'center' }}>No hay rutinas.</div>
@@ -144,7 +148,10 @@ export function RutinasView() {
         <div className="modal-overlay">
           <div className="modal" style={{ width: 420 }} role="dialog" aria-label="Eliminar rutina">
             <div className="modal-header"><span className="modal-title">Eliminar «{eliminar.nombre}»</span></div>
-            <div className="modal-body"><div className="text-muted text-xs">La rutina se da de baja y deja de generar eventos. Los eventos ya creados no se tocan.</div></div>
+            <div className="modal-body">
+              <div className="text-muted text-xs">La rutina se da de baja y deja de generar eventos. Los eventos ya creados no se tocan.</div>
+              {accionError && <div className="alert-danger" role="alert" style={{ marginTop: 8 }}>{accionError}</div>}
+            </div>
             <div className="modal-footer">
               <button type="button" className="btn-secondary" onClick={() => setEliminar(null)} disabled={procesando}>Cancelar</button>
               <button type="button" className="btn-danger" disabled={procesando} onClick={() => accion(() => agendaApi().rutina.eliminar({ id: eliminar.id }))}>Eliminar</button>
