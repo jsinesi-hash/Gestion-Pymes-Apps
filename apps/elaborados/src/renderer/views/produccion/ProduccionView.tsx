@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth, useEscapeToClose, useToast } from '@core/ui';
+import { useAuth, useEscapeToClose, useToast, SupervisorAuthModal } from '@core/ui';
 import { useProduccion, type ProduccionRow } from '../../hooks/useProduccion';
 import { useArticulos } from '../../hooks/useArticulos';
 
@@ -150,53 +150,48 @@ function AnularProduccionModal({ produccion, onClose, onAnular }: {
 }) {
   const toast = useToast();
   const [motivo, setMotivo] = useState('');
-  const [nombreUsuario, setNombreUsuario] = useState('');
-  const [password, setPassword] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [step, setStep] = useState<'motivo' | 'auth'>('motivo');
   const [error, setError] = useState<string | null>(null);
 
-  useEscapeToClose(onClose, !saving);
+  useEscapeToClose(onClose, step === 'motivo');
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleContinuar(e: React.FormEvent) {
     e.preventDefault();
-    if (!motivo.trim() || !nombreUsuario.trim() || !password) return;
-    setSaving(true); setError(null);
-    try {
-      await onAnular({
-        id: produccion.id, motivo: motivo.trim(),
-        supervisor_credenciales: { nombre_usuario: nombreUsuario.trim(), password },
-      });
-      toast.success('Producción anulada');
-      onClose();
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Error';
-      setError(msg.includes('SUPERVISOR_INVALIDO') ? 'Usuario o contraseña de Supervisor inválidos' : msg);
-    } finally { setSaving(false); }
+    if (!motivo.trim()) { setError('El motivo es obligatorio'); return; }
+    setError(null);
+    setStep('auth');
+  }
+
+  async function handleAuthConfirm({ nombre_usuario, password }: { nombre_usuario: string; password: string }) {
+    await onAnular({
+      id: produccion.id,
+      motivo: motivo.trim(),
+      supervisor_credenciales: { nombre_usuario, password },
+    });
+    toast.success('Producción anulada');
+    onClose();
+  }
+
+  if (step === 'auth') {
+    return <SupervisorAuthModal onConfirm={handleAuthConfirm} onCancel={() => setStep('motivo')} />;
   }
 
   return (
     <div role="dialog" className="modal-overlay">
-      <form className="modal" onSubmit={handleSubmit}>
+      <form className="modal" onSubmit={handleContinuar}>
         <div className="modal-header"><span className="modal-title">Anular producción {produccion.numero}</span></div>
         <div className="modal-body">
           <div className="field">
             <label htmlFor="anular-motivo">Motivo *</label>
-            <input id="anular-motivo" className="input" type="text" required value={motivo} onChange={(e) => setMotivo(e.target.value)} autoFocus />
+            <input id="anular-motivo" className="input" type="text" required value={motivo}
+              onChange={(e) => { setMotivo(e.target.value); setError(null); }} autoFocus />
           </div>
           <p style={{ fontSize: '0.85rem', opacity: 0.75 }}>Requiere autorización de un Supervisor.</p>
-          <div className="field">
-            <label htmlFor="anular-usuario">Usuario Supervisor *</label>
-            <input id="anular-usuario" className="input" type="text" required value={nombreUsuario} onChange={(e) => setNombreUsuario(e.target.value)} />
-          </div>
-          <div className="field">
-            <label htmlFor="anular-password">Contraseña *</label>
-            <input id="anular-password" className="input" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-          </div>
           {error && <div className="alert-danger" role="alert">{error}</div>}
         </div>
         <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Anulando…' : 'Anular'}</button>
+          <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
+          <button type="submit" className="btn-primary">Continuar</button>
         </div>
       </form>
     </div>

@@ -4661,3 +4661,33 @@ anidado). Ambos montajes se conservan.
 
 TDD en las tres capas. Verificado: `tsc` limpio; **shared 157 · main 1578 · renderer 927** verdes.
 Falta verificación manual en la app (§12).
+
+## ADR-094 — AnulacionModal/AnularProduccionModal reusan SupervisorAuthModal (2 pasos)
+
+**Estado:** Aceptado — implementado · **Fecha:** 2026-09-28
+
+Cierra uno de los 5 follow-ups de bajo riesgo detectados en la revisión holística de ADR-093
+(Elaborados E2): `AnulacionModal` (Retail, venta) y `AnularProduccionModal` (Elaborados,
+producción) reimplementaban cada uno, desde cero, el mismo formulario de motivo+credenciales de
+Supervisor que ya existe en `@core/ui` (`SupervisorAuthModal`, consumido por `CajaCierreView`) —
+con mensajes de error de `SUPERVISOR_INVALIDO` divergentes entre los dos (comparación exacta vs
+`.includes(...)`).
+
+**Decisión:** ambos modales pasan a una máquina de 2 estados (`motivo` → `auth`) que reusa
+`SupervisorAuthModal` **sin modificarlo**, replicando el patrón ya usado por `CajaCierreView`
+(recolectar datos propios del dominio → abrir `SupervisorAuthModal` solo para credenciales).
+Cancelar/Escape en el paso de credenciales **vuelve** al paso de motivo preservando lo tipeado (no
+cierra todo el flujo), igual que `CajaCierreView`; el botón del primer paso pasa a decir
+"Continuar" en vez de "Anular ..." porque ese click todavía no ejecuta la acción destructiva —
+dejar el label viejo hubiera sido engañoso. Efecto colateral: el mensaje de `SUPERVISOR_INVALIDO`
+queda unificado en ambas apps. No se creó un componente compartido para el paso de motivo (copy y
+color de botón distintos por dominio, ~15 líneas cada uno): habría repetido el mismo problema de
+sobre-parametrizar un componente por 2 usos que se estaba resolviendo.
+
+Brainstorm → spec → plan → TDD vía `superpowers:subagent-driven-development` (implementador + spec
+reviewer + code reviewer por task, 2 tasks). Spec:
+[`docs/specs/2026-09-28-anulacion-two-step-supervisor-auth-design.md`](specs/2026-09-28-anulacion-two-step-supervisor-auth-design.md),
+plan: [`docs/plans/2026-09-28-anulacion-two-step-supervisor-auth.md`](plans/2026-09-28-anulacion-two-step-supervisor-auth.md).
+Verificado: typecheck del monorepo limpio; **Retail 140 archivos/1591 tests · Elaborados renderer
+68/68 + main 65/65**; navegación manual confirmada por el usuario en ambas apps (Retail y
+Elaborados).
