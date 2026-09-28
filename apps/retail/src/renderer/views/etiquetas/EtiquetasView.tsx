@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { EtiquetaItem, PerfilEtiqueta, BarcodeTipo } from '@ferreteria/shared';
 import { useFilaNavegable } from '../../hooks/useFilaNavegable';
+import { useToast } from '@core/ui';
 
 type Categoria = { id: string; nombre: string };
 type Ubicacion = { id: string; codigo: string };
@@ -39,6 +40,7 @@ const STORAGE_KEY = 'etiquetas:estado';
 
 export function EtiquetasView() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [items,       setItems]       = useState<EtiquetaItem[]>([]);
   const [categorias,  setCategorias]  = useState<Categoria[]>([]);
   const [ubicaciones, setUbicaciones] = useState<Ubicacion[]>([]);
@@ -158,6 +160,8 @@ export function EtiquetasView() {
         perfil:      { ...perfilActual, barcode_tipo: barcodeTipo },
         celdaInicio: perfilActual.tipo === 'hoja' ? celdaInicio : 0,
       });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al imprimir las etiquetas.');
     } finally { setAccion(null); }
   }
 
@@ -176,7 +180,10 @@ export function EtiquetasView() {
       } else {
         setAccion(null);
       }
-    } catch { setAccion(null); }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al exportar el PDF.');
+      setAccion(null);
+    }
   }
 
   async function handleVistaPrevia() {
@@ -188,6 +195,8 @@ export function EtiquetasView() {
         perfil:      { ...perfilActual, barcode_tipo: barcodeTipo },
         celdaInicio: perfilActual.tipo === 'hoja' ? celdaInicio : 0,
       });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al generar la vista previa.');
     } finally { setAccion(null); }
   }
 

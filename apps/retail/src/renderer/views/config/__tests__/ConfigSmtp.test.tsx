@@ -41,6 +41,17 @@ describe('ConfigSmtp', () => {
     expect(await screen.findByText(/conexión ok/i)).toBeInTheDocument();
   });
 
+  it('probar conexión muestra el error cuando la IPC rechaza (antes fallaba en silencio)', async () => {
+    probar.mockRejectedValue(new Error('ECONNREFUSED'));
+    render(<ConfigSmtp />);
+    await waitFor(() => expect(getConfig).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole('button', { name: /probar/i }));
+
+    expect(await screen.findByText('ECONNREFUSED')).toBeInTheDocument();
+    // el botón vuelve a decir "Probar conexión", no queda colgado en "Probando..."
+    expect(screen.getByRole('button', { name: /^probar conexión$/i })).toBeEnabled();
+  });
+
   it('guardar llama a setConfig con los valores del form', async () => {
     render(<ConfigSmtp />);
     await screen.findByDisplayValue('smtp.x');

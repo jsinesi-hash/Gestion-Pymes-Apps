@@ -62,4 +62,23 @@ describe('UbicacionesView', () => {
     expect(inline).toHaveClass('field-error');
     expect(screen.getByLabelText('Sector *')).toHaveClass('error');
   });
+
+  it('muestra el error cuando "Fusionar duplicados" falla (antes quedaba en silencio)', async () => {
+    (globalThis as any).ferreteria.catalogo.ubicacion.dedupPreview = vi.fn().mockResolvedValue([
+      { codigo: 'A-0-1', sobreviviente: { id: 'u1', codigo: 'A-0-1' }, duplicados: [{ id: 'u9', codigo: 'A-0-01' }], productos_a_reasignar: 2 },
+    ]);
+    (globalThis as any).ferreteria.catalogo.ubicacion.dedupAplicar = vi.fn().mockRejectedValue(new Error('UBICACION_EN_USO'));
+    render(<UbicacionesView />);
+    await waitFor(() => expect(screen.getByText('A-0-1')).toBeInTheDocument());
+
+    await act(async () => { screen.getByText('Detectar duplicados').click(); });
+    await waitFor(() => expect(screen.getByText(/1 grupo/i)).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: /fusionar duplicados/i }));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('UBICACION_EN_USO'));
+    // el diálogo sigue abierto y el botón vuelve a estar disponible, no queda inerte
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /fusionar duplicados/i })).toBeEnabled();
+  });
 });

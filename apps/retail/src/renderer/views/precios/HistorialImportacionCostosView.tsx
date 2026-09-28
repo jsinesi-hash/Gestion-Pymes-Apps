@@ -68,6 +68,7 @@ export function HistorialImportacionCostosView({ onVerPendientes }: { onVerPendi
   const [filtro, setFiltro] = useState<FiltroDetalle>('all');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [eliminando, setEliminando] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   // ADR-054: filtros y orden del LISTADO (client-side; el dataset es chico).
   const [filtroProveedor, setFiltroProveedor] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
@@ -98,10 +99,13 @@ export function HistorialImportacionCostosView({ onVerPendientes }: { onVerPendi
   // cambio de costo) — se puede borrar directo desde acá. Borrado físico, no baja lógica.
   async function eliminarDelHistorial(importacionId: string) {
     setEliminando(importacionId);
+    setError(null);
     try {
       await ipc.eliminar({ importacionId });
       setConfirmDeleteId(null);
       await cargarHistorial();
+    } catch (e: any) {
+      setError(e?.message ?? 'Error al eliminar la importación.');
     } finally {
       setEliminando(null);
     }
@@ -226,6 +230,7 @@ export function HistorialImportacionCostosView({ onVerPendientes }: { onVerPendi
 
   return (
     <div className="panel" style={{ flex: 1, minHeight: 0 }}>
+      {error && <div className="alert-danger" role="alert" style={{ margin: 'var(--pad) var(--pad) 0' }}>{error}</div>}
       <div className="toolbar" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <div className="field" style={{ margin: 0 }}>
           <select aria-label="Filtrar por proveedor" className="input" style={{ fontSize: 13, padding: '5px 8px' }}

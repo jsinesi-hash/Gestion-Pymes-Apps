@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { RutinasView } from './RutinasView';
 
 // AuthContext: la vista/form usan useAuth().session
@@ -89,5 +89,29 @@ describe('RutinasView', () => {
     fireEvent.keyDown(window, { key: 'Escape' });
 
     expect(screen.queryByText(/eliminar «pedido semanal»/i)).not.toBeInTheDocument();
+  });
+
+  it('pausar con falla de IPC muestra el error (antes quedaba en silencio)', async () => {
+    list.mockResolvedValue([unaRutina()]);
+    pausar.mockRejectedValue(new Error('RUTINA_EN_USO'));
+    render(<RutinasView />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Pausar' }));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('RUTINA_EN_USO'));
+    // la rutina sigue activa: no se aplicó ningún cambio optimista
+    expect(screen.getByRole('button', { name: 'Pausar' })).toBeEnabled();
+  });
+
+  it('eliminar con falla de IPC muestra el error dentro del modal y no lo cierra', async () => {
+    list.mockResolvedValue([unaRutina()]);
+    eliminar.mockRejectedValue(new Error('RUTINA_CON_EVENTOS_PENDIENTES'));
+    render(<RutinasView />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Eliminar' }));
+    const dialog = screen.getByRole('dialog', { name: /eliminar rutina/i });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }));
+
+    await waitFor(() => expect(within(dialog).getByRole('alert')).toHaveTextContent('RUTINA_CON_EVENTOS_PENDIENTES'));
+    // el modal de confirmación sigue abierto (no se descartó el intento silenciosamente)
+    expect(screen.getByText(/eliminar «pedido semanal»/i)).toBeInTheDocument();
   });
 });

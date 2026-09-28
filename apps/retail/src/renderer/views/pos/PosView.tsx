@@ -121,7 +121,7 @@ export function PosView() {
     try {
       await retomarVenta(venta_id);
     } catch {
-      // error ya en hook
+      // error ya en hook (session.error, mostrado por PosBottomBar)
     }
   }
 
@@ -129,7 +129,7 @@ export function PosView() {
     try {
       await descartarVenta(venta_id);
     } catch {
-      // silencioso
+      // error ya en hook (session.error, mostrado por PosBottomBar)
     }
   }
 

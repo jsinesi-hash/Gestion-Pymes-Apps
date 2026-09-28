@@ -38,6 +38,7 @@ export function ProveedorDetalle() {
   const [loading, setLoading] = useState(true);
   const [confirmando, setConfirmando] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('datos');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -50,9 +51,12 @@ export function ProveedorDetalle() {
     if (!id || !proveedor) return;
     if (!window.confirm(`¿Dar de baja a "${proveedor.razon_social}"? Esta acción es reversible editando el proveedor.`)) return;
     setConfirmando(true);
+    setError(null);
     try {
       await (globalThis as any).ferreteria.compras.proveedor.deactivate(id);
       setProveedor(p => p ? { ...p, activo: false } : p);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al dar de baja el proveedor.');
     } finally {
       setConfirmando(false);
     }
@@ -86,6 +90,8 @@ export function ProveedorDetalle() {
       {proveedor.nombre_fantasia && (
         <p className="text-muted">{proveedor.nombre_fantasia}</p>
       )}
+
+      {error && <div className="alert-danger" role="alert">{error}</div>}
 
       <div style={{
         display: 'flex',

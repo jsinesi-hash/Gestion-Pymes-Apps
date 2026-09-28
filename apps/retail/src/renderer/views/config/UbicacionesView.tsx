@@ -257,14 +257,22 @@ function DedupBoton({ onDone }: { onDone: () => Promise<void> }) {
   const [open, setOpen] = useState(false);
   const [grupos, setGrupos] = useState<DedupGrupoUI[] | null>(null);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function abrir() {
     setOpen(true);
-    setGrupos(await ubi().dedupPreview());
+    setError(null);
+    try {
+      setGrupos(await ubi().dedupPreview());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
   }
   async function aplicar() {
     setSaving(true);
+    setError(null);
     try { await ubi().dedupAplicar(); await onDone(); setOpen(false); setGrupos(null); }
+    catch (err) { setError(err instanceof Error ? err.message : String(err)); }
     finally { setSaving(false); }
   }
 
@@ -276,7 +284,8 @@ function DedupBoton({ onDone }: { onDone: () => Promise<void> }) {
           <div className="modal">
             <div className="modal-header"><span className="modal-title">Deduplicar ubicaciones</span></div>
             <div className="modal-body">
-              {grupos === null && <p>Analizando…</p>}
+              {error && <div className="alert-danger" role="alert">{error}</div>}
+              {grupos === null && !error && <p>Analizando…</p>}
               {grupos !== null && grupos.length === 0 && <p>No se detectaron duplicados.</p>}
               {grupos !== null && grupos.length > 0 && (
                 <>

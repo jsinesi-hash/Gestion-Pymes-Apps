@@ -88,6 +88,19 @@ describe('HistorialImportacionCostosView — eliminar pendientes/canceladas (fol
     fireEvent.click(screen.getAllByText('Eliminar')[0]);
     expect((window as any).ferreteria.importacionCosto.getHistorialDetalle).not.toHaveBeenCalled();
   });
+
+  it('muestra el error cuando falla la eliminación (antes quedaba en silencio)', async () => {
+    (window as any).ferreteria.importacionCosto.eliminar = vi.fn().mockRejectedValue(new Error('IMPORTACION_REFERENCIADA'));
+    renderView();
+    await screen.findByText('abandonada.csv');
+    fireEvent.click(screen.getAllByText('Eliminar')[0]);
+    fireEvent.click(screen.getByText('Sí'));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('IMPORTACION_REFERENCIADA'));
+    // la fila sigue en el listado (no se refrescó) y el botón "Eliminar" vuelve a estar disponible
+    expect(screen.getByText('abandonada.csv')).toBeInTheDocument();
+    expect(screen.getAllByText('Eliminar').length).toBeGreaterThan(0);
+  });
 });
 
 describe('HistorialImportacionCostosView — filtros y orden (ADR-054)', () => {

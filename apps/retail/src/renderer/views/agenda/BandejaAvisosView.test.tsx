@@ -76,4 +76,23 @@ describe('BandejaAvisosView', () => {
 
     expect(screen.queryByText(/EMAIL_NO_IMPLEMENTADO/)).not.toBeInTheDocument();
   });
+
+  it('reintentar con falla de IPC muestra el error (antes quedaba en silencio)', async () => {
+    listar.mockResolvedValue([unAviso({ estado: 'fallido' })]);
+    reintentar.mockRejectedValue(new Error('CANAL_DESHABILITADO'));
+    renderView();
+    fireEvent.click(await screen.findByRole('button', { name: 'Reintentar' }));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('CANAL_DESHABILITADO'));
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeEnabled();
+  });
+
+  it('descartar con falla de IPC muestra el error (antes quedaba en silencio)', async () => {
+    listar.mockResolvedValue([unAviso({ estado: 'pendiente' })]);
+    descartar.mockRejectedValue(new Error('AVISO_YA_ENVIADO'));
+    renderView();
+    fireEvent.click(await screen.findByRole('button', { name: 'Descartar' }));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('AVISO_YA_ENVIADO'));
+  });
 });

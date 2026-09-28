@@ -72,6 +72,8 @@ export function ConfigSmtp() {
     try {
       const r = await (globalThis as any).ferreteria.smtp.probar();
       if (r.ok) setMsg('Conexión OK.'); else setErr(`Falló la conexión: ${r.error}`);
+    } catch (e: any) {
+      setErr(e?.message ?? 'Error al probar la conexión.');
     } finally { setProbando(false); }
   }
 
