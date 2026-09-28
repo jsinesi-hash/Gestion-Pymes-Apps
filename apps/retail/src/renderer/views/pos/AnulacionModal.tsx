@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useEscapeToClose } from '@core/ui';
+import { useEscapeToClose, SupervisorAuthModal } from '@core/ui';
 
 type Props = {
   ventaId: string;
@@ -7,35 +7,32 @@ type Props = {
   onCancel: () => void;
 };
 
+type Step = 'motivo' | 'auth';
+
 export function AnulacionModal({ ventaId, onSuccess, onCancel }: Readonly<Props>) {
   const [motivo, setMotivo] = useState('');
-  const [supUsuario, setSupUsuario] = useState('');
-  const [supPassword, setSupPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState<Step>('motivo');
   const [error, setError] = useState<string | null>(null);
 
-  useEscapeToClose(onCancel, !loading);
+  useEscapeToClose(onCancel, step === 'motivo');
 
-  async function handleConfirmar() {
+  function handleContinuar() {
     if (!motivo.trim()) { setError('El motivo es obligatorio'); return; }
-    if (!supUsuario.trim() || !supPassword.trim()) { setError('Credenciales del Supervisor requeridas'); return; }
-    setLoading(true);
     setError(null);
-    try {
-      await (globalThis as any).ferreteria.venta.anular({
-        venta_id: ventaId,
-        motivo: motivo.trim(),
-        supervisor_credenciales: { nombre_usuario: supUsuario, password: supPassword },
-      });
-      onSuccess();
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Error';
-      if (msg === 'MOTIVO_REQUERIDO') { setError('El motivo es obligatorio'); return; }
-      if (msg === 'SUPERVISOR_INVALIDO') { setError('Usuario o contraseña de Supervisor incorrectos'); return; }
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
+    setStep('auth');
+  }
+
+  async function handleAuthConfirm({ nombre_usuario, password }: { nombre_usuario: string; password: string }) {
+    await (globalThis as any).ferreteria.venta.anular({
+      venta_id: ventaId,
+      motivo: motivo.trim(),
+      supervisor_credenciales: { nombre_usuario, password },
+    });
+    onSuccess();
+  }
+
+  if (step === 'auth') {
+    return <SupervisorAuthModal onConfirm={handleAuthConfirm} onCancel={() => setStep('motivo')} />;
   }
 
   return (
@@ -49,27 +46,13 @@ export function AnulacionModal({ ventaId, onSuccess, onCancel }: Readonly<Props>
           <div className="field">
             <label htmlFor="anulacion-motivo">Motivo</label>
             <input id="anulacion-motivo" className="input" type="text" placeholder="Motivo de anulación"
-              value={motivo} onChange={e => setMotivo(e.target.value)} autoFocus />
-          </div>
-          <div className="field">
-            <label htmlFor="anulacion-sup-usuario">Usuario Supervisor</label>
-            <input id="anulacion-sup-usuario" aria-label="Usuario Supervisor"
-              className="input" type="text"
-              value={supUsuario} onChange={e => setSupUsuario(e.target.value)} />
-          </div>
-          <div className="field">
-            <label htmlFor="anulacion-sup-password">Contraseña Supervisor</label>
-            <input id="anulacion-sup-password" aria-label="Contraseña Supervisor"
-              className="input" type="password"
-              value={supPassword} onChange={e => setSupPassword(e.target.value)} />
+              value={motivo} onChange={e => { setMotivo(e.target.value); setError(null); }} autoFocus />
           </div>
           {error && <div className="alert-danger" role="alert">{error}</div>}
         </div>
         <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onCancel} disabled={loading}>Cancelar</button>
-          <button type="button" className="btn-danger" onClick={handleConfirmar} disabled={loading}>
-            {loading ? 'Anulando…' : 'Anular venta'}
-          </button>
+          <button type="button" className="btn-secondary" onClick={onCancel}>Cancelar</button>
+          <button type="button" className="btn-danger" onClick={handleContinuar}>Continuar</button>
         </div>
       </div>
     </div>
