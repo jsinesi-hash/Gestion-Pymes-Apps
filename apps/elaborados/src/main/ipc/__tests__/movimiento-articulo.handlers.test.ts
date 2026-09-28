@@ -52,4 +52,27 @@ describe('movimiento-articulo handlers', () => {
     const mov = movimientoArticuloCreateHandler(db, { articulo_id: a.id, motivo: 'conteo', cantidad: -5 });
     expect(mov.stock_resultante).toBe(0);
   });
+
+  it('tipo se deriva del motivo, no del signo de cantidad: compra siempre es entrada', () => {
+    loginAsAdmin(db);
+    const a = articuloCreateHandler(db, { nombre: 'Vainilla', tipo: 'insumo', unidad: 'l', bloquea_sin_stock: false });
+    const mov = movimientoArticuloCreateHandler(db, { articulo_id: a.id, motivo: 'compra', cantidad: 10, costo_unitario_centavos: 500 });
+    expect(mov.tipo).toBe('entrada');
+  });
+
+  it('tipo se deriva del motivo: merma (cantidad negativa) es siempre salida', () => {
+    loginAsAdmin(db);
+    const a = articuloCreateHandler(db, { nombre: 'Dulce de leche', tipo: 'insumo', unidad: 'kg', bloquea_sin_stock: false });
+    movimientoArticuloCreateHandler(db, { articulo_id: a.id, motivo: 'compra', cantidad: 10, costo_unitario_centavos: 500 });
+    const mov = movimientoArticuloCreateHandler(db, { articulo_id: a.id, motivo: 'merma', cantidad: -3 });
+    expect(mov.tipo).toBe('salida');
+  });
+
+  it('tipo se deriva del motivo: un conteo que AUMENTA el stock sigue siendo ajuste, no entrada', () => {
+    loginAsAdmin(db);
+    const a = articuloCreateHandler(db, { nombre: 'Maní', tipo: 'insumo', unidad: 'kg', bloquea_sin_stock: false });
+    // conteo con cantidad positiva (se encontró más stock del registrado)
+    const mov = movimientoArticuloCreateHandler(db, { articulo_id: a.id, motivo: 'conteo', cantidad: 4 });
+    expect(mov.tipo).toBe('ajuste');
+  });
 });

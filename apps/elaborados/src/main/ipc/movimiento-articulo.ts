@@ -24,6 +24,12 @@ export function movimientoArticuloListHandler(db: Db, payload: { articulo_id: st
 
 const MOTIVOS_AJUSTE = ['conteo', 'merma', 'compra'] as const;
 
+const TIPO_POR_MOTIVO: Record<(typeof MOTIVOS_AJUSTE)[number], 'entrada' | 'salida' | 'ajuste'> = {
+  compra: 'entrada',
+  merma: 'salida',
+  conteo: 'ajuste',
+};
+
 export function movimientoArticuloCreateHandler(db: Db, payload: unknown) {
   const session = requireSession();
   const p = (payload ?? {}) as Record<string, unknown>;
@@ -47,7 +53,7 @@ export function movimientoArticuloCreateHandler(db: Db, payload: unknown) {
   const now = new Date();
   const id = generateId();
   const sync = { version: 1 as const, origin_id: getOriginId(), sync_state: 'pending' as const, updated_at: now };
-  const tipo = v_cantidad >= 0 ? ('entrada' as const) : ('ajuste' as const);
+  const tipo = TIPO_POR_MOTIVO[v_motivo];
 
   const nuevoCostoPromedio =
     v_cantidad > 0 && v_costo_unitario_centavos != null
