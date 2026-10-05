@@ -108,6 +108,9 @@ Si el dominio es **universal** (lo necesitan o lo necesitarán ambas apps sin va
 de tres, ver ADR-091/ADR-092), va a `@core/main` (handler) + `@core/preload` (`coreCanales`) +
 `@core/ui` (vista/hook) en vez de a la app, con el mismo patrón de seams que ya usan caja/exportar/
 navegación: opts inyectadas en el registrador del core, cada app decide el contenido.
+Ejemplo vigente: **venta** — `confirmarVenta`/`anularVenta` en `@core/main` (ADR-095); cada app
+inyecta `validarPrevio`/`aplicarLineas`/`revertirLineas` con su lógica de líneas e inventario. El core
+recibe los totales ya calculados y no conoce `venta_detalle` ni el stock de ninguna app.
 
 ### Dos runners de test (crítico — NMV)
 
