@@ -18,6 +18,7 @@ export * from './ipc/backup';
 export * from './ipc/restore';
 export * from './ipc/caja';
 export * from './ipc/ctacte';
+export * from './venta';
 export * from './ipc/exportar';
 export * from './ipc/dialog';
 export * from './registrar';
