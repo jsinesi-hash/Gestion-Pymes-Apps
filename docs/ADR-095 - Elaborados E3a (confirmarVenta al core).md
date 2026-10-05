@@ -35,7 +35,8 @@ Template method con hooks en `packages/core-main/src/venta/`, exportado desde `@
   `esRetoma` en el hook). Los handlers de en espera (`venta-espera.ts`) **siguen en Retail**.
 - **Retail** queda con wrappers finos: permiso + validación SEC-2 + hooks (`validarLineasPrevio`,
   `aplicarLineasRetail`, `revertirLineasRetail`) con la lógica movida textual. Mismos canales IPC,
-  firmas y códigos de error.
+  firmas y códigos de error, salvo `CORRELATIVO_NOT_FOUND`: ya no se lanza (el core crea el correlativo
+  si falta; el código queda muerto en `core-ui/lib/errores.ts`).
 
 ## Diferido a E3b
 B1 (`ItemComprobante`/`ComprobantePayload`) y `TicketModal` desde `ComprobantePayload` (sin consumidor

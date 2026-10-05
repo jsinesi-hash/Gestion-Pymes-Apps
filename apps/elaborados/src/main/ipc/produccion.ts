@@ -18,7 +18,7 @@ function requireSession() {
 /**
  * Lee e incrementa produccion_correlativo_<terminal> dentro de la transaccion de creacion, para
  * que un throw posterior (p. ej. STOCK_INSUFICIENTE) no "queme" un numero sin producir nada.
- * Mismo patron que nextNumeroInterno (venta.ts) / nextNumeroRemitoAtomico (remito.ts).
+ * Mismo patron que siguienteNumeroInterno (@core/main, venta) / nextNumeroRemitoAtomico (remito.ts).
  */
 function nextNumeroProduccion(tx: Db, terminal: string): string {
   const clave = `produccion_correlativo_${terminal}`;

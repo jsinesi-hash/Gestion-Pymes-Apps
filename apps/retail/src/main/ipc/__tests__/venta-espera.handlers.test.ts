@@ -249,6 +249,8 @@ describe('venta-espera handlers', () => {
     expect(result.venta.caja_id).toBe(caja2.id);
     expect(result.venta.numero_interno).toMatch(/^V-C1-\d{6}$/);
     expect(result.venta.estado).toBe('confirmada');
+    // retomar REEMPLAZA las líneas de la espera (no las duplica)
+    expect(result.detalles).toHaveLength(1);
 
     // Stock descontado
     const ex = db.select().from(schema.existencias)
