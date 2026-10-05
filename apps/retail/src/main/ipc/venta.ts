@@ -3,7 +3,7 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId, inicioDelDia, finDelDia, nombreCompletoCliente } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession, getOriginId, verificarSupervisor, optId, arr, num, centavos, oneOf, id as vId, confirmarVenta, type AplicarLineasCtx, type VentaPagoPayload } from '@core/main';
+import { getSession, verificarSupervisor, optId, arr, num, centavos, oneOf, id as vId, confirmarVenta, anularVenta, type AplicarLineasCtx, type RevertirLineasCtx, type VentaPagoPayload } from '@core/main';
 export type { VentaPagoPayload } from '@core/main';
 import { marcarPresupuestoConvertido } from './presupuesto';
 import { getPrecioEnListaHandler, resolverListaEfectiva } from './lista-precio-valor';
@@ -210,144 +210,50 @@ export function ventaConfirmarHandler(db: Db, rawPayload: unknown) {
   return { venta, detalles, comprobante };
 }
 
-export function ventaAnularHandler(db: Db, payload: VentaAnularPayload) {
-  const session = requireSession();
-  if (!session.permisos.has('venta.anular')) throw new Error('FORBIDDEN');
-  if (!payload.motivo?.trim()) throw new Error('MOTIVO_REQUERIDO');
+function revertirLineasRetail(tx: Tx, ctx: RevertirLineasCtx): void {
+  const { venta, now, sync, userId } = ctx;
+  const detalles = tx.select().from(schema.venta_detalle)
+    .where(eq(schema.venta_detalle.venta_id, venta.id)).all();
 
-  verificarSupervisor(db, payload.supervisor_credenciales);
+  for (const det of detalles) {
+    const ex = tx.select().from(schema.existencias)
+      .where(eq(schema.existencias.producto_id, det.producto_id)).get()!;
+    const factorDet = det.factor_a_stock_aplicado ?? 1.0;
+    const cantidadStockDet = det.cantidad * factorDet;
+    const stockResultante = ex.stock_fisico + cantidadStockDet;
 
-  const ventaRow = db.select().from(schema.venta)
-    .where(eq(schema.venta.id, payload.venta_id)).get();
-  if (!ventaRow) throw new Error('NOT_FOUND');
-  if (ventaRow.estado === 'anulada') throw new Error('VENTA_YA_ANULADA');
-  if (ventaRow.estado !== 'confirmada') throw new Error('VENTA_NO_CONFIRMADA');
+    tx.insert(schema.movimiento_stock).values({
+      id: generateId(),
+      producto_id: det.producto_id,
+      tipo: 'entrada',
+      motivo: 'devolucion',
+      cantidad: cantidadStockDet,
+      stock_resultante: stockResultante,
+      costo_unitario: null,
+      referencia_tipo: 'anulacion_venta',
+      referencia_id: venta.id,
+      usuario_id: userId,
+      fecha: now,
+      ...sync,
+    }).run();
 
-  const cajaOrigen = db.select().from(schema.caja)
-    .where(eq(schema.caja.id, ventaRow.caja_id)).get();
-  if (!cajaOrigen || cajaOrigen.estado === 'cerrada') throw new Error('CAJA_ORIGEN_CERRADA');
-
-  const detalles = db.select().from(schema.venta_detalle)
-    .where(eq(schema.venta_detalle.venta_id, payload.venta_id)).all();
-
-  const now = new Date();
-  const terminal = getOriginId();
-  const sync = { version: 1 as const, origin_id: terminal, sync_state: 'pending' as const, updated_at: now };
-
-  return db.transaction((tx) => {
-    tx.update(schema.venta).set({
-      estado: 'anulada',
-      usuario_modificacion_id: session.userId,
-      fecha_actualizacion: now,
-      version: ventaRow.version + 1,
+    tx.update(schema.existencias).set({
+      stock_fisico: stockResultante,
+      ultima_fecha_movimiento: now,
+      version: ex.version + 1,
       sync_state: 'pending',
       updated_at: now,
-    }).where(eq(schema.venta.id, payload.venta_id)).run();
+    }).where(eq(schema.existencias.producto_id, det.producto_id)).run();
+  }
+}
 
-    for (const det of detalles) {
-      const ex = tx.select().from(schema.existencias)
-        .where(eq(schema.existencias.producto_id, det.producto_id)).get()!;
-      const factorDet = det.factor_a_stock_aplicado ?? 1.0;
-      const cantidadStockDet = det.cantidad * factorDet;
-      const stockResultante = ex.stock_fisico + cantidadStockDet;
-
-      tx.insert(schema.movimiento_stock).values({
-        id: generateId(),
-        producto_id: det.producto_id,
-        tipo: 'entrada',
-        motivo: 'devolucion',
-        cantidad: cantidadStockDet,
-        stock_resultante: stockResultante,
-        costo_unitario: null,
-        referencia_tipo: 'anulacion_venta',
-        referencia_id: payload.venta_id,
-        usuario_id: session.userId,
-        fecha: now,
-        ...sync,
-      }).run();
-
-      tx.update(schema.existencias).set({
-        stock_fisico: stockResultante,
-        ultima_fecha_movimiento: now,
-        version: ex.version + 1,
-        sync_state: 'pending',
-        updated_at: now,
-      }).where(eq(schema.existencias.producto_id, det.producto_id)).run();
-    }
-
-    const pagoRows = tx.select().from(schema.venta_pago)
-      .where(eq(schema.venta_pago.venta_id, payload.venta_id)).all();
-
-    if (pagoRows.length > 0) {
-      // Nueva lógica: egreso por cada pago no-CCC
-      for (const pago of pagoRows) {
-        if (pago.medio_pago === 'cuenta_corriente') continue;
-        const montoCaja = (pago.monto_centavos + pago.recargo_centavos) / 100;
-        tx.insert(schema.movimiento_caja).values({
-          id: generateId(),
-          caja_id: ventaRow.caja_id,
-          tipo: 'egreso',
-          motivo: 'ajuste',
-          monto: montoCaja,
-          forma_pago: pago.medio_pago,
-          referencia_tipo: 'anulacion_venta',
-          referencia_id: payload.venta_id,
-          usuario_id: session.userId,
-          fecha: now,
-          observaciones: payload.motivo,
-          ...sync,
-        }).run();
-      }
-    } else {
-      // Lógica legacy: ventas sin filas venta_pago
-      tx.insert(schema.movimiento_caja).values({
-        id: generateId(),
-        caja_id: ventaRow.caja_id,
-        tipo: 'egreso',
-        motivo: 'ajuste',
-        monto: ventaRow.total,
-        forma_pago: ventaRow.forma_pago,
-        referencia_tipo: 'anulacion_venta',
-        referencia_id: payload.venta_id,
-        usuario_id: session.userId,
-        fecha: now,
-        observaciones: payload.motivo,
-        ...sync,
-      }).run();
-    }
-
-    // Revertir cargos CCC si los hay
-    const pagoCccRows = pagoRows.filter(p => p.medio_pago === 'cuenta_corriente');
-    for (const pago of pagoCccRows) {
-      const cuenta = tx.select().from(schema.cuenta_corriente_cliente)
-        .where(eq(schema.cuenta_corriente_cliente.cliente_id, ventaRow.cliente_id))
-        .get();
-      if (!cuenta) continue;
-      const nuevoSaldo = cuenta.saldo_centavos - pago.monto_centavos;
-      tx.insert(schema.movimiento_cuenta_corriente).values({
-        id: generateId(),
-        cuenta_id: cuenta.id,
-        tipo: 'pago',
-        motivo: 'nota_credito',
-        monto_centavos: pago.monto_centavos,
-        saldo_resultante_centavos: nuevoSaldo,
-        referencia_tipo: 'anulacion_venta',
-        referencia_id: payload.venta_id,
-        usuario_id: session.userId,
-        fecha: now,
-        ...sync,
-      }).run();
-      tx.update(schema.cuenta_corriente_cliente).set({
-        saldo_centavos: nuevoSaldo,
-        fecha_ultimo_movimiento: now,
-        version: cuenta.version + 1,
-        sync_state: 'pending',
-        updated_at: now,
-      }).where(eq(schema.cuenta_corriente_cliente.id, cuenta.id)).run();
-    }
-
-    return tx.select().from(schema.venta)
-      .where(eq(schema.venta.id, payload.venta_id)).get()!;
+export function ventaAnularHandler(db: Db, payload: VentaAnularPayload) {
+  return anularVenta(db, {
+    venta_id: payload.venta_id,
+    motivo: payload.motivo,
+    supervisor_credenciales: payload.supervisor_credenciales,
+  }, {
+    revertirLineas: (tx, ctx) => revertirLineasRetail(tx as unknown as Tx, ctx),
   });
 }
 
