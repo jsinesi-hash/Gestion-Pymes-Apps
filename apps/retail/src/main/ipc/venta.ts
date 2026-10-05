@@ -1,9 +1,10 @@
-import { eq, and, ne, desc, asc, gte, lte, inArray } from 'drizzle-orm';
+import { eq, and, desc, asc, gte, lte, inArray } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId, inicioDelDia, finDelDia, nombreCompletoCliente } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession, getOriginId, verificarSupervisor, optId, arr, num, centavos, oneOf, id as vId } from '@core/main';
+import { getSession, getOriginId, verificarSupervisor, optId, arr, num, centavos, oneOf, id as vId, confirmarVenta, type AplicarLineasCtx, type VentaPagoPayload } from '@core/main';
+export type { VentaPagoPayload } from '@core/main';
 import { marcarPresupuestoConvertido } from './presupuesto';
 import { getPrecioEnListaHandler, resolverListaEfectiva } from './lista-precio-valor';
 import { resolverCostoNetoProducto } from '../precios/motor';
@@ -21,17 +22,6 @@ export type LineaPayload = {
   // ADR-040: snapshot at sale time; null for sales before multi-presentación
   presentacion_id?: string | null;
   factor_a_stock_aplicado?: number | null;
-};
-
-export type VentaPagoPayload = {
-  medio_pago: 'efectivo' | 'tarjeta' | 'cuenta_corriente' | 'transferencia' | 'cheque';
-  monto_centavos: number;
-  recargo_pct?: number;
-  recargo_centavos?: number;
-  numero_cheque?: string;
-  banco?: string;
-  fecha_cheque?: string;
-  titular_cheque?: string;
 };
 
 export type VentaConfirmarPayload = {
@@ -64,61 +54,7 @@ function requireSession() {
   return session;
 }
 
-function nextNumeroInterno(tx: Db, terminal: string): string {
-  const clave = `venta_correlativo_${terminal}`;
-  const param = tx.select().from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, clave))
-    .get();
-  if (!param) throw new Error('CORRELATIVO_NOT_FOUND');
-  const correlativo = Number.parseInt(param.valor) + 1;
-  tx.update(schema.parametros_sistema)
-    .set({ valor: String(correlativo), actualizado_en: new Date() })
-    .where(eq(schema.parametros_sistema.clave, clave))
-    .run();
-  return `V-${terminal}-${String(correlativo).padStart(6, '0')}`;
-}
-
-export function ventaConfirmarHandler(db: Db, rawPayload: unknown) {
-  const session = requireSession();
-  if (!session.permisos.has('venta.crear')) throw new Error('FORBIDDEN');
-
-  // ADR-082 (SEC-2): validación de forma/tipo en el borde, ANTES de la lógica de negocio.
-  // Solo controla la forma del payload (no re-implementa reglas: PAGOS_REQUERIDOS,
-  // STOCK_INSUFICIENTE, MEDIO_PAGO_DUPLICADO, etc. siguen siendo del handler). Se corre
-  // por su efecto de throw; el cuerpo sigue leyendo el payload original completo.
-  const p = (rawPayload ?? {}) as Record<string, unknown>;
-  optId(p['cliente_id'], 'cliente_id');
-  arr(p['lineas'], 'lineas', (l, i) => {
-    const li = (l ?? {}) as Record<string, unknown>;
-    return {
-      producto_id: vId(li['producto_id'], `lineas.${i}.producto_id`),
-      cantidad: num(li['cantidad'], `lineas.${i}.cantidad`, { min: 0 }),
-    };
-  });
-  arr(p['pagos'], 'pagos', (pg, i) => {
-    const pj = (pg ?? {}) as Record<string, unknown>;
-    return {
-      medio_pago: oneOf(pj['medio_pago'], `pagos.${i}.medio_pago`,
-        ['efectivo', 'tarjeta', 'cuenta_corriente', 'transferencia', 'cheque'] as const),
-      monto_centavos: centavos(pj['monto_centavos'], `pagos.${i}.monto_centavos`),
-    };
-  });
-  const payload = rawPayload as VentaConfirmarPayload;
-
-  const cajaRow = db.select().from(schema.caja)
-    .where(and(eq(schema.caja.id, payload.caja_id), eq(schema.caja.estado, 'abierta')))
-    .get();
-  if (!cajaRow) throw new Error('CAJA_REQUERIDA');
-
-  // Validar que los pagos cubren el total
-  if (payload.pagos.length === 0) throw new Error('PAGOS_REQUERIDOS');
-  // Un mismo medio no puede aparecer dos veces: se carga en una sola línea por su total.
-  const mediosUsados = new Set(payload.pagos.map(p => p.medio_pago));
-  if (mediosUsados.size !== payload.pagos.length) throw new Error('MEDIO_PAGO_DUPLICADO');
-  const totalCentavos = Math.round(payload.total * 100);
-  const sumPagosCentavos = payload.pagos.reduce((acc, p) => acc + p.monto_centavos, 0);
-  if (sumPagosCentavos < totalCentavos) throw new Error('SALDO_PENDIENTE');
-
+function validarLineasPrevio(db: Db, payload: VentaConfirmarPayload): void {
   // ADR-049 §9 — lista efectiva del cliente (cliente.lista_precio_id → predeterminada),
   // para re-resolver el precio de cada línea contra el servidor.
   const listaPredeterminadaRow = db.select({ id: schema.lista_precio.id })
@@ -154,249 +90,124 @@ export function ventaConfirmarHandler(db: Db, rawPayload: unknown) {
     if (!payload.supervisor_credenciales) throw new Error('PRECIO_DESACTUALIZADO');
     verificarSupervisor(db, payload.supervisor_credenciales);
   }
+}
 
-  // Validar CCC: límite de crédito
-  const pagosCcc = payload.pagos.filter(p => p.medio_pago === 'cuenta_corriente');
-  if (pagosCcc.length > 0) {
-    const montoCccTotal = pagosCcc.reduce((acc, p) => acc + p.monto_centavos, 0);
-    const cuentaRow = db.select().from(schema.cuenta_corriente_cliente)
-      .where(eq(schema.cuenta_corriente_cliente.cliente_id, payload.cliente_id))
-      .get();
-    if (!cuentaRow || !cuentaRow.activo) throw new Error('CCC_NO_DISPONIBLE');
-    if (cuentaRow.limite_credito_centavos > 0 &&
-        cuentaRow.saldo_centavos + montoCccTotal > cuentaRow.limite_credito_centavos) {
-      if (!payload.supervisor_credenciales) throw new Error('LIMITE_CREDITO_EXCEDIDO');
-      verificarSupervisor(db, payload.supervisor_credenciales);
-    }
+type Tx = Parameters<typeof marcarPresupuestoConvertido>[0];
+
+function aplicarLineasRetail(tx: Tx, payload: VentaConfirmarPayload, ctx: AplicarLineasCtx): void {
+  const { ventaId, now, sync, userId, esRetoma } = ctx;
+
+  // ADR-046 §4: marca el presupuesto como convertido en la MISMA transaccion.
+  // Condicionado a estado IN ('emitido','vencido'): si ya no es convertible, toda
+  // la venta hace rollback.
+  if (payload.presupuesto_id) {
+    marcarPresupuestoConvertido(tx, payload.presupuesto_id, ventaId);
   }
 
-  // Calcular vuelto
-  const efectivoCentavos = payload.pagos
-    .filter(p => p.medio_pago === 'efectivo')
-    .reduce((acc, p) => acc + p.monto_centavos, 0);
-  const otrosCentavos = payload.pagos
-    .filter(p => p.medio_pago !== 'efectivo')
-    .reduce((acc, p) => acc + p.monto_centavos, 0);
-  const necesarioEfectivo = Math.max(0, totalCentavos - otrosCentavos);
-  const vueltoCentavos = efectivoCentavos > 0 ? Math.max(0, efectivoCentavos - necesarioEfectivo) : 0;
-
-  // Derivar forma_pago legacy (campo del schema solo admite efectivo|cuenta_corriente|transferencia|tarjeta)
-  const primerMedio = payload.pagos[0]?.medio_pago ?? 'efectivo';
-  const formaPago: 'efectivo' | 'cuenta_corriente' | 'transferencia' | 'tarjeta' =
-    primerMedio === 'cheque' ? 'efectivo' : primerMedio;
-
-  // Validar venta en espera si se está retomando
-  let ventaEsperaRow: typeof schema.venta.$inferSelect | undefined;
-  if (payload.venta_en_espera_id) {
-    ventaEsperaRow = db.select().from(schema.venta)
-      .where(eq(schema.venta.id, payload.venta_en_espera_id))
-      .get();
-    if (!ventaEsperaRow) throw new Error('VENTA_ESPERA_NOT_FOUND');
-    if (ventaEsperaRow.estado !== 'en_espera') throw new Error('VENTA_NO_EN_ESPERA');
+  if (esRetoma) {
+    tx.delete(schema.venta_detalle)
+      .where(eq(schema.venta_detalle.venta_id, ventaId)).run();
   }
 
-  const now = new Date();
-  const ventaId = payload.venta_en_espera_id ?? generateId();
-  const terminal = getOriginId();
-  const sync = { version: 1 as const, origin_id: terminal, sync_state: 'pending' as const, updated_at: now };
+  for (const linea of payload.lineas) {
+    const factorAplicado = linea.factor_a_stock_aplicado ?? 1.0;
+    const cantidadStockLinea = linea.cantidad * factorAplicado;
 
-  return db.transaction((tx) => {
-    const numero_interno = nextNumeroInterno(tx, terminal);
-
-    if (payload.venta_en_espera_id && ventaEsperaRow) {
-      tx.update(schema.venta).set({
-        numero_interno,
-        fecha: now,
-        caja_id: payload.caja_id,
-        cliente_id: payload.cliente_id,
-        usuario_id: session.userId,
-        subtotal: payload.subtotal,
-        descuento_global: payload.descuento_global,
-        importe_iva: payload.importe_iva,
-        total: payload.total,
-        ajuste_redondeo: payload.ajuste_redondeo,
-        vuelto_centavos: vueltoCentavos,
-        forma_pago: formaPago,
-        estado: 'confirmada',
-        presupuesto_id: payload.presupuesto_id ?? null,
-        usuario_modificacion_id: session.userId,
-        fecha_actualizacion: now,
-        version: ventaEsperaRow.version + 1,
-        sync_state: 'pending',
-        updated_at: now,
-      }).where(eq(schema.venta.id, ventaId)).run();
-
-      tx.delete(schema.venta_detalle)
-        .where(eq(schema.venta_detalle.venta_id, ventaId)).run();
-    } else {
-      tx.insert(schema.venta).values({
-        id: ventaId,
-        numero_interno,
-        fecha: now,
-        cliente_id: payload.cliente_id,
-        usuario_id: session.userId,
-        caja_id: payload.caja_id,
-        subtotal: payload.subtotal,
-        descuento_global: payload.descuento_global,
-        importe_iva: payload.importe_iva,
-        total: payload.total,
-        ajuste_redondeo: payload.ajuste_redondeo,
-        vuelto_centavos: vueltoCentavos,
-        forma_pago: formaPago,
-        estado: 'confirmada',
-        comprobante_id: null,
-        presupuesto_id: payload.presupuesto_id ?? null,
-        usuario_creacion_id: session.userId,
-        fecha_creacion: now,
-        ...sync,
-      }).run();
-    }
-
-    // ADR-046 §4: marca el presupuesto como convertido en la MISMA transaccion.
-    // Condicionado a estado IN ('emitido','vencido'): si ya no es convertible, toda
-    // la venta hace rollback.
-    if (payload.presupuesto_id) {
-      marcarPresupuestoConvertido(tx, payload.presupuesto_id, ventaId);
-    }
-
-    // Insertar filas en venta_pago y movimientos de caja por pago
-    for (const pago of payload.pagos) {
-      tx.insert(schema.venta_pago).values({
-        id: generateId(),
-        venta_id: ventaId,
-        medio_pago: pago.medio_pago,
-        monto_centavos: pago.monto_centavos,
-        recargo_pct: pago.recargo_pct ?? 0,
-        recargo_centavos: pago.recargo_centavos ?? 0,
-        numero_cheque: pago.numero_cheque ?? null,
-        banco: pago.banco ?? null,
-        fecha_cheque: pago.fecha_cheque ? new Date(pago.fecha_cheque) : null,
-        titular_cheque: pago.titular_cheque ?? null,
-        ...sync,
-      }).run();
-
-      if (pago.medio_pago !== 'cuenta_corriente') {
-        const montoCaja = (pago.monto_centavos + (pago.recargo_centavos ?? 0)) / 100;
-        tx.insert(schema.movimiento_caja).values({
-          id: generateId(),
-          caja_id: payload.caja_id,
-          tipo: 'ingreso',
-          motivo: 'venta',
-          monto: montoCaja,
-          forma_pago: pago.medio_pago,
-          referencia_tipo: 'venta',
-          referencia_id: ventaId,
-          usuario_id: session.userId,
-          fecha: now,
-          ...sync,
-        }).run();
-      }
-    }
-
-    // Registrar cargo en Cuenta Corriente para pagos CCC
-    for (const pago of payload.pagos) {
-      if (pago.medio_pago !== 'cuenta_corriente') continue;
-      const cuenta = tx.select().from(schema.cuenta_corriente_cliente)
-        .where(eq(schema.cuenta_corriente_cliente.cliente_id, payload.cliente_id))
-        .get()!;
-      const nuevoSaldo = cuenta.saldo_centavos + pago.monto_centavos;
-      tx.insert(schema.movimiento_cuenta_corriente).values({
-        id: generateId(),
-        cuenta_id: cuenta.id,
-        tipo: 'cargo',
-        motivo: 'venta_credito',
-        monto_centavos: pago.monto_centavos,
-        saldo_resultante_centavos: nuevoSaldo,
-        referencia_tipo: 'venta',
-        referencia_id: ventaId,
-        usuario_id: session.userId,
-        fecha: now,
-        ...sync,
-      }).run();
-      tx.update(schema.cuenta_corriente_cliente).set({
-        saldo_centavos: nuevoSaldo,
-        fecha_ultimo_movimiento: now,
-        version: cuenta.version + 1,
-        sync_state: 'pending',
-        updated_at: now,
-      }).where(eq(schema.cuenta_corriente_cliente.id, cuenta.id)).run();
-    }
-
-    for (const linea of payload.lineas) {
-      const factorAplicado = linea.factor_a_stock_aplicado ?? 1.0;
-      const cantidadStockLinea = linea.cantidad * factorAplicado;
-
-      tx.insert(schema.venta_detalle).values({
-        id: generateId(),
-        venta_id: ventaId,
-        producto_id: linea.producto_id,
-        descripcion: linea.descripcion,
-        cantidad: linea.cantidad,
-        precio_unitario: linea.precio_unitario,
-        descuento_linea: linea.descuento_linea,
-        alicuota_iva: linea.alicuota_iva,
-        subtotal: linea.subtotal,
-        presentacion_id: linea.presentacion_id ?? null,
-        factor_a_stock_aplicado: factorAplicado,
-        ...sync,
-      }).run();
-
-      const ex = tx.select().from(schema.existencias)
-        .where(eq(schema.existencias.producto_id, linea.producto_id)).get()!;
-      const stockResultante = ex.stock_fisico - cantidadStockLinea;
-
-      // ADR-049 §9 — costo neto del momento (habilita margen real por venta en el
-      // Dashboard); null si el producto no tiene proveedor preferido con costo.
-      const costoNetoCentavos = resolverCostoNetoProducto(tx as Db, linea.producto_id);
-
-      tx.insert(schema.movimiento_stock).values({
-        id: generateId(),
-        producto_id: linea.producto_id,
-        tipo: 'salida',
-        motivo: 'venta',
-        cantidad: cantidadStockLinea,
-        stock_resultante: stockResultante,
-        costo_unitario: costoNetoCentavos != null ? costoNetoCentavos / 100 : null,
-        referencia_tipo: 'venta',
-        referencia_id: ventaId,
-        usuario_id: session.userId,
-        fecha: now,
-        ...sync,
-      }).run();
-
-      tx.update(schema.existencias).set({
-        stock_fisico: stockResultante,
-        ultima_fecha_movimiento: now,
-        version: ex.version + 1,
-        sync_state: 'pending',
-        updated_at: now,
-      }).where(eq(schema.existencias.producto_id, linea.producto_id)).run();
-    }
-
-    const comprobanteId = generateId();
-    tx.insert(schema.comprobante).values({
-      id: comprobanteId,
+    tx.insert(schema.venta_detalle).values({
+      id: generateId(),
       venta_id: ventaId,
-      tipo: 'ticket_interno',
-      fecha_emision: now,
-      importe_neto: payload.total - payload.importe_iva,
-      importe_iva: payload.importe_iva,
-      importe_total: payload.total,
-      estado: 'autorizado',
+      producto_id: linea.producto_id,
+      descripcion: linea.descripcion,
+      cantidad: linea.cantidad,
+      precio_unitario: linea.precio_unitario,
+      descuento_linea: linea.descuento_linea,
+      alicuota_iva: linea.alicuota_iva,
+      subtotal: linea.subtotal,
+      presentacion_id: linea.presentacion_id ?? null,
+      factor_a_stock_aplicado: factorAplicado,
       ...sync,
     }).run();
 
-    tx.update(schema.venta).set({ comprobante_id: comprobanteId })
-      .where(eq(schema.venta.id, ventaId)).run();
+    const ex = tx.select().from(schema.existencias)
+      .where(eq(schema.existencias.producto_id, linea.producto_id)).get()!;
+    const stockResultante = ex.stock_fisico - cantidadStockLinea;
 
-    const venta = tx.select().from(schema.venta).where(eq(schema.venta.id, ventaId)).get()!;
-    const detalles = tx.select().from(schema.venta_detalle)
-      .where(eq(schema.venta_detalle.venta_id, ventaId)).all();
-    const comprobante = tx.select().from(schema.comprobante)
-      .where(eq(schema.comprobante.id, comprobanteId)).get()!;
+    // ADR-049 §9 — costo neto del momento (habilita margen real por venta en el
+    // Dashboard); null si el producto no tiene proveedor preferido con costo.
+    const costoNetoCentavos = resolverCostoNetoProducto(tx as Db, linea.producto_id);
 
-    return { venta, detalles, comprobante };
+    tx.insert(schema.movimiento_stock).values({
+      id: generateId(),
+      producto_id: linea.producto_id,
+      tipo: 'salida',
+      motivo: 'venta',
+      cantidad: cantidadStockLinea,
+      stock_resultante: stockResultante,
+      costo_unitario: costoNetoCentavos != null ? costoNetoCentavos / 100 : null,
+      referencia_tipo: 'venta',
+      referencia_id: ventaId,
+      usuario_id: userId,
+      fecha: now,
+      ...sync,
+    }).run();
+
+    tx.update(schema.existencias).set({
+      stock_fisico: stockResultante,
+      ultima_fecha_movimiento: now,
+      version: ex.version + 1,
+      sync_state: 'pending',
+      updated_at: now,
+    }).where(eq(schema.existencias.producto_id, linea.producto_id)).run();
+  }
+}
+
+export function ventaConfirmarHandler(db: Db, rawPayload: unknown) {
+  const session = requireSession();
+  if (!session.permisos.has('venta.crear')) throw new Error('FORBIDDEN');
+
+  // ADR-082 (SEC-2): validación de forma/tipo en el borde, ANTES de la lógica de negocio.
+  // Solo controla la forma del payload (no re-implementa reglas: PAGOS_REQUERIDOS,
+  // STOCK_INSUFICIENTE, MEDIO_PAGO_DUPLICADO, etc. siguen siendo del core/hooks). Se corre
+  // por su efecto de throw; el cuerpo sigue leyendo el payload original completo.
+  const p = (rawPayload ?? {}) as Record<string, unknown>;
+  optId(p['cliente_id'], 'cliente_id');
+  arr(p['lineas'], 'lineas', (l, i) => {
+    const li = (l ?? {}) as Record<string, unknown>;
+    return {
+      producto_id: vId(li['producto_id'], `lineas.${i}.producto_id`),
+      cantidad: num(li['cantidad'], `lineas.${i}.cantidad`, { min: 0 }),
+    };
   });
+  arr(p['pagos'], 'pagos', (pg, i) => {
+    const pj = (pg ?? {}) as Record<string, unknown>;
+    return {
+      medio_pago: oneOf(pj['medio_pago'], `pagos.${i}.medio_pago`,
+        ['efectivo', 'tarjeta', 'cuenta_corriente', 'transferencia', 'cheque'] as const),
+      monto_centavos: centavos(pj['monto_centavos'], `pagos.${i}.monto_centavos`),
+    };
+  });
+  const payload = rawPayload as VentaConfirmarPayload;
+
+  const { venta, comprobante } = confirmarVenta(db, {
+    caja_id: payload.caja_id,
+    cliente_id: payload.cliente_id,
+    subtotal: payload.subtotal,
+    descuento_global: payload.descuento_global,
+    importe_iva: payload.importe_iva,
+    total: payload.total,
+    ajuste_redondeo: payload.ajuste_redondeo,
+    pagos: payload.pagos,
+    ...(payload.venta_en_espera_id !== undefined && { venta_en_espera_id: payload.venta_en_espera_id }),
+    ...(payload.presupuesto_id !== undefined && { presupuesto_id: payload.presupuesto_id }),
+    ...(payload.supervisor_credenciales !== undefined && { supervisor_credenciales: payload.supervisor_credenciales }),
+  }, {
+    validarPrevio: () => validarLineasPrevio(db, payload),
+    aplicarLineas: (tx, ctx) => aplicarLineasRetail(tx as unknown as Tx, payload, ctx),
+  });
+
+  const detalles = db.select().from(schema.venta_detalle)
+    .where(eq(schema.venta_detalle.venta_id, venta.id)).all();
+  return { venta, detalles, comprobante };
 }
 
 export function ventaAnularHandler(db: Db, payload: VentaAnularPayload) {
