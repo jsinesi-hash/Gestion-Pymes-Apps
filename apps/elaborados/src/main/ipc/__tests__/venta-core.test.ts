@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { generateId } from '@ferreteria/shared';
-import { cajaAbrirHandler, confirmarVenta, type ConfirmarVentaInput } from '@core/main';
+import { cajaAbrirHandler, confirmarVenta, anularVenta, type ConfirmarVentaInput } from '@core/main';
 import * as schema from '../../db/schema';
 import { setupDb, loginAsAdmin, clearSession } from '../../__tests__/helpers';
 
@@ -160,6 +160,27 @@ describe('confirmarVenta (core)', () => {
     expect(venta.estado).toBe('confirmada');
   });
 
+  it('pagos múltiples con recargo y cheque: un movimiento de caja por medio, recargo sumado, forma_pago legado e importe_neto', () => {
+    const { caja, clienteId } = preparar();
+    const { venta, comprobante } = confirmarVenta(db, input(caja.id, clienteId, {
+      total: 1000, subtotal: 1000, importe_iva: 173.55,
+      pagos: [
+        { medio_pago: 'cheque', monto_centavos: 40000, numero_cheque: '123', banco: 'B', titular_cheque: 'T' },
+        { medio_pago: 'tarjeta', monto_centavos: 60000, recargo_centavos: 3000 },
+      ],
+    }), { aplicarLineas: vi.fn() });
+
+    expect(venta.forma_pago).toBe('efectivo'); // cheque → efectivo (legado)
+    expect(comprobante.importe_neto).toBeCloseTo(826.45, 2);
+    const movs = db.select().from(schema.movimiento_caja)
+      .where(eq(schema.movimiento_caja.referencia_id, venta.id)).all();
+    expect(movs).toHaveLength(2);
+    const tarjeta = movs.find(m => m.forma_pago === 'tarjeta')!;
+    expect(tarjeta.monto).toBe(630); // 600 + recargo 30
+    const pagos = db.select().from(schema.venta_pago).where(eq(schema.venta_pago.venta_id, venta.id)).all();
+    expect(pagos.find(p => p.medio_pago === 'cheque')!.numero_cheque).toBe('123');
+  });
+
   it('retomar una venta en espera reusa el id, sube la versión y marca esRetoma', () => {
     const { caja, clienteId } = preparar();
     const ventaId = generateId();
@@ -186,5 +207,80 @@ describe('confirmarVenta (core)', () => {
       .toThrow('VENTA_NO_EN_ESPERA');
     expect(() => confirmarVenta(db, input(caja.id, clienteId, { venta_en_espera_id: generateId() }), { aplicarLineas }))
       .toThrow('VENTA_ESPERA_NOT_FOUND');
+  });
+});
+
+describe('anularVenta (core)', () => {
+  let db: Db;
+  beforeEach(() => { db = setupDb(); clearSession(); });
+
+  function ventaConfirmada(conCuenta?: { limite: number }, pagos?: ConfirmarVentaInput['pagos']) {
+    loginAsAdmin(db);
+    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const cli = crearCliente(db, conCuenta);
+    const { venta } = confirmarVenta(db, input(caja.id, cli.clienteId, pagos ? { pagos } : {}), { aplicarLineas: vi.fn() });
+    return { caja, venta, ...cli };
+  }
+
+  it('anula: estado anulada, egreso de caja por pago y llama a revertirLineas', () => {
+    const { venta } = ventaConfirmada();
+    const revertirLineas = vi.fn();
+
+    const r = anularVenta(db, { venta_id: venta.id, motivo: 'error', supervisor_credenciales: SUP }, { revertirLineas });
+
+    expect(r.estado).toBe('anulada');
+    expect(revertirLineas).toHaveBeenCalledTimes(1);
+    expect(revertirLineas.mock.calls[0][1]).toMatchObject({ motivo: 'error' });
+    const egresos = db.select().from(schema.movimiento_caja)
+      .where(eq(schema.movimiento_caja.referencia_id, venta.id)).all().filter(m => m.tipo === 'egreso');
+    expect(egresos).toHaveLength(1);
+    expect(egresos[0]).toMatchObject({ motivo: 'ajuste', monto: 1000, observaciones: 'error' });
+  });
+
+  it('anula una venta con cuenta corriente: revierte el saldo', () => {
+    const { venta, cuentaId } = ventaConfirmada({ limite: 500_000 },
+      [{ medio_pago: 'cuenta_corriente', monto_centavos: 100000 }]);
+    anularVenta(db, { venta_id: venta.id, motivo: 'x', supervisor_credenciales: SUP }, { revertirLineas: vi.fn() });
+
+    const cuenta = db.select().from(schema.cuenta_corriente_cliente)
+      .where(eq(schema.cuenta_corriente_cliente.id, cuentaId!)).get()!;
+    expect(cuenta.saldo_centavos).toBe(0);
+    const movs = db.select().from(schema.movimiento_cuenta_corriente)
+      .where(eq(schema.movimiento_cuenta_corriente.referencia_id, venta.id)).all();
+    expect(movs.map(m => m.motivo).sort()).toEqual(['nota_credito', 'venta_credito']);
+    // cta cte no mueve caja: ni ingreso ni egreso
+    expect(db.select().from(schema.movimiento_caja)
+      .where(eq(schema.movimiento_caja.referencia_id, venta.id)).all()).toHaveLength(0);
+  });
+
+  it('errores: motivo, supervisor, inexistente, ya anulada, caja origen cerrada, sesión', () => {
+    const { caja, venta } = ventaConfirmada();
+    const hooks = { revertirLineas: vi.fn() };
+    const ok = { venta_id: venta.id, motivo: 'x', supervisor_credenciales: SUP };
+
+    expect(() => anularVenta(db, { ...ok, motivo: '  ' }, hooks)).toThrow('MOTIVO_REQUERIDO');
+    expect(() => anularVenta(db, { ...ok, supervisor_credenciales: { nombre_usuario: 'admin', password: 'mal' } }, hooks))
+      .toThrow('SUPERVISOR_INVALIDO');
+    expect(() => anularVenta(db, { ...ok, venta_id: generateId() }, hooks)).toThrow('NOT_FOUND');
+
+    db.update(schema.caja).set({ estado: 'cerrada' }).where(eq(schema.caja.id, caja.id)).run();
+    expect(() => anularVenta(db, ok, hooks)).toThrow('CAJA_ORIGEN_CERRADA');
+    db.update(schema.caja).set({ estado: 'abierta' }).where(eq(schema.caja.id, caja.id)).run();
+
+    anularVenta(db, ok, hooks);
+    expect(() => anularVenta(db, ok, hooks)).toThrow('VENTA_YA_ANULADA');
+
+    clearSession();
+    expect(() => anularVenta(db, ok, hooks)).toThrow('UNAUTHENTICATED');
+    expect(hooks.revertirLineas).toHaveBeenCalledTimes(1);
+  });
+
+  it('rollback si revertirLineas lanza: la venta sigue confirmada', () => {
+    const { venta } = ventaConfirmada();
+    expect(() => anularVenta(db, { venta_id: venta.id, motivo: 'x', supervisor_credenciales: SUP }, {
+      revertirLineas: () => { throw new Error('BOOM'); },
+    })).toThrow('BOOM');
+    const v = db.select().from(schema.venta).where(eq(schema.venta.id, venta.id)).get()!;
+    expect(v.estado).toBe('confirmada');
   });
 });
