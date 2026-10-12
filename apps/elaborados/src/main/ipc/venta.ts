@@ -1,11 +1,12 @@
 import { eq, inArray } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import {
-  getSession, confirmarVenta,
+  getSession, confirmarVenta, anularVenta, ventaListByCajaHandler, requirePermission,
   str, optStr, num, centavos, oneOf, arr, id as vId,
   type VentaPagoPayload, type AplicarLineasCtx,
 } from '@core/main';
-import { generateId } from '@ferreteria/shared';
+import type { IpcMain } from 'electron';
+import { generateId, nombreCompletoCliente } from '@ferreteria/shared';
 import * as schema from '../db/schema';
 import {
   valorizarCarrito, type Carrito, type ProductoCatalogo, type OpcionCatalogo, type VentaValorizada,
@@ -218,4 +219,70 @@ export function ventaConfirmarHandler(db: Db, rawPayload: unknown) {
   });
 
   return { venta, lineas: lineasConModificadores(db, venta.id), comprobante, advertencias };
+}
+
+// ── venta:anular ─────────────────────────────────────────────────────────────
+
+export function ventaAnularHandler(db: Db, rawPayload: unknown) {
+  const p = (rawPayload ?? {}) as Record<string, unknown>;
+  const supervisor = parseSupervisor(p['supervisor_credenciales']);
+  if (!supervisor) throw new Error('supervisor_credenciales:REQUERIDO');
+  const input = {
+    venta_id: vId(p['venta_id'], 'venta_id'),
+    motivo: typeof p['motivo'] === 'string' ? p['motivo'] : '',
+    supervisor_credenciales: supervisor,
+  };
+
+  return anularVenta(db, input, {
+    // No recalcula: invierte los movimientos de artículo que originó esta venta.
+    revertirLineas: (rawTx, ctx) => {
+      const tx = rawTx as unknown as Tx;
+      const originales = tx.select().from(schema.movimiento_articulo)
+        .where(eq(schema.movimiento_articulo.referencia_id, ctx.venta.id)).all()
+        .filter((m) => m.referencia_tipo === 'venta' && m.motivo === 'venta');
+      for (const m of originales) {
+        const ex = tx.select().from(schema.existencia_articulo)
+          .where(eq(schema.existencia_articulo.articulo_id, m.articulo_id)).get()!;
+        const stock_resultante = ex.stock - m.cantidad; // m.cantidad es negativa → suma
+        tx.insert(schema.movimiento_articulo).values({
+          id: generateId(), articulo_id: m.articulo_id, tipo: 'entrada', motivo: 'anulacion_venta',
+          cantidad: -m.cantidad, stock_resultante, costo_unitario_centavos: m.costo_unitario_centavos,
+          referencia_tipo: 'anulacion_venta', referencia_id: ctx.venta.id, usuario_id: ctx.userId,
+          fecha: ctx.now, observaciones: ctx.motivo, ...ctx.sync,
+        }).run();
+        tx.update(schema.existencia_articulo).set({
+          stock: stock_resultante, ultima_fecha_movimiento: ctx.now,
+          version: ex.version + 1, sync_state: 'pending', updated_at: ctx.now,
+        }).where(eq(schema.existencia_articulo.articulo_id, m.articulo_id)).run();
+      }
+    },
+  });
+}
+
+// ── venta:get ────────────────────────────────────────────────────────────────
+
+export function ventaGetHandler(db: Db, payload: { id: string }) {
+  requireSession();
+  const venta = db.select().from(schema.venta).where(eq(schema.venta.id, payload.id)).get();
+  if (!venta) return null;
+  const comprobante = venta.comprobante_id
+    ? db.select().from(schema.comprobante).where(eq(schema.comprobante.id, venta.comprobante_id)).get() ?? null
+    : null;
+  const c = db.select({ nombre: schema.cliente.nombre, apellido: schema.cliente.apellido })
+    .from(schema.cliente).where(eq(schema.cliente.id, venta.cliente_id)).get();
+  return {
+    venta, lineas: lineasConModificadores(db, venta.id), comprobante,
+    cliente: c ? { nombre_completo: nombreCompletoCliente(c) } : null,
+  };
+}
+
+// ── Registro IPC ─────────────────────────────────────────────────────────────
+
+export function registerVentaHandlers(ipcMain: IpcMain, db: Db): void {
+  const guardCrear = requirePermission('venta.crear');
+  ipcMain.handle('venta:cotizar',   guardCrear(async (_e, p) => ventaCotizarHandler(db, p)));
+  ipcMain.handle('venta:confirmar', async (_e, p) => ventaConfirmarHandler(db, p)); // permiso verificado adentro
+  ipcMain.handle('venta:anular',    async (_e, p) => ventaAnularHandler(db, p));    // permiso + supervisor en el core
+  ipcMain.handle('venta:get',       async (_e, p) => ventaGetHandler(db, p));
+  ipcMain.handle('venta:listByCaja', async (_e, p) => ventaListByCajaHandler(db, p));
 }
