@@ -8,7 +8,7 @@ import type * as schema from './db/schema';
 // donde app puede no estar inicializado.
 import { runSeed, crearBackup, runGeoSeedOffline } from '@core/main';
 import { PERMISOS_ELABORADOS, OPERADOR_PERMISOS_ELABORADOS } from './auth/seed';
-import { runCatalogSeedElaborados } from './catalog/seed';
+import { runCatalogSeedElaborados, asegurarConsumidorFinal } from './catalog/seed';
 import * as dbSchema from './db/schema';
 
 type Db = BetterSQLite3Database<typeof schema>;
@@ -84,6 +84,7 @@ export async function runStartup(db: Db, opts: StartupOpts = {}): Promise<void> 
   //    admin solo si no hay usuarios), así que correrlo siempre es seguro y hace que los
   //    permisos nuevos de una versión lleguen a instalaciones ya inicializadas.
   runSeed(db, { permisos: PERMISOS_ELABORADOS, operador: OPERADOR_PERMISOS_ELABORADOS });
+  asegurarConsumidorFinal(db);
 
   // 4. First-run guard: geo una sola vez
   if (!isSeedBaseAplicado(db)) {

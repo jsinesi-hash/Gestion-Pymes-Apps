@@ -3,3 +3,4 @@ export * from '@core/db';
 export * from './schema/stock';
 export * from './schema/produccion';
 export * from './schema/venta-catalogo';
+export * from './schema/venta';

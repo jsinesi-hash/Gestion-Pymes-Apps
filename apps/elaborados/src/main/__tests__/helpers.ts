@@ -4,6 +4,7 @@ import { createDb, runMigrations } from '@core/db';
 import { runSeed, loginHandler } from '@core/main';
 import * as schema from '../db/schema';
 import { PERMISOS_ELABORADOS, OPERADOR_PERMISOS_ELABORADOS } from '../auth/seed';
+import { asegurarConsumidorFinal } from '../catalog/seed';
 
 export const MIGRATIONS_DIR = path.resolve(__dirname, '../db/migrations');
 
@@ -17,6 +18,7 @@ export function createTestDb() {
 export function setupDb() {
   const db = createTestDb();
   runSeed(db, { permisos: PERMISOS_ELABORADOS, operador: OPERADOR_PERMISOS_ELABORADOS });
+  asegurarConsumidorFinal(db);
   return db;
 }
 
