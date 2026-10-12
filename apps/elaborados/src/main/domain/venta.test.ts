@@ -103,6 +103,53 @@ describe('valorizarCarrito', () => {
     expect(v.consumo_total).toEqual([{ articulo_id: 'a-palito', cantidad: 4 }]);
   });
 
+  it('IVA con alícuotas mixtas: suma el IVA incluido de cada línea con su alícuota', () => {
+    const reducido = { ...palito, id: 'p-red', alicuota_iva: 10.5, componentes: [] };
+    const v = valorizarCarrito(catalogo(palito, reducido), OPCIONES, cart([
+      { producto_venta_id: 'p-palito', cantidad: 1, descuento_linea_pct: 0, modificadores: [] },
+      { producto_venta_id: 'p-red', cantidad: 1, descuento_linea_pct: 0, modificadores: [] },
+    ]));
+    // 100000*21/121 = 17355.37 ; 100000*10.5/110.5 = 9502.26 ; suma 26857.63 → 26858
+    expect(v.importe_iva_centavos).toBe(26858);
+    expect(v.total_centavos).toBe(200000);
+  });
+
+  it('descuento global 100%: total 0, IVA 0 y sin NaN', () => {
+    const v = valorizarCarrito(catalogo(palito), OPCIONES, cart([
+      { producto_venta_id: 'p-palito', cantidad: 2, descuento_linea_pct: 0, modificadores: [] },
+    ], 100));
+    expect(v.subtotal_centavos).toBe(200000);
+    expect(v.descuento_global_centavos).toBe(200000);
+    expect(v.total_centavos).toBe(0);
+    expect(v.importe_iva_centavos).toBe(0);
+    expect(v.ajuste_redondeo_centavos).toBe(0);
+    for (const n of [v.subtotal_centavos, v.total_centavos, v.importe_iva_centavos, v.ajuste_redondeo_centavos]) {
+      expect(Number.isNaN(n)).toBe(false);
+    }
+  });
+
+  it('cantidad decimal: escala subtotal y consumo', () => {
+    const v = valorizarCarrito(catalogo(palito), OPCIONES, cart([
+      { producto_venta_id: 'p-palito', cantidad: 0.5, descuento_linea_pct: 0, modificadores: [] },
+    ]));
+    expect(v.lineas[0].subtotal_centavos).toBe(50000);
+    expect(v.total_centavos).toBe(50000);
+    expect(v.consumo_total).toEqual([{ articulo_id: 'a-palito', cantidad: 0.5 }]);
+  });
+
+  it('por_opcion: cantidad_consumida de cada opción (por unidad) y consumo_total escalado', () => {
+    const conCantidad = new Map(OPCIONES);
+    conCantidad.set('choco', op('choco', 'a-choco', 0, 0.05));
+    conCantidad.set('ddl', op('ddl', 'a-ddl', 0, 0.03));
+    const v = valorizarCarrito(catalogo(pote('por_opcion')), conCantidad, cart([{
+      producto_venta_id: 'p-pote', cantidad: 2, descuento_linea_pct: 0,
+      modificadores: [{ grupo_modificador_id: GRUPO, opcion_ids: ['choco', 'ddl'] }],
+    }]));
+    expect(v.lineas[0].opciones.map((o) => o.cantidad_consumida)).toEqual([0.05, 0.03]);
+    expect(v.consumo_total.find((c) => c.articulo_id === 'a-choco')?.cantidad).toBeCloseTo(0.1, 6);
+    expect(v.consumo_total.find((c) => c.articulo_id === 'a-ddl')?.cantidad).toBeCloseTo(0.06, 6);
+  });
+
   it('valida el carrito contra el catálogo', () => {
     const c = catalogo(pote(), palito);
     const lin = (over: Partial<Carrito['lineas'][number]> = {}) => cart([{

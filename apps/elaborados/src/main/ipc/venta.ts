@@ -16,6 +16,9 @@ import { validarStock, type ConsumoLinea } from '../domain/consumo';
 type Db = BetterSQLite3Database<typeof schema>;
 type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
 
+/** Absorbe el error de punto flotante acumulado en el stock (0.3 − 0.1 − 0.2 ≠ 0). `+ 0` normaliza -0. */
+const redondear6 = (n: number) => Math.round(n * 1e6) / 1e6 + 0;
+
 function requireSession() {
   const session = getSession();
   if (!session) throw new Error('UNAUTHENTICATED');
@@ -30,7 +33,7 @@ function parseCarrito(p: Record<string, unknown>): Carrito {
       const li = (l ?? {}) as Record<string, unknown>;
       return {
         producto_venta_id: vId(li['producto_venta_id'], `lineas.${i}.producto_venta_id`),
-        cantidad: num(li['cantidad'], `lineas.${i}.cantidad`, { min: 0 }),
+        cantidad: num(li['cantidad'], `lineas.${i}.cantidad`, { min: 0, max: 100000 }),
         descuento_linea_pct: li['descuento_linea_pct'] == null
           ? 0 : num(li['descuento_linea_pct'], `lineas.${i}.descuento_linea_pct`, { min: 0, max: 100 }),
         modificadores: li['modificadores'] == null ? [] : arr(li['modificadores'], `lineas.${i}.modificadores`, (m, j) => {
@@ -162,7 +165,7 @@ function aplicarLineasElaborados(tx: Tx, v: VentaValorizada, ctx: AplicarLineasC
     const art = tx.select().from(schema.articulo).where(eq(schema.articulo.id, c.articulo_id)).get()!;
     const ex = tx.select().from(schema.existencia_articulo)
       .where(eq(schema.existencia_articulo.articulo_id, c.articulo_id)).get()!;
-    const stock_resultante = ex.stock - c.cantidad;
+    const stock_resultante = redondear6(ex.stock - c.cantidad);
     tx.insert(schema.movimiento_articulo).values({
       id: generateId(), articulo_id: c.articulo_id, tipo: 'salida', motivo: 'venta',
       cantidad: -c.cantidad, stock_resultante, costo_unitario_centavos: art.costo_promedio_centavos,
@@ -227,9 +230,13 @@ export function ventaAnularHandler(db: Db, rawPayload: unknown) {
   const p = (rawPayload ?? {}) as Record<string, unknown>;
   const supervisor = parseSupervisor(p['supervisor_credenciales']);
   if (!supervisor) throw new Error('supervisor_credenciales:REQUERIDO');
+  const rawMotivo = p['motivo'];
+  if (rawMotivo != null && typeof rawMotivo !== 'string') throw new Error('motivo:TIPO');
+  if (typeof rawMotivo === 'string' && rawMotivo.length > 500) throw new Error('motivo:MAX:500');
+  const motivo = rawMotivo ?? '';
   const input = {
     venta_id: vId(p['venta_id'], 'venta_id'),
-    motivo: typeof p['motivo'] === 'string' ? p['motivo'] : '',
+    motivo,
     supervisor_credenciales: supervisor,
   };
 
@@ -243,7 +250,7 @@ export function ventaAnularHandler(db: Db, rawPayload: unknown) {
       for (const m of originales) {
         const ex = tx.select().from(schema.existencia_articulo)
           .where(eq(schema.existencia_articulo.articulo_id, m.articulo_id)).get()!;
-        const stock_resultante = ex.stock - m.cantidad; // m.cantidad es negativa → suma
+        const stock_resultante = redondear6(ex.stock - m.cantidad); // m.cantidad es negativa → suma
         tx.insert(schema.movimiento_articulo).values({
           id: generateId(), articulo_id: m.articulo_id, tipo: 'entrada', motivo: 'anulacion_venta',
           cantidad: -m.cantidad, stock_resultante, costo_unitario_centavos: m.costo_unitario_centavos,
@@ -263,7 +270,8 @@ export function ventaAnularHandler(db: Db, rawPayload: unknown) {
 
 export function ventaGetHandler(db: Db, payload: { id: string }) {
   requireSession();
-  const venta = db.select().from(schema.venta).where(eq(schema.venta.id, payload.id)).get();
+  const id = vId((payload as Record<string, unknown> | null)?.['id'], 'id');
+  const venta = db.select().from(schema.venta).where(eq(schema.venta.id, id)).get();
   if (!venta) return null;
   const comprobante = venta.comprobante_id
     ? db.select().from(schema.comprobante).where(eq(schema.comprobante.id, venta.comprobante_id)).get() ?? null
