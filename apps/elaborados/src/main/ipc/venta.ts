@@ -1,17 +1,19 @@
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import {
-  getSession,
+  getSession, confirmarVenta,
   str, optStr, num, centavos, oneOf, arr, id as vId,
-  type VentaPagoPayload,
+  type VentaPagoPayload, type AplicarLineasCtx,
 } from '@core/main';
+import { generateId } from '@ferreteria/shared';
 import * as schema from '../db/schema';
 import {
-  valorizarCarrito, type Carrito, type ProductoCatalogo, type OpcionCatalogo,
+  valorizarCarrito, type Carrito, type ProductoCatalogo, type OpcionCatalogo, type VentaValorizada,
 } from '../domain/venta';
 import { validarStock, type ConsumoLinea } from '../domain/consumo';
 
 type Db = BetterSQLite3Database<typeof schema>;
+type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
 
 function requireSession() {
   const session = getSession();
@@ -133,4 +135,87 @@ export function ventaCotizarHandler(db: Db, rawPayload: unknown) {
   const { productos, opciones } = cargarCatalogo(db, carrito.lineas.map((l) => l.producto_venta_id));
   const valorizada = valorizarCarrito(productos, opciones, carrito);
   return { ...valorizada, ...evaluarStock(db, valorizada.consumo_total) };
+}
+
+// ── venta:confirmar ──────────────────────────────────────────────────────────
+
+function aplicarLineasElaborados(tx: Tx, v: VentaValorizada, ctx: AplicarLineasCtx): void {
+  for (const l of v.lineas) {
+    const lineaId = generateId();
+    tx.insert(schema.venta_linea).values({
+      id: lineaId, venta_id: ctx.ventaId, producto_venta_id: l.producto_venta_id,
+      descripcion: l.descripcion, cantidad: l.cantidad,
+      precio_unitario_centavos: l.precio_unitario_centavos, descuento_linea_pct: l.descuento_linea_pct,
+      alicuota_iva: l.alicuota_iva, subtotal_centavos: l.subtotal_centavos, ...ctx.sync,
+    }).run();
+    for (const o of l.opciones) {
+      tx.insert(schema.venta_linea_modificador).values({
+        id: generateId(), venta_linea_id: lineaId, grupo_modificador_opcion_id: o.opcion_id,
+        articulo_id: o.articulo_id, descripcion: o.nombre, recargo_centavos: o.recargo_centavos,
+        cantidad_consumida: o.cantidad_consumida, ...ctx.sync,
+      }).run();
+    }
+  }
+
+  for (const c of v.consumo_total) {
+    const art = tx.select().from(schema.articulo).where(eq(schema.articulo.id, c.articulo_id)).get()!;
+    const ex = tx.select().from(schema.existencia_articulo)
+      .where(eq(schema.existencia_articulo.articulo_id, c.articulo_id)).get()!;
+    const stock_resultante = ex.stock - c.cantidad;
+    tx.insert(schema.movimiento_articulo).values({
+      id: generateId(), articulo_id: c.articulo_id, tipo: 'salida', motivo: 'venta',
+      cantidad: -c.cantidad, stock_resultante, costo_unitario_centavos: art.costo_promedio_centavos,
+      referencia_tipo: 'venta', referencia_id: ctx.ventaId, usuario_id: ctx.userId,
+      fecha: ctx.now, observaciones: null, ...ctx.sync,
+    }).run();
+    tx.update(schema.existencia_articulo).set({
+      stock: stock_resultante, ultima_fecha_movimiento: ctx.now,
+      version: ex.version + 1, sync_state: 'pending', updated_at: ctx.now,
+    }).where(eq(schema.existencia_articulo.articulo_id, c.articulo_id)).run();
+  }
+}
+
+function lineasConModificadores(db: Db, ventaId: string) {
+  const lineas = db.select().from(schema.venta_linea).where(eq(schema.venta_linea.venta_id, ventaId)).all();
+  const mods = lineas.length === 0 ? [] : db.select().from(schema.venta_linea_modificador)
+    .where(inArray(schema.venta_linea_modificador.venta_linea_id, lineas.map((l) => l.id))).all();
+  return lineas.map((l) => ({ ...l, modificadores: mods.filter((m) => m.venta_linea_id === l.id) }));
+}
+
+export function ventaConfirmarHandler(db: Db, rawPayload: unknown) {
+  const session = requireSession();
+  if (!session.permisos.has('venta.crear')) throw new Error('FORBIDDEN');
+
+  // SEC-2: forma y tipo en el borde, antes de la lógica de negocio.
+  const p = (rawPayload ?? {}) as Record<string, unknown>;
+  const carrito = parseCarrito(p);
+  const caja_id = vId(p['caja_id'], 'caja_id');
+  const cliente_id = vId(p['cliente_id'], 'cliente_id');
+  const pagos = parsePagos(p['pagos']);
+  const supervisor = parseSupervisor(p['supervisor_credenciales']);
+
+  const { productos, opciones } = cargarCatalogo(db, carrito.lineas.map((l) => l.producto_venta_id));
+  const v = valorizarCarrito(productos, opciones, carrito);
+
+  let advertencias: AvisoStock[] = [];
+  const { venta, comprobante } = confirmarVenta(db, {
+    caja_id, cliente_id,
+    // Único punto de conversión centavos → pesos hacia `venta` (columnas legado REAL).
+    subtotal: v.subtotal_centavos / 100,
+    descuento_global: v.descuento_global_centavos / 100,
+    importe_iva: v.importe_iva_centavos / 100,
+    total: v.total_centavos / 100,
+    ajuste_redondeo: v.ajuste_redondeo_centavos / 100,
+    pagos,
+    ...(supervisor && { supervisor_credenciales: supervisor }),
+  }, {
+    validarPrevio: () => {
+      const ev = evaluarStock(db, v.consumo_total);
+      if (ev.bloqueos.length > 0) throw new Error(`STOCK_INSUFICIENTE:${ev.bloqueos[0].nombre}`);
+      advertencias = ev.advertencias;
+    },
+    aplicarLineas: (tx, ctx) => aplicarLineasElaborados(tx as unknown as Tx, v, ctx),
+  });
+
+  return { venta, lineas: lineasConModificadores(db, venta.id), comprobante, advertencias };
 }
