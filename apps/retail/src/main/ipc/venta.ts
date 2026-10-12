@@ -1,10 +1,11 @@
-import { eq, and, desc, asc, gte, lte, inArray } from 'drizzle-orm';
+import { eq, and, asc, gte, lte, inArray } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId, inicioDelDia, finDelDia, nombreCompletoCliente } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession, verificarSupervisor, optId, arr, num, centavos, oneOf, id as vId, confirmarVenta, anularVenta, type AplicarLineasCtx, type RevertirLineasCtx, type VentaPagoPayload } from '@core/main';
+import { getSession, verificarSupervisor, optId, arr, num, centavos, oneOf, id as vId, confirmarVenta, anularVenta, ventaListByCajaHandler, type AplicarLineasCtx, type RevertirLineasCtx, type VentaPagoPayload } from '@core/main';
 export type { VentaPagoPayload } from '@core/main';
+export { ventaListByCajaHandler };
 import { marcarPresupuestoConvertido } from './presupuesto';
 import { getPrecioEnListaHandler, resolverListaEfectiva } from './lista-precio-valor';
 import { resolverCostoNetoProducto } from '../precios/motor';
@@ -255,32 +256,6 @@ export function ventaAnularHandler(db: Db, payload: VentaAnularPayload) {
   }, {
     revertirLineas: (tx, ctx) => revertirLineasRetail(tx as unknown as Tx, ctx),
   });
-}
-
-export function ventaListByCajaHandler(db: Db, payload: { caja_id: string }) {
-  return db.select({
-    id: schema.venta.id,
-    numero_interno: schema.venta.numero_interno,
-    fecha: schema.venta.fecha,
-    total: schema.venta.total,
-    estado: schema.venta.estado,
-    forma_pago: schema.venta.forma_pago,
-    cliente_nombre_raw: schema.cliente.nombre,
-    cliente_apellido_raw: schema.cliente.apellido,
-  }).from(schema.venta)
-    .leftJoin(schema.cliente, eq(schema.cliente.id, schema.venta.cliente_id))
-    .where(and(
-      eq(schema.venta.caja_id, payload.caja_id),
-      inArray(schema.venta.estado, ['confirmada', 'anulada']),
-    ))
-    .orderBy(desc(schema.venta.fecha))
-    .all()
-    .map(({ cliente_nombre_raw, cliente_apellido_raw, ...r }) => ({
-      ...r,
-      cliente_nombre: cliente_nombre_raw != null
-        ? nombreCompletoCliente({ nombre: cliente_nombre_raw, apellido: cliente_apellido_raw })
-        : null,
-    }));
 }
 
 export function ventaGetHandler(db: Db, payload: { id: string }) {
