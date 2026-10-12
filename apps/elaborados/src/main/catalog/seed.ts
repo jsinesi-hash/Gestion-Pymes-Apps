@@ -28,3 +28,17 @@ export function runCatalogSeedElaborados(db: Db): void {
     }
   }
 }
+
+export const CONSUMIDOR_FINAL_ID = 'cf000000-0000-0000-0000-000000000001';
+
+/** Cliente fijo para ventas de mostrador (mismo id que Retail). Idempotente; corre en cada arranque. */
+export function asegurarConsumidorFinal(db: Db): void {
+  const now = new Date();
+  db.insert(schema.cliente).values({
+    id: CONSUMIDOR_FINAL_ID, tipo_documento: 'CUIT', numero_documento: '00000000000',
+    nombre: 'Consumidor', apellido: 'Final', condicion_fiscal: 'Consumidor Final',
+    habilita_cuenta_corriente: false, activo: true,
+    usuario_creacion_id: 'system', fecha_creacion: now,
+    version: 1, origin_id: 'system', sync_state: 'synced', updated_at: now,
+  }).onConflictDoNothing().run();
+}
