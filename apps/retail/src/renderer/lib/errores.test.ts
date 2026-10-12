@@ -102,6 +102,13 @@ describe('catálogo de códigos de dominio (ADR-082)', () => {
     expect(traducirError(new Error('Error: Error: STOCK_INSUFICIENTE')).mensaje).toMatch(/stock/i);
   });
 
+  it('CODIGO:arg (STOCK_INSUFICIENTE:Palito) resuelve el código y los códigos de venta de Elaborados traducen', () => {
+    expect(traducirError(new Error("Error invoking remote method 'venta:confirmar': Error: STOCK_INSUFICIENTE:Palito")).mensaje).toMatch(/stock/i);
+    for (const c of ['CARRITO_VACIO','PRODUCTO_VENTA_NO_ENCONTRADO','DESCUENTO_INVALIDO','GRUPO_NO_PERMITIDO','OPCION_INVALIDA','OPCION_DUPLICADA','MODIFICADOR_MIN','MODIFICADOR_MAX']) {
+      expect(traducirError(new Error(c)).mensaje).not.toMatch(/no se pudo/i);
+    }
+  });
+
   it('código con argumento faltante no renderiza "undefined"', () => {
     expect(traducirError(new Error('TIENE_PRODUCTOS')).mensaje).not.toMatch(/undefined/);
     expect(traducirError(new Error('YA_EXISTE')).mensaje).not.toMatch(/undefined/);
