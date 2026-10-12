@@ -70,4 +70,12 @@ describe('validarStock', () => {
     );
     expect(r).toEqual([{ articulo_id: 'vasito', ok: true, bloquea: false, stockResultante: 9 }]);
   });
+
+  it('absorbe el error de punto flotante: 0.1 + 0.2 consumido contra stock 0.3 no bloquea', () => {
+    const r = validarStock(
+      [{ articulo_id: 'harina', cantidad: 0.1 + 0.2 }],
+      new Map([['harina', { stock: 0.3, bloquea_sin_stock: true }]]),
+    );
+    expect(r).toEqual([{ articulo_id: 'harina', ok: true, bloquea: false, stockResultante: 0 }]);
+  });
 });

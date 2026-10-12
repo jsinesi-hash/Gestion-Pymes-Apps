@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
+import { generateId } from '@ferreteria/shared';
 import * as schema from '../../db/schema';
 import { setupDb, loginAsAdmin, clearSession } from '../../__tests__/helpers';
 import { runCatalogSeedElaborados, CONSUMIDOR_FINAL_ID } from '../../catalog/seed';
@@ -57,6 +58,29 @@ function stockDe(db: Db, articulo_id: string) {
     .where(eq(schema.existencia_articulo.articulo_id, articulo_id)).get()!.stock;
 }
 
+/** Cliente + (opcional) cuenta corriente con límite en centavos. */
+function crearCliente(db: Db, conCuenta?: { limite: number }) {
+  const clienteId = generateId();
+  const now = new Date();
+  const sync = { version: 1 as const, origin_id: 'test', sync_state: 'pending' as const, updated_at: now };
+  const adminId = db.select({ id: schema.usuario.id }).from(schema.usuario).get()!.id;
+  db.insert(schema.cliente).values({
+    id: clienteId, tipo_documento: 'DNI', numero_documento: '11111111',
+    nombre: 'Cli', apellido: 'Test', condicion_fiscal: 'Consumidor Final',
+    habilita_cuenta_corriente: !!conCuenta, activo: true,
+    usuario_creacion_id: adminId, fecha_creacion: now, ...sync,
+  }).run();
+  let cuentaId: string | null = null;
+  if (conCuenta) {
+    cuentaId = generateId();
+    db.insert(schema.cuenta_corriente_cliente).values({
+      id: cuentaId, cliente_id: clienteId, saldo_centavos: 0,
+      limite_credito_centavos: conCuenta.limite, activo: true, ...sync,
+    }).run();
+  }
+  return { clienteId, cuentaId };
+}
+
 describe('venta handlers (Elaborados)', () => {
   let db: Db;
   beforeEach(() => { db = setupDb(); clearSession(); });
@@ -92,6 +116,14 @@ describe('venta handlers (Elaborados)', () => {
           modificadores: [{ grupo_modificador_id: c.grupo.id, opcion_ids: [c.opChoco.id] }] }],
       });
       expect(grande.advertencias.map((a) => a.nombre)).toContain('Chocolate'); // 30 × 0.25 = 7.5 > 5, no bloquea
+    });
+
+    it('rechaza cantidad fuera de rango (Infinity, 1e300) en el borde', () => {
+      loginAsAdmin(db);
+      const c = catalogo(db);
+      for (const cantidad of [Infinity, 1e300]) {
+        expect(() => ventaCotizarHandler(db, { lineas: [{ producto_venta_id: c.palito.id, cantidad }] })).toThrow(/cantidad:MAX/);
+      }
     });
 
     it('rechaza sin sesión y payload mal formado', () => {
@@ -190,6 +222,61 @@ describe('venta handlers (Elaborados)', () => {
         .toThrow('UNAUTHENTICATED');
     });
 
+    describe('cuenta corriente', () => {
+      const venderEnCtaCte = (c: ReturnType<typeof catalogo>, cajaId: string, clienteId: string, extra: object = {}) =>
+        ventaConfirmarHandler(db, {
+          caja_id: cajaId, cliente_id: clienteId,
+          lineas: [{ producto_venta_id: c.palito.id, cantidad: 1 }],
+          pagos: [{ medio_pago: 'cuenta_corriente', monto_centavos: 100000 }], ...extra,
+        });
+
+      it('100% a cuenta corriente: sube el saldo, registra cargo y no mueve la caja', () => {
+        const { c, caja } = preparar();
+        const { clienteId, cuentaId } = crearCliente(db, { limite: 500000 });
+        const r = venderEnCtaCte(c, caja.id, clienteId);
+        const cuenta = db.select().from(schema.cuenta_corriente_cliente).where(eq(schema.cuenta_corriente_cliente.id, cuentaId!)).get()!;
+        expect(cuenta.saldo_centavos).toBe(100000);
+        const movs = db.select().from(schema.movimiento_cuenta_corriente)
+          .where(eq(schema.movimiento_cuenta_corriente.cuenta_id, cuentaId!)).all();
+        expect(movs).toHaveLength(1);
+        expect(movs[0]).toMatchObject({ tipo: 'cargo', monto_centavos: 100000 });
+        expect(db.select().from(schema.movimiento_caja).where(eq(schema.movimiento_caja.referencia_id, r.venta.id)).all()).toHaveLength(0);
+      });
+
+      it('Consumidor Final (sin cuenta) → CCC_NO_DISPONIBLE', () => {
+        const { c, caja } = preparar();
+        expect(() => venderEnCtaCte(c, caja.id, CONSUMIDOR_FINAL_ID)).toThrow('CCC_NO_DISPONIBLE');
+      });
+
+      it('sobre el límite → LIMITE_CREDITO_EXCEDIDO; con supervisor pasa', () => {
+        const { c, caja } = preparar();
+        const { clienteId } = crearCliente(db, { limite: 50000 });
+        expect(() => venderEnCtaCte(c, caja.id, clienteId)).toThrow('LIMITE_CREDITO_EXCEDIDO');
+        expect(db.select().from(schema.venta).all()).toHaveLength(0);
+        const r = venderEnCtaCte(c, caja.id, clienteId, { supervisor_credenciales: SUP });
+        expect(r.venta.estado).toBe('confirmada');
+      });
+    });
+
+    it('falla dentro de aplicarLineas → rollback total (nada persistido, correlativo incluido)', () => {
+      const { c, caja } = preparar();
+      db.delete(schema.existencia_articulo).where(eq(schema.existencia_articulo.articulo_id, c.choco.id)).run();
+      expect(() => ventaConfirmarHandler(db, {
+        caja_id: caja.id, cliente_id: CONSUMIDOR_FINAL_ID,
+        lineas: [pote(c, [c.opChoco.id])],
+        pagos: [{ medio_pago: 'efectivo', monto_centavos: 150000 }],
+      })).toThrow();
+      expect(db.select().from(schema.venta).all()).toHaveLength(0);
+      expect(db.select().from(schema.venta_pago).all()).toHaveLength(0);
+      expect(db.select().from(schema.venta_linea).all()).toHaveLength(0);
+      expect(db.select().from(schema.venta_linea_modificador).all()).toHaveLength(0);
+      expect(db.select().from(schema.movimiento_caja).all().filter((m) => m.motivo === 'venta')).toHaveLength(0);
+      expect(db.select().from(schema.movimiento_articulo).all().filter((m) => m.motivo === 'venta')).toHaveLength(0);
+      expect(stockDe(db, c.envase.id)).toBe(10);
+      expect(db.select().from(schema.parametros_sistema)
+        .where(eq(schema.parametros_sistema.clave, 'venta_correlativo_C1')).all()).toHaveLength(0);
+    });
+
     it('valida el carrito contra el catálogo (MODIFICADOR_MIN) sin tocar el stock', () => {
       const { c, caja } = preparar();
       expect(() => ventaConfirmarHandler(db, {
@@ -248,6 +335,18 @@ describe('venta handlers (Elaborados)', () => {
       expect(() => ventaAnularHandler(db, { venta_id: r.venta.id, motivo: ' ', supervisor_credenciales: SUP })).toThrow('MOTIVO_REQUERIDO');
       ventaAnularHandler(db, { venta_id: r.venta.id, motivo: 'x', supervisor_credenciales: SUP });
       expect(() => ventaAnularHandler(db, { venta_id: r.venta.id, motivo: 'x', supervisor_credenciales: SUP })).toThrow('VENTA_YA_ANULADA');
+    });
+
+    it('anular: motivo > 500 → motivo:MAX:500; motivo no-string → motivo:TIPO', () => {
+      const { r } = ventaHecha();
+      expect(() => ventaAnularHandler(db, { venta_id: r.venta.id, motivo: 'x'.repeat(501), supervisor_credenciales: SUP })).toThrow('motivo:MAX:500');
+      expect(() => ventaAnularHandler(db, { venta_id: r.venta.id, motivo: 5, supervisor_credenciales: SUP })).toThrow('motivo:TIPO');
+    });
+
+    it('get valida el id (payload null → error de campo, no TypeError)', () => {
+      loginAsAdmin(db);
+      expect(() => ventaGetHandler(db, null as never)).toThrow(/^VALIDATION:id:/);
+      expect(() => ventaGetHandler(db, { id: 5 } as never)).toThrow(/^VALIDATION:id:/);
     });
 
     it('get devuelve venta, líneas con modificadores, comprobante y cliente; null si no existe', () => {

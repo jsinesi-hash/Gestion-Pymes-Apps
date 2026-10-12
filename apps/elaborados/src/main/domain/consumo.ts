@@ -64,7 +64,7 @@ export function validarStock(
     const info = stocks.get(c.articulo_id);
     const stockActual = info?.stock ?? 0;
     const bloqueaSinStock = info?.bloquea_sin_stock ?? true;
-    const stockResultante = stockActual - c.cantidad;
+    const stockResultante = redondear(stockActual - c.cantidad) + 0; // + 0 normaliza -0
     const bloquea = bloqueaSinStock && stockResultante < 0;
     return { articulo_id: c.articulo_id, ok: !bloquea, bloquea, stockResultante };
   });
