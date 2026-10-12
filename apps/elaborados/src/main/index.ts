@@ -20,6 +20,7 @@ import { registerCategoriaVentaHandlers } from './ipc/categoria-venta';
 import { registerGrupoModificadorHandlers } from './ipc/grupo-modificador';
 import { registerProductoVentaHandlers } from './ipc/producto-venta';
 import { registerDemoCatalogHandlers } from './ipc/demo-catalog';
+import { registerVentaHandlers } from './ipc/venta';
 
 async function createWindow(): Promise<void> {
   loadTerminalConfig();
@@ -37,6 +38,7 @@ async function createWindow(): Promise<void> {
   registerGrupoModificadorHandlers(ipcMain, db);
   registerProductoVentaHandlers(ipcMain, db);
   registerDemoCatalogHandlers(ipcMain, db);
+  registerVentaHandlers(ipcMain, db);
 
   const win = new BrowserWindow({
     width: 1280,

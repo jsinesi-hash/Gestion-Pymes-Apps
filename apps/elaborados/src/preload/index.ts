@@ -45,5 +45,12 @@ createBridge({
     demoCatalog: {
       seedHeladeria: () => invoke('demo-catalog:seed-heladeria'),
     },
+    venta: {
+      cotizar:    (p: unknown) => invoke('venta:cotizar', p),
+      confirmar:  (p: unknown) => invoke('venta:confirmar', p),
+      anular:     (p: unknown) => invoke('venta:anular', p),
+      get:        (p: { id: string }) => invoke('venta:get', p),
+      listByCaja: (p: { caja_id: string }) => invoke('venta:listByCaja', p),
+    },
   }),
 }, { contextBridge, ipcRenderer });

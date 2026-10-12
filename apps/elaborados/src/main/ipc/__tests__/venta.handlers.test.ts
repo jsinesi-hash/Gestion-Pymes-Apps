@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 import * as schema from '../../db/schema';
 import { setupDb, loginAsAdmin, clearSession } from '../../__tests__/helpers';
@@ -9,7 +9,11 @@ import { categoriaVentaCreateHandler } from '../categoria-venta';
 import { grupoModificadorCreateHandler, grupoModificadorOpcionSetHandler } from '../grupo-modificador';
 import { productoVentaCreateHandler } from '../producto-venta';
 import { movimientoArticuloCreateHandler } from '../movimiento-articulo';
-import { ventaCotizarHandler, ventaConfirmarHandler } from '../venta';
+import {
+  ventaCotizarHandler, ventaConfirmarHandler, ventaAnularHandler, ventaGetHandler, registerVentaHandlers,
+} from '../venta';
+
+const SUP = { nombre_usuario: 'admin', password: 'admin1234' }; // NOSONAR
 
 type Db = ReturnType<typeof setupDb>;
 
@@ -194,6 +198,77 @@ describe('venta handlers (Elaborados)', () => {
         pagos: [{ medio_pago: 'efectivo', monto_centavos: 150000 }],
       })).toThrow('MODIFICADOR_MIN');
       expect(stockDe(db, c.envase.id)).toBe(10);
+    });
+  });
+
+  describe('ventaAnularHandler / ventaGetHandler', () => {
+    function ventaHecha() {
+      loginAsAdmin(db);
+      const c = catalogo(db);
+      const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+      const r = ventaConfirmarHandler(db, {
+        caja_id: caja.id, cliente_id: CONSUMIDOR_FINAL_ID,
+        lineas: [
+          { producto_venta_id: c.pote.id, cantidad: 2,
+            modificadores: [{ grupo_modificador_id: c.grupo.id, opcion_ids: [c.opChoco.id, c.opDdl.id] }] },
+          { producto_venta_id: c.palito.id, cantidad: 1 },
+        ],
+        pagos: [{ medio_pago: 'efectivo', monto_centavos: 2 * 170000 + 100000 }],
+      });
+      return { c, caja, r };
+    }
+
+    it('anula y restituye exactamente el stock descontado, con movimientos inversos', () => {
+      const { c, r } = ventaHecha();
+      expect(stockDe(db, c.palitoArt.id)).toBe(1);
+      const anulada = ventaAnularHandler(db, { venta_id: r.venta.id, motivo: 'error de carga', supervisor_credenciales: SUP });
+      expect(anulada.estado).toBe('anulada');
+      expect(stockDe(db, c.envase.id)).toBe(10);
+      expect(stockDe(db, c.palitoArt.id)).toBe(2);
+      expect(stockDe(db, c.choco.id)).toBeCloseTo(5, 6);
+      expect(stockDe(db, c.ddl.id)).toBeCloseTo(5, 6);
+      const inversos = db.select().from(schema.movimiento_articulo)
+        .where(eq(schema.movimiento_articulo.referencia_id, r.venta.id)).all()
+        .filter((m) => m.motivo === 'anulacion_venta');
+      expect(inversos).toHaveLength(4);
+      expect(inversos.every((m) => m.tipo === 'entrada' && m.cantidad > 0)).toBe(true);
+    });
+
+    it('no recalcula: restituye lo descontado aunque la receta cambie después de vender', () => {
+      const { c, r } = ventaHecha();
+      db.update(schema.producto_venta_grupo).set({ cantidad_total: 0.9 }).run(); // cambia el consumo del pote
+      ventaAnularHandler(db, { venta_id: r.venta.id, motivo: 'x', supervisor_credenciales: SUP });
+      expect(stockDe(db, c.choco.id)).toBeCloseTo(5, 6);
+    });
+
+    it('errores: credenciales inválidas, ya anulada, motivo vacío', () => {
+      const { r } = ventaHecha();
+      expect(() => ventaAnularHandler(db, { venta_id: r.venta.id, motivo: 'x', supervisor_credenciales: { nombre_usuario: 'admin', password: 'mal' } }))
+        .toThrow('SUPERVISOR_INVALIDO');
+      expect(() => ventaAnularHandler(db, { venta_id: r.venta.id, motivo: ' ', supervisor_credenciales: SUP })).toThrow('MOTIVO_REQUERIDO');
+      ventaAnularHandler(db, { venta_id: r.venta.id, motivo: 'x', supervisor_credenciales: SUP });
+      expect(() => ventaAnularHandler(db, { venta_id: r.venta.id, motivo: 'x', supervisor_credenciales: SUP })).toThrow('VENTA_YA_ANULADA');
+    });
+
+    it('get devuelve venta, líneas con modificadores, comprobante y cliente; null si no existe', () => {
+      const { r } = ventaHecha();
+      const g = ventaGetHandler(db, { id: r.venta.id })!;
+      expect(g.venta.id).toBe(r.venta.id);
+      expect(g.lineas).toHaveLength(2);
+      expect(g.lineas.find((l) => l.descripcion === 'Pote 1/4')!.modificadores).toHaveLength(2);
+      expect(g.comprobante?.tipo).toBe('ticket_interno');
+      expect(g.cliente?.nombre_completo).toBe('Consumidor Final');
+      expect(ventaGetHandler(db, { id: 'no-existe' })).toBeNull();
+    });
+  });
+
+  describe('registerVentaHandlers', () => {
+    it('registra los 5 canales venta:*', () => {
+      const handle = vi.fn();
+      registerVentaHandlers({ handle } as never, db);
+      expect(handle.mock.calls.map((c) => c[0]).sort()).toEqual(
+        ['venta:anular', 'venta:confirmar', 'venta:cotizar', 'venta:get', 'venta:listByCaja'],
+      );
     });
   });
 });
