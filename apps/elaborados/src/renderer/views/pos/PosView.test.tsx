@@ -432,6 +432,51 @@ describe('PosView', () => {
       expect(screen.getByText('El carrito está vacío')).toBeInTheDocument();
     });
 
+    it('si confirmar falla con un pedido vinculado, el vínculo (chip) se conserva', async () => {
+      confirmar.mockRejectedValue(new Error('STOCK_INSUFICIENTE:Pote'));
+      montar();
+      await retomarPrimero();
+      await screen.findByText('Pedido: Ana');
+      await waitFor(() => expect(screen.getByRole('button', { name: 'COBRAR' })).toBeEnabled(), { timeout: 3000 });
+      await cobrarEfectivo();
+      await screen.findByText(/No hay stock suficiente/);
+      expect(confirmar.mock.calls[0][0]).toMatchObject({ venta_en_espera_id: 've-1' });
+      expect(screen.getByText('Pedido: Ana')).toBeInTheDocument();
+    });
+
+    it('el reintento por LIMITE_CREDITO_EXCEDIDO con pedido vinculado manda venta_en_espera_id también con credenciales', async () => {
+      montar();
+      await retomarPrimero();
+      await screen.findByText('Pedido: Ana');
+      await waitFor(() => expect(screen.getByRole('button', { name: 'COBRAR' })).toBeEnabled(), { timeout: 3000 });
+      await pedirSupervisor();
+      autorizar();
+      expect(await screen.findByText(/V-C1-000001/)).toBeInTheDocument();
+      expect(confirmar).toHaveBeenCalledTimes(2);
+      expect(confirmar.mock.calls[0][0]).toMatchObject({ venta_en_espera_id: 've-1' });
+      expect(confirmar.mock.calls[1][0]).toMatchObject({
+        venta_en_espera_id: 've-1',
+        supervisor_credenciales: { nombre_usuario: 'sup', password: 'pw' },
+      });
+    });
+
+    it('error de retomar → alerta traducida en el panel, sin vincular', async () => {
+      retomar.mockRejectedValue(new Error("Error invoking remote method 'venta.espera:retomar': Error: VENTA_NO_EN_ESPERA"));
+      montar();
+      await retomarPrimero();
+      expect(await within(panel()).findByRole('alert')).toHaveTextContent('La venta ya no está en espera.');
+      expect(screen.queryByText(/Pedido: /)).toBeNull();
+    });
+
+    it('error de descartar → alerta traducida en el panel', async () => {
+      descartar.mockRejectedValue(new Error("Error invoking remote method 'venta.espera:descartar': Error: VENTA_ESPERA_NOT_FOUND"));
+      montar();
+      const p = await abrirPedidos();
+      fireEvent.click(within(p).getAllByRole('button', { name: 'Descartar' })[0]!);
+      fireEvent.click(within(p).getByRole('button', { name: 'Sí, descartar' }));
+      expect(await within(p).findByRole('alert')).toHaveTextContent('No se encontró la venta en espera.');
+    });
+
     it('con el carrito no vacío Retomar está deshabilitado en el panel', async () => {
       montar();
       await agregarPalito();
@@ -465,6 +510,28 @@ describe('PosView', () => {
         venta_id: 'v-9', motivo: 'Error de carga',
         supervisor_credenciales: { nombre_usuario: 'sup', password: 'clave' },
       });
+    });
+
+    it('SUPERVISOR_INVALIDO envuelto por Electron muestra el mensaje amigable y deja reintentar', async () => {
+      mockAnular = true;
+      anular.mockRejectedValueOnce(new Error("Error invoking remote method 'venta:anular': Error: SUPERVISOR_INVALIDO"));
+      anular.mockResolvedValue({ ok: true });
+      await cobrarHastaTicket();
+      fireEvent.click(screen.getByRole('button', { name: 'Anular venta' }));
+      fireEvent.change(screen.getByLabelText('Motivo'), { target: { value: 'Error de carga' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Continuar' }));
+      fireEvent.change(screen.getByLabelText('Usuario Supervisor'), { target: { value: 'sup' } });
+      fireEvent.change(screen.getByLabelText('Contraseña Supervisor'), { target: { value: 'mala' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Autorizar' }));
+      expect(await screen.findByText('Usuario o contraseña incorrectos, o no es Supervisor.')).toBeInTheDocument();
+      expect(screen.queryByText(/invoking remote method/)).toBeNull();
+      expect(screen.queryByText('ANULADA')).toBeNull();
+      // el modal sigue abierto: se puede reintentar con otra clave
+      fireEvent.change(screen.getByLabelText('Contraseña Supervisor'), { target: { value: 'buena' } });
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Autorizar' })).toBeEnabled());
+      fireEvent.click(screen.getByRole('button', { name: 'Autorizar' }));
+      expect(await screen.findByText('ANULADA')).toBeInTheDocument();
+      expect(anular).toHaveBeenCalledTimes(2);
     });
 
     it('sin venta.anular el ticket no ofrece Anular venta', async () => {
