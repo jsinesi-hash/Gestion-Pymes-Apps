@@ -11,7 +11,7 @@ import { grupoModificadorCreateHandler, grupoModificadorOpcionSetHandler } from 
 import { productoVentaCreateHandler } from '../producto-venta';
 import { movimientoArticuloCreateHandler } from '../movimiento-articulo';
 import {
-  ventaCotizarHandler, ventaConfirmarHandler, ventaAnularHandler, ventaGetHandler, registerVentaHandlers,
+  ventaCotizarHandler, ventaConfirmarHandler, ventaAnularHandler, ventaGetHandler, ventaCatalogoHandler, registerVentaHandlers,
 } from '../venta';
 
 const SUP = { nombre_usuario: 'admin', password: 'admin1234' }; // NOSONAR
@@ -361,12 +361,35 @@ describe('venta handlers (Elaborados)', () => {
     });
   });
 
+  describe('ventaCatalogoHandler', () => {
+    it('devuelve categorías y productos activos con sus grupos y opciones, listos para el POS', () => {
+      loginAsAdmin(db);
+      const c = catalogo(db);
+      const r = ventaCatalogoHandler(db);
+      expect(r.categorias.map((x) => x.nombre)).toEqual(['Helados']);
+      const pote = r.productos.find((p) => p.id === c.pote.id)!;
+      expect(pote).toMatchObject({ nombre: 'Pote 1/4', precio_centavos: 150000, categoria_venta_id: r.categorias[0].id });
+      expect(pote.grupos).toHaveLength(1);
+      expect(pote.grupos[0]).toMatchObject({ grupo_modificador_id: c.grupo.id, nombre: 'Sabores', min: 1, max: 3, modo_descuento: 'reparto' });
+      expect(pote.grupos[0].opciones.map((o) => [o.nombre, o.recargo_centavos])).toEqual([['Chocolate', 0], ['Dulce de leche', 20000]]);
+      expect(r.productos.find((p) => p.id === c.palito.id)!.grupos).toEqual([]);
+    });
+
+    it('omite productos y categorías inactivos y exige sesión', () => {
+      expect(() => ventaCatalogoHandler(db)).toThrow('UNAUTHENTICATED');
+      loginAsAdmin(db);
+      const c = catalogo(db);
+      db.update(schema.producto_venta).set({ activo: false }).where(eq(schema.producto_venta.id, c.palito.id)).run();
+      expect(ventaCatalogoHandler(db).productos.map((p) => p.id)).toEqual([c.pote.id]);
+    });
+  });
+
   describe('registerVentaHandlers', () => {
-    it('registra los 5 canales venta:*', () => {
+    it('registra los 6 canales venta:*', () => {
       const handle = vi.fn();
       registerVentaHandlers({ handle } as never, db);
       expect(handle.mock.calls.map((c) => c[0]).sort()).toEqual(
-        ['venta:anular', 'venta:confirmar', 'venta:cotizar', 'venta:get', 'venta:listByCaja'],
+        ['venta:anular', 'venta:catalogo', 'venta:confirmar', 'venta:cotizar', 'venta:get', 'venta:listByCaja'],
       );
     });
   });

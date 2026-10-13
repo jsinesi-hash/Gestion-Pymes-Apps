@@ -1,4 +1,4 @@
-import { eq, inArray } from 'drizzle-orm';
+import { asc, eq, inArray } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import {
   getSession, confirmarVenta, anularVenta, ventaListByCajaHandler, requirePermission,
@@ -287,11 +287,49 @@ export function ventaGetHandler(db: Db, payload: { id: string }) {
 
 // ── Registro IPC ─────────────────────────────────────────────────────────────
 
+export type OpcionPos = { id: string; nombre: string; recargo_centavos: number };
+export type GrupoPos = {
+  grupo_modificador_id: string; nombre: string; min: number; max: number; cantidad_total: number;
+  modo_descuento: 'reparto' | 'por_opcion' | 'sin_descuento'; opciones: OpcionPos[];
+};
+export type ProductoPos = { id: string; nombre: string; categoria_venta_id: string; precio_centavos: number; grupos: GrupoPos[] };
+export type CatalogoPos = { categorias: { id: string; nombre: string; orden: number }[]; productos: ProductoPos[] };
+
+/** Catálogo completo para el POS en una sola llamada (categorías + productos activos con grupos y opciones). */
+export function ventaCatalogoHandler(db: Db): CatalogoPos {
+  requireSession();
+  const categorias = db.select().from(schema.categoria_venta)
+    .where(eq(schema.categoria_venta.activo, true)).orderBy(asc(schema.categoria_venta.orden), asc(schema.categoria_venta.nombre)).all()
+    .map((c) => ({ id: c.id, nombre: c.nombre, orden: c.orden }));
+  const productos = db.select().from(schema.producto_venta)
+    .where(eq(schema.producto_venta.activo, true)).orderBy(asc(schema.producto_venta.nombre)).all()
+    .map((pv): ProductoPos => {
+      const grupos = db.select().from(schema.producto_venta_grupo)
+        .where(eq(schema.producto_venta_grupo.producto_venta_id, pv.id))
+        .orderBy(asc(schema.producto_venta_grupo.orden)).all()
+        .map((g): GrupoPos => {
+          const grupo = db.select().from(schema.grupo_modificador)
+            .where(eq(schema.grupo_modificador.id, g.grupo_modificador_id)).get();
+          const opciones = db.select().from(schema.grupo_modificador_opcion)
+            .where(eq(schema.grupo_modificador_opcion.grupo_modificador_id, g.grupo_modificador_id))
+            .orderBy(asc(schema.grupo_modificador_opcion.orden)).all()
+            .map((o) => ({ id: o.id, nombre: o.nombre, recargo_centavos: o.recargo_centavos }));
+          return {
+            grupo_modificador_id: g.grupo_modificador_id, nombre: grupo?.nombre ?? '', min: g.min, max: g.max,
+            cantidad_total: g.cantidad_total, modo_descuento: g.modo_descuento, opciones,
+          };
+        });
+      return { id: pv.id, nombre: pv.nombre, categoria_venta_id: pv.categoria_venta_id, precio_centavos: pv.precio_centavos, grupos };
+    });
+  return { categorias, productos };
+}
+
 export function registerVentaHandlers(ipcMain: IpcMain, db: Db): void {
   const guardCrear = requirePermission('venta.crear');
   ipcMain.handle('venta:cotizar',   guardCrear(async (_e, p) => ventaCotizarHandler(db, p)));
   ipcMain.handle('venta:confirmar', async (_e, p) => ventaConfirmarHandler(db, p)); // permiso verificado adentro
   ipcMain.handle('venta:anular',    async (_e, p) => ventaAnularHandler(db, p));    // permiso + supervisor en el core
+  ipcMain.handle('venta:catalogo', async () => ventaCatalogoHandler(db));
   ipcMain.handle('venta:get',       async (_e, p) => ventaGetHandler(db, p));
   ipcMain.handle('venta:listByCaja', async (_e, p) => ventaListByCajaHandler(db, p));
 }
