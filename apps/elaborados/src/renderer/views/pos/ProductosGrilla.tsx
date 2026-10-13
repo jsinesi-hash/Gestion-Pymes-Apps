@@ -14,7 +14,8 @@ export function ProductosGrilla({ categorias, productos, onElegir }: Props) {
     .filter((c) => productos.some((p) => p.categoria_venta_id === c.id));
   const [elegida, setElegida] = useState<string | null>(null);
 
-  if (productos.length === 0) {
+  const hayAlcanzables = productos.some((p) => conProductos.some((c) => c.id === p.categoria_venta_id));
+  if (!hayAlcanzables) {
     return <p>No hay productos cargados. Cargalos en Carta → Productos de venta.</p>;
   }
 

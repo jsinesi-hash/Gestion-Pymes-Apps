@@ -37,4 +37,10 @@ describe('ProductosGrilla', () => {
     render(<ProductosGrilla categorias={categorias} productos={[]} onElegir={vi.fn()} />);
     expect(screen.getByText(/No hay productos cargados/)).toBeInTheDocument();
   });
+
+  it('muestra el estado vacío si ningún producto pertenece a una categoría listada', () => {
+    const huerfano: ProductoPos = { ...pote, categoria_venta_id: 'inexistente' };
+    render(<ProductosGrilla categorias={categorias} productos={[huerfano]} onElegir={vi.fn()} />);
+    expect(screen.getByText(/No hay productos cargados/)).toBeInTheDocument();
+  });
 });
