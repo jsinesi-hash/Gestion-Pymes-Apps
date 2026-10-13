@@ -1,7 +1,7 @@
 import { useMemo, useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  bridge, traducirError, useCajaActiva,
+  bridge, traducirError, useAuth, useCajaActiva,
   ConfirmarVentaModal, TicketModal, SupervisorAuthModal,
 } from '@core/ui';
 import type { PagoComprobante } from '@ferreteria/shared';
@@ -24,7 +24,10 @@ const mensaje = (e: unknown): string => (e instanceof Error ? e.message : String
 
 export function PosView() {
   const { caja, isLoading } = useCajaActiva();
-  const { catalogo, error: errorCatalogo } = usePosCatalogo();
+  const { catalogo, error: errorCatalogo, recargar } = usePosCatalogo();
+  const { can } = useAuth();
+  const [sembrando, setSembrando] = useState(false);
+  const [errorSiembra, setErrorSiembra] = useState<string | null>(null);
   const [estado, dispatch] = useReducer(carritoReducer, carritoInicial);
   const [cliente, setCliente] = useState<ClientePos>(CONSUMIDOR_FINAL);
   const payload = useMemo(() => aPayload(estado), [estado]);
@@ -48,6 +51,19 @@ export function PosView() {
     );
   }
   const cajaId = caja.id;
+
+  async function cargarDemo() {
+    setErrorSiembra(null);
+    setSembrando(true);
+    try {
+      await (bridge() as any).demoCatalog.seedHeladeria();
+      recargar();
+    } catch (e) {
+      setErrorSiembra(traducirError(e).mensaje);
+    } finally {
+      setSembrando(false);
+    }
+  }
 
   const elegirProducto = (p: ProductoPos) => {
     if (p.grupos.length > 0) setProductoElegido(p);
@@ -130,6 +146,19 @@ export function PosView() {
         {errorCatalogo && <div role="alert" style={{ color: 'var(--danger, #b3261e)' }}>{errorCatalogo}</div>}
         {catalogo && (
           <ProductosGrilla categorias={catalogo.categorias} productos={catalogo.productos} onElegir={elegirProducto} />
+        )}
+        {catalogo && !errorCatalogo && catalogo.productos.length === 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8, marginTop: 12 }}>
+            {can('producto_venta.gestionar') ? (
+              <button type="button" className="btn-primary" disabled={sembrando} onClick={cargarDemo}>
+                Cargar catálogo demo de heladería
+              </button>
+            ) : (
+              <p>Pedile a un Supervisor que cargue los productos en Carta → Productos de venta.</p>
+            )}
+            {errorSiembra && <div role="alert" style={{ color: 'var(--danger, #b3261e)' }}>{errorSiembra}</div>}
+            <Link to="/carta/productos">Ir a Carta → Productos de venta</Link>
+          </div>
         )}
       </div>
       <CarritoPanel
