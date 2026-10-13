@@ -206,7 +206,8 @@ export function ventaConfirmarHandler(db: Db, rawPayload: unknown) {
     caja_id, cliente_id,
     // Único punto de conversión centavos → pesos hacia `venta` (columnas legado REAL).
     subtotal: v.subtotal_centavos / 100,
-    descuento_global: v.descuento_global_centavos / 100,
+    // Convención de la columna legado `venta.descuento_global` (igual que Retail): PORCENTAJE, no importe.
+    descuento_global: carrito.descuento_global_pct,
     importe_iva: v.importe_iva_centavos / 100,
     total: v.total_centavos / 100,
     ajuste_redondeo: v.ajuste_redondeo_centavos / 100,

@@ -206,7 +206,7 @@ describe('venta handlers (Elaborados)', () => {
         pagos: [{ medio_pago: 'efectivo', monto_centavos: 81000 }],
       });
       expect(r.venta.total).toBe(810);
-      expect(r.venta.descuento_global).toBe(90);
+      expect(r.venta.descuento_global).toBe(10); // porcentaje (convención de la columna, igual que Retail)
       expect(r.lineas[0].descuento_linea_pct).toBe(10);
     });
 
