@@ -58,8 +58,7 @@ Pedidos en espera/para llevar y anulación en pantalla (E3d); listas de precio (
 línea cargada; balanza; ARCA (R2).
 
 ## Verificación
-Gates en serie: **Retail renderer 145/933 · Retail main 141/1598 (sin cambios) · core-ui 4/28 · Elaborados
-renderer 16/121 (128 con los retoques finales) · Elaborados main 20/115**; typecheck limpio. Revisión final
+Gates en serie: **Retail renderer 145/933 · Retail main 141/1598 (sin cambios) · core-ui 4/28 · Elaborados renderer 16/131 · Elaborados main 24/131**; typecheck limpio. Revisión final
 independiente del diff completo (31 archivos): sin hallazgos críticos ni importantes; los menores baratos
 (subtotales por línea sin desfase, estado vacío de la grilla, tests del flujo de crédito) se corrigieron.
 Falta el click-through con el usuario (CLAUDE.md §12): abrir caja, pote de 3 sabores, palito sin stock
