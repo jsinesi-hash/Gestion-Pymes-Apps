@@ -3,18 +3,8 @@ import { resolverPrecio, redondearPeso, nombreCompletoCliente } from '@ferreteri
 
 export const CONSUMIDOR_FINAL_ID = 'cf000000-0000-0000-0000-000000000001';
 
-export type MedioPago = 'efectivo' | 'tarjeta' | 'cuenta_corriente' | 'transferencia' | 'cheque';
-
-export type VentaPagoPayload = {
-  medio_pago: MedioPago;
-  monto_centavos: number;
-  recargo_pct?: number;
-  recargo_centavos?: number;
-  numero_cheque?: string;
-  banco?: string;
-  fecha_cheque?: string;
-  titular_cheque?: string;
-};
+import type { MedioPago, VentaPagoPayload } from '@core/ui';
+export type { MedioPago, VentaPagoPayload };
 
 export type PresentacionOpcion = {
   id: string;

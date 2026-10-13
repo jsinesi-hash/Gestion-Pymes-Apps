@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ConfirmarVentaModal } from '../ConfirmarVentaModal';
-import type { MedioPago, VentaPagoPayload } from '../../../hooks/usePosSession';
+import { ConfirmarVentaModal } from './ConfirmarVentaModal';
+import type { MedioPago, VentaPagoPayload } from './tipos';
 
 const totales = {
   subtotalCentavos: 100000,
