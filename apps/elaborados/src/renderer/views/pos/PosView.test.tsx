@@ -4,8 +4,10 @@ import { MemoryRouter } from 'react-router-dom';
 import { PosView } from './PosView';
 
 let mockCaja: any = { id: 'caja-1' };
+let mockCan = false;
 vi.mock('@core/ui', async (orig) => ({
   ...(await orig<any>()),
+  useAuth: () => ({ ...(({} as any)), can: () => mockCan }),
   useCajaActiva: () => ({ caja: mockCaja, isLoading: false, refetch: vi.fn() }),
 }));
 
@@ -41,8 +43,10 @@ const cotizar = vi.fn();
 const confirmar = vi.fn();
 const html = vi.fn();
 const list = vi.fn();
+const seedHeladeria = vi.fn();
 vi.stubGlobal('elaborados', {
   venta: { catalogo, cotizar, confirmar }, print: { html }, cliente: { list },
+  demoCatalog: { seedHeladeria },
 });
 
 const montar = () => render(<MemoryRouter><PosView /></MemoryRouter>);
@@ -59,6 +63,7 @@ const cobrarEfectivo = async () => {
 beforeEach(() => {
   vi.clearAllMocks();
   mockCaja = { id: 'caja-1' };
+  mockCan = false;
   catalogo.mockResolvedValue(CATALOGO);
   cotizar.mockResolvedValue(cotizacion());
   confirmar.mockResolvedValue(RESULTADO);
@@ -227,5 +232,39 @@ describe('PosView', () => {
     fireEvent.click(screen.getByRole('button', { name: 'COBRAR' }));
     await screen.findByLabelText('Monto');
     expect(screen.getByRole('option', { name: 'Cta. Corriente' })).toBeInTheDocument();
+  });
+
+  describe('catálogo vacío', () => {
+    const BOTON = 'Cargar catálogo demo de heladería';
+
+    it('con permiso muestra el botón; al click siembra y recarga el catálogo sin recargar la página', async () => {
+      mockCan = true;
+      catalogo.mockResolvedValueOnce({ categorias: CATALOGO.categorias, productos: [] }).mockResolvedValue(CATALOGO);
+      seedHeladeria.mockResolvedValue(undefined);
+      montar();
+      fireEvent.click(await screen.findByRole('button', { name: BOTON }));
+      expect(await screen.findByRole('button', { name: 'Palito' })).toBeInTheDocument();
+      expect(seedHeladeria).toHaveBeenCalledTimes(1);
+      expect(catalogo).toHaveBeenCalledTimes(2);
+      expect(screen.queryByRole('button', { name: BOTON })).toBeNull();
+    });
+
+    it('sin permiso no hay botón y se pide a un Supervisor', async () => {
+      mockCan = false;
+      catalogo.mockResolvedValue({ categorias: [], productos: [] });
+      montar();
+      expect(await screen.findByText(/Pedile a un Supervisor/)).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: BOTON })).toBeNull();
+    });
+
+    it('si seedHeladeria rechaza muestra una alerta y el botón sigue disponible', async () => {
+      mockCan = true;
+      catalogo.mockResolvedValue({ categorias: [], productos: [] });
+      seedHeladeria.mockRejectedValue(new Error('boom'));
+      montar();
+      fireEvent.click(await screen.findByRole('button', { name: BOTON }));
+      expect(await screen.findByRole('alert')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: BOTON })).toBeEnabled();
+    });
   });
 });
