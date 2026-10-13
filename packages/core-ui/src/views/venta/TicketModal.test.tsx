@@ -59,4 +59,19 @@ describe('TicketModal (core)', () => {
     expect(screen.getByText('ANULADA')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /anular venta/i })).not.toBeInTheDocument();
   });
+
+  it('Escape avanza a una nueva venta (el ticket no descarta nada)', () => {
+    const onNueva = vi.fn();
+    render(<TicketModal comprobante={comp} onNuevaVenta={onNueva} />);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(onNueva).toHaveBeenCalledTimes(1);
+  });
+
+  it('si Imprimir falla o el usuario cancela, no rompe y el botón se vuelve a habilitar', async () => {
+    const onImprimir = vi.fn().mockRejectedValue(new Error('cancelled'));
+    render(<TicketModal comprobante={comp} onNuevaVenta={vi.fn()} onImprimir={onImprimir} />);
+    fireEvent.click(screen.getByRole('button', { name: /imprimir/i }));
+    await waitFor(() => expect(onImprimir).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.getByRole('button', { name: /imprimir/i })).toBeEnabled());
+  });
 });
