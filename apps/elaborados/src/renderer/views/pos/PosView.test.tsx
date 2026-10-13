@@ -407,6 +407,31 @@ describe('PosView', () => {
       await waitFor(() => expect(listar).toHaveBeenCalledTimes(2));
     });
 
+    it('M-1: quitar todas las líneas de un pedido retomado lo desvincula; el cobro siguiente no lo consume', async () => {
+      montar();
+      await retomarPrimero();
+      await screen.findByText('Pedido: Ana');
+      fireEvent.click(screen.getByRole('button', { name: 'Quitar' }));
+      expect(await screen.findByText('El carrito está vacío')).toBeInTheDocument();
+      expect(screen.queryByText('Pedido: Ana')).toBeNull();
+      await agregarPalito();
+      await cobrarEfectivo();
+      expect(await screen.findByText(/V-C1-000001/)).toBeInTheDocument();
+      expect(confirmar).toHaveBeenCalledTimes(1);
+      expect(confirmar.mock.calls[0][0]).not.toHaveProperty('venta_en_espera_id');
+    });
+
+    it('M-4: retomar con el catálogo sin cargar avisa y no llama a retomar ni vincula', async () => {
+      catalogo.mockReturnValue(new Promise(() => {})); // nunca resuelve
+      montar();
+      const p = await abrirPedidos();
+      fireEvent.click(within(p).getAllByRole('button', { name: 'Retomar' })[0]!);
+      expect(await within(p).findByRole('alert')).toHaveTextContent('El catálogo todavía no cargó. Probá de nuevo en un momento.');
+      expect(retomar).not.toHaveBeenCalled();
+      expect(screen.queryByText(/Pedido: /)).toBeNull();
+      expect(screen.getByText('El carrito está vacío')).toBeInTheDocument();
+    });
+
     it('con el carrito no vacío Retomar está deshabilitado en el panel', async () => {
       montar();
       await agregarPalito();

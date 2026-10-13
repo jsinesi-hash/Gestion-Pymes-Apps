@@ -1,4 +1,4 @@
-import { useMemo, useReducer, useState } from 'react';
+import { useEffect, useMemo, useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   bridge, traducirError, useAuth, useCajaActiva,
@@ -62,6 +62,13 @@ export function PosView() {
   const [pedidosAbierto, setPedidosAbierto] = useState(false);
   const [errorPedidos, setErrorPedidos] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+
+  // M-1: si el operador vacía el carrito de un pedido retomado, se desvincula; si no, el próximo
+  // carrito (contenido ajeno) se cobraría consumiendo ese pedido. Antes del early return (hooks).
+  const carritoVacio = estado.lineas.length === 0;
+  useEffect(() => {
+    if (carritoVacio) setPedidoActual(null);
+  }, [carritoVacio]);
 
   if (isLoading || caja === undefined) return null;
 
@@ -156,9 +163,14 @@ export function PosView() {
 
   async function retomarPedido(id: string) {
     setErrorPedidos(null);
+    // M-4: sin catálogo cargado todas las líneas parecerían "no disponibles" (aviso falso).
+    if (!catalogo) {
+      setErrorPedidos('El catálogo todavía no cargó. Probá de nuevo en un momento.');
+      return;
+    }
     try {
       const r = (await (bridge() as any).ventaEspera.retomar({ venta_id: id })) as PedidoRetomado;
-      const productos = new Map((catalogo?.productos ?? []).map((p) => [p.id, p] as const));
+      const productos = new Map(catalogo.productos.map((p) => [p.id, p] as const));
       const lineas: LineaCargar[] = [];
       let omitidas = 0;
       for (const l of r.lineas) {
@@ -319,7 +331,7 @@ export function PosView() {
         <PedidosPendientesPanel
           pedidos={pedidos}
           pedidoActualId={pedidoActual?.id ?? null}
-          carritoVacio={estado.lineas.length === 0}
+          carritoVacio={carritoVacio}
           onRetomar={retomarPedido}
           onDescartar={descartarPedido}
           onCerrar={() => { setPedidosAbierto(false); setErrorPedidos(null); }}
