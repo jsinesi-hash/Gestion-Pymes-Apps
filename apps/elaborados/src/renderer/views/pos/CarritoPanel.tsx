@@ -23,6 +23,8 @@ export function CarritoPanel(p: Props) {
   const { lineas, cotizacion: cot } = p;
   const bloqueos = cot?.bloqueos ?? [];
   const advertencias = cot?.advertencias ?? [];
+  // La cotización es por posición: solo es confiable si cubre exactamente las líneas actuales.
+  const cotAlineada = cot !== null && cot.lineas.length === lineas.length;
   const deshabilitado = !p.puedeCobrar || lineas.length === 0 || bloqueos.length > 0 || p.cotizando
     || p.errorCotizacion !== null || cot === null;
 
@@ -48,7 +50,7 @@ export function CarritoPanel(p: Props) {
                 onChange={(e) => p.onDescuentoLinea(l.key, num(e.target.value))}
               />
               <span className="num" style={{ minWidth: 80, textAlign: 'right' }}>
-                {cot?.lineas[i] ? formatPesos(cot.lineas[i].subtotal_centavos) : '—'}
+                {cotAlineada && cot.lineas[i] ? formatPesos(cot.lineas[i].subtotal_centavos) : '—'}
               </span>
               <button type="button" className="btn-secondary" aria-label="Quitar" onClick={() => p.onQuitar(l.key)}>✕</button>
             </div>

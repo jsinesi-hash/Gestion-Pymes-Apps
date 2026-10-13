@@ -40,8 +40,9 @@ const catalogo = vi.fn();
 const cotizar = vi.fn();
 const confirmar = vi.fn();
 const html = vi.fn();
+const list = vi.fn();
 vi.stubGlobal('elaborados', {
-  venta: { catalogo, cotizar, confirmar }, print: { html }, cliente: { list: vi.fn().mockResolvedValue([]) },
+  venta: { catalogo, cotizar, confirmar }, print: { html }, cliente: { list },
 });
 
 const montar = () => render(<MemoryRouter><PosView /></MemoryRouter>);
@@ -62,7 +63,25 @@ beforeEach(() => {
   cotizar.mockResolvedValue(cotizacion());
   confirmar.mockResolvedValue(RESULTADO);
   html.mockResolvedValue(undefined);
+  list.mockResolvedValue([
+    { id: 'c1', nombre: 'Juan', apellido: 'García', numero_documento: '20111222', habilita_cuenta_corriente: true },
+  ]);
 });
+
+const elegirJuan = async () => {
+  fireEvent.click(screen.getByRole('button', { name: 'Cambiar' }));
+  fireEvent.click(await screen.findByText('Juan García'));
+};
+const pedirSupervisor = async () => {
+  confirmar.mockRejectedValueOnce(new Error('LIMITE_CREDITO_EXCEDIDO'));
+  await cobrarEfectivo();
+  await screen.findByLabelText('Usuario Supervisor');
+};
+const autorizar = () => {
+  fireEvent.change(screen.getByLabelText('Usuario Supervisor'), { target: { value: 'sup' } });
+  fireEvent.change(screen.getByLabelText('Contraseña Supervisor'), { target: { value: 'pw' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Autorizar' }));
+};
 
 describe('PosView', () => {
   it('sin caja abierta muestra el mensaje y el link, sin grilla', async () => {
@@ -151,5 +170,62 @@ describe('PosView', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Imprimir' }));
     await waitFor(() => expect(html).toHaveBeenCalled());
     expect(html.mock.calls[0][0]).toContain('TICKET INTERNO');
+  });
+
+  it('SUPERVISOR_INVALIDO en el reintento deja el modal abierto con el error y no reintenta solo', async () => {
+    montar();
+    await agregarPalito();
+    await pedirSupervisor();
+    confirmar.mockRejectedValueOnce(new Error('SUPERVISOR_INVALIDO'));
+    autorizar();
+    expect(await screen.findByText(/Usuario o contraseña incorrectos/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Usuario Supervisor')).toBeInTheDocument();
+    expect(confirmar).toHaveBeenCalledTimes(2);
+  });
+
+  it('cancelar el Supervisor vuelve al cobro', async () => {
+    montar();
+    await agregarPalito();
+    await pedirSupervisor();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(await screen.findByRole('button', { name: 'Confirmar' })).toBeInTheDocument();
+    expect(screen.queryByLabelText('Usuario Supervisor')).toBeNull();
+  });
+
+  it('reintento con credenciales que falla por otro error cierra el Supervisor y vuelve al cobro con alerta', async () => {
+    montar();
+    await agregarPalito();
+    await pedirSupervisor();
+    confirmar.mockRejectedValueOnce(new Error('STOCK_INSUFICIENTE:Palito'));
+    autorizar();
+    const alerta = await screen.findByText(/No hay stock suficiente/);
+    expect(alerta.closest('[role="alert"]')).not.toBeNull();
+    expect(screen.queryByLabelText('Usuario Supervisor')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Confirmar' })).toBeInTheDocument();
+  });
+
+  it('Nueva venta devuelve el cliente a Consumidor Final', async () => {
+    montar();
+    await agregarPalito();
+    await elegirJuan();
+    expect(screen.getByText('Juan García')).toBeInTheDocument();
+    await cobrarEfectivo();
+    fireEvent.click(await screen.findByRole('button', { name: 'Nueva venta' }));
+    expect(await screen.findByText('El carrito está vacío')).toBeInTheDocument();
+    expect(screen.getByText('Consumidor Final')).toBeInTheDocument();
+    expect(screen.queryByText('Juan García')).toBeNull();
+  });
+
+  it('un cliente con cuenta corriente habilita Cta. Corriente en el cobro; Consumidor Final no', async () => {
+    montar();
+    await agregarPalito();
+    fireEvent.click(screen.getByRole('button', { name: 'COBRAR' }));
+    await screen.findByLabelText('Monto');
+    expect(screen.queryByRole('option', { name: 'Cta. Corriente' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Volver' }));
+    await elegirJuan();
+    fireEvent.click(screen.getByRole('button', { name: 'COBRAR' }));
+    await screen.findByLabelText('Monto');
+    expect(screen.getByRole('option', { name: 'Cta. Corriente' })).toBeInTheDocument();
   });
 });

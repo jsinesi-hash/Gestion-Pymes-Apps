@@ -78,4 +78,12 @@ describe('CarritoPanel', () => {
     montar({ puedeCobrar: false });
     expect(cobrar()).toBeDisabled();
   });
+
+  it('cotización desfasada (distinta cantidad de líneas): no muestra subtotales ajenos', () => {
+    const otra: LineaCarrito = { ...linea, key: 'l2', nombre: 'Palito' };
+    montar({ lineas: [linea, otra], cotizacion: cot });
+    expect(screen.getAllByText('—')).toHaveLength(2);
+    // el único 300000 visible es el del resumen (Subtotal/TOTAL), no el de una fila
+    expect(screen.getAllByText(formatPesos(300000))).toHaveLength(2);
+  });
 });
