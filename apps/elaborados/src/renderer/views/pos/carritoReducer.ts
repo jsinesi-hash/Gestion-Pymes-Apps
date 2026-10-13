@@ -9,6 +9,7 @@ export type CarritoAction =
   | { tipo: 'descuentoLinea'; key: string; pct: number }
   | { tipo: 'descuentoGlobal'; pct: number }
   | { tipo: 'quitar'; key: string }
+  | { tipo: 'cargar'; lineas: { producto: ProductoPos; cantidad: number; descuento_linea_pct: number; modificadores: ModificadorElegido[] }[]; descuentoGlobalPct: number }
   | { tipo: 'limpiar' };
 
 const acotar = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
@@ -46,6 +47,17 @@ export function carritoReducer(state: CarritoState, a: CarritoAction): CarritoSt
       return { ...state, descuentoGlobalPct: acotar(a.pct, 0, 100) };
     case 'quitar':
       return { ...state, lineas: state.lineas.filter((l) => l.key !== a.key) };
+    case 'cargar':
+      return {
+        lineas: a.lineas.map((l, i) => ({
+          key: `l${i + 1}`, producto_venta_id: l.producto.id, nombre: l.producto.nombre,
+          detalle: detalleDe(l.producto, l.modificadores), cantidad: Math.max(1, l.cantidad),
+          descuento_linea_pct: acotar(l.descuento_linea_pct, 0, 100),
+          modificadores: l.modificadores.map((m) => ({ ...m, opcion_ids: [...m.opcion_ids] })),
+        })),
+        descuentoGlobalPct: acotar(a.descuentoGlobalPct, 0, 100),
+        siguienteKey: a.lineas.length + 1,
+      };
     case 'limpiar':
       return carritoInicial;
   }
