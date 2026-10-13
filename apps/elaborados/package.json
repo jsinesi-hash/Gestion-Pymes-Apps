@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit",
     "test": "pnpm run typecheck && vitest run && node scripts/test-node.cjs --serial",
     "rebuild:electron": "electron-rebuild -f -w better-sqlite3",
-    "rebuild:node": "node -e \"require('child_process').execSync('npx prebuild-install --runtime node --target ' + process.version.slice(1), {stdio:'inherit'})\""
+    "rebuild:node": "node -e \"require('child_process').execSync('npx prebuild-install --runtime node --target ' + process.version.slice(1), {stdio:'inherit'})\"",
+    "seed:base": "node scripts/seed-base.cjs",
+    "seed:dev": "node scripts/seed-dev.cjs"
   },
   "dependencies": {
     "@core/db": "workspace:*",
