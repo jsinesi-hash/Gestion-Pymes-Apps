@@ -27,3 +27,4 @@ export * from './backup/restore-engine';
 export * from './export/csv-writer';
 export * from './export/xlsx-writer';
 export * from './seed/geo';
+export * from './ipc/print';

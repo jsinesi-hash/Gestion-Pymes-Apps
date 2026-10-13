@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import { crearImpresorHtml } from '@core/main';
 import type { BrowserWindow as BrowserWindowType } from 'electron';
 import type { IPrintService, ProductLabelData, LocationLabelData, PrintFormat } from './types';
 
@@ -18,15 +19,7 @@ export class ElectronPrintService implements IPrintService {
   }
 
   async printRawHtml(html: string): Promise<void> {
-    const win = this.createWindow();
-    await win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
-    await new Promise<void>((resolve, reject) => {
-      win.webContents.print({ silent: false }, (success, reason) => {
-        win.close();
-        if (!success) reject(new Error(reason));
-        else resolve();
-      });
-    });
+    await crearImpresorHtml(this.createWindow)(html);
   }
 
   private buildProductHtml(data: ProductLabelData, qrDataUrl: string, format: PrintFormat): string {

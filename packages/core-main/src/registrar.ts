@@ -12,6 +12,7 @@ import { registerCajaHandlers, type CajaHooks } from './ipc/caja';
 import { registerBackupHandlers } from './ipc/backup';
 import { registerRestoreHandlers } from './ipc/restore';
 import { registerDialogHandlers } from './ipc/dialog';
+import { registerPrintHtmlHandler, type ImpresorHtml } from './ipc/print';
 import { registerExportarHandlers, crearExportarEjecutar, EXPORTADORES_CORE, type Exportador } from './ipc/exportar';
 
 export type CoreHandlersOpts = {
@@ -19,6 +20,7 @@ export type CoreHandlersOpts = {
   navegacion: Navegacion;
   exportadores?: readonly Exportador[];
   caja?: CajaHooks;
+  imprimirHtml?: ImpresorHtml;
 };
 
 /** Registra TODOS los canales IPC universales. Lo llama el main/index.ts de cada app. */
@@ -34,4 +36,5 @@ export function registerCoreHandlers(ipcMain: IpcMain, db: BetterSQLite3Database
   registerRestoreHandlers(ipcMain, db, { migrationsFolder: opts.migrationsFolder });
   registerDialogHandlers(ipcMain);
   registerExportarHandlers(ipcMain, db, crearExportarEjecutar([...EXPORTADORES_CORE, ...(opts.exportadores ?? [])]));
+  if (opts.imprimirHtml) registerPrintHtmlHandler(ipcMain, opts.imprimirHtml);
 }
