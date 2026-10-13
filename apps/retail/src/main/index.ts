@@ -65,18 +65,19 @@ import { getSession, aplicarSeguridadVentana } from '@core/main';
 async function createWindow(): Promise<void> {
   loadTerminalConfig();
   await runStartup(db);
+  const printService = new ElectronPrintService(() => new BrowserWindow({
+    show: false,
+    webPreferences: { nodeIntegration: false, contextIsolation: true },
+  }));
+
   registerCoreHandlers(ipcMain, db, {
     migrationsFolder: path.join(__dirname, 'migrations'),
     navegacion: navegacionRetail,
     exportadores: EXPORTADORES_RETAIL,
     caja: { onCajaCerrada: avisoCierreCaja },
+    imprimirHtml: (h) => printService.printRawHtml(h),
   });
   registerDialogRetailHandlers(ipcMain);
-
-  const printService = new ElectronPrintService(() => new BrowserWindow({
-    show: false,
-    webPreferences: { nodeIntegration: false, contextIsolation: true },
-  }));
 
   registerImpuestoHandlers(ipcMain, db);
   registerMarcaHandlers(ipcMain, db);

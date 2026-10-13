@@ -71,6 +71,7 @@ export function coreCanales(invoke: Invoke) {
       seleccionarArchivo: (): Promise<string | null> => invoke('dialog:seleccionarArchivo'),
       getDefaultBackupPath: (): Promise<string> => invoke('dialog:getDefaultBackupPath'),
     },
+    print: { html: (h: string) => invoke('print:html', h) },
     exportar: { ejecutar: (req: ExportRequest): Promise<void> => invoke('exportar:ejecutar', req) },
   };
 }

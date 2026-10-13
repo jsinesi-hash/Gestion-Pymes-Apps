@@ -37,4 +37,15 @@ describe('createBridge', () => {
     createBridge({ exposeAs: 'x' }, d);
     expect(await (expuesto['x'] as any).geo.localidades('p1', 'ro')).toEqual({ canal: 'geo:localidades', a: ['p1', 'ro'] });
   });
+  it('expone print.html sobre el canal print:html', async () => {
+    const { d, expuesto } = deps();
+    createBridge({ exposeAs: 'x' }, d);
+    expect(await (expuesto['x'] as any).print.html('<p>x</p>')).toEqual({ canal: 'print:html', a: ['<p>x</p>'] });
+  });
+  it('print de primer nivel del core no colisiona con catalogo.print de la app (anidado)', () => {
+    const { d, expuesto } = deps();
+    expect(() => createBridge({ exposeAs: 'x', app: (inv) => ({ catalogo: { print: { html: (h: string) => inv('print:html', h) } } }) }, d)).not.toThrow();
+    expect(typeof (expuesto['x'] as any).catalogo.print.html).toBe('function');
+    expect(typeof (expuesto['x'] as any).print.html).toBe('function');
+  });
 });

@@ -9,7 +9,7 @@ if (started) app.quit();
 import { loadTerminalConfig } from './config';
 import { db } from './db/client';
 import { runStartup } from './startup';
-import { registerCoreHandlers, aplicarSeguridadVentana } from '@core/main';
+import { registerCoreHandlers, aplicarSeguridadVentana, crearImpresorHtml } from '@core/main';
 import { navegacionElaborados } from '../common/navegacion';
 import { registerImpuestoHandlers } from './ipc/impuesto';
 import { registerArticuloHandlers } from './ipc/articulo';
@@ -28,6 +28,7 @@ async function createWindow(): Promise<void> {
   registerCoreHandlers(ipcMain, db, {
     migrationsFolder: path.join(__dirname, 'migrations'),
     navegacion: navegacionElaborados,
+    imprimirHtml: crearImpresorHtml(() => new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false, contextIsolation: true } })),
   });
   registerImpuestoHandlers(ipcMain, db);
   registerArticuloHandlers(ipcMain, db);

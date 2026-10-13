@@ -29,12 +29,7 @@ export async function printLocationLabelHandler(
   }, payload.format ?? 'label');
 }
 
-export async function printHtmlHandler(html: string, service: IPrintService): Promise<void> {
-  await service.printRawHtml(html);
-}
-
 export function registerPrintHandlers(ipcMain: IpcMain, db: Db, service: IPrintService): void {
   ipcMain.handle('print:product-label', (_e, p) => printProductLabelHandler(db, p, service));
   ipcMain.handle('print:location-label', (_e, p) => printLocationLabelHandler(db, p, service));
-  ipcMain.handle('print:html', (_e, html: string) => printHtmlHandler(html, service));
 }
