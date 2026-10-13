@@ -3,60 +3,19 @@ import { eq } from 'drizzle-orm';
 import { generateId } from '@ferreteria/shared';
 import * as schema from '../../db/schema';
 import { setupDb, loginAsAdmin, clearSession } from '../../__tests__/helpers';
-import { runCatalogSeedElaborados, CONSUMIDOR_FINAL_ID } from '../../catalog/seed';
-import { cajaAbrirHandler } from '@core/main';
-import { articuloCreateHandler } from '../articulo';
-import { categoriaVentaCreateHandler } from '../categoria-venta';
-import { grupoModificadorCreateHandler, grupoModificadorOpcionSetHandler } from '../grupo-modificador';
-import { productoVentaCreateHandler } from '../producto-venta';
+import { CONSUMIDOR_FINAL_ID } from '../../catalog/seed';
+import { cajaAbrirHandler, pausarVentaEspera } from '@core/main';
 import { movimientoArticuloCreateHandler } from '../movimiento-articulo';
+import { catalogo, stockDe } from './ventaFixtures';
 import {
   ventaCotizarHandler, ventaConfirmarHandler, ventaAnularHandler, ventaGetHandler, ventaCatalogoHandler, registerVentaHandlers,
+  parseCarrito, cargarCatalogo, guardarLineasElaborados,
 } from '../venta';
+import { valorizarCarrito } from '../../domain/venta';
 
 const SUP = { nombre_usuario: 'admin', password: 'admin1234' }; // NOSONAR
 
 type Db = ReturnType<typeof setupDb>;
-
-/** Heladería mínima: pote 1/4 (envase fijo + 1..3 sabores en reparto), palito de reventa que bloquea. */
-function catalogo(db: Db) {
-  runCatalogSeedElaborados(db);
-  const impuesto = db.select().from(schema.impuesto).all()[0];
-  const cat = categoriaVentaCreateHandler(db, { nombre: 'Helados', orden: 1 });
-  const envase = articuloCreateHandler(db, { nombre: 'Envase 1/4', tipo: 'reventa', unidad: 'u', bloquea_sin_stock: true });
-  const palitoArt = articuloCreateHandler(db, { nombre: 'Palito', tipo: 'reventa', unidad: 'u', bloquea_sin_stock: true });
-  const choco = articuloCreateHandler(db, { nombre: 'Chocolate', tipo: 'elaborado', unidad: 'kg', bloquea_sin_stock: false });
-  const ddl = articuloCreateHandler(db, { nombre: 'Dulce de leche', tipo: 'elaborado', unidad: 'kg', bloquea_sin_stock: false });
-  const grupo = grupoModificadorCreateHandler(db, { nombre: 'Sabores' });
-  grupoModificadorOpcionSetHandler(db, {
-    grupo_modificador_id: grupo.id,
-    opciones: [
-      { articulo_id: choco.id, nombre: 'Chocolate', recargo_centavos: 0, cantidad: 0, orden: 1 },
-      { articulo_id: ddl.id, nombre: 'Dulce de leche', recargo_centavos: 20000, cantidad: 0, orden: 2 },
-    ],
-  });
-  const opciones = db.select().from(schema.grupo_modificador_opcion).all();
-  const opChoco = opciones.find((o) => o.articulo_id === choco.id)!;
-  const opDdl = opciones.find((o) => o.articulo_id === ddl.id)!;
-  const pote = productoVentaCreateHandler(db, {
-    nombre: 'Pote 1/4', categoria_venta_id: cat.id, precio_centavos: 150000, impuesto_id: impuesto.id,
-    componentes: [{ articulo_id: envase.id, cantidad: 1 }],
-    grupos: [{ grupo_modificador_id: grupo.id, min: 1, max: 3, cantidad_total: 0.25, modo_descuento: 'reparto', orden: 1 }],
-  });
-  const palito = productoVentaCreateHandler(db, {
-    nombre: 'Palito', categoria_venta_id: cat.id, precio_centavos: 100000, impuesto_id: impuesto.id,
-    componentes: [{ articulo_id: palitoArt.id, cantidad: 1 }], grupos: [],
-  });
-  const stock = (articulo_id: string, cantidad: number) =>
-    movimientoArticuloCreateHandler(db, { articulo_id, motivo: 'compra', cantidad, costo_unitario_centavos: 100 });
-  stock(envase.id, 10); stock(palitoArt.id, 2); stock(choco.id, 5); stock(ddl.id, 5);
-  return { pote, palito, grupo, opChoco, opDdl, envase, palitoArt, choco, ddl };
-}
-
-function stockDe(db: Db, articulo_id: string) {
-  return db.select().from(schema.existencia_articulo)
-    .where(eq(schema.existencia_articulo.articulo_id, articulo_id)).get()!.stock;
-}
 
 /** Cliente + (opcional) cuenta corriente con límite en centavos. */
 function crearCliente(db: Db, conCuenta?: { limite: number }) {
@@ -284,6 +243,79 @@ describe('venta handlers (Elaborados)', () => {
         lineas: [{ producto_venta_id: c.pote.id, cantidad: 1 }], // exige ≥1 sabor
         pagos: [{ medio_pago: 'efectivo', monto_centavos: 150000 }],
       })).toThrow('MODIFICADOR_MIN');
+      expect(stockDe(db, c.envase.id)).toBe(10);
+    });
+  });
+
+  describe('confirmar un pedido en espera', () => {
+    function preparar() {
+      loginAsAdmin(db);
+      const c = catalogo(db);
+      const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+      return { c, caja };
+    }
+    /** Arma un pedido como lo hará venta.espera:pausar: valoriza con el dominio y pausa con el core. */
+    function armarPedido(cajaId: string, payload: Record<string, unknown>) {
+      const carrito = parseCarrito(payload);
+      const { productos, opciones } = cargarCatalogo(db, carrito.lineas.map((l) => l.producto_venta_id));
+      const v = valorizarCarrito(productos, opciones, carrito);
+      return pausarVentaEspera(db, {
+        caja_id: cajaId, cliente_id: CONSUMIDOR_FINAL_ID,
+        subtotal: v.subtotal_centavos / 100, descuento_global: carrito.descuento_global_pct,
+        importe_iva: v.importe_iva_centavos / 100, total: v.total_centavos / 100,
+        ajuste_redondeo: v.ajuste_redondeo_centavos / 100, alias: 'Juan',
+      }, { aplicarLineas: (tx, ctx) => guardarLineasElaborados(tx as never, v, ctx) }).venta_id;
+    }
+    const potes = (c: ReturnType<typeof catalogo>, opcionIds: string[], cantidad = 1) => ({
+      producto_venta_id: c.pote.id, cantidad,
+      modificadores: [{ grupo_modificador_id: c.grupo.id, opcion_ids: opcionIds }],
+    });
+
+    it('reutiliza la misma venta, reemplaza las líneas y descuenta el stock una sola vez', () => {
+      const { c, caja } = preparar();
+      const ventaId = armarPedido(caja.id, { lineas: [potes(c, [c.opChoco.id], 2)] });
+      expect(stockDe(db, c.envase.id)).toBe(10); // guardar no toca stock
+      expect(db.select().from(schema.venta_linea).all()).toHaveLength(1);
+
+      const r = ventaConfirmarHandler(db, {
+        caja_id: caja.id, cliente_id: CONSUMIDOR_FINAL_ID, venta_en_espera_id: ventaId,
+        lineas: [potes(c, [c.opChoco.id, c.opDdl.id]), { producto_venta_id: c.palito.id, cantidad: 1 }],
+        pagos: [{ medio_pago: 'efectivo', monto_centavos: 270000 }],
+      });
+      expect(r.venta.id).toBe(ventaId);
+      expect(r.venta.estado).toBe('confirmada');
+      expect(r.venta.numero_interno).toBe('V-C1-000001');
+      expect(r.venta.numero_interno.startsWith('HOLD:')).toBe(false);
+
+      const lineas = db.select().from(schema.venta_linea).where(eq(schema.venta_linea.venta_id, ventaId)).all();
+      expect(lineas.map((l) => l.descripcion).sort()).toEqual(['Palito', 'Pote 1/4']);
+      expect(r.lineas).toHaveLength(2);
+      expect(r.lineas.find((l) => l.descripcion === 'Pote 1/4')!.modificadores).toHaveLength(2);
+      expect(db.select().from(schema.venta_linea_modificador).all()).toHaveLength(2); // los del pedido original se borraron
+
+      expect(stockDe(db, c.envase.id)).toBe(9);
+      expect(stockDe(db, c.palitoArt.id)).toBe(1);
+      expect(db.select().from(schema.movimiento_articulo).all().filter((m) => m.motivo === 'venta')).toHaveLength(4);
+    });
+
+    it('venta_en_espera_id inexistente → VENTA_ESPERA_NOT_FOUND; de una venta confirmada → VENTA_NO_EN_ESPERA', () => {
+      const { c, caja } = preparar();
+      const base = {
+        caja_id: caja.id, cliente_id: CONSUMIDOR_FINAL_ID,
+        lineas: [{ producto_venta_id: c.palito.id, cantidad: 1 }],
+        pagos: [{ medio_pago: 'efectivo', monto_centavos: 100000 }],
+      };
+      expect(() => ventaConfirmarHandler(db, { ...base, venta_en_espera_id: 'no-existe' })).toThrow('VENTA_ESPERA_NOT_FOUND');
+      const hecha = ventaConfirmarHandler(db, base);
+      expect(() => ventaConfirmarHandler(db, { ...base, venta_en_espera_id: hecha.venta.id })).toThrow('VENTA_NO_EN_ESPERA');
+    });
+
+    it('guardar un pedido no crea movimientos de artículo, de caja ni pagos', () => {
+      const { c, caja } = preparar();
+      armarPedido(caja.id, { lineas: [potes(c, [c.opChoco.id])] });
+      expect(db.select().from(schema.movimiento_articulo).all().filter((m) => m.motivo === 'venta')).toHaveLength(0);
+      expect(db.select().from(schema.movimiento_caja).all().filter((m) => m.motivo === 'venta')).toHaveLength(0);
+      expect(db.select().from(schema.venta_pago).all()).toHaveLength(0);
       expect(stockDe(db, c.envase.id)).toBe(10);
     });
   });
