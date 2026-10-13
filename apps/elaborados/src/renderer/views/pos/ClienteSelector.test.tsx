@@ -61,4 +61,10 @@ describe('ClienteSelector', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cambiar' }));
     await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy());
   });
+
+  it('muestra el nombre recibido por prop cuando el cliente viene de afuera (p. ej. al retomar un pedido)', () => {
+    render(<ClienteSelector clienteId="c-externo" nombre="Juan García" onCambiar={vi.fn()} />);
+    expect(screen.getByText('Juan García')).toBeInTheDocument();
+    expect(screen.queryByText('Cliente')).not.toBeInTheDocument();
+  });
 });

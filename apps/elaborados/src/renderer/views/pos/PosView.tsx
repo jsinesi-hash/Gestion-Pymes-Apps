@@ -295,7 +295,7 @@ export function PosView() {
         puedeCobrar
         acciones={acciones}
       >
-        <ClienteSelector clienteId={cliente.id} onCambiar={setCliente} />
+        <ClienteSelector clienteId={cliente.id} nombre={cliente.nombre_completo} onCambiar={setCliente} />
       </CarritoPanel>
 
       {aviso && (
