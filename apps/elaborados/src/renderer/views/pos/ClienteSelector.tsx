@@ -11,9 +11,10 @@ type ClienteRow = {
   habilita_cuenta_corriente: boolean;
 };
 
-type Props = { clienteId: string; onCambiar: (cliente: ClientePos) => void };
+/** `nombre` permite que el padre fije el nombre (p. ej. al retomar un pedido con su cliente). */
+type Props = { clienteId: string; nombre?: string; onCambiar: (cliente: ClientePos) => void };
 
-export function ClienteSelector({ clienteId, onCambiar }: Props) {
+export function ClienteSelector({ clienteId, nombre, onCambiar }: Props) {
   const [abierto, setAbierto] = useState(false);
   const [clientes, setClientes] = useState<ClienteRow[]>([]);
   const [busqueda, setBusqueda] = useState('');
@@ -43,7 +44,7 @@ export function ClienteSelector({ clienteId, onCambiar }: Props) {
     .map((c) => ({ c, nombre: nombreCompletoCliente(c) }))
     .filter(({ c, nombre }) => !q || normalizar(nombre).includes(q) || normalizar(c.numero_documento ?? '').includes(q));
 
-  const nombreActual = clienteId === CONSUMIDOR_FINAL_ID ? CONSUMIDOR_FINAL.nombre_completo : (actual ?? 'Cliente');
+  const nombreActual = clienteId === CONSUMIDOR_FINAL_ID ? CONSUMIDOR_FINAL.nombre_completo : (nombre ?? actual ?? 'Cliente');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

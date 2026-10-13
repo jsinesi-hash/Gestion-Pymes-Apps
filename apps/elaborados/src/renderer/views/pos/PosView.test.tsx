@@ -318,6 +318,8 @@ describe('PosView', () => {
       expect(screen.getByLabelText('Descuento global')).toHaveValue(10);
       expect(screen.getByLabelText('Descuento de línea')).toHaveValue(5);
       expect(screen.getByText('Pedido: Ana')).toBeInTheDocument();
+      // el selector muestra el cliente del pedido (no el genérico "Cliente")
+      expect(screen.getByText('Juan García')).toBeInTheDocument();
       expect(screen.queryByRole('dialog', { name: 'Pedidos pendientes' })).toBeNull();
       await waitFor(() => expect(cotizar).toHaveBeenLastCalledWith({
         lineas: [{ producto_venta_id: 'p-pote', cantidad: 2, descuento_linea_pct: 5, modificadores: LINEA_POTE.modificadores }],
