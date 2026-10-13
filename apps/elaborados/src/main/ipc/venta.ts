@@ -2,7 +2,7 @@ import { asc, eq, inArray } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import {
   getSession, confirmarVenta, anularVenta, ventaListByCajaHandler, requirePermission,
-  str, optStr, num, centavos, oneOf, arr, id as vId,
+  str, optStr, optId, num, centavos, oneOf, arr, id as vId,
   type VentaPagoPayload, type AplicarLineasCtx,
 } from '@core/main';
 import type { IpcMain } from 'electron';
@@ -27,7 +27,7 @@ function requireSession() {
 
 // ── Parseo de payload (SEC-2: forma y tipo en el borde) ──────────────────────
 
-function parseCarrito(p: Record<string, unknown>): Carrito {
+export function parseCarrito(p: Record<string, unknown>): Carrito {
   return {
     lineas: arr(p['lineas'], 'lineas', (l, i) => {
       const li = (l ?? {}) as Record<string, unknown>;
@@ -80,7 +80,7 @@ function parseSupervisor(raw: unknown): { nombre_usuario: string; password: stri
 
 // ── Catálogo y stock ─────────────────────────────────────────────────────────
 
-function cargarCatalogo(db: Db, productoIds: string[]) {
+export function cargarCatalogo(db: Db, productoIds: string[]) {
   const productos = new Map<string, ProductoCatalogo>();
   const opciones = new Map<string, OpcionCatalogo>();
   for (const pid of new Set(productoIds)) {
@@ -143,7 +143,18 @@ export function ventaCotizarHandler(db: Db, rawPayload: unknown) {
 
 // ── venta:confirmar ──────────────────────────────────────────────────────────
 
-function aplicarLineasElaborados(tx: Tx, v: VentaValorizada, ctx: AplicarLineasCtx): void {
+/** Inserta las líneas (y sus sabores) de la venta. NO toca stock: lo usa también el pedido en espera. */
+export function guardarLineasElaborados(tx: Tx, v: VentaValorizada, ctx: AplicarLineasCtx): void {
+  if (ctx.esRetoma) {
+    // Reemplaza las líneas previas del pedido (retomado/actualizado).
+    const previas = tx.select({ id: schema.venta_linea.id }).from(schema.venta_linea)
+      .where(eq(schema.venta_linea.venta_id, ctx.ventaId)).all();
+    if (previas.length > 0) {
+      tx.delete(schema.venta_linea_modificador)
+        .where(inArray(schema.venta_linea_modificador.venta_linea_id, previas.map((l) => l.id))).run();
+      tx.delete(schema.venta_linea).where(eq(schema.venta_linea.venta_id, ctx.ventaId)).run();
+    }
+  }
   for (const l of v.lineas) {
     const lineaId = generateId();
     tx.insert(schema.venta_linea).values({
@@ -160,7 +171,10 @@ function aplicarLineasElaborados(tx: Tx, v: VentaValorizada, ctx: AplicarLineasC
       }).run();
     }
   }
+}
 
+/** Consume el stock de los artículos de la venta (movimiento + existencia). Solo al confirmar. */
+function descontarStockElaborados(tx: Tx, v: VentaValorizada, ctx: AplicarLineasCtx): void {
   for (const c of v.consumo_total) {
     const art = tx.select().from(schema.articulo).where(eq(schema.articulo.id, c.articulo_id)).get()!;
     const ex = tx.select().from(schema.existencia_articulo)
@@ -179,7 +193,12 @@ function aplicarLineasElaborados(tx: Tx, v: VentaValorizada, ctx: AplicarLineasC
   }
 }
 
-function lineasConModificadores(db: Db, ventaId: string) {
+function aplicarLineasElaborados(tx: Tx, v: VentaValorizada, ctx: AplicarLineasCtx): void {
+  guardarLineasElaborados(tx, v, ctx);
+  descontarStockElaborados(tx, v, ctx);
+}
+
+export function lineasConModificadores(db: Db, ventaId: string) {
   const lineas = db.select().from(schema.venta_linea).where(eq(schema.venta_linea.venta_id, ventaId)).all();
   const mods = lineas.length === 0 ? [] : db.select().from(schema.venta_linea_modificador)
     .where(inArray(schema.venta_linea_modificador.venta_linea_id, lineas.map((l) => l.id))).all();
@@ -197,6 +216,7 @@ export function ventaConfirmarHandler(db: Db, rawPayload: unknown) {
   const cliente_id = vId(p['cliente_id'], 'cliente_id');
   const pagos = parsePagos(p['pagos']);
   const supervisor = parseSupervisor(p['supervisor_credenciales']);
+  const venta_en_espera_id = optId(p['venta_en_espera_id'], 'venta_en_espera_id');
 
   const { productos, opciones } = cargarCatalogo(db, carrito.lineas.map((l) => l.producto_venta_id));
   const v = valorizarCarrito(productos, opciones, carrito);
@@ -213,6 +233,7 @@ export function ventaConfirmarHandler(db: Db, rawPayload: unknown) {
     ajuste_redondeo: v.ajuste_redondeo_centavos / 100,
     pagos,
     ...(supervisor && { supervisor_credenciales: supervisor }),
+    ...(venta_en_espera_id !== undefined && { venta_en_espera_id }),
   }, {
     validarPrevio: () => {
       const ev = evaluarStock(db, v.consumo_total);
