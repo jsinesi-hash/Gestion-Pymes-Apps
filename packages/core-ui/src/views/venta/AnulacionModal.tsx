@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { useEscapeToClose, SupervisorAuthModal } from '@core/ui';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { SupervisorAuthModal } from '../caja/SupervisorAuthModal';
+import { bridge } from '../../bridge';
 
 type Props = {
   ventaId: string;
@@ -23,7 +25,7 @@ export function AnulacionModal({ ventaId, onSuccess, onCancel }: Readonly<Props>
   }
 
   async function handleAuthConfirm({ nombre_usuario, password }: { nombre_usuario: string; password: string }) {
-    await (globalThis as any).ferreteria.venta.anular({
+    await (bridge() as any).venta.anular({
       venta_id: ventaId,
       motivo: motivo.trim(),
       supervisor_credenciales: { nombre_usuario, password },
