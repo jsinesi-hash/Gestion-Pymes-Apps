@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth, ConfirmarVentaModal } from '@core/ui';
+import { useAuth, ConfirmarVentaModal, TicketModal } from '@core/ui';
 import { usePosSessionContext } from '../../context/PosSessionContext';
 import type { VentaPagoPayload } from '../../hooks/usePosSession';
 import { PosItemsTable } from './PosItemsTable';
 import { PosTopBar } from './PosTopBar';
 import { PosBottomBar } from './PosBottomBar';
 import { CancelarVentaModal } from './CancelarVentaModal';
-import { TicketModal } from './TicketModal';
+import { AnulacionModal } from './AnulacionModal';
+import { ticketDesdeVentaRetail } from './ticketRetail';
 import { PausarEsperaModal } from './PausarEsperaModal';
 import { VentaEsperaDrawer } from './VentaEsperaDrawer';
 import { LimiteCreditoAuthModal } from './LimiteCreditoAuthModal';
@@ -211,9 +212,12 @@ export function PosView() {
       )}
       {ventaResult && (
         <TicketModal
-          result={ventaResult}
+          comprobante={ticketDesdeVentaRetail(ventaResult, clienteInfo?.nombre_completo ?? 'Consumidor Final')}
           onNuevaVenta={() => { reset(); setVentaResult(null); }}
-          canAnular={can('venta.anular')}
+          onImprimir={(html) => (globalThis as any).ferreteria.catalogo.print.html(html)}
+          {...(can('venta.anular')
+            ? { anulacion: ({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void }) => <AnulacionModal ventaId={ventaResult.venta.id} onSuccess={onSuccess} onCancel={onCancel} /> }
+            : {})}
         />
       )}
       {pausarOpen && (
