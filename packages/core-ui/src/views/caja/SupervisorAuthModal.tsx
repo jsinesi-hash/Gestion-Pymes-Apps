@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { traducirError } from '../../lib/errores';
 
 type Creds = { nombre_usuario: string; password: string };
 
@@ -23,10 +24,13 @@ export function SupervisorAuthModal({ onConfirm, onCancel }: Readonly<Props>) {
     try {
       await onConfirm({ nombre_usuario: nombreUsuario, password });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Error';
-      setError(msg === 'SUPERVISOR_INVALIDO'
+      // Electron envuelve el rechazo de invoke ("Error invoking remote method '…': Error:
+      // SUPERVISOR_INVALIDO"), así que se busca el código por inclusión, no por igualdad.
+      // Cualquier otro error se traduce con el catálogo común (nunca la cadena técnica cruda).
+      const msg = err instanceof Error ? err.message : String(err ?? '');
+      setError(msg.includes('SUPERVISOR_INVALIDO')
         ? 'Usuario o contraseña incorrectos, o no es Supervisor.'
-        : msg);
+        : traducirError(err).mensaje);
     } finally {
       setLoading(false);
     }
