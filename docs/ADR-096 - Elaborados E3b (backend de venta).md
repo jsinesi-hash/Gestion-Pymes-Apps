@@ -1,6 +1,6 @@
 # ADR-096 — Elaborados E3b: backend de venta (valorizar, confirmar, anular)
 
-**Estado:** Aceptado — implementado en la rama `e3b-venta-backend`
+**Estado:** Aceptado — implementado y mergeado a `main` (PR #8, 2026-10-12)
 **Fecha:** 2026-10-12
 **Spec:** `docs/superpowers/specs/2026-10-12-elaborados-e3b-venta-backend-design.md`
 **Plan:** `docs/superpowers/plans/2026-10-12-elaborados-e3b-venta-backend.md`
