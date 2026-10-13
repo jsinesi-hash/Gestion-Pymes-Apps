@@ -20,7 +20,9 @@ export function ticketDesdeVentaRetail(
     precioUnitarioCentavos: centavos(d.precio_unitario), subtotalCentavos: centavos(d.subtotal),
     alicuotaIva: d.alicuota_iva ?? 21,
   }));
-  const descuentoGlobalCentavos = centavos(r.venta.descuento_global);
+  // En Retail `venta.descuento_global` guarda el PORCENTAJE (el POS envía descuentoGlobalPct), no un importe.
+  const brutoCentavos = items.reduce((s, i) => s + i.subtotalCentavos, 0);
+  const descuentoGlobalCentavos = Math.round(brutoCentavos * r.venta.descuento_global / 100);
   const totalCentavos = centavos(r.venta.total);
   return {
     tipo: 'ticket_interno',
