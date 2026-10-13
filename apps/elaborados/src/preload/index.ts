@@ -53,5 +53,11 @@ createBridge({
       get:        (p: { id: string }) => invoke('venta:get', p),
       listByCaja: (p: { caja_id: string }) => invoke('venta:listByCaja', p),
     },
+    ventaEspera: {
+      pausar:    (p: unknown) => invoke('venta.espera:pausar', p),
+      listar:    () => invoke('venta.espera:listar'),
+      retomar:   (p: unknown) => invoke('venta.espera:retomar', p),
+      descartar: (p: unknown) => invoke('venta.espera:descartar', p),
+    },
   }),
 }, { contextBridge, ipcRenderer });
