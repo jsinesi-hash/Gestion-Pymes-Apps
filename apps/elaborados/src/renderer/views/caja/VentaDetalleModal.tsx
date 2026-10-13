@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { bridge, formatPesos, traducirError, useEscapeToClose } from '@core/ui';
+import { AnulacionModal, bridge, formatPesos, traducirError, useAuth, useEscapeToClose } from '@core/ui';
 
 type Modificador = { id: string; descripcion: string };
 type Linea = {
@@ -19,6 +19,9 @@ export function VentaDetalleModal({ ventaId, onClose }: Readonly<Props>) {
   const [detalle, setDetalle] = useState<Detalle | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [anulando, setAnulando] = useState(false);
+  const [recarga, setRecarga] = useState(0);
+  const { can } = useAuth();
 
   useEffect(() => {
     let vivo = true;
@@ -33,7 +36,7 @@ export function VentaDetalleModal({ ventaId, onClose }: Readonly<Props>) {
       }
     })();
     return () => { vivo = false; };
-  }, [ventaId]);
+  }, [ventaId, recarga]);
 
   return (
     <div role="dialog" aria-label="Detalle de venta" className="modal-overlay">
@@ -68,9 +71,19 @@ export function VentaDetalleModal({ ventaId, onClose }: Readonly<Props>) {
           )}
         </div>
         <div className="modal-footer">
+          {can('venta.anular') && detalle?.venta.estado === 'confirmada' && (
+            <button type="button" className="btn-danger" onClick={() => setAnulando(true)}>Anular venta</button>
+          )}
           <button type="button" className="btn-secondary" onClick={onClose}>Cerrar</button>
         </div>
       </div>
+      {anulando && (
+        <AnulacionModal
+          ventaId={ventaId}
+          onSuccess={() => { setAnulando(false); setRecarga((n) => n + 1); }}
+          onCancel={() => setAnulando(false)}
+        />
+      )}
     </div>
   );
 }

@@ -5,9 +5,10 @@ import { PosView } from './PosView';
 
 let mockCaja: any = { id: 'caja-1' };
 let mockCan = false;
+let mockAnular = false;
 vi.mock('@core/ui', async (orig) => ({
   ...(await orig<any>()),
-  useAuth: () => ({ ...(({} as any)), can: () => mockCan }),
+  useAuth: () => ({ ...(({} as any)), can: (c: string) => (c === 'venta.anular' ? mockAnular : mockCan) }),
   useCajaActiva: () => ({ caja: mockCaja, isLoading: false, refetch: vi.fn() }),
 }));
 
@@ -41,6 +42,7 @@ const RESULTADO = {
 const catalogo = vi.fn();
 const cotizar = vi.fn();
 const confirmar = vi.fn();
+const anular = vi.fn();
 const html = vi.fn();
 const list = vi.fn();
 const seedHeladeria = vi.fn();
@@ -49,7 +51,7 @@ const pausar = vi.fn();
 const retomar = vi.fn();
 const descartar = vi.fn();
 vi.stubGlobal('elaborados', {
-  venta: { catalogo, cotizar, confirmar }, print: { html }, cliente: { list },
+  venta: { catalogo, cotizar, confirmar, anular }, print: { html }, cliente: { list },
   demoCatalog: { seedHeladeria },
   ventaEspera: { listar, pausar, retomar, descartar },
 });
@@ -83,6 +85,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockCaja = { id: 'caja-1' };
   mockCan = false;
+  mockAnular = false;
   catalogo.mockResolvedValue(CATALOGO);
   cotizar.mockResolvedValue(cotizacion());
   confirmar.mockResolvedValue(RESULTADO);
@@ -410,6 +413,39 @@ describe('PosView', () => {
       const p = await abrirPedidos();
       for (const b of within(p).getAllByRole('button', { name: 'Retomar' })) expect(b).toBeDisabled();
       expect(within(p).getByText(/Guardá o vaciá el carrito actual/)).toBeInTheDocument();
+    });
+  });
+
+  describe('anulación desde el ticket', () => {
+    const cobrarHastaTicket = async () => {
+      confirmar.mockResolvedValue({ ...RESULTADO, venta: { ...RESULTADO.venta, id: 'v-9' } });
+      montar();
+      await agregarPalito();
+      await cobrarEfectivo();
+      await screen.findByText('Ticket interno');
+    };
+
+    it('con venta.anular el flujo motivo → Supervisor llama a venta.anular y el ticket queda ANULADA', async () => {
+      mockAnular = true;
+      anular.mockResolvedValue({ ok: true });
+      await cobrarHastaTicket();
+      fireEvent.click(screen.getByRole('button', { name: 'Anular venta' }));
+      fireEvent.change(screen.getByLabelText('Motivo'), { target: { value: 'Error de carga' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Continuar' }));
+      fireEvent.change(screen.getByLabelText('Usuario Supervisor'), { target: { value: 'sup' } });
+      fireEvent.change(screen.getByLabelText('Contraseña Supervisor'), { target: { value: 'clave' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Autorizar' }));
+      expect(await screen.findByText('ANULADA')).toBeInTheDocument();
+      expect(anular).toHaveBeenCalledWith({
+        venta_id: 'v-9', motivo: 'Error de carga',
+        supervisor_credenciales: { nombre_usuario: 'sup', password: 'clave' },
+      });
+    });
+
+    it('sin venta.anular el ticket no ofrece Anular venta', async () => {
+      mockAnular = false;
+      await cobrarHastaTicket();
+      expect(screen.queryByRole('button', { name: 'Anular venta' })).toBeNull();
     });
   });
 
