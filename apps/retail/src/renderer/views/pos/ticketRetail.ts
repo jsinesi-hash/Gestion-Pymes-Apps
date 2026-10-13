@@ -22,7 +22,8 @@ export function ticketDesdeVentaRetail(
   }));
   // En Retail `venta.descuento_global` guarda el PORCENTAJE (el POS envía descuentoGlobalPct), no un importe.
   const brutoCentavos = items.reduce((s, i) => s + i.subtotalCentavos, 0);
-  const descuentoGlobalCentavos = Math.round(brutoCentavos * r.venta.descuento_global / 100);
+  // Misma fórmula que `resolverPrecio` (shared/precio.ts): bruto − round(bruto × (1 − pct/100)), así el ticket cierra al centavo.
+  const descuentoGlobalCentavos = brutoCentavos - Math.round(brutoCentavos * (1 - r.venta.descuento_global / 100));
   const totalCentavos = centavos(r.venta.total);
   return {
     tipo: 'ticket_interno',
