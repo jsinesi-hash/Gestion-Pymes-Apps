@@ -69,3 +69,5 @@ export { RestoreWizard } from './views/config/RestoreWizard';
 // Venta universal (E3c1)
 export { TicketModal } from './views/venta/TicketModal';
 export { buildTicketHtml, formatPesos, etiquetaMedio } from './views/venta/ticketHtml';
+export { ConfirmarVentaModal } from './views/venta/ConfirmarVentaModal';
+export type { MedioPago, VentaPagoPayload } from './views/venta/tipos';
