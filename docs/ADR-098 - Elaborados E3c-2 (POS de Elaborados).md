@@ -1,6 +1,6 @@
 # ADR-098 — Elaborados E3c-2: POS de Elaborados
 
-**Estado:** Aceptado — implementado en la rama `e3c2-pos-elaborados` (pendiente de click-through y merge)
+**Estado:** Aceptado — implementado y mergeado a `main` (PR #11, 2026-10-13)
 **Fecha:** 2026-10-13
 **Spec:** `docs/superpowers/specs/2026-10-13-elaborados-e3c-pos-design.md` (§3)
 **Plan:** `docs/superpowers/plans/2026-10-13-elaborados-e3c2-pos.md`

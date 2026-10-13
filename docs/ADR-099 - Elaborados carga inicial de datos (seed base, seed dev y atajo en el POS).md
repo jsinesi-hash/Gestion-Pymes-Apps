@@ -1,6 +1,6 @@
 # ADR-099 — Elaborados: carga inicial de datos (seed base, `seed:dev` y atajo en el POS)
 
-**Estado:** Aceptado — implementado en la rama `e3c2-pos-elaborados` (PR #11, pendiente de click-through y merge)
+**Estado:** Aceptado — implementado y mergeado a `main` (PR #11, 2026-10-13)
 **Fecha:** 2026-10-13
 **Plan:** `docs/superpowers/plans/2026-10-13-elaborados-carga-inicial.md`
 **Precedentes:** spec de la familia §7.3 (perfil y seed), ADR-093 (seed demo de heladería), ADR-098 (POS).
