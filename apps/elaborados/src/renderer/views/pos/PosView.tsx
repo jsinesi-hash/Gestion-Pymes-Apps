@@ -2,7 +2,7 @@ import { useMemo, useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   bridge, traducirError, useAuth, useCajaActiva,
-  ConfirmarVentaModal, TicketModal, SupervisorAuthModal,
+  ConfirmarVentaModal, TicketModal, SupervisorAuthModal, AnulacionModal,
 } from '@core/ui';
 import type { PagoComprobante } from '@ferreteria/shared';
 import { usePosCatalogo } from '../../hooks/usePosCatalogo';
@@ -258,6 +258,7 @@ export function PosView() {
         })),
       )
     : null;
+  const ventaTerminadaId: string = terminada?.resultado?.venta?.id;
   const advertencias: { nombre: string }[] = terminada?.resultado?.advertencias ?? [];
 
   return (
@@ -370,6 +371,13 @@ export function PosView() {
             comprobante={comprobante}
             onNuevaVenta={nuevaVenta}
             onImprimir={(html) => (bridge() as any).print.html(html)}
+            {...(can('venta.anular')
+              ? {
+                  anulacion: ({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void }) => (
+                    <AnulacionModal ventaId={ventaTerminadaId} onSuccess={onSuccess} onCancel={onCancel} />
+                  ),
+                }
+              : {})}
           />
         </>
       )}
