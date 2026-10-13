@@ -1,6 +1,7 @@
 import type { Seccion } from '@core/ui';
 
 export const CRUMBS_ELABORADOS: Seccion[] = [
+  { grupo: 'Venta', base: '/pos', baseLabel: 'POS' },
   { grupo: 'Caja', base: '/caja', baseLabel: 'Caja' },
   { grupo: 'Clientes', base: '/clientes', baseLabel: 'Clientes' },
   { grupo: 'Clientes', base: '/credito', baseLabel: 'Cuentas corrientes' },

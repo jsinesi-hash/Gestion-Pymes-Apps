@@ -23,10 +23,12 @@ import { ProduccionView } from '../views/produccion/ProduccionView';
 import { CategoriasVentaView } from '../views/carta/CategoriasVentaView';
 import { ModificadoresView } from '../views/carta/ModificadoresView';
 import { ProductosVentaView } from '../views/carta/ProductosVentaView';
+import { PosView } from '../views/pos/PosView';
+import { VentaDetalleModal } from '../views/caja/VentaDetalleModal';
 
 // Centralized route tree. Routes are never defined inline in components.
-// E1: solo pantallas del core (sin renderVentaDetalle en CajaView — llega en E3; sin
-// cargarListasPrecio en ClienteForm/ClienteDetalle — llega en E4).
+// Pantallas del core + propias de Elaborados. CajaView recibe renderVentaDetalle (E3);
+// sin cargarListasPrecio en ClienteForm/ClienteDetalle — llega en E4.
 export const routes: RouteObject[] = [
   { path: '/login', element: <Login /> },
   {
@@ -38,7 +40,8 @@ export const routes: RouteObject[] = [
     ),
     children: [
       { index: true, element: <InicioRedirect /> },
-      { path: 'caja', element: <CajaView /> },
+      { path: 'pos', element: <PosView /> },
+      { path: 'caja', element: <CajaView renderVentaDetalle={(id, onClose) => <VentaDetalleModal ventaId={id} onClose={onClose} />} /> },
       { path: 'caja/cerrar', element: <CajaCierreView /> },
       { path: 'clientes', element: <ClientesListado /> },
       { path: 'clientes/nuevo', element: <ClienteForm /> },
