@@ -47,6 +47,7 @@ export function ventaEsperaPausarHandler(db: Db, rawPayload: unknown): { venta_i
 }
 
 export function ventaEsperaListarHandler(db: Db) {
+  requireVentaCrear();
   return listarVentasEspera(db, (ventaId) =>
     db.select({ id: schema.venta_linea.id }).from(schema.venta_linea)
       .where(eq(schema.venta_linea.venta_id, ventaId)).all().length);

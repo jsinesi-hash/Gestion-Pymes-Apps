@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import * as schema from '../../db/schema';
 import { setupDb, loginAsAdmin, clearSession } from '../../__tests__/helpers';
 import { CONSUMIDOR_FINAL_ID } from '../../catalog/seed';
-import { cajaAbrirHandler } from '@core/main';
+import { cajaAbrirHandler, getSession } from '@core/main';
 import { catalogo, stockDe } from './ventaFixtures';
 import {
   ventaEsperaPausarHandler, ventaEsperaListarHandler, ventaEsperaRetomarHandler,
@@ -207,6 +207,55 @@ describe('venta.espera handlers (Elaborados)', () => {
       expect(db.select().from(schema.movimiento_articulo).all()
         .filter((m) => m.motivo === 'venta' && m.articulo_id === c.envase.id)).toHaveLength(1);
       expect(ventaEsperaListarHandler(db)).toHaveLength(0);
+    });
+  });
+
+  describe('permisos (M-3)', () => {
+    it('sin venta.crear los cuatro handlers lanzan FORBIDDEN', () => {
+      const { payload } = armar();
+      const { venta_id } = ventaEsperaPausarHandler(db, payload());
+      // Quita venta.crear a la sesión activa (usuario autenticado sin ese permiso).
+      (getSession()!.permisos as Set<string>).delete('venta.crear');
+      expect(() => ventaEsperaPausarHandler(db, payload())).toThrow('FORBIDDEN');
+      expect(() => ventaEsperaListarHandler(db)).toThrow('FORBIDDEN');
+      expect(() => ventaEsperaRetomarHandler(db, { venta_id })).toThrow('FORBIDDEN');
+      expect(() => ventaEsperaDescartarHandler(db, { venta_id })).toThrow('FORBIDDEN');
+    });
+
+    it('sin sesión los cuatro handlers lanzan UNAUTHENTICATED', () => {
+      const { payload } = armar();
+      const { venta_id } = ventaEsperaPausarHandler(db, payload());
+      clearSession();
+      expect(() => ventaEsperaPausarHandler(db, payload())).toThrow('UNAUTHENTICATED');
+      expect(() => ventaEsperaListarHandler(db)).toThrow('UNAUTHENTICATED');
+      expect(() => ventaEsperaRetomarHandler(db, { venta_id })).toThrow('UNAUTHENTICATED');
+      expect(() => ventaEsperaDescartarHandler(db, { venta_id })).toThrow('UNAUTHENTICATED');
+    });
+  });
+
+  describe('límites del payload (SEC-2)', () => {
+    it('alias de 61 caracteres y observaciones de 501 → error de campo MAX', () => {
+      const { payload } = armar();
+      expect(() => ventaEsperaPausarHandler(db, payload({ alias: 'a'.repeat(61) })))
+        .toThrow(/VALIDATION:alias:MAX/);
+      expect(() => ventaEsperaPausarHandler(db, payload({ observaciones: 'o'.repeat(501) })))
+        .toThrow(/VALIDATION:observaciones:MAX/);
+      // en el límite exacto se acepta
+      expect(() => ventaEsperaPausarHandler(db, payload({ alias: 'a'.repeat(60), observaciones: 'o'.repeat(500) })))
+        .not.toThrow();
+      expect(db.select().from(schema.venta).all()).toHaveLength(1);
+    });
+
+    it('pausar con venta_id de una venta ya confirmada → VENTA_NO_EN_ESPERA', () => {
+      const { caja, payload } = armar();
+      const res = ventaConfirmarHandler(db, {
+        caja_id: caja.id, cliente_id: CONSUMIDOR_FINAL_ID,
+        lineas: payload().lineas,
+        pagos: [{ medio_pago: 'efectivo', monto_centavos: 170000 }],
+      });
+      expect(res.venta.estado).toBe('confirmada');
+      expect(() => ventaEsperaPausarHandler(db, payload({ venta_id: res.venta.id }))).toThrow('VENTA_NO_EN_ESPERA');
+      expect(db.select().from(schema.venta).where(eq(schema.venta.id, res.venta.id)).get()!.estado).toBe('confirmada');
     });
   });
 
