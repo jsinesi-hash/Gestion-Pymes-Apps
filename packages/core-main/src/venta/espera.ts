@@ -61,13 +61,18 @@ export function pausarVentaEspera(
   // Actualización en el lugar de una venta ya en espera (no aplica el tope máximo).
   if (input.venta_id) {
     const ventaId = input.venta_id;
-    const ventaRow = db.select().from(schema.venta)
-      .where(eq(schema.venta.id, ventaId))
-      .get();
-    if (!ventaRow) throw new Error('VENTA_ESPERA_NOT_FOUND');
-    if (ventaRow.estado !== 'en_espera') throw new Error('VENTA_NO_EN_ESPERA');
 
     db.transaction((tx) => {
+      // El chequeo de estado va DENTRO de la transacción y el UPDATE filtra por estado: no se puede
+      // reescribir una venta que otra operación confirmó o descartó en el medio.
+      const ventaRow = tx.select().from(schema.venta)
+        .where(eq(schema.venta.id, ventaId))
+        .get();
+      if (!ventaRow) throw new Error('VENTA_ESPERA_NOT_FOUND');
+      if (ventaRow.estado !== 'en_espera') throw new Error('VENTA_NO_EN_ESPERA');
+
+      // `turno_creacion_id` y `usuario_id` NO se tocan: son el turno y el usuario de origen del pedido;
+      // `caja_id` sí, porque al confirmar se cobra en la caja abierta del momento.
       tx.update(schema.venta).set({
         caja_id: input.caja_id,
         cliente_id: input.cliente_id,
@@ -83,7 +88,7 @@ export function pausarVentaEspera(
         version: ventaRow.version + 1,
         sync_state: 'pending',
         updated_at: now,
-      }).where(eq(schema.venta.id, ventaId)).run();
+      }).where(and(eq(schema.venta.id, ventaId), eq(schema.venta.estado, 'en_espera'))).run();
 
       hooks.aplicarLineas(tx, { ventaId, now, sync, userId: session.userId, esRetoma: true });
     });
