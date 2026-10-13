@@ -80,4 +80,14 @@ describe('usePosCotizacion', () => {
     expect(result.current.error).toBe('Ingresá una cantidad válida.');
     expect(result.current.cotizacion).toBeNull();
   });
+
+  it('un payload nuevo con el mismo contenido en cada render NO re-dispara la cotización', async () => {
+    cotizar.mockResolvedValue(cot(1000));
+    const { rerender } = renderHook(() => usePosCotizacion(conLineas(1))); // objeto nuevo en cada render
+    await act(async () => { await vi.advanceTimersByTimeAsync(150); });
+    rerender();
+    rerender();
+    await act(async () => { await vi.advanceTimersByTimeAsync(500); });
+    expect(cotizar).toHaveBeenCalledTimes(1);
+  });
 });

@@ -10,6 +10,8 @@ export function usePosCotizacion(payload: CarritoPayload) {
   const [error, setError] = useState<string | null>(null);
   const contador = useRef(0);
   const vacio = payload.lineas.length === 0;
+  // Clave por CONTENIDO: un consumidor que arme un objeto nuevo en cada render no re-dispara la cotización.
+  const clave = JSON.stringify(payload);
 
   useEffect(() => {
     const miPeticion = ++contador.current;
@@ -22,7 +24,7 @@ export function usePosCotizacion(payload: CarritoPayload) {
     setCotizando(true);
     const timer = setTimeout(async () => {
       try {
-        const r = (await (bridge() as any).venta.cotizar(payload)) as Cotizacion;
+        const r = (await (bridge() as any).venta.cotizar(JSON.parse(clave) as CarritoPayload)) as Cotizacion;
         if (miPeticion !== contador.current) return;
         setCotizacion(r);
         setError(null);
@@ -39,7 +41,7 @@ export function usePosCotizacion(payload: CarritoPayload) {
       // Invalida respuestas en vuelo (cambio de payload o desmontaje).
       contador.current++;
     };
-  }, [payload, vacio]);
+  }, [clave, vacio]);
 
   return { cotizacion, cotizando, error };
 }
