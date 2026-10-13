@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { PosView } from './PosView';
 
@@ -44,10 +44,29 @@ const confirmar = vi.fn();
 const html = vi.fn();
 const list = vi.fn();
 const seedHeladeria = vi.fn();
+const listar = vi.fn();
+const pausar = vi.fn();
+const retomar = vi.fn();
+const descartar = vi.fn();
 vi.stubGlobal('elaborados', {
   venta: { catalogo, cotizar, confirmar }, print: { html }, cliente: { list },
   demoCatalog: { seedHeladeria },
+  ventaEspera: { listar, pausar, retomar, descartar },
 });
+
+const PEDIDOS = [
+  { id: 've-1', alias: 'Ana', observaciones: 'Calle 1', en_espera_desde: Date.now(), turno_creacion_id: null, cliente_id: 'c1', total: 2700, count_items: 1, vencida: false },
+  { id: 've-2', alias: 'Beto', observaciones: null, en_espera_desde: Date.now(), turno_creacion_id: null, cliente_id: 'cf000000-0000-0000-0000-000000000001', total: 500, count_items: 1, vencida: false },
+];
+const LINEA_POTE = {
+  producto_venta_id: 'p-pote', nombre: 'Pote 1/4', cantidad: 2, descuento_linea_pct: 5,
+  modificadores: [{ grupo_modificador_id: 'g1', opcion_ids: ['o-choco', 'o-ddl'] }],
+};
+const RETOMADO = {
+  venta_id: 've-1', alias: 'Ana', observaciones: 'Calle 1', descuento_global_pct: 10,
+  cliente: { id: 'c1', nombre_completo: 'Juan García', habilita_cuenta_corriente: true },
+  lineas: [LINEA_POTE],
+};
 
 const montar = () => render(<MemoryRouter><PosView /></MemoryRouter>);
 const agregarPalito = async () => {
@@ -71,6 +90,10 @@ beforeEach(() => {
   list.mockResolvedValue([
     { id: 'c1', nombre: 'Juan', apellido: 'García', numero_documento: '20111222', habilita_cuenta_corriente: true },
   ]);
+  listar.mockResolvedValue([]);
+  pausar.mockResolvedValue({ id: 've-nuevo' });
+  retomar.mockResolvedValue(RETOMADO);
+  descartar.mockResolvedValue({ ok: true });
 });
 
 const elegirJuan = async () => {
@@ -232,6 +255,160 @@ describe('PosView', () => {
     fireEvent.click(screen.getByRole('button', { name: 'COBRAR' }));
     await screen.findByLabelText('Monto');
     expect(screen.getByRole('option', { name: 'Cta. Corriente' })).toBeInTheDocument();
+  });
+
+  describe('pedidos en espera', () => {
+    const CF = 'cf000000-0000-0000-0000-000000000001';
+    const accionGuardar = () => screen.getByRole('button', { name: 'Guardar pedido' });
+    const modalGuardar = () => screen.getByRole('dialog', { name: 'Guardar pedido' });
+    const panel = () => screen.getByRole('dialog', { name: 'Pedidos pendientes' });
+    const abrirPedidos = async (n = 2) => {
+      fireEvent.click(await screen.findByRole('button', { name: `Pedidos (${n})` }));
+      return panel();
+    };
+    const retomarPrimero = async () => {
+      const p = await abrirPedidos();
+      await screen.findByRole('button', { name: 'Palito' }); // catálogo cargado
+      fireEvent.click(within(p).getAllByRole('button', { name: 'Retomar' })[0]!);
+    };
+    beforeEach(() => { listar.mockResolvedValue(PEDIDOS); });
+    const guardarCon = (alias?: string, obs?: string) => {
+      fireEvent.click(accionGuardar());
+      const m = modalGuardar();
+      if (alias !== undefined) fireEvent.change(within(m).getByLabelText('Alias del pedido'), { target: { value: alias } });
+      if (obs !== undefined) fireEvent.change(within(m).getByLabelText('Observaciones'), { target: { value: obs } });
+      fireEvent.click(within(m).getByRole('button', { name: 'Guardar pedido' }));
+    };
+
+    it('Guardar pedido: deshabilitado vacío; con una línea guarda sin precios, limpia el carrito y avisa', async () => {
+      montar();
+      await screen.findByRole('button', { name: 'Palito' });
+      expect(accionGuardar()).toBeDisabled();
+      await agregarPalito();
+      guardarCon('  Ana  ', ' Calle 1 ');
+      await waitFor(() => expect(pausar).toHaveBeenCalledTimes(1));
+      expect(pausar.mock.calls[0][0]).toEqual({
+        caja_id: 'caja-1', cliente_id: CF,
+        lineas: [{ producto_venta_id: 'p-palito', cantidad: 1, descuento_linea_pct: 0, modificadores: [] }],
+        descuento_global_pct: 0, alias: 'Ana', observaciones: 'Calle 1',
+      });
+      expect(await screen.findByRole('status')).toHaveTextContent('Pedido guardado');
+      expect(screen.getByText('El carrito está vacío')).toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: 'Guardar pedido' })).toBeNull();
+      await waitFor(() => expect(listar).toHaveBeenCalledTimes(2));
+    });
+
+    it('pausar rechaza MAX_EN_ESPERA: alerta traducida y el modal sigue abierto', async () => {
+      pausar.mockRejectedValue(new Error('MAX_EN_ESPERA'));
+      montar();
+      await agregarPalito();
+      guardarCon('Ana');
+      const alerta = await within(modalGuardar()).findByRole('alert');
+      expect(alerta).toHaveTextContent('Llegaste al máximo de ventas en espera.');
+      expect(modalGuardar()).toBeInTheDocument();
+      expect(screen.queryByText('El carrito está vacío')).toBeNull();
+    });
+
+    it('Pedidos (2) abre el panel; Retomar carga líneas, sabores, descuento global y cliente, y muestra el chip', async () => {
+      montar();
+      await retomarPrimero();
+      await waitFor(() => expect(retomar).toHaveBeenCalledWith({ venta_id: 've-1' }));
+      expect(await screen.findByText('Chocolate, DDL')).toBeInTheDocument();
+      expect(screen.getAllByText('Pote 1/4').length).toBeGreaterThan(0);
+      expect(screen.getByLabelText('Descuento global')).toHaveValue(10);
+      expect(screen.getByLabelText('Descuento de línea')).toHaveValue(5);
+      expect(screen.getByText('Pedido: Ana')).toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: 'Pedidos pendientes' })).toBeNull();
+      await waitFor(() => expect(cotizar).toHaveBeenLastCalledWith({
+        lineas: [{ producto_venta_id: 'p-pote', cantidad: 2, descuento_linea_pct: 5, modificadores: LINEA_POTE.modificadores }],
+        descuento_global_pct: 10,
+      }));
+      // el cliente del pedido habilita cuenta corriente en el cobro
+      await waitFor(() => expect(screen.getByRole('button', { name: 'COBRAR' })).toBeEnabled(), { timeout: 3000 });
+      fireEvent.click(screen.getByRole('button', { name: 'COBRAR' }));
+      await screen.findByLabelText('Monto');
+      expect(screen.getByRole('option', { name: 'Cta. Corriente' })).toBeInTheDocument();
+    });
+
+    it('retomar con un producto que ya no está en el catálogo lo omite y avisa', async () => {
+      retomar.mockResolvedValue({
+        ...RETOMADO,
+        lineas: [LINEA_POTE, { producto_venta_id: 'p-borrado', nombre: 'Viejo', cantidad: 1, descuento_linea_pct: 0, modificadores: [] }],
+      });
+      montar();
+      await retomarPrimero();
+      expect(await screen.findByRole('status')).toHaveTextContent('1 producto(s) del pedido ya no están disponibles');
+      expect(screen.getByText('Chocolate, DDL')).toBeInTheDocument();
+      expect(screen.queryByText('Viejo')).toBeNull();
+      expect(screen.getByText('Pedido: Ana')).toBeInTheDocument();
+    });
+
+    it('retomar un pedido sin ningún producto disponible no lo vincula y deja el carrito vacío', async () => {
+      retomar.mockResolvedValue({
+        ...RETOMADO,
+        lineas: [{ producto_venta_id: 'p-borrado', nombre: 'Viejo', cantidad: 1, descuento_linea_pct: 0, modificadores: [] }],
+      });
+      montar();
+      await retomarPrimero();
+      expect(await screen.findByRole('status')).toHaveTextContent('1 producto(s) del pedido ya no están disponibles');
+      expect(screen.getByText('El carrito está vacío')).toBeInTheDocument();
+      expect(screen.queryByText(/Pedido: /)).toBeNull();
+    });
+
+    it('con un pedido retomado: COBRAR confirma con venta_en_espera_id y suelta el chip; Guardar manda venta_id', async () => {
+      montar();
+      await retomarPrimero();
+      await screen.findByText('Pedido: Ana');
+      await waitFor(() => expect(screen.getByRole('button', { name: 'COBRAR' })).toBeEnabled(), { timeout: 3000 });
+      await cobrarEfectivo();
+      expect(await screen.findByText(/V-C1-000001/)).toBeInTheDocument();
+      expect(confirmar.mock.calls[0][0]).toMatchObject({ venta_en_espera_id: 've-1', cliente_id: 'c1', descuento_global_pct: 10 });
+      expect(screen.queryByText('Pedido: Ana')).toBeNull();
+      await waitFor(() => expect(listar).toHaveBeenCalledTimes(2));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Nueva venta' }));
+      await retomarPrimero();
+      await screen.findByText('Pedido: Ana');
+      fireEvent.click(accionGuardar());
+      expect(within(modalGuardar()).getByLabelText('Alias del pedido')).toHaveValue('Ana');
+      expect(within(modalGuardar()).getByLabelText('Observaciones')).toHaveValue('Calle 1');
+      fireEvent.click(within(modalGuardar()).getByRole('button', { name: 'Guardar pedido' }));
+      await waitFor(() => expect(pausar).toHaveBeenCalledTimes(1));
+      expect(pausar.mock.calls[0][0]).toMatchObject({ venta_id: 've-1', cliente_id: 'c1', alias: 'Ana', descuento_global_pct: 10 });
+      expect(await screen.findByText('El carrito está vacío')).toBeInTheDocument();
+      expect(screen.queryByText('Pedido: Ana')).toBeNull();
+    });
+
+    it('Soltar desvincula el pedido: el siguiente guardado ya no manda venta_id', async () => {
+      montar();
+      await retomarPrimero();
+      await screen.findByText('Pedido: Ana');
+      fireEvent.click(screen.getByRole('button', { name: 'Soltar pedido' }));
+      expect(screen.queryByText('Pedido: Ana')).toBeNull();
+      expect(screen.getByText('Chocolate, DDL')).toBeInTheDocument();
+      guardarCon('Otro');
+      await waitFor(() => expect(pausar).toHaveBeenCalledTimes(1));
+      expect(pausar.mock.calls[0][0]).not.toHaveProperty('venta_id');
+      expect(pausar.mock.calls[0][0].alias).toBe('Otro');
+    });
+
+    it('Descartar pide confirmación, llama a descartar y refresca la lista', async () => {
+      montar();
+      const p = await abrirPedidos();
+      fireEvent.click(within(p).getAllByRole('button', { name: 'Descartar' })[0]!);
+      expect(descartar).not.toHaveBeenCalled();
+      fireEvent.click(within(p).getByRole('button', { name: 'Sí, descartar' }));
+      await waitFor(() => expect(descartar).toHaveBeenCalledWith({ venta_id: 've-1' }));
+      await waitFor(() => expect(listar).toHaveBeenCalledTimes(2));
+    });
+
+    it('con el carrito no vacío Retomar está deshabilitado en el panel', async () => {
+      montar();
+      await agregarPalito();
+      const p = await abrirPedidos();
+      for (const b of within(p).getAllByRole('button', { name: 'Retomar' })) expect(b).toBeDisabled();
+      expect(within(p).getByText(/Guardá o vaciá el carrito actual/)).toBeInTheDocument();
+    });
   });
 
   describe('catálogo vacío', () => {

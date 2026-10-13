@@ -14,6 +14,8 @@ type Props = {
   onDescuentoGlobal: (pct: number) => void;
   onCobrar: () => void;
   children?: ReactNode;
+  /** Acciones extra (p. ej. guardar pedido) que se muestran encima del botón COBRAR. */
+  acciones?: ReactNode;
   puedeCobrar: boolean;
 };
 
@@ -92,6 +94,7 @@ export function CarritoPanel(p: Props) {
         </div>
       )}
 
+      {p.acciones}
       <button type="button" className="btn-primary" disabled={deshabilitado} onClick={p.onCobrar}>COBRAR</button>
     </div>
   );
