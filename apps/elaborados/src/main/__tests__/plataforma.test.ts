@@ -45,10 +45,10 @@ describe('Elaborados E1 — plataforma del core sobre su propia BD', () => {
     const db = setupDb();
     const s = loginAsAdmin(db);
     expect(() =>
-      preferenciasGuardarHandler(db, { usuario_id: s.id, pantalla_inicio: '/pos' }, navegacionElaborados)
+      preferenciasGuardarHandler(db, { usuario_id: s.id, pantalla_inicio: '/inexistente' }, navegacionElaborados)
     ).toThrow('PANTALLA_INICIO_INVALIDA');
     expect(() =>
-      preferenciasGuardarHandler(db, { usuario_id: s.id, pantalla_inicio: '/caja' }, navegacionElaborados)
+      preferenciasGuardarHandler(db, { usuario_id: s.id, pantalla_inicio: '/pos' }, navegacionElaborados)
     ).not.toThrow();
   });
 });
