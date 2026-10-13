@@ -42,7 +42,7 @@ pnpm make    # genera instalador
 cd packages/client && node scripts/seed-dev.cjs   # catálogo + personas + ventas de prueba
 cd packages/client && node scripts/seed-geo.cjs   # provincias/localidades
 
-# Seeds de Elaborados (ADR-099) — con la app CERRADA; BD: %APPDATA%/elaborados-client/elaborados.db (o DB_PATH)
+# Seeds de Elaborados (ADR-099) — desde la raíz: pnpm seed:base:elaborados / pnpm seed:dev:elaborados — con la app CERRADA; BD: %APPDATA%/elaborados-client/elaborados.db (o DB_PATH)
 cd apps/elaborados && pnpm seed:base   # datos base del rubro: impuestos, Consumidor Final, categorías de venta, grupo Sabores
 cd apps/elaborados && pnpm seed:dev    # base + catálogo demo de heladería + clientes de ejemplo + 3 ventas (la caja queda abierta); idempotente, sin --force
 # Los CLI de seed usan el `dist` de @core/* y @ferreteria/shared: si tocaste packages/*/src, recompilalos antes (pnpm -r build).

@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "pnpm --filter ferreteria-client dev",
     "dev:elaborados": "pnpm --filter elaborados-client dev",
+    "seed:base:elaborados": "pnpm --filter elaborados-client seed:base",
+    "seed:dev:elaborados": "pnpm --filter elaborados-client seed:dev",
     "build": "pnpm --filter ferreteria-client build",
     "make": "pnpm --filter ferreteria-client make",
     "typecheck": "pnpm -r exec tsc --noEmit",
