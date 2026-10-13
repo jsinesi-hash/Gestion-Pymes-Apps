@@ -129,6 +129,31 @@ describe('venta en espera (core)', () => {
       expect(aplicarLineas.mock.calls[1][1]).toMatchObject({ ventaId: venta_id, esRetoma: true });
     });
 
+    it('con venta_id: si el hook falla, la actualización hace rollback (encabezado intacto)', () => {
+      const { caja, clienteId } = preparar();
+      const { venta_id } = pausarVentaEspera(db, input(caja.id, clienteId, { alias: 'A', total: 500, subtotal: 500 }), { aplicarLineas: vi.fn() });
+      const antes = db.select().from(schema.venta).where(eq(schema.venta.id, venta_id)).get()!;
+      expect(() => pausarVentaEspera(db,
+        input(caja.id, clienteId, { venta_id, alias: 'B', total: 900, subtotal: 900 }),
+        { aplicarLineas: () => { throw new Error('BOOM'); } })).toThrow('BOOM');
+      const desp = db.select().from(schema.venta).where(eq(schema.venta.id, venta_id)).get()!;
+      expect(desp.alias).toBe('A');
+      expect(desp.total).toBe(500);
+      expect(desp.version).toBe(antes.version);
+    });
+
+    it('con venta_id: exige caja abierta y no pisa el turno ni el usuario de origen', () => {
+      const { caja, clienteId } = preparar();
+      const { venta_id } = pausarVentaEspera(db, input(caja.id, clienteId), { aplicarLineas: vi.fn() });
+      const antes = db.select().from(schema.venta).where(eq(schema.venta.id, venta_id)).get()!;
+      expect(() => pausarVentaEspera(db, input('no-existe', clienteId, { venta_id }), { aplicarLineas: vi.fn() }))
+        .toThrow('CAJA_REQUERIDA');
+      pausarVentaEspera(db, input(caja.id, clienteId, { venta_id, alias: 'Z' }), { aplicarLineas: vi.fn() });
+      const desp = db.select().from(schema.venta).where(eq(schema.venta.id, venta_id)).get()!;
+      expect(desp.turno_creacion_id).toBe(antes.turno_creacion_id);
+      expect(desp.usuario_id).toBe(antes.usuario_id);
+    });
+
     it('con venta_id: inexistente -> VENTA_ESPERA_NOT_FOUND; confirmada -> VENTA_NO_EN_ESPERA', () => {
       const { caja, clienteId } = preparar();
       const hooks = { aplicarLineas: vi.fn() };
