@@ -1,12 +1,16 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { AnulacionModal } from '../AnulacionModal';
+import { AnulacionModal } from './AnulacionModal';
+import { configurarBridge } from '../../bridge';
 
 beforeEach(() => {
   vi.clearAllMocks();
-  (window as any).ferreteria = {
-    venta: { anular: vi.fn().mockResolvedValue({}) },
-  };
+  configurarBridge('test');
+  vi.stubGlobal('test', { venta: { anular: vi.fn().mockResolvedValue({}) } });
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 function avanzarAMotivo(motivo = 'Error de precio') {
@@ -68,7 +72,7 @@ describe('AnulacionModal', () => {
     fireEvent.change(screen.getByLabelText(/contraseña supervisor/i), { target: { value: 'admin1234' } });
     fireEvent.click(screen.getByRole('button', { name: /autorizar/i }));
 
-    await waitFor(() => expect((window as any).ferreteria.venta.anular).toHaveBeenCalledWith({
+    await waitFor(() => expect((globalThis as any).test.venta.anular).toHaveBeenCalledWith({
       venta_id: 'v-1',
       motivo: 'Error de precio',
       supervisor_credenciales: { nombre_usuario: 'admin', password: 'admin1234' },
@@ -77,7 +81,7 @@ describe('AnulacionModal', () => {
   });
 
   it('muestra error unificado de supervisor inválido del backend', async () => {
-    (window as any).ferreteria.venta.anular = vi.fn().mockRejectedValue(new Error('SUPERVISOR_INVALIDO'));
+    vi.stubGlobal('test', { venta: { anular: vi.fn().mockRejectedValue(new Error('SUPERVISOR_INVALIDO')) } });
     render(<AnulacionModal ventaId="v-1" onSuccess={vi.fn()} onCancel={vi.fn()} />);
     avanzarAMotivo('Motivo');
 

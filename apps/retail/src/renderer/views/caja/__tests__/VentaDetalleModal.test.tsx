@@ -5,9 +5,6 @@ import { VentaDetalleModal } from '../VentaDetalleModal';
 const mockCan = vi.fn().mockReturnValue(false);
 vi.mock('@core/ui', async (importOriginal) => ({ ...(await importOriginal<any>()),
   useAuth: () => ({ can: mockCan }),
-}));
-
-vi.mock('../../pos/AnulacionModal', () => ({
   AnulacionModal: ({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void }) => (
     <div data-testid="anulacion-modal">
       <button onClick={onSuccess}>confirmar-anulacion</button>
