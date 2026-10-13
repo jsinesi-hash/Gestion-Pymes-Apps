@@ -45,3 +45,5 @@ export type { BarcodeTipo, PerfilEtiqueta, EtiquetaItem, CeldaLayout } from './e
 export { generarLayoutHoja } from './etiquetas/index.js';
 export * from './navegacion.js';
 export { ETIQUETA_PERMISO, etiquetaPermiso } from './permisos.js';
+export type { ItemComprobante, CondicionFiscalComprobante, ReceptorComprobante, IvaAlicuota, PagoComprobante, ComprobantePayload } from './comprobante.js';
+export { ivaPorAlicuota } from './comprobante.js';
