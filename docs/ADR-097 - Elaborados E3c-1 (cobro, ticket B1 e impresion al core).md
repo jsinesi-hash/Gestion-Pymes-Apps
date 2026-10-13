@@ -1,6 +1,6 @@
 # ADR-097 — Elaborados E3c-1: cobro, ticket (B1) e impresión HTML al core
 
-**Estado:** Aceptado — implementado en la rama `e3c1-core-venta-ui` (pendiente de click-through y merge)
+**Estado:** Aceptado — implementado y mergeado a `main` (PR #10, 2026-10-13)
 **Fecha:** 2026-10-13
 **Spec:** `docs/superpowers/specs/2026-10-13-elaborados-e3c-pos-design.md` (§2)
 **Plan:** `docs/superpowers/plans/2026-10-13-elaborados-e3c1-core-venta-ui.md`
@@ -59,4 +59,4 @@ Gates en serie: **shared 19 archivos/165 · core-ui 4/26 · core-main 2 · core-
 Retail renderer pasa de 948 a 933: −13 del modal movido a core-ui, −4 del ticket viejo, +2 del adaptador
 (el `PosView.test.tsx`, sin editar, sigue cubriendo el botón Anular del ticket para Operador y
 Supervisor). Revisión final independiente del diff completo: sin hallazgos críticos ni importantes; los
-menores baratos se corrigieron. Falta el click-through en Retail (CLAUDE.md §12).
+menores baratos se corrigieron. Click-through en Retail confirmado por el usuario (CLAUDE.md §12).
