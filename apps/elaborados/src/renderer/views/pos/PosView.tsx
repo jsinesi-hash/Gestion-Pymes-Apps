@@ -7,10 +7,13 @@ import {
 import type { PagoComprobante } from '@ferreteria/shared';
 import { usePosCatalogo } from '../../hooks/usePosCatalogo';
 import { usePosCotizacion } from '../../hooks/usePosCotizacion';
-import { aPayload, carritoInicial, carritoReducer } from './carritoReducer';
+import { usePedidosPendientes } from '../../hooks/usePedidosPendientes';
+import { aPayload, carritoInicial, carritoReducer, type CarritoAction } from './carritoReducer';
 import { CarritoPanel } from './CarritoPanel';
 import { ClienteSelector } from './ClienteSelector';
 import { CONSUMIDOR_FINAL, type ClientePos } from './consumidorFinal';
+import { GuardarPedidoModal } from './GuardarPedidoModal';
+import { PedidosPendientesPanel } from './PedidosPendientesPanel';
 import { ProductosGrilla } from './ProductosGrilla';
 import { SelectorSaboresModal } from './SelectorSaboresModal';
 import { ticketDesdeVentaElaborados } from './ticketElaborados';
@@ -19,6 +22,17 @@ import type { ModificadorElegido, ProductoPos } from './tipos';
 type Pagos = Parameters<NonNullable<React.ComponentProps<typeof ConfirmarVentaModal>['onConfirmar']>>[0];
 type Creds = { nombre_usuario: string; password: string };
 type VentaTerminada = { resultado: any; pagos: Pagos; cliente: ClientePos };
+type PedidoActual = { id: string; alias: string | null; observaciones: string | null };
+type LineaCargar = Extract<CarritoAction, { tipo: 'cargar' }>['lineas'][number];
+/** Respuesta de `ventaEspera.retomar` (líneas sin precios; el carrito vuelve a cotizar). */
+type PedidoRetomado = {
+  venta_id: string;
+  alias: string | null;
+  observaciones: string | null;
+  descuento_global_pct: number;
+  cliente: ClientePos | null;
+  lineas: { producto_venta_id: string; nombre: string; cantidad: number; descuento_linea_pct: number; modificadores: ModificadorElegido[] }[];
+};
 
 const mensaje = (e: unknown): string => (e instanceof Error ? e.message : String(e ?? ''));
 
@@ -39,6 +53,15 @@ export function PosView() {
   const [errorCobro, setErrorCobro] = useState<string | null>(null);
   const [limitePendiente, setLimitePendiente] = useState<Pagos | null>(null);
   const [terminada, setTerminada] = useState<VentaTerminada | null>(null);
+
+  const { pedidos, error: errorListaPedidos, recargar: recargarPedidos } = usePedidosPendientes();
+  const [pedidoActual, setPedidoActual] = useState<PedidoActual | null>(null);
+  const [guardarAbierto, setGuardarAbierto] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [errorGuardar, setErrorGuardar] = useState<string | null>(null);
+  const [pedidosAbierto, setPedidosAbierto] = useState(false);
+  const [errorPedidos, setErrorPedidos] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
 
   if (isLoading || caja === undefined) return null;
 
@@ -82,11 +105,86 @@ export function PosView() {
       ...payload,
       pagos,
       ...(supervisor ? { supervisor_credenciales: supervisor } : {}),
+      ...(pedidoActual ? { venta_en_espera_id: pedidoActual.id } : {}),
     });
     setTerminada({ resultado, pagos, cliente });
     setCobroAbierto(false);
     setLimitePendiente(null);
     dispatch({ tipo: 'limpiar' });
+    if (pedidoActual) {
+      setPedidoActual(null);
+      recargarPedidos();
+    }
+  }
+
+  const abrirGuardar = () => {
+    setAviso(null);
+    setErrorGuardar(null);
+    setGuardarAbierto(true);
+  };
+
+  async function guardarPedido(datos: { alias: string; observaciones: string }) {
+    setErrorGuardar(null);
+    setGuardando(true);
+    try {
+      await (bridge() as any).ventaEspera.pausar({
+        caja_id: cajaId,
+        cliente_id: cliente.id,
+        ...payload,
+        alias: datos.alias,
+        observaciones: datos.observaciones,
+        ...(pedidoActual ? { venta_id: pedidoActual.id } : {}),
+      });
+      setGuardarAbierto(false);
+      dispatch({ tipo: 'limpiar' });
+      setPedidoActual(null);
+      setCliente(CONSUMIDOR_FINAL);
+      recargarPedidos();
+      setAviso('Pedido guardado');
+    } catch (e) {
+      setErrorGuardar(traducirError(e).mensaje);
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  const abrirPedidos = () => {
+    setAviso(null);
+    setErrorPedidos(null);
+    setPedidosAbierto(true);
+  };
+
+  async function retomarPedido(id: string) {
+    setErrorPedidos(null);
+    try {
+      const r = (await (bridge() as any).ventaEspera.retomar({ venta_id: id })) as PedidoRetomado;
+      const productos = new Map((catalogo?.productos ?? []).map((p) => [p.id, p] as const));
+      const lineas: LineaCargar[] = [];
+      let omitidas = 0;
+      for (const l of r.lineas) {
+        const producto = productos.get(l.producto_venta_id);
+        if (!producto) { omitidas += 1; continue; }
+        lineas.push({ producto, cantidad: l.cantidad, descuento_linea_pct: l.descuento_linea_pct, modificadores: l.modificadores });
+      }
+      setPedidosAbierto(false);
+      setAviso(omitidas > 0 ? `${omitidas} producto(s) del pedido ya no están disponibles` : null);
+      if (lineas.length === 0) return; // nada que cargar: el pedido queda pendiente, sin vincular
+      dispatch({ tipo: 'cargar', lineas, descuentoGlobalPct: r.descuento_global_pct });
+      setCliente(r.cliente ?? CONSUMIDOR_FINAL);
+      setPedidoActual({ id: r.venta_id, alias: r.alias, observaciones: r.observaciones });
+    } catch (e) {
+      setErrorPedidos(traducirError(e).mensaje);
+    }
+  }
+
+  async function descartarPedido(id: string) {
+    setErrorPedidos(null);
+    try {
+      await (bridge() as any).ventaEspera.descartar({ venta_id: id });
+      recargarPedidos();
+    } catch (e) {
+      setErrorPedidos(traducirError(e).mensaje);
+    }
   }
 
   async function handleConfirmarCobro(pagos: Pagos) {
@@ -125,7 +223,29 @@ export function PosView() {
     setTerminada(null);
     setCliente(CONSUMIDOR_FINAL);
     setErrorCobro(null);
+    setPedidoActual(null);
   };
+
+  const acciones = (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {pedidoActual && (
+        <div className="badge" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <span>Pedido: {pedidoActual.alias ?? 'sin alias'}</span>
+          <button type="button" className="btn-secondary" aria-label="Soltar pedido" onClick={() => setPedidoActual(null)}>
+            Soltar
+          </button>
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button type="button" className="btn-secondary" disabled={estado.lineas.length === 0} onClick={abrirGuardar}>
+          Guardar pedido
+        </button>
+        <button type="button" className="btn-secondary" onClick={abrirPedidos}>
+          {pedidos.length > 0 ? `Pedidos (${pedidos.length})` : 'Pedidos'}
+        </button>
+      </div>
+    </div>
+  );
 
   const comprobante = terminada
     ? ticketDesdeVentaElaborados(
@@ -173,9 +293,38 @@ export function PosView() {
         onDescuentoGlobal={(pct) => dispatch({ tipo: 'descuentoGlobal', pct })}
         onCobrar={() => { setErrorCobro(null); setCobroAbierto(true); }}
         puedeCobrar
+        acciones={acciones}
       >
         <ClienteSelector clienteId={cliente.id} onCambiar={setCliente} />
       </CarritoPanel>
+
+      {aviso && (
+        <div role="status" style={{ position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 1100, background: 'var(--bg, #fff)', padding: '8px 16px' }}>
+          {aviso}
+        </div>
+      )}
+
+      {guardarAbierto && (
+        <GuardarPedidoModal
+          {...(pedidoActual ? { inicial: { alias: pedidoActual.alias ?? '', observaciones: pedidoActual.observaciones ?? '' } } : {})}
+          guardando={guardando}
+          error={errorGuardar}
+          onGuardar={guardarPedido}
+          onCancelar={() => { setGuardarAbierto(false); setErrorGuardar(null); }}
+        />
+      )}
+
+      {pedidosAbierto && (
+        <PedidosPendientesPanel
+          pedidos={pedidos}
+          pedidoActualId={pedidoActual?.id ?? null}
+          carritoVacio={estado.lineas.length === 0}
+          onRetomar={retomarPedido}
+          onDescartar={descartarPedido}
+          onCerrar={() => { setPedidosAbierto(false); setErrorPedidos(null); }}
+          error={errorPedidos ?? errorListaPedidos}
+        />
+      )}
 
       {productoElegido && (
         <SelectorSaboresModal

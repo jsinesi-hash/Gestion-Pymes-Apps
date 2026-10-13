@@ -79,6 +79,15 @@ describe('CarritoPanel', () => {
     expect(cobrar()).toBeDisabled();
   });
 
+  it('acciones: se muestran encima de COBRAR; sin la prop no aparece nada extra', () => {
+    montar({ acciones: <button type="button">Guardar pedido</button> });
+    const accion = screen.getByRole('button', { name: 'Guardar pedido' });
+    expect(accion.compareDocumentPosition(cobrar()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    cleanup();
+    montar();
+    expect(screen.queryByRole('button', { name: 'Guardar pedido' })).toBeNull();
+  });
+
   it('cotización desfasada (distinta cantidad de líneas): no muestra subtotales ajenos', () => {
     const otra: LineaCarrito = { ...linea, key: 'l2', nombre: 'Palito' };
     montar({ lineas: [linea, otra], cotizacion: cot });
