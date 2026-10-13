@@ -17,7 +17,17 @@ const SABORES = [
 ] as const;
 
 function yaSembrado(db: Db): boolean {
-  return db.select({ id: schema.categoria_venta.id }).from(schema.categoria_venta).all().length > 0;
+  return db.select({ id: schema.producto_venta.id }).from(schema.producto_venta).limit(1).all().length > 0;
+}
+
+function categoriaPorNombre(db: Db, nombre: string, orden: number) {
+  return db.select().from(schema.categoria_venta).where(eq(schema.categoria_venta.nombre, nombre)).get()
+    ?? categoriaVentaCreateHandler(db, { nombre, orden });
+}
+
+function grupoPorNombre(db: Db, nombre: string) {
+  return db.select().from(schema.grupo_modificador).where(eq(schema.grupo_modificador.nombre, nombre)).get()
+    ?? grupoModificadorCreateHandler(db, { nombre });
 }
 
 export function runDemoHeladeriaSeed(db: Db): void {
@@ -40,7 +50,7 @@ export function runDemoHeladeriaSeed(db: Db): void {
   }
 
   // ── 8 sabores con receta (rinde 12kg: 6 leche + 3 crema + 2 azúcar + 1 saborizante) ──
-  const grupoSabores = grupoModificadorCreateHandler(db, { nombre: 'Sabores' });
+  const grupoSabores = grupoPorNombre(db, 'Sabores');
   const opcionesSabores: { articulo_id: string; nombre: string; recargo_centavos: number; cantidad: number; orden: number }[] = [];
   SABORES.forEach((nombreSabor, i) => {
     const sabz = saborizantes[i];
@@ -72,11 +82,11 @@ export function runDemoHeladeriaSeed(db: Db): void {
   }
 
   // ── Categorías de venta ────────────────────────────────────────────────────
-  const catHelados = categoriaVentaCreateHandler(db, { nombre: 'Helados', orden: 1 });
-  const catPalitos = categoriaVentaCreateHandler(db, { nombre: 'Palitos', orden: 2 });
-  const catTortas = categoriaVentaCreateHandler(db, { nombre: 'Tortas', orden: 3 });
-  const catLicuados = categoriaVentaCreateHandler(db, { nombre: 'Licuados', orden: 4 });
-  const catCucuruchos = categoriaVentaCreateHandler(db, { nombre: 'Cucuruchos', orden: 5 });
+  const catHelados = categoriaPorNombre(db, 'Helados', 1);
+  const catPalitos = categoriaPorNombre(db, 'Palitos', 2);
+  const catTortas = categoriaPorNombre(db, 'Tortas', 3);
+  const catLicuados = categoriaPorNombre(db, 'Licuados', 4);
+  const catCucuruchos = categoriaPorNombre(db, 'Cucuruchos', 5);
 
   // ── Productos de venta ─────────────────────────────────────────────────────
   productoVentaCreateHandler(db, {

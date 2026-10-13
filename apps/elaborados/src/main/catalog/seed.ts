@@ -42,3 +42,30 @@ export function asegurarConsumidorFinal(db: Db): void {
     version: 1, origin_id: 'system', sync_state: 'synced', updated_at: now,
   }).onConflictDoNothing().run();
 }
+
+export const CATEGORIAS_VENTA_HELADERIA = ['Helados', 'Palitos', 'Tortas', 'Licuados', 'Cucuruchos'] as const;
+export const GRUPO_SABORES = 'Sabores';
+
+/**
+ * Datos base del rubro heladería: categorías de venta y grupo de modificadores "Sabores"
+ * (sin opciones). Find-or-create por nombre; no requiere sesión (inserción directa).
+ */
+export function runBaseRubroHeladeria(db: Db): void {
+  const now = new Date();
+  CATEGORIAS_VENTA_HELADERIA.forEach((nombre, i) => {
+    const existe = db.select({ id: schema.categoria_venta.id }).from(schema.categoria_venta)
+      .where(eq(schema.categoria_venta.nombre, nombre)).get();
+    if (!existe) {
+      db.insert(schema.categoria_venta).values({
+        id: randomUUID(), nombre, orden: i + 1, activo: true, ...SYNC, updated_at: now,
+      }).run();
+    }
+  });
+  const grupo = db.select({ id: schema.grupo_modificador.id }).from(schema.grupo_modificador)
+    .where(eq(schema.grupo_modificador.nombre, GRUPO_SABORES)).get();
+  if (!grupo) {
+    db.insert(schema.grupo_modificador).values({
+      id: randomUUID(), nombre: GRUPO_SABORES, ...SYNC, updated_at: now,
+    }).run();
+  }
+}

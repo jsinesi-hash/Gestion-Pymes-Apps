@@ -8,7 +8,7 @@ import type * as schema from './db/schema';
 // donde app puede no estar inicializado.
 import { runSeed, crearBackup, runGeoSeedOffline } from '@core/main';
 import { PERMISOS_ELABORADOS, OPERADOR_PERMISOS_ELABORADOS } from './auth/seed';
-import { runCatalogSeedElaborados, asegurarConsumidorFinal } from './catalog/seed';
+import { runCatalogSeedElaborados, asegurarConsumidorFinal, runBaseRubroHeladeria } from './catalog/seed';
 import * as dbSchema from './db/schema';
 
 type Db = BetterSQLite3Database<typeof schema>;
@@ -36,6 +36,28 @@ function marcarSeedBaseAplicado(db: Db): void {
       valor: 'true',
       tipo: 'bool',
       descripcion: 'Seed base ejecutado en primer arranque',
+    })
+    .onConflictDoNothing()
+    .run();
+}
+
+const CLAVE_SEED_RUBRO_APLICADO = 'sistema.seed_rubro_aplicado';
+
+function isSeedRubroAplicado(db: Db): boolean {
+  const row = db.select()
+    .from(dbSchema.parametros_sistema)
+    .where(eq(dbSchema.parametros_sistema.clave, CLAVE_SEED_RUBRO_APLICADO))
+    .get();
+  return row?.valor === 'true';
+}
+
+function marcarSeedRubroAplicado(db: Db): void {
+  db.insert(dbSchema.parametros_sistema)
+    .values({
+      clave: CLAVE_SEED_RUBRO_APLICADO,
+      valor: 'true',
+      tipo: 'bool',
+      descripcion: 'Seed base del rubro (categorías de venta y grupo Sabores) ejecutado una vez',
     })
     .onConflictDoNothing()
     .run();
@@ -85,6 +107,14 @@ export async function runStartup(db: Db, opts: StartupOpts = {}): Promise<void> 
   //    permisos nuevos de una versión lleguen a instalaciones ya inicializadas.
   runSeed(db, { permisos: PERMISOS_ELABORADOS, operador: OPERADOR_PERMISOS_ELABORADOS });
   asegurarConsumidorFinal(db);
+
+  // Seed base del rubro: una sola vez por BD (clave propia, distinta de seed_base_aplicado,
+  // para que también lo reciban las instalaciones ya sembradas). No reaparece lo que un
+  // Supervisor haya renombrado/desactivado.
+  if (!isSeedRubroAplicado(db)) {
+    runBaseRubroHeladeria(db);
+    marcarSeedRubroAplicado(db);
+  }
 
   // 4. First-run guard: geo una sola vez
   if (!isSeedBaseAplicado(db)) {

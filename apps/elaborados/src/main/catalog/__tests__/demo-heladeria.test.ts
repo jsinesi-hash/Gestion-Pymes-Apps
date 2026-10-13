@@ -4,7 +4,7 @@ import * as schema from '../../db/schema';
 import { createTestDb, loginAsAdmin } from '../../__tests__/helpers';
 import { runSeed as runSeedCore } from '@core/main';
 import { PERMISOS_ELABORADOS, OPERADOR_PERMISOS_ELABORADOS } from '../../auth/seed';
-import { runCatalogSeedElaborados } from '../seed';
+import { runCatalogSeedElaborados, runBaseRubroHeladeria } from '../seed';
 import { runDemoHeladeriaSeed } from '../demo-heladeria';
 
 function dbConCatalogoBase() {
@@ -47,5 +47,34 @@ describe('runDemoHeladeriaSeed', () => {
     runDemoHeladeriaSeed(db);
     const sabores = db.select().from(schema.articulo).where(eq(schema.articulo.tipo, 'elaborado')).all();
     expect(sabores).toHaveLength(8);
+  });
+});
+
+describe('runDemoHeladeriaSeed con el seed base del rubro', () => {
+  it('corre igual, reutiliza categorías y grupo Sabores y deja las opciones en ese grupo', () => {
+    const db = dbConCatalogoBase();
+    runBaseRubroHeladeria(db);
+    const grupoBase = db.select().from(schema.grupo_modificador).where(eq(schema.grupo_modificador.nombre, 'Sabores')).get()!;
+    runDemoHeladeriaSeed(db);
+    expect(db.select().from(schema.producto_venta).all().length).toBeGreaterThanOrEqual(7);
+    expect(db.select().from(schema.categoria_venta).all()).toHaveLength(5);
+    const grupos = db.select().from(schema.grupo_modificador).where(eq(schema.grupo_modificador.nombre, 'Sabores')).all();
+    expect(grupos).toHaveLength(1);
+    expect(grupos[0].id).toBe(grupoBase.id);
+    const opciones = db.select().from(schema.grupo_modificador_opcion)
+      .where(eq(schema.grupo_modificador_opcion.grupo_modificador_id, grupoBase.id)).all();
+    expect(opciones).toHaveLength(8);
+  });
+
+  it('una segunda corrida no duplica nada (guard por producto_venta)', () => {
+    const db = dbConCatalogoBase();
+    runBaseRubroHeladeria(db);
+    runDemoHeladeriaSeed(db);
+    const productos = db.select().from(schema.producto_venta).all().length;
+    const articulos = db.select().from(schema.articulo).all().length;
+    runDemoHeladeriaSeed(db);
+    expect(db.select().from(schema.producto_venta).all()).toHaveLength(productos);
+    expect(db.select().from(schema.articulo).all()).toHaveLength(articulos);
+    expect(db.select().from(schema.categoria_venta).all()).toHaveLength(5);
   });
 });
