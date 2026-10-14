@@ -4255,6 +4255,22 @@ TDD RED→GREEN:
   ubicación legacy `A-01-03` en catálogo y la columna `ubicacion=A-1-3` → la fila debe
   quedar `Nuevo`/`Actualiza`, no `Error`.
 
+## ADR-076 — Política de retención y depuración de backups
+
+**Estado:** Aceptado — implementado · **Fecha:** 2026-09-04
+
+Hoy los backups automáticos (pre-migración al arrancar y los de cierre de caja) se acumulaban sin depuración. **Decisiones:** (D1) retención **híbrida con piso**: protege los *últimos N* ∪ los *más nuevos que X días* ∪ los manuales, con un piso mínimo absoluto por carpeta y un tope de tamaño opcional; (D2) **consulta diferida**: nada se borra solo, se calculan candidatos y el Supervisor confirma; (D3) el aviso es exclusivo del Supervisor (permiso `backup.crear`); (D4) los backups **manuales están siempre protegidos**; (D5) modal una vez al abrir la app (si hay candidatos y sesión Supervisor) + banner permanente en Configuración → Backups, con "Ahora no" por sesión; (D6) defaults `N = 10`, piso `3` por carpeta, tope de tamaño desactivado y `backup_retencion_dias = 30`. Implementado como función pura de retención + IPC `backup:depurar` en `@core/main` y `DepuracionBackupsModal` en `AppShell` de `@core/ui`.
+
+Detalle completo: [`docs/ADR-076 - Politica de retencion y depuracion de backups.md`](ADR-076%20-%20Politica%20de%20retencion%20y%20depuracion%20de%20backups.md).
+
+## ADR-077 — Fase 1 de mejoras UX: feedback central, traducción de errores, validación inline y fix de hook
+
+**Estado:** Aceptado — implementado · **Fecha:** 2026-09-06
+
+Primera fase de la auditoría de UX/seguridad (`docs/prompts-fases-mejoras-ux.md`), sin migraciones y sin dependencias nuevas: **BUG-1** (fila de listado extraída a un componente propio, fix de hook), **ERR-1** (capa de feedback única: `ToastProvider`/`useToast` + helper `useCallIpc`), **ERR-2** (`traducirError(e) → { mensaje, accion? }`, tabla de códigos de dominio traducidos), **PROD-1** (validación inline en `ProductoForm` como primer consumidor), **NAV-1** (breadcrumb jerárquico y clicable) y **SEC-1** (control de navegación y CSP en el main: `webSecurity.ts`). `traducirError` y los toasts son hoy la base de manejo de errores de **ambas apps** (viven en `@core/ui`).
+
+Detalle completo: [`docs/ADR-077 - Fase 1 mejoras UX - feedback central, traduccion de errores, validacion inline y fix de hook.md`](ADR-077%20-%20Fase%201%20mejoras%20UX%20-%20feedback%20central,%20traduccion%20de%20errores,%20validacion%20inline%20y%20fix%20de%20hook.md).
+
 ## ADR-078 — Fase 2 mejoras UX: stock inicial en el alta, hub de Precios/Costos y paleta de comandos
 
 **Estado:** Aceptado — implementado · **Fecha:** 2026-09-07 · Detalle completo en
