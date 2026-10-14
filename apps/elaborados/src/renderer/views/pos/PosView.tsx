@@ -45,7 +45,9 @@ export function PosView() {
   const [estado, dispatch] = useReducer(carritoReducer, carritoInicial);
   const [cliente, setCliente] = useState<ClientePos>(CONSUMIDOR_FINAL);
   const payload = useMemo(() => aPayload(estado), [estado]);
-  const { cotizacion, cotizando, error: errorCotizacion } = usePosCotizacion(payload);
+  // ADR-104: el cliente viaja en la cotización para que el main aplique su lista de precios.
+  const payloadCotizar = useMemo(() => ({ ...payload, cliente_id: cliente.id }), [payload, cliente.id]);
+  const { cotizacion, cotizando, error: errorCotizacion } = usePosCotizacion(payloadCotizar);
 
   const [productoElegido, setProductoElegido] = useState<ProductoPos | null>(null);
   const [cobroAbierto, setCobroAbierto] = useState(false);

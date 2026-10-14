@@ -12,6 +12,7 @@ export const CRUMBS_ELABORADOS: Seccion[] = [
   { grupo: 'Carta', base: '/carta/categorias', baseLabel: 'Categorías' },
   { grupo: 'Carta', base: '/carta/modificadores', baseLabel: 'Modificadores' },
   { grupo: 'Carta', base: '/carta/productos', baseLabel: 'Productos de venta' },
+  { grupo: 'Carta', base: '/carta/listas-precio', baseLabel: 'Listas de precio' },
   { grupo: 'Sistema', base: '/config/mi-cuenta', baseLabel: 'Mi cuenta' },
   { grupo: 'Sistema', base: '/config/usuarios', baseLabel: 'Usuarios' },
   { grupo: 'Sistema', base: '/config/roles-permisos', baseLabel: 'Roles y permisos' },

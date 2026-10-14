@@ -102,6 +102,8 @@ beforeEach(() => {
 const elegirJuan = async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Cambiar' }));
   fireEvent.click(await screen.findByText('Juan García'));
+  // ADR-104: cambiar de cliente re-cotiza (lista de precios); esperar a que COBRAR se rehabilite.
+  await waitFor(() => expect(screen.getByRole('button', { name: 'COBRAR' })).toBeEnabled());
 };
 const pedirSupervisor = async () => {
   confirmar.mockRejectedValueOnce(new Error('LIMITE_CREDITO_EXCEDIDO'));
@@ -129,6 +131,7 @@ describe('PosView', () => {
     expect(cotizar).toHaveBeenLastCalledWith({
       lineas: [{ producto_venta_id: 'p-palito', cantidad: 1, descuento_linea_pct: 0, modificadores: [] }],
       descuento_global_pct: 0,
+      cliente_id: 'cf000000-0000-0000-0000-000000000001',
     });
   });
 
@@ -327,6 +330,7 @@ describe('PosView', () => {
       await waitFor(() => expect(cotizar).toHaveBeenLastCalledWith({
         lineas: [{ producto_venta_id: 'p-pote', cantidad: 2, descuento_linea_pct: 5, modificadores: LINEA_POTE.modificadores }],
         descuento_global_pct: 10,
+        cliente_id: 'c1',
       }));
       // el cliente del pedido habilita cuenta corriente en el cobro
       await waitFor(() => expect(screen.getByRole('button', { name: 'COBRAR' })).toBeEnabled(), { timeout: 3000 });

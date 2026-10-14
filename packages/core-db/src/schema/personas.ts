@@ -1,5 +1,6 @@
 import { sqliteTable, text, real, integer } from 'drizzle-orm/sqlite-core';
 import { localidad } from './geo';
+import { lista_precio } from './listas-precio';
 
 const TIPO_DOC = ['DNI', 'CUIT', 'CUIL'] as const;
 const COND_FISCAL = ['Responsable Inscripto', 'Monotributo', 'Consumidor Final', 'Exento'] as const;
@@ -25,7 +26,7 @@ export const cliente = sqliteTable('cliente', {
   telefono:                 text('telefono'),
   email:                    text('email'),
   habilita_cuenta_corriente: integer('habilita_cuenta_corriente', { mode: 'boolean' }).notNull().default(false),
-  lista_precio_id:          text('lista_precio_id'),
+  lista_precio_id:          text('lista_precio_id').references(() => lista_precio.id),
   activo:                   integer('activo', { mode: 'boolean' }).notNull().default(true),
   usuario_creacion_id: text('usuario_creacion_id').notNull(),
   fecha_creacion: integer('fecha_creacion', { mode: 'timestamp' }).notNull(),
