@@ -4,3 +4,4 @@ export * from './schema/stock';
 export * from './schema/produccion';
 export * from './schema/venta-catalogo';
 export * from './schema/venta';
+export * from './schema/compra';

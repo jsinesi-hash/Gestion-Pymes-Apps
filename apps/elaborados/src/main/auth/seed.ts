@@ -7,8 +7,9 @@ export const PERMISOS_ELABORADOS: readonly PermisoDef[] = [
   { codigo: 'produccion.registrar',    modulo: 'produccion' },
   { codigo: 'receta.gestionar',        modulo: 'produccion' },
   { codigo: 'producto_venta.gestionar', modulo: 'carta' },
+  { codigo: 'compra.registrar',       modulo: 'compras' },
 ];
 
 export const OPERADOR_PERMISOS_ELABORADOS: readonly string[] = [
-  'articulo.gestionar', 'stock.ajustar', 'produccion.registrar',
+  'articulo.gestionar', 'stock.ajustar', 'produccion.registrar', 'compra.registrar',
 ];

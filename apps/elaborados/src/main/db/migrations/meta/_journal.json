@@ -50,6 +50,13 @@
       "when": 1792001545660,
       "tag": "0006_add_opcion_activo",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1792002559376,
+      "tag": "0007_add_compras",
+      "breakpoints": true
     }
   ]
 }
