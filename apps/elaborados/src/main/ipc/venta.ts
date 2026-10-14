@@ -1,4 +1,4 @@
-import { asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import {
   getSession, confirmarVenta, anularVenta, ventaListByCajaHandler, requirePermission,
@@ -98,7 +98,7 @@ export function cargarCatalogo(db: Db, productoIds: string[]) {
       }));
     for (const g of grupos) {
       for (const o of db.select().from(schema.grupo_modificador_opcion)
-        .where(eq(schema.grupo_modificador_opcion.grupo_modificador_id, g.grupo_modificador_id)).all()) {
+        .where(and(eq(schema.grupo_modificador_opcion.grupo_modificador_id, g.grupo_modificador_id), eq(schema.grupo_modificador_opcion.activo, true))).all()) {
         opciones.set(o.id, {
           id: o.id, grupo_modificador_id: o.grupo_modificador_id, articulo_id: o.articulo_id,
           nombre: o.nombre, recargo_centavos: o.recargo_centavos, cantidad: o.cantidad,
@@ -332,7 +332,7 @@ export function ventaCatalogoHandler(db: Db): CatalogoPos {
           const grupo = db.select().from(schema.grupo_modificador)
             .where(eq(schema.grupo_modificador.id, g.grupo_modificador_id)).get();
           const opciones = db.select().from(schema.grupo_modificador_opcion)
-            .where(eq(schema.grupo_modificador_opcion.grupo_modificador_id, g.grupo_modificador_id))
+            .where(and(eq(schema.grupo_modificador_opcion.grupo_modificador_id, g.grupo_modificador_id), eq(schema.grupo_modificador_opcion.activo, true)))
             .orderBy(asc(schema.grupo_modificador_opcion.orden)).all()
             .map((o) => ({ id: o.id, nombre: o.nombre, recargo_centavos: o.recargo_centavos }));
           return {

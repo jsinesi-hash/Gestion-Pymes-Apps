@@ -225,7 +225,7 @@ describe('ArticulosView', () => {
       fireEvent.change(screen.getByPlaceholderText(/cantidad/i), { target: { value: '3' } });
       fireEvent.click(screen.getByRole('button', { name: /guardar receta/i }));
 
-      expect(await screen.findByRole('alert')).toHaveTextContent(/no se pudo completar la operación/i);
+      expect(await screen.findByRole('alert')).toHaveTextContent(/solo los artículos elaborados/i);
       // El modal sigue abierto: no se llamó a onClose.
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });

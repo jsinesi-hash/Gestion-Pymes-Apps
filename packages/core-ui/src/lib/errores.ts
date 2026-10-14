@@ -73,7 +73,9 @@ const CODIGOS: Record<string, Formateador> = {
   MEDIO_PAGO_DUPLICADO: msg('Hay un medio de pago repetido.'),
   SALDO_PENDIENTE: msg('El pago no cubre el total de la venta.'),
   PRODUCTO_INACTIVO: msg('El producto está inactivo y no se puede vender.'),
-  STOCK_INSUFICIENTE: msg('No hay stock suficiente para completar la operación.'),
+  STOCK_INSUFICIENTE: a => ({
+    mensaje: a[0] ? `No hay stock suficiente de ${a[0]} para completar la operación.` : 'No hay stock suficiente para completar la operación.',
+  }),
   PRECIO_DESACTUALIZADO: msg('El precio cambió. Requiere autorización del supervisor.'),
   CCC_NO_DISPONIBLE: msg('El cliente no tiene cuenta corriente habilitada.'),
   LIMITE_CREDITO_EXCEDIDO: msg('La venta supera el límite de crédito. Requiere autorización del supervisor.'),
@@ -90,6 +92,13 @@ const CODIGOS: Record<string, Formateador> = {
   OPCION_DUPLICADA: msg('No podés repetir la misma opción.'),
   MODIFICADOR_MIN: msg('Elegí al menos la cantidad mínima de opciones (por ejemplo, sabores).'),
   MODIFICADOR_MAX: msg('Elegiste más opciones de las permitidas.'),
+  // Producción / recetas (Elaborados)
+  RECETA_NO_DEFINIDA: msg('El artículo no tiene receta definida.'),
+  RINDE_INVALIDO: msg('El rinde de la receta debe ser mayor que cero.'),
+  ARTICULO_NO_ELABORADO: msg('Solo los artículos elaborados pueden tener receta.'),
+  CANTIDAD_PRODUCIDA_INVALIDA: msg('La cantidad producida debe ser mayor que cero.'),
+  ANULACION_REQUIERE_AUTORIZACION: msg('Anular requiere la autorización de un supervisor.'),
+  YA_ANULADA: msg('El registro ya estaba anulado.'),
   // Catálogos auxiliares
   TIENE_PRODUCTOS: a => ({ mensaje: `No se puede: tiene ${a[0] ?? '—'} producto(s) asociado(s).` }),
   YA_EXISTE: a => ({ mensaje: `Ya existe un registro con el código ${a[0] ?? '—'}.` }),

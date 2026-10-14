@@ -1,0 +1,1 @@
+ALTER TABLE `grupo_modificador_opcion` ADD `activo` integer DEFAULT true NOT NULL;
