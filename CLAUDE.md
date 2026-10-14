@@ -17,30 +17,30 @@ pnpm dev
 
 # Correr TODOS los tests (renderer + main process)
 pnpm test
-# O desde packages/client directamente:
-cd packages/client && pnpm test   # vitest jsdom + test-node.cjs bajo Electron
+# O desde la app (apps/retail o apps/elaborados) directamente:
+cd apps/retail && pnpm test   # vitest jsdom + test-node.cjs bajo Electron
 
 # Solo tests del renderer (jsdom, rápidos)
-cd packages/client && pnpm exec vitest run --config vitest.config.ts
+cd apps/retail && pnpm exec vitest run --config vitest.config.ts
 
 # Solo tests del main process (corre bajo el binario de Electron)
-cd packages/client && node scripts/test-node.cjs
+cd apps/retail && node scripts/test-node.cjs
 
 # Un único archivo de test
-cd packages/client && pnpm exec vitest run src/renderer/views/productos/ProductoDetalle.test.tsx
-cd packages/client && ELECTRON_RUN_AS_NODE=1 ./node_modules/.bin/electron node_modules/vitest/vitest.mjs run --config vitest.node.config.ts src/main/ipc/__tests__/venta.handlers.test.ts
+cd apps/retail && pnpm exec vitest run src/renderer/views/productos/ProductoDetalle.test.tsx
+cd apps/retail && ELECTRON_RUN_AS_NODE=1 ./node_modules/.bin/electron node_modules/vitest/vitest.mjs run --config vitest.node.config.ts src/main/ipc/__tests__/venta.handlers.test.ts
 
 # Recompilar el módulo nativo según el runtime
 pnpm rebuild                             # para Electron (antes de pnpm dev)
-cd packages/client && pnpm rebuild:node  # para Node del sistema (antes de pnpm test)
+cd apps/retail && pnpm rebuild:node  # para Node del sistema (antes de pnpm test)
 
 # Build y empaquetado
-pnpm build   # empaqueta packages/client
+pnpm build   # empaqueta apps/retail (ferreteria-client)
 pnpm make    # genera instalador
 
 # Seeds de datos
-cd packages/client && node scripts/seed-dev.cjs   # catálogo + personas + ventas de prueba
-cd packages/client && node scripts/seed-geo.cjs   # provincias/localidades
+cd apps/retail && node scripts/seed-dev.cjs   # catálogo + personas + ventas de prueba
+cd apps/retail && node scripts/seed-geo.cjs   # provincias/localidades
 
 # Seeds de Elaborados (ADR-099) — desde la raíz: pnpm seed:base:elaborados / pnpm seed:dev:elaborados — con la app CERRADA; BD: %APPDATA%/elaborados-client/elaborados.db (o DB_PATH)
 cd apps/elaborados && pnpm seed:base   # datos base del rubro: impuestos, Consumidor Final, categorías de venta, grupo Sabores
@@ -124,7 +124,7 @@ recibe los totales ya calculados y no conoce `venta_detalle` ni el stock de ning
 - **Tests del renderer** (`src/renderer/**/*.test.{ts,tsx}`): corren con `vitest` bajo jsdom — sin módulos nativos, el Node del sistema funciona.
 - **Tests del main process** (`src/main/**/*.test.ts`): corren vía `scripts/test-node.cjs`, que lanza el binario de Electron con `ELECTRON_RUN_AS_NODE=1`, garantizando el mismo NMV que producción.
 
-`pnpm test` en `packages/client` ejecuta ambos en secuencia: `vitest run && node scripts/test-node.cjs`.
+`pnpm test` en cada app (`apps/retail`, `apps/elaborados`) ejecuta ambos en secuencia: `vitest run && node scripts/test-node.cjs`.
 
 Al alternar entre `pnpm dev` y `pnpm test`, recompilar el módulo nativo con `pnpm rebuild:electron` o `pnpm rebuild:node` según corresponda.
 
@@ -288,7 +288,7 @@ No se puede desactivar el último Supervisor activo. Roles base con `es_sistema 
 
 ## 7. Modelo de datos
 
-> **La fuente de verdad es `packages/client/src/main/db/schema/*.ts`, no esta sección.**
+> **La fuente de verdad es `packages/core-db/src/schema/*.ts` (universal) y `apps/<app>/src/main/db/schema/*.ts`, no esta sección.**
 > Esta sección es un mapa para orientarse; ante cualquier duda de nombre, tipo o
 > nullabilidad, abrir el archivo de esquema. **51 tablas** en 12 archivos de dominio.
 >
@@ -736,6 +736,7 @@ electrónicos.
 - No implementar nada de la sección 10.
 - Ante un ADR abierto, **proponer opciones y esperar confirmación**.
 - Cada fase termina **desplegable**, en verde y sin romper las anteriores.
+- **Cierre documental obligatorio de cada paso:** actualizar `Estado.md` (cabecera + Bitácora + tabla de ADRs + releases) **y** `docs/ADR-Log-ferreteria.md` (entrada del ADR) en el mismo PR. Un paso no está cerrado hasta que ambos están al día.
 - **La suite en verde no prueba que una feature sea alcanzable.** Todo cambio con
   superficie de UI se cierra abriendo la app (`pnpm dev`) y llegando a la pantalla
   *navegando como lo haría el usuario* — no basta con que exista la ruta ni con que los

@@ -3,7 +3,7 @@
 > Fuente de verdad sobre qué está hecho, qué está en curso y qué viene después.
 > Actualizar al completar cada fase o tomar una decisión de diseño significativa.
 
-**Última actualización:** 2026-10-13 (**Elaborados E3d-2 — pedidos en espera/para llevar y anulación en pantalla — ADR-101** — mergeado a `main` (PR #13). El POS de Elaborados guarda pedidos (alias + observaciones) sin tocar stock ni caja, los lista con antigüedad y vencimiento, los retoma (el carrito queda vinculado al pedido), los confirma al entregar (el stock se descuenta una sola vez) y los descarta; y permite anular una venta desde el ticket y desde el detalle de Caja (Supervisor). Backend `venta.espera:*` sobre el core (ADR-100), `venta:confirmar` con `venta_en_espera_id`. Corrección transversal: `SupervisorAuthModal` traduce los errores envueltos de Electron (afecta a Retail). Gates: **core-ui 40 · Retail renderer 925 · Retail main 1598 (sin cambios) · Elaborados renderer 174 · Elaborados main 160**. Deuda: editar sabores tras la primera venta probablemente rompe (`grupoModificadorOpcionSetHandler` borra y reinserta con FK activas). Con esto E3 queda completo; próximo: **E4** (compras de insumos, listas de precio, reportes, export, CRUD de proveedor) — **ver `docs/Handoff-E4-Elaborados.md`** (alcance, deuda previa, convenciones y gotchas de entorno para retomar en otra sesión). Ver ADR-101. **Previo:** 2026-10-13 (**Elaborados E3d-1 — venta en espera y anulación al core — ADR-100** — mergeado a `main` (PR #12). Promovido al core con Retail re-apuntado sin cambios visibles: `AnulacionModal` a `@core/ui` (sobre `bridge()`), y el encabezado de la venta en espera a `@core/main` (`pausarVentaEspera` con actualización en el lugar vía `venta_id`, `descartarVentaEspera`, `listarVentasEspera`; las líneas las persiste cada app por hook). Gates: **core-ui 36 · Retail renderer 925 · Retail main 1598 (sin cambios) · Elaborados renderer 131 · Elaborados main 141**. Próximo: E3d-2 (pedidos en espera/para llevar y anulación en pantalla en el POS de Elaborados). Ver ADR-100. **Previo:** 2026-10-13 (**Elaborados E3c-2 — POS de Elaborados — ADR-098** — mergeado a `main` (PR #11). Elaborados ya vende desde una pantalla: `/pos` con categorías → grilla de productos → selector de sabores (chips con `min`/`max` y recargo) → carrito valorizado por `venta:cotizar` (el renderer no calcula precios; debounce y descarte de respuestas obsoletas) → cobro/ticket/impresión del core; cliente con búsqueda y cuenta corriente (Supervisor al exceder el límite); caja obligatoria; `venta:catalogo` (una llamada); `VentaDetalleModal` en Caja; el POS es la pantalla de inicio y el NAV suma el grupo Venta. Gates: **Retail renderer 933 · Retail main 1598 (sin cambios) · core-ui 28 · Elaborados renderer 131 · Elaborados main 131**. Incluye la **carga inicial de datos (ADR-099)**: seed base del rubro (categorías de venta y grupo Sabores, una vez por BD), `pnpm seed:base`/`pnpm seed:dev` en `apps/elaborados` (catálogo demo + 6 clientes + 3 ventas, caja abierta; idempotente, sin `--force`) y atajo "Cargar catálogo demo" en el POS vacío. Próximo: E3d (pedidos en espera/para llevar + anulación en pantalla), luego E4. Ver ADR-098. **Previo:** 2026-10-13 (**Elaborados E3c-1 — cobro, ticket (B1) e impresión HTML al core — ADR-097** — mergeado a `main` (PR #10). Promovidos al core por 2º consumidor, con Retail re-apuntado: B1 (`ComprobantePayload`/`ivaPorAlicuota` en `shared`), `TicketModal` genérico + `buildTicketHtml` en `@core/ui` (slot de anulación, `onImprimir` inyectado), `ConfirmarVentaModal` y tipos de medios de pago en `@core/ui`, y `print:html` universal (`crearImpresorHtml` en `@core/main` + `print.html` en `@core/preload`). Convención aclarada: `venta.descuento_global` es un porcentaje (Elaborados lo guardaba como importe; corregido). Gates: **shared 165 · core-ui 26 · Retail renderer 933 · Retail main 1598 · Elaborados renderer 68 · Elaborados main 113**. Próximo: E3c-2 (POS de Elaborados: botonera, selector de sabores, cobro, ticket, clientes/cta cte), luego E3d. Ver ADR-097. **Previo:** 2026-10-12 (**Elaborados E3b — backend de venta de Elaborados — ADR-096** — mergeado a `main` (PR #8). Elaborados ya valoriza, confirma y anula ventas desde el main (sin UI): dominio puro `valorizarCarrito` (precio = base + recargos de sabor, descuento de línea y global con el motor de `shared`, IVA incluido prorrateado, redondeo a $1, consumo con `calcularConsumo`), handlers `venta:cotizar/confirmar/anular/get/listByCaja` sobre `confirmarVenta`/`anularVenta` del core, política de stock R2 (la reventa bloquea; el granel avisa y puede quedar en negativo) y anulación que invierte los movimientos originales. Esquema `venta_linea`/`venta_linea_modificador` (migración 0005) y cliente Consumidor Final asegurado en cada arranque. `ventaListByCajaHandler` promovido a `@core/main`. Gates: **Retail main 141 archivos/1598 · Retail renderer 948 · Elaborados main 20 archivos/113 · Elaborados renderer 68**, typecheck limpio. Brainstorm → spec → plan → TDD con `superpowers:subagent-driven-development` + revisión final independiente. Próximo: E3c (POS UI: botonera, selector de sabores, cobro, ticket con B1/`TicketModal`), luego E3d (pedidos en espera + anulación en pantalla). Ver ADR-096. **Previo:** 2026-10-05 (**Elaborados E3a — `confirmarVenta`/`anularVenta` al core — ADR-095** — en rama `e3a-confirmar-venta-core` (pendiente de merge). Extracción por regla-de-tres de la parte universal de la venta de Retail a `@core/main` (template method con hooks `validarPrevio`/`aplicarLineas`/`revertirLineas`; el core recibe totales ya calculados y crea el correlativo si falta); Retail queda con wrappers finos sin cambio de comportamiento. Brainstorm → spec → plan → TDD con `superpowers:subagent-driven-development`. Gates: **Retail main 141 archivos/1598 · Retail renderer 947 · Elaborados main 79 · Elaborados renderer 68**, typecheck limpio. **Pendiente:** click-through en Retail (venta mixta + anulación, retomar espera, presupuesto→venta). Próximo: E3b (POS de Elaborados, selector de sabores, B1/TicketModal, pedidos en espera). Ver ADR-095. **Previo:** 2026-09-28 (**AnulacionModal/AnularProduccionModal reusan
+**Última actualización:** 2026-10-14 (**Reconciliación documental:** ADR-Log (ADR 076, 077 y 091–101) y secciones de Estado.md al día (release actual, R3/1.1.0 integrados, próximas fases, decisiones abiertas, convenciones, estado actual). **Previo:** 2026-10-13 (**Elaborados E3d-2 — pedidos en espera/para llevar y anulación en pantalla — ADR-101** — mergeado a `main` (PR #13). El POS de Elaborados guarda pedidos (alias + observaciones) sin tocar stock ni caja, los lista con antigüedad y vencimiento, los retoma (el carrito queda vinculado al pedido), los confirma al entregar (el stock se descuenta una sola vez) y los descarta; y permite anular una venta desde el ticket y desde el detalle de Caja (Supervisor). Backend `venta.espera:*` sobre el core (ADR-100), `venta:confirmar` con `venta_en_espera_id`. Corrección transversal: `SupervisorAuthModal` traduce los errores envueltos de Electron (afecta a Retail). Gates: **core-ui 40 · Retail renderer 925 · Retail main 1598 (sin cambios) · Elaborados renderer 174 · Elaborados main 160**. Deuda: editar sabores tras la primera venta probablemente rompe (`grupoModificadorOpcionSetHandler` borra y reinserta con FK activas). Con esto E3 queda completo; próximo: **E4** (compras de insumos, listas de precio, reportes, export, CRUD de proveedor) — **ver `docs/Handoff-E4-Elaborados.md`** (alcance, deuda previa, convenciones y gotchas de entorno para retomar en otra sesión). Ver ADR-101. **Previo:** 2026-10-13 (**Elaborados E3d-1 — venta en espera y anulación al core — ADR-100** — mergeado a `main` (PR #12). Promovido al core con Retail re-apuntado sin cambios visibles: `AnulacionModal` a `@core/ui` (sobre `bridge()`), y el encabezado de la venta en espera a `@core/main` (`pausarVentaEspera` con actualización en el lugar vía `venta_id`, `descartarVentaEspera`, `listarVentasEspera`; las líneas las persiste cada app por hook). Gates: **core-ui 36 · Retail renderer 925 · Retail main 1598 (sin cambios) · Elaborados renderer 131 · Elaborados main 141**. Próximo: E3d-2 (pedidos en espera/para llevar y anulación en pantalla en el POS de Elaborados). Ver ADR-100. **Previo:** 2026-10-13 (**Elaborados E3c-2 — POS de Elaborados — ADR-098** — mergeado a `main` (PR #11). Elaborados ya vende desde una pantalla: `/pos` con categorías → grilla de productos → selector de sabores (chips con `min`/`max` y recargo) → carrito valorizado por `venta:cotizar` (el renderer no calcula precios; debounce y descarte de respuestas obsoletas) → cobro/ticket/impresión del core; cliente con búsqueda y cuenta corriente (Supervisor al exceder el límite); caja obligatoria; `venta:catalogo` (una llamada); `VentaDetalleModal` en Caja; el POS es la pantalla de inicio y el NAV suma el grupo Venta. Gates: **Retail renderer 933 · Retail main 1598 (sin cambios) · core-ui 28 · Elaborados renderer 131 · Elaborados main 131**. Incluye la **carga inicial de datos (ADR-099)**: seed base del rubro (categorías de venta y grupo Sabores, una vez por BD), `pnpm seed:base`/`pnpm seed:dev` en `apps/elaborados` (catálogo demo + 6 clientes + 3 ventas, caja abierta; idempotente, sin `--force`) y atajo "Cargar catálogo demo" en el POS vacío. Próximo: E3d (pedidos en espera/para llevar + anulación en pantalla), luego E4. Ver ADR-098. **Previo:** 2026-10-13 (**Elaborados E3c-1 — cobro, ticket (B1) e impresión HTML al core — ADR-097** — mergeado a `main` (PR #10). Promovidos al core por 2º consumidor, con Retail re-apuntado: B1 (`ComprobantePayload`/`ivaPorAlicuota` en `shared`), `TicketModal` genérico + `buildTicketHtml` en `@core/ui` (slot de anulación, `onImprimir` inyectado), `ConfirmarVentaModal` y tipos de medios de pago en `@core/ui`, y `print:html` universal (`crearImpresorHtml` en `@core/main` + `print.html` en `@core/preload`). Convención aclarada: `venta.descuento_global` es un porcentaje (Elaborados lo guardaba como importe; corregido). Gates: **shared 165 · core-ui 26 · Retail renderer 933 · Retail main 1598 · Elaborados renderer 68 · Elaborados main 113**. Próximo: E3c-2 (POS de Elaborados: botonera, selector de sabores, cobro, ticket, clientes/cta cte), luego E3d. Ver ADR-097. **Previo:** 2026-10-12 (**Elaborados E3b — backend de venta de Elaborados — ADR-096** — mergeado a `main` (PR #8). Elaborados ya valoriza, confirma y anula ventas desde el main (sin UI): dominio puro `valorizarCarrito` (precio = base + recargos de sabor, descuento de línea y global con el motor de `shared`, IVA incluido prorrateado, redondeo a $1, consumo con `calcularConsumo`), handlers `venta:cotizar/confirmar/anular/get/listByCaja` sobre `confirmarVenta`/`anularVenta` del core, política de stock R2 (la reventa bloquea; el granel avisa y puede quedar en negativo) y anulación que invierte los movimientos originales. Esquema `venta_linea`/`venta_linea_modificador` (migración 0005) y cliente Consumidor Final asegurado en cada arranque. `ventaListByCajaHandler` promovido a `@core/main`. Gates: **Retail main 141 archivos/1598 · Retail renderer 948 · Elaborados main 20 archivos/113 · Elaborados renderer 68**, typecheck limpio. Brainstorm → spec → plan → TDD con `superpowers:subagent-driven-development` + revisión final independiente. Próximo: E3c (POS UI: botonera, selector de sabores, cobro, ticket con B1/`TicketModal`), luego E3d (pedidos en espera + anulación en pantalla). Ver ADR-096. **Previo:** 2026-10-05 (**Elaborados E3a — `confirmarVenta`/`anularVenta` al core — ADR-095** — en rama `e3a-confirmar-venta-core` (pendiente de merge). Extracción por regla-de-tres de la parte universal de la venta de Retail a `@core/main` (template method con hooks `validarPrevio`/`aplicarLineas`/`revertirLineas`; el core recibe totales ya calculados y crea el correlativo si falta); Retail queda con wrappers finos sin cambio de comportamiento. Brainstorm → spec → plan → TDD con `superpowers:subagent-driven-development`. Gates: **Retail main 141 archivos/1598 · Retail renderer 947 · Elaborados main 79 · Elaborados renderer 68**, typecheck limpio. **Pendiente:** click-through en Retail (venta mixta + anulación, retomar espera, presupuesto→venta). Próximo: E3b (POS de Elaborados, selector de sabores, B1/TicketModal, pedidos en espera). Ver ADR-095. **Previo:** 2026-09-28 (**AnulacionModal/AnularProduccionModal reusan
 SupervisorAuthModal en 2 pasos — ADR-094** — cierra uno de los 5 follow-ups de bajo riesgo
 detectados en la revisión holística de ADR-093 (duplicación de `SupervisorAuthModal`): Retail
 (`AnulacionModal`, venta) y Elaborados (`AnularProduccionModal`, producción) reimplementaban cada
@@ -34,7 +34,9 @@ menu-nativo se **renumeraron a `0037`-`0041`** para convivir con `0036_sustituto
 
 ---
 
-## Release actual: R3 — Compras y Crédito (en curso)
+## Release actual: 1.1.x (Retail) + base multi-rubro
+
+Retail (`ferreteria-client`) en **1.1.1**: R1 y R3 integrados en 1.0.x; **1.1.0** (Remitos, Presupuestos, Agenda/avisos, Motor de Precios v2 y mejoras UX) integrado en `main`; el fiscal ARCA (R2, ADR-013) sigue pendiente. En paralelo, la base multi-rubro (ADR-091…101): **Elaborados (heladería) E1–E3 completos**; **E4** (compras de insumos, listas de precio, reportes, export) pendiente — ver `docs/Handoff-E4-Elaborados.md`.
 
 ---
 
@@ -98,7 +100,7 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 | Iter-02 | Importación enriquecida: 16 columnas CSV, UPDATE con stock condicional y CPP | ✅ |
 | Sonar-01 | Correcciones masivas SonarCloud: 6 BLOCKERs + CC + quality issues (93 archivos) | ✅ |
 
-### R3 — Compras y Crédito 🔄 En curso
+### R3 — Compras y Crédito ✅ (integrada en 1.0.x)
 
 | Fase | Descripción | Estado |
 |------|-------------|--------|
@@ -124,7 +126,7 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 | ADR-042 | Corte de versión v1.0.0 y estrategia de branching pre-R2 | Aceptado |
 | ADR-043 | Empaquetado NSIS + seed:base + backup pre-migración + auto-update | ✅ |
 
-### 1.1.0 — Remitos + Presupuestos 🔄 En curso
+### 1.1.0 — Remitos + Presupuestos + Agenda + Motor de Precios v2 ✅ (integrado en `main`)
 
 | Fase | Descripción | Estado |
 |------|-------------|--------|
@@ -144,16 +146,13 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 
 ## Próximas fases (backlog confirmado)
 
-- **1.1.0 — Remitos + Presupuestos** (ADR-044): features nuevas, sin ARCA ni nube, en
-  `main` detrás de flags independientes. Orden de trabajo: **Remitos primero**
-  (fase interna, sin CAE; fase 2 de integración ARCA queda atada al avance real de R2),
-  luego Presupuestos (cotización → conversión a Venta). Cada una con su propio ADR/diseño.
-  → **Remitos ✅ implementado** (rama `feat/adr-045-remitos`, flag `remitos_habilitado`
-  en `false`). Siguiente: diseño de Presupuestos.
-- **1.2.0 — R2 fiscal**: facturación AFIP/ARCA (ADR-013 pendiente), CAE, comprobantes A/B/C
+- **Elaborados E4 — gestión** (compras de insumos, listas de precio con `lista_precio`→core, reportes y export, CRUD de proveedor): sesión nueva; alcance, deuda previa y gotchas de entorno en `docs/Handoff-E4-Elaborados.md`. Antes o dentro de E4: arreglar `grupoModificadorOpcionSetHandler` (editar sabores tras la primera venta rompe).
+- **Corte multi-rubro, Fases 3 y 4** (ADR-091): capa de perfiles de rubro data-driven; guía "cómo nace una app de familia" + reframe de docs + numeración de ADR. Una tercera familia (Servicios) no tiene diseño todavía.
+- **1.2.0 — R2 fiscal**: facturación AFIP/ARCA (ADR-013 pendiente), CAE, comprobantes A/B/C. La interfaz B1 (`ComprobantePayload`, ADR-097) ya existe con el ticket interno como consumidor.
 - **R3** restante: CCteProv diferida (ADR-019), comprobantes de compra (tabla existe, sin UI)
 - **2.0.0 — R4** nube + sync: backend Node + PostgreSQL, outbox, conflictos (ADR-012)
 - **R5** reportes consolidados, preparación multi-sucursal
+- ✅ **1.1.0 — Remitos + Presupuestos** (ADR-044/045/046): integrado en `main`, detrás de flags independientes.
 
 ---
 
@@ -221,6 +220,7 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 | 077 | Fase 1 mejoras UX (6 ítems): feedback central (`ToastProvider`/`useToast`/`callIpc`), traductor de errores, validación inline en `ProductoForm`, fix del hook `useFilaNavegable`, breadcrumb jerárquico clicable (`buildBreadcrumb`) y endurecimiento del main (nav guard + CSP en prod, `main/security/webSecurity.ts`) | Aceptado — implementado |
 | 074 | Sustitutos curados entre productos (equivalentes + reemplazos) y flag `discontinuado` | Aceptado — Fase 1 implementada |
 | 075 | Match canónico de ubicación en el import de productos (ceros a la izquierda + case-insensitive) | Aceptado — implementado |
+| 076 | Política de retención y depuración de backups (híbrida con piso, consulta diferida al Supervisor) | Aceptado — implementado |
 | 078 | Fase 2 mejoras UX (ítems 1-3): stock inicial en el alta, hub Precios/Costos, paleta Ctrl+K | Aceptado — implementado |
 | 061 | Pantalla de Funcionalidades para administrar feature flags (auto-descubrimiento) | Aceptado — implementado |
 | 079 | Fase 2b mejoras UX (ítems 4-6): links de vuelta al producto, alta express, auto-bloqueo por inactividad | Aceptado — implementado |
@@ -257,25 +257,27 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 - **NMV:** Electron 32 = NMV 128; Node 24 sistema = NMV 137. `pnpm rebuild:electron` antes de dev, `pnpm rebuild:node` antes de tests.
 - **Tests renderer:** `vitest run` bajo jsdom (rápidos, sin módulos nativos).
 - **Tests main:** `node scripts/test-node.cjs` bajo Electron (`ELECTRON_RUN_AS_NODE=1`).
-- **IPC:** todo bajo `window.ferreteria.<namespace>.*`. Namespaces activos: `catalogo`, `stock`, `caja`, `pos`, `precios`, `config`, `backup`, `restore`, `geo`, `export`, `importar`, `etiquetas`, `reportes`, `unidad`, `presentacion`, `remito`, `presupuesto`.
+- **IPC:** Retail bajo `window.ferreteria.<namespace>.*` y Elaborados bajo `window.elaborados.<namespace>.*`; el renderer accede siempre con `bridge()` de `@core/ui`, nunca con `globalThis`. Namespaces activos: `catalogo`, `stock`, `caja`, `pos`, `precios`, `config`, `backup`, `restore`, `geo`, `export`, `importar`, `etiquetas`, `reportes`, `unidad`, `presentacion`, `remito`, `presupuesto`.
 - **Precios:** centavos en toda la lógica; formateo solo en render.
-- **Migraciones:** `packages/client/src/main/db/migrations/`. Última: `0025_adr046_presupuesto.sql`.
+- **Migraciones:** Retail en `apps/retail/src/main/db/migrations/` (última `0049_adr089_tipografias.sql`); Elaborados en `apps/elaborados/src/main/db/migrations/` (última `0005_add_venta_linea.sql`, generadas con `drizzle-kit generate`; en Retail el snapshot chain está desactualizado y `generate` no sirve).
   El `meta/_journal.json` se mantiene **a mano**: la entrada nueva necesita un `when`
   mayor al de la última, o Drizzle saltea la migración.
 - **Permisos nuevos:** `runSeed` corre en **cada** arranque (`startup.ts` §3). Agregar un
   permiso a `PERMISOS` en `auth/seed.ts` alcanza para que llegue también a instalaciones
   ya inicializadas. Antes vivía dentro del guard de primer arranque y no llegaba nunca.
 - **Permisos:** guard doble (renderer + IPC handler). Permiso `import.masiva` solo Supervisor.
-- `seed:dev` tiene workaround NMV; solución limpia pendiente (correr vía electron main process).
+- **Seeds:** corren con Electron `ELECTRON_RUN_AS_NODE=1` + `tsx` (mismo NMV): Retail `apps/retail/scripts/seed-*.cjs`; Elaborados `pnpm seed:base:elaborados` / `pnpm seed:dev:elaborados` (ADR-099, idempotentes, sin `--force`). Usan el `dist` de `@core/*` y `@ferreteria/shared`: `pnpm -r build` si se tocó `packages/*/src`.
+- **Venta (ADR-095…101):** `confirmarVenta`/`anularVenta` y el encabezado de la venta en espera viven en `@core/main` con hooks por app; `venta.descuento_global` es un **porcentaje**; en Elaborados el renderer **no calcula precios** (todo viene de `venta:cotizar`); una venta `en_espera` no toca stock ni caja y todo punto de lectura debe filtrar el estado explícitamente.
+- **Cierre documental de cada paso (obligatorio):** actualizar en el mismo PR `Estado.md` (cabecera + Bitácora + tabla "ADRs de arquitectura" + lista de releases) **y** `docs/ADR-Log-ferreteria.md` (entrada del ADR con estado, fecha y enlace). Un paso no está cerrado hasta que ambos están al día.
 
 ---
 
 ## Decisiones abiertas
 
 - ADR-013: ubicación integración fiscal (cliente vs nube) — decidir en R2.
-- Comportamiento de venta POS que excede límite de crédito (bloquear vs. override de supervisor).
-- Cobro en efectivo sin caja abierta (recomendado: bloquear).
-- Pantalla de Parámetros del sistema: no existe todavía. Falta definir qué parámetros de `parametros_sistema` son editables desde UI (vs. solo seed/valor fijo) antes de agregarla al sidebar. Sacada del grupo Configuración en ADR-030 hasta que se especifique con su propio ADR.
+- ~~Comportamiento de venta POS que excede límite de crédito~~ → **cerrada:** override del Supervisor (matriz RBAC; `LIMITE_CREDITO_EXCEDIDO` + credenciales en `confirmarVenta`, ADR-095).
+- ~~Cobro en efectivo sin caja abierta~~ → **cerrada:** se bloquea (`CAJA_REQUERIDA`) en ambas apps.
+- Pantalla de Parámetros del sistema: ADR-061 cubrió solo los feature flags (`/config/funcionalidades`); el resto no existe todavía. Falta definir qué parámetros de `parametros_sistema` son editables desde UI (vs. solo seed/valor fijo) antes de agregarla al sidebar. Sacada del grupo Configuración en ADR-030 hasta que se especifique con su propio ADR.
 - Unidades: conversión y multi-presentación diferidas → cerrado en ADR-040/ADR-041.
 - **Revocación de permisos vs. `runSeed` en cada arranque.** `runSeed` es aditivo: si
   algún día se agrega una UI para quitarle un permiso a un rol, el siguiente arranque se
@@ -295,6 +297,12 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 - ADR-048
 - Plantilla del email de avisos (texto plano v1; HTML diferido).
 - Valor default de `arqueo_diferencia_alerta_centavos` (a confirmar con el comercio).
+
+- Elaborados (ADR-098/101):
+- Pedido para llevar con campos estructurados de delivery (teléfono, dirección, hora): diferido (hoy alias + observaciones).
+- Reserva de stock para pedidos en espera: diferida (un pedido no toca stock hasta confirmarse).
+- Edición de opciones de sabores tras la primera venta: `grupoModificadorOpcionSetHandler` (E2) borra y reinserta con FK activas; hay que pasarlo a upsert/baja lógica antes de uso real.
+- Precio por lista de precios en el POS de Elaborados: E4.
 
 ---
 
@@ -715,6 +723,7 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 
 - ADR-001 a ADR-012, ADR-014 a ADR-016, ADR-017 a ADR-027, ADR-029, ADR-030, ADR-031, ADR-032, ADR-033, ADR-034, ADR-035, ADR-039
 - [x] ADR-036 — Vistas cruzadas producto↔proveedor definidas (Proveedor = dueño de la relación, Producto = solo lectura)
+- ADR-040 a ADR-101: aceptados e implementados (estado y PR en la tabla "ADRs de arquitectura"; el único abierto sigue siendo ADR-013).
 
 
 ## En curso / próximo
@@ -805,10 +814,9 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
   → siguiente: diseño (brainstorm + spec) de Remitos.
 
 ## Estado actual
+- **Al 2026-10-14:** `main` en **1.1.1** (Retail) con la base multi-rubro (`@core/*` + `@ferreteria/shared`, ADR-091) y **Elaborados E1–E3 completos** (ADR-092…101: inventario, producción, catálogo de venta, POS, pedidos en espera, anulación y carga inicial de datos). Pendiente: **E4** (ver `docs/Handoff-E4-Elaborados.md`) y el fiscal 1.2.0. Conteos de referencia: core-ui 40 · Retail renderer 925 / main 1598 · Elaborados renderer 174 / main 160.
 - **Release estable congelado:** v1.0.0 (tag sobre `main`, rama `release/1.0.x`)
-- **Rama activa de desarrollo:** `main` → objetivo **1.1.0 (Remitos + Presupuestos,
-  ADR-044)**; el fiscal AFIP/ARCA pasa a **1.2.0** (antes se apuntaba a 1.1.0 — ver
-  ADR-044)
+- **Rama activa de desarrollo:** `main` (1.1.0 **alcanzado**: Remitos + Presupuestos, ADR-044); el fiscal AFIP/ARCA es **1.2.0**
 - **1.1.0 integrado en `origin/main` (2026-07-21):** **Remitos (ADR-045)** y
   **Presupuestos (ADR-046)** ya están mergeados a `main` y pusheados, ambos detrás de sus
   flags (`remitos_habilitado` / `presupuestos_habilitado`, default `false`). `main` sigue
