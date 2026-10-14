@@ -27,6 +27,16 @@ createBridge({
       crear:  (p: unknown) => invoke('produccion:crear', p),
       anular: (p: unknown) => invoke('produccion:anular', p),
     },
+    compra: {
+      list:   () => invoke('compra:list'),
+      get:    (p: { id: string }) => invoke('compra:get', p),
+      crear:  (p: unknown) => invoke('compra:crear', p),
+      anular: (p: unknown) => invoke('compra:anular', p),
+    },
+    proveedor: {
+      list:        () => invoke('proveedor:list'),
+      crearRapido: (p: unknown) => invoke('proveedor:crear-rapido', p),
+    },
     categoriaVenta: {
       list:   () => invoke('categoria-venta:list'),
       create: (p: unknown) => invoke('categoria-venta:create', p),

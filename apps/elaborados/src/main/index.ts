@@ -16,6 +16,8 @@ import { registerArticuloHandlers } from './ipc/articulo';
 import { registerMovimientoArticuloHandlers } from './ipc/movimiento-articulo';
 import { registerRecetaProduccionHandlers } from './ipc/receta-produccion';
 import { registerProduccionHandlers } from './ipc/produccion';
+import { registerCompraHandlers } from './ipc/compra';
+import { registerProveedorHandlers } from './ipc/proveedor';
 import { registerCategoriaVentaHandlers } from './ipc/categoria-venta';
 import { registerGrupoModificadorHandlers } from './ipc/grupo-modificador';
 import { registerProductoVentaHandlers } from './ipc/producto-venta';
@@ -36,6 +38,8 @@ async function createWindow(): Promise<void> {
   registerMovimientoArticuloHandlers(ipcMain, db);
   registerRecetaProduccionHandlers(ipcMain, db);
   registerProduccionHandlers(ipcMain, db);
+  registerCompraHandlers(ipcMain, db);
+  registerProveedorHandlers(ipcMain, db);
   registerCategoriaVentaHandlers(ipcMain, db);
   registerGrupoModificadorHandlers(ipcMain, db);
   registerProductoVentaHandlers(ipcMain, db);

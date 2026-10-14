@@ -59,6 +59,14 @@ export const NAV_ELABORADOS: NavGroup[] = [
     items: [{ label: 'Producción', to: '/produccion', icon: I('M3 3h18v18H3zM3 9h18M9 21V9'), permiso: 'produccion.registrar' }],
   },
   {
+    key: 'compras',
+    label: 'Compras',
+    icon: I('M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0'),
+    standalone: true,
+    permiso: 'compra.registrar',
+    items: [{ label: 'Compras', to: '/compras', icon: I('M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0'), permiso: 'compra.registrar' }],
+  },
+  {
     key: 'carta',
     label: 'Carta',
     icon: I('M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5v15z'),

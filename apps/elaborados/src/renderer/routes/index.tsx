@@ -20,6 +20,7 @@ import { ElaboradosShell } from '../shell/ElaboradosShell';
 import { ArticulosView } from '../views/stock/ArticulosView';
 import { ConteoView } from '../views/stock/ConteoView';
 import { ProduccionView } from '../views/produccion/ProduccionView';
+import { ComprasView } from '../views/compras/ComprasView';
 import { CategoriasVentaView } from '../views/carta/CategoriasVentaView';
 import { ModificadoresView } from '../views/carta/ModificadoresView';
 import { ProductosVentaView } from '../views/carta/ProductosVentaView';
@@ -52,6 +53,7 @@ export const routes: RouteObject[] = [
       { path: 'stock/articulos', element: <ArticulosView /> },
       { path: 'stock/conteo', element: <ConteoView /> },
       { path: 'produccion', element: <ProduccionView /> },
+      { path: 'compras', element: <ComprasView /> },
       { path: 'carta/categorias', element: <CategoriasVentaView /> },
       { path: 'carta/modificadores', element: <ModificadoresView /> },
       { path: 'carta/productos', element: <ProductosVentaView /> },

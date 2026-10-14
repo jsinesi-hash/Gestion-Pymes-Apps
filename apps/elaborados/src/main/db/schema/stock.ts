@@ -36,7 +36,7 @@ export const movimiento_articulo = sqliteTable('movimiento_articulo', {
   tipo:             text('tipo', { enum: ['entrada', 'salida', 'ajuste'] }).notNull(),
   motivo:           text('motivo', { enum: [
     'venta', 'anulacion_venta', 'produccion_consumo', 'produccion_alta',
-    'produccion_anulacion', 'compra', 'conteo', 'merma', 'inicial',
+    'produccion_anulacion', 'compra', 'compra_anulacion', 'conteo', 'merma', 'inicial',
   ] }).notNull(),
   cantidad:         real('cantidad').notNull(),
   stock_resultante: real('stock_resultante').notNull(),
