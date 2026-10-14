@@ -1,4 +1,5 @@
 export * from './seguridad';
+export * from './listas-precio';
 export * from './personas';
 export * from './geo';
 export * from './credito';

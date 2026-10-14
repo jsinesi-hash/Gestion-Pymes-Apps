@@ -30,7 +30,7 @@ export function ventaEsperaPausarHandler(db: Db, rawPayload: unknown): { venta_i
   const alias = optStr(p['alias'], 'alias', 60);
   const observaciones = optStr(p['observaciones'], 'observaciones', 500);
 
-  const { productos, opciones } = cargarCatalogo(db, carrito.lineas.map((l) => l.producto_venta_id));
+  const { productos, opciones } = cargarCatalogo(db, carrito.lineas.map((l) => l.producto_venta_id), cliente_id);
   const v = valorizarCarrito(productos, opciones, carrito);
 
   return pausarVentaEspera(db, {

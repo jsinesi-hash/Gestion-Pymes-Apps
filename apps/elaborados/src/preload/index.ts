@@ -37,6 +37,13 @@ createBridge({
       list:        () => invoke('proveedor:list'),
       crearRapido: (p: unknown) => invoke('proveedor:crear-rapido', p),
     },
+    listaPrecio: {
+      list:      () => invoke('lista-precio:list'),
+      precios:   (p: { lista_precio_id: string }) => invoke('lista-precio:precios', p),
+      create:    (p: unknown) => invoke('lista-precio:create', p),
+      update:    (p: unknown) => invoke('lista-precio:update', p),
+      precioSet: (p: unknown) => invoke('lista-precio:precio-set', p),
+    },
     categoriaVenta: {
       list:   () => invoke('categoria-venta:list'),
       create: (p: unknown) => invoke('categoria-venta:create', p),

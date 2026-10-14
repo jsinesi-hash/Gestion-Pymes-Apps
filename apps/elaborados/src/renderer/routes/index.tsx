@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
 import {
   Login,
+  bridge,
   ProtectedRoute,
   InicioRedirect,
   CajaView,
@@ -24,12 +25,19 @@ import { ComprasView } from '../views/compras/ComprasView';
 import { CategoriasVentaView } from '../views/carta/CategoriasVentaView';
 import { ModificadoresView } from '../views/carta/ModificadoresView';
 import { ProductosVentaView } from '../views/carta/ProductosVentaView';
+import { ListasPrecioView } from '../views/carta/ListasPrecioView';
 import { PosView } from '../views/pos/PosView';
 import { VentaDetalleModal } from '../views/caja/VentaDetalleModal';
 
 // Centralized route tree. Routes are never defined inline in components.
 // Pantallas del core + propias de Elaborados. CajaView recibe renderVentaDetalle (E3);
-// sin cargarListasPrecio en ClienteForm/ClienteDetalle — llega en E4.
+// ClienteForm/ClienteDetalle reciben las listas de precio activas (ADR-104).
+// Seam B6: las listas son datos de la app; el core recibe sólo el catálogo a mostrar.
+const cargarListas = () =>
+  (bridge() as any).listaPrecio.list().then((rows: { id: string; nombre: string; activo: boolean }[]) =>
+    rows.filter((r) => r.activo),
+  );
+
 export const routes: RouteObject[] = [
   { path: '/login', element: <Login /> },
   {
@@ -45,9 +53,9 @@ export const routes: RouteObject[] = [
       { path: 'caja', element: <CajaView renderVentaDetalle={(id, onClose) => <VentaDetalleModal ventaId={id} onClose={onClose} />} /> },
       { path: 'caja/cerrar', element: <CajaCierreView /> },
       { path: 'clientes', element: <ClientesListado /> },
-      { path: 'clientes/nuevo', element: <ClienteForm /> },
-      { path: 'clientes/:id', element: <ClienteDetalle /> },
-      { path: 'clientes/:id/editar', element: <ClienteForm /> },
+      { path: 'clientes/nuevo', element: <ClienteForm cargarListasPrecio={cargarListas} /> },
+      { path: 'clientes/:id', element: <ClienteDetalle cargarListasPrecio={cargarListas} /> },
+      { path: 'clientes/:id/editar', element: <ClienteForm cargarListasPrecio={cargarListas} /> },
       { path: 'credito', element: <CtaCteListado /> },
       { path: 'credito/:clienteId', element: <CtaCteDetalle /> },
       { path: 'stock/articulos', element: <ArticulosView /> },
@@ -57,6 +65,7 @@ export const routes: RouteObject[] = [
       { path: 'carta/categorias', element: <CategoriasVentaView /> },
       { path: 'carta/modificadores', element: <ModificadoresView /> },
       { path: 'carta/productos', element: <ProductosVentaView /> },
+      { path: 'carta/listas-precio', element: <ListasPrecioView /> },
       { path: 'config/mi-cuenta', element: <ConfigMiCuenta /> },
       { path: 'config/usuarios', element: <ConfigUsuarios /> },
       { path: 'config/roles-permisos', element: <RolesPermisosView /> },

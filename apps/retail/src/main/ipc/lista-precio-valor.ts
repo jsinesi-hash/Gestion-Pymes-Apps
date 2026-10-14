@@ -3,7 +3,7 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession, getOriginId, centavos, id as vId } from '@core/main';
+import { getSession, getOriginId, centavos, id as vId, resolverListaEfectiva } from '@core/main';
 import { getDefaultPresentacionId } from './presentacion';
 
 type Db = BetterSQLite3Database<typeof schema>;
@@ -27,17 +27,8 @@ export type RecalcularMasivoParams = {
 
 // ── getPrecioEnLista ─────────────────────────────────────────────────────────
 
-/**
- * ADR-049 §9 — Price List Resolver: `cliente.lista_precio_id` → `listaIdFallback`
- * (la predeterminada, que ya resuelve el caller). Sin `clienteId`, o sin lista propia,
- * devuelve el fallback tal cual — comportamiento actual, sin cambios.
- */
-export function resolverListaEfectiva(db: Db, clienteId: string | undefined, listaIdFallback: string): string {
-  if (!clienteId) return listaIdFallback;
-  const cliente = db.select({ lista_precio_id: schema.cliente.lista_precio_id })
-    .from(schema.cliente).where(eq(schema.cliente.id, clienteId)).get();
-  return cliente?.lista_precio_id ?? listaIdFallback;
-}
+// ADR-104: el resolver pasó a @core/main; se re-exporta para no tocar a los consumidores de Retail.
+export { resolverListaEfectiva };
 
 export function getPrecioEnListaHandler(
   db: Db,

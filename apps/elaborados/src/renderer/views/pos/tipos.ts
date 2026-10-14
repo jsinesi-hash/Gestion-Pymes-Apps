@@ -38,4 +38,5 @@ export type Cotizacion = {
 export type CarritoPayload = {
   lineas: { producto_venta_id: string; cantidad: number; descuento_linea_pct: number; modificadores: ModificadorElegido[] }[];
   descuento_global_pct: number;
+  cliente_id?: string;
 };

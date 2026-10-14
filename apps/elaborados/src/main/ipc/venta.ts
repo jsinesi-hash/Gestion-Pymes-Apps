@@ -8,6 +8,7 @@ import {
 import type { IpcMain } from 'electron';
 import { generateId, nombreCompletoCliente } from '@ferreteria/shared';
 import * as schema from '../db/schema';
+import { resolverPreciosCliente } from './lista-precio';
 import {
   valorizarCarrito, type Carrito, type ProductoCatalogo, type OpcionCatalogo, type VentaValorizada,
 } from '../domain/venta';
@@ -80,7 +81,7 @@ function parseSupervisor(raw: unknown): { nombre_usuario: string; password: stri
 
 // ── Catálogo y stock ─────────────────────────────────────────────────────────
 
-export function cargarCatalogo(db: Db, productoIds: string[]) {
+export function cargarCatalogo(db: Db, productoIds: string[], clienteId?: string) {
   const productos = new Map<string, ProductoCatalogo>();
   const opciones = new Map<string, OpcionCatalogo>();
   for (const pid of new Set(productoIds)) {
@@ -107,6 +108,9 @@ export function cargarCatalogo(db: Db, productoIds: string[]) {
     }
     productos.set(pv.id, { id: pv.id, nombre: pv.nombre, precio_centavos: pv.precio_centavos, alicuota_iva: imp.alicuota, componentes, grupos });
   }
+  // ADR-104: el precio base se reemplaza por el de la lista del cliente (si tiene una activa).
+  const precios = resolverPreciosCliente(db, clienteId, new Map([...productos].map(([id, pr]) => [id, pr.precio_centavos])));
+  for (const [id, pr] of productos) productos.set(id, { ...pr, precio_centavos: precios.get(id) ?? pr.precio_centavos });
   return { productos, opciones };
 }
 
@@ -135,8 +139,9 @@ function evaluarStock(db: Db, consumos: readonly ConsumoLinea[]): { bloqueos: Av
 
 export function ventaCotizarHandler(db: Db, rawPayload: unknown) {
   requireSession();
-  const carrito = parseCarrito((rawPayload ?? {}) as Record<string, unknown>);
-  const { productos, opciones } = cargarCatalogo(db, carrito.lineas.map((l) => l.producto_venta_id));
+  const raw = (rawPayload ?? {}) as Record<string, unknown>;
+  const carrito = parseCarrito(raw);
+  const { productos, opciones } = cargarCatalogo(db, carrito.lineas.map((l) => l.producto_venta_id), optId(raw['cliente_id'], 'cliente_id'));
   const valorizada = valorizarCarrito(productos, opciones, carrito);
   return { ...valorizada, ...evaluarStock(db, valorizada.consumo_total) };
 }
@@ -218,7 +223,7 @@ export function ventaConfirmarHandler(db: Db, rawPayload: unknown) {
   const supervisor = parseSupervisor(p['supervisor_credenciales']);
   const venta_en_espera_id = optId(p['venta_en_espera_id'], 'venta_en_espera_id');
 
-  const { productos, opciones } = cargarCatalogo(db, carrito.lineas.map((l) => l.producto_venta_id));
+  const { productos, opciones } = cargarCatalogo(db, carrito.lineas.map((l) => l.producto_venta_id), cliente_id);
   const v = valorizarCarrito(productos, opciones, carrito);
 
   let advertencias: AvisoStock[] = [];
