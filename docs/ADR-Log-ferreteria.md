@@ -4662,6 +4662,30 @@ anidado). Ambos montajes se conservan.
 TDD en las tres capas. Verificado: `tsc` limpio; **shared 157 · main 1578 · renderer 927** verdes.
 Falta verificación manual en la app (§12).
 
+## ADR-091 — Corte multi-rubro: boundary Opción C, 4 barandas y topología del monorepo
+
+**Estado:** Aceptado — Fase 2 ejecutada y mergeada (PR #1) · **Fecha:** 2026-09-22
+
+Se reestructura lo hecho como **base reutilizable** para disparar apps por familia de negocio (Retail, Elaborados, Servicios). Monorepo `Gestion-Pymes-Apps` con `packages/{shared, core-db, core-ui, core-main, core-preload}` y `apps/{retail, elaborados}`. **Boundary Opción C: una app puede depender del core, el core nunca de una app**, protegido por barandas automáticas (B4 `no-electron` en `shared` y boundary core↛app por paquete; B1 fiscal y B2 sync definidas, B2 implementada como test en ADR-092). Fase 2 extrajo al core, de forma incremental y acotada por la regla de tres: `shared` → `@core/db` (esquema universal + factory `createDb`/`runMigrations`) → `@core/ui` (design system + primitivos) → `@core/main` (plomería hoja). Lo demás quedó **diferido hasta el 2º consumidor real** (AppShell/vistas, preload, handlers de dominio, seed de auth). Las migraciones las posee cada app.
+
+Detalle completo: [`docs/ADR-091 - Corte multi-rubro (boundary C, barandas, topologia monorepo) - Fase 2.md`](ADR-091%20-%20Corte%20multi-rubro%20%28boundary%20C,%20barandas,%20topologia%20monorepo%29%20-%20Fase%202.md).
+
+## ADR-092 — Elaborados E1: la plataforma va al core por el 2º consumidor real
+
+**Estado:** Aceptado — E1 ejecutado y mergeado · **Fecha:** 2026-09-23
+
+Nace `apps/elaborados` (heladería, `elaborados-client`) y, con ella, la promoción al core de lo diferido en ADR-091, siempre re-apuntando a Retail sin cambio de comportamiento: `runSeed(db, { permisos, operador })` con `PERMISOS_CORE`; handlers universales (auth, usuario, preferencias, parámetros, geo, cliente, cta cte, caja, backup/restore, exportar) con `registerCoreHandlers`; caja con hook `onCajaCerrada`; registry de exportadores; `@core/preload` (`createBridge`, clave de bridge configurable: Retail `window.ferreteria`, Elaborados `window.elaborados`); en `@core/ui` `bridge()`, `AppProfileProvider`, AppShell/CommandPalette/breadcrumbs por props y las vistas universales (clientes, cta cte, caja, usuarios, backup); `crearNavegacion` en `shared`. Baranda B2 (campos de sync por app) como test.
+
+Detalle completo: [`docs/ADR-092 - Elaborados E1 (plataforma al core por 2º consumidor).md`](ADR-092%20-%20Elaborados%20E1%20%28plataforma%20al%20core%20por%202º%20consumidor%29.md).
+
+## ADR-093 — Elaborados E2: inventario elaborado (stock, producción, catálogo de venta)
+
+**Estado:** Aceptado — implementado y mergeado · **Fecha:** 2026-09-28
+
+Stock de artículos con saldo + libro inmutable (`articulo`/`existencia_articulo`/`movimiento_articulo`) y `bloquea_sin_stock` **por artículo** (la reventa bloquea; el granel puede quedar negativo con aviso); costo promedio ponderado; producción transaccional (`receta_produccion`+`produccion`, anular exige Supervisor); conteo/merma con atajo "Tacho vacío"; catálogo de venta (`categoria_venta`, `producto_venta`+componentes, `grupo_modificador`+opciones, `producto_venta_grupo`) con `calcularConsumo`/`validarStock` puras; `impuesto` promovido a `@core/db`; seed demo de heladería bajo demanda. Permisos nuevos `articulo.gestionar`, `stock.ajustar`, `produccion.registrar` (ambos roles) y `receta.gestionar`, `producto_venta.gestionar` (Supervisor).
+
+Detalle completo: [`docs/ADR-093 - Elaborados E2 (inventario elaborado).md`](ADR-093%20-%20Elaborados%20E2%20%28inventario%20elaborado%29.md).
+
 ## ADR-094 — AnulacionModal/AnularProduccionModal reusan SupervisorAuthModal (2 pasos)
 
 **Estado:** Aceptado — implementado · **Fecha:** 2026-09-28
@@ -4691,3 +4715,59 @@ plan: [`docs/plans/2026-09-28-anulacion-two-step-supervisor-auth.md`](plans/2026
 Verificado: typecheck del monorepo limpio; **Retail 140 archivos/1591 tests · Elaborados renderer
 68/68 + main 65/65**; navegación manual confirmada por el usuario en ambas apps (Retail y
 Elaborados).
+
+## ADR-095 — Elaborados E3a: `confirmarVenta`/`anularVenta` al core
+
+**Estado:** Aceptado — implementado y mergeado (PR #6) · **Fecha:** 2026-10-05
+
+La parte universal de confirmar/anular una venta (sesión y permisos, caja, pagos, límite de cta cte, vuelto, numeración, `venta`/`venta_pago`/`movimiento_caja`/cta cte/`comprobante`) sale de Retail a `@core/main` como **template method con hooks**: `confirmarVenta(db, input, { validarPrevio?, aplicarLineas })` y `anularVenta(db, input, { revertirLineas })`. **El core recibe los totales ya calculados** (en pesos, como las columnas legado) y **crea el correlativo** `venta_correlativo_<terminal>` si falta. Retomar una venta en espera lo soporta el core (`venta_en_espera_id`). Retail queda con wrappers finos; su suite es el oráculo.
+
+Detalle completo: [`docs/ADR-095 - Elaborados E3a (confirmarVenta al core).md`](ADR-095%20-%20Elaborados%20E3a%20%28confirmarVenta%20al%20core%29.md).
+
+## ADR-096 — Elaborados E3b: backend de venta (valorizar, confirmar, anular)
+
+**Estado:** Aceptado — implementado y mergeado (PR #8) · **Fecha:** 2026-10-12
+
+Elaborados valoriza, confirma y anula ventas desde el main: dominio puro `valorizarCarrito` (precio = base + recargos de sabor, descuento de línea y global con el motor de `shared`, IVA incluido prorrateado, redondeo a $1, consumo con `calcularConsumo`), handlers `venta:cotizar/confirmar/anular/get/listByCaja`, política de stock R2 (reventa bloquea; granel avisa y puede quedar negativo) y anulación que invierte los movimientos originales. **El renderer no calcula precios.** Esquema `venta_linea`/`venta_linea_modificador`, cliente Consumidor Final asegurado en cada arranque, y `ventaListByCajaHandler` promovido al core.
+
+Detalle completo: [`docs/ADR-096 - Elaborados E3b (backend de venta).md`](ADR-096%20-%20Elaborados%20E3b%20%28backend%20de%20venta%29.md).
+
+## ADR-097 — Elaborados E3c-1: cobro, ticket (B1) e impresión HTML al core
+
+**Estado:** Aceptado — implementado y mergeado (PR #10) · **Fecha:** 2026-10-13
+
+B1 en `@ferreteria/shared` (`ComprobantePayload`, `ivaPorAlicuota`); `TicketModal` genérico y `buildTicketHtml` en `@core/ui` (slot de anulación, `onImprimir` inyectado); `ConfirmarVentaModal` y los tipos de medios de pago movidos al core; `print:html` universal (`crearImpresorHtml` en `@core/main` + `print.html` en `@core/preload`). Convención aclarada: **`venta.descuento_global` es un porcentaje** en ambas apps (Elaborados lo guardaba como importe; corregido). Retail re-apuntado con un adaptador.
+
+Detalle completo: [`docs/ADR-097 - Elaborados E3c-1 (cobro, ticket B1 e impresion al core).md`](ADR-097%20-%20Elaborados%20E3c-1%20%28cobro,%20ticket%20B1%20e%20impresion%20al%20core%29.md).
+
+## ADR-098 — Elaborados E3c-2: POS de Elaborados
+
+**Estado:** Aceptado — implementado y mergeado (PR #11) · **Fecha:** 2026-10-13
+
+Pantalla `/pos`: categorías → grilla de productos → selector de sabores (chips con `min`/`max` y recargo) → carrito valorizado por `venta:cotizar` (debounce y descarte de respuestas obsoletas) → cobro/ticket/impresión del core. Cliente con búsqueda y cuenta corriente (Supervisor al exceder el límite), caja obligatoria, endpoint `venta:catalogo`, `VentaDetalleModal` en Caja, ruta/NAV/crumb y el POS como inicio de la app.
+
+Detalle completo: [`docs/ADR-098 - Elaborados E3c-2 (POS de Elaborados).md`](ADR-098%20-%20Elaborados%20E3c-2%20%28POS%20de%20Elaborados%29.md).
+
+## ADR-099 — Elaborados: carga inicial de datos (seed base, `seed:dev` y atajo en el POS)
+
+**Estado:** Aceptado — implementado y mergeado (PR #11) · **Fecha:** 2026-10-13
+
+Seed base del rubro **una vez por BD** (categorías de venta y grupo Sabores, flag `sistema.seed_rubro_aplicado`); `pnpm seed:base`/`pnpm seed:dev` (desde la raíz `seed:*:elaborados`) con catálogo demo, clientes de ejemplo (2 con cuenta corriente) y 3 ventas, idempotentes y sin `--force`; atajo "Cargar catálogo demo" en el POS vacío. El CLI usa el `dist` de `@core/*`.
+
+Detalle completo: [`docs/ADR-099 - Elaborados carga inicial de datos (seed base, seed dev y atajo en el POS).md`](ADR-099%20-%20Elaborados%20carga%20inicial%20de%20datos%20%28seed%20base,%20seed%20dev%20y%20atajo%20en%20el%20POS%29.md).
+
+## ADR-100 — Elaborados E3d-1: venta en espera y anulación al core
+
+**Estado:** Aceptado — implementado y mergeado (PR #12) · **Fecha:** 2026-10-13
+
+`AnulacionModal` pasa a `@core/ui` (sobre `bridge()`); el encabezado de la venta en espera pasa a `@core/main` (`pausarVentaEspera` con actualización en el lugar vía `venta_id`, `descartarVentaEspera`, `listarVentasEspera`), con las líneas a cargo de cada app por hook. Retail queda con wrappers finos y su suite como oráculo.
+
+Detalle completo: [`docs/ADR-100 - Elaborados E3d-1 (venta en espera y anulacion al core).md`](ADR-100%20-%20Elaborados%20E3d-1%20%28venta%20en%20espera%20y%20anulacion%20al%20core%29.md).
+
+## ADR-101 — Elaborados E3d-2: pedidos en espera/para llevar y anulación en pantalla
+
+**Estado:** Aceptado — implementado y mergeado (PR #13) · **Fecha:** 2026-10-14
+
+Backend `venta.espera:pausar/listar/retomar/descartar` y `venta:confirmar` con `venta_en_espera_id`; un pedido guarda líneas y sabores **sin tocar stock ni caja** y el stock se descuenta una sola vez al confirmar. POS con Guardar pedido (alias + observaciones), panel de pendientes con vencimiento, retomar con el carrito vinculado al pedido, y anulación desde el ticket y desde el detalle de Caja. Corrección transversal: `SupervisorAuthModal` traduce los errores envueltos de Electron. Deuda: editar sabores tras la primera venta probablemente rompe (`grupoModificadorOpcionSetHandler`).
+
+Detalle completo: [`docs/ADR-101 - Elaborados E3d-2 (pedidos en espera y anulacion en pantalla).md`](ADR-101%20-%20Elaborados%20E3d-2%20%28pedidos%20en%20espera%20y%20anulacion%20en%20pantalla%29.md).

@@ -56,8 +56,8 @@ promoción al core de lo diferido en Fase 2. **E1 (esqueleto + plataforma)** y *
 elaborado: stock/producción/catálogo de venta + `impuesto`→core)** completos, rama `elaborados-e1`
 **mergeada a `main`** (PR #2, auto-cerrado por GitHub al detectar que `main` ya contenía sus
 commits). Releases de Elaborados: **E1** ✅ · **E2** ✅ · E3a core de venta ✅ (ADR-095) · E3b backend de venta ✅ (ADR-096) · E3c-1 core de cobro/ticket/impresión ✅ (ADR-097, PR #10) · E3c-2 POS UI ✅ (ADR-098, PR #11) · E3d pedidos en espera + anulación UI ✅ (ADR-101, PR #13) · E4
-compras/listas/reportes (+ `lista_precio`→core) ⏳. Ver ADR-093. Spec y planes en `docs/superpowers/`.
-**Pendiente:** verificación manual navegando ambas apps como Operador y Supervisor (§12).
+compras/listas/reportes (+ `lista_precio`→core) ⏳. Ver ADR-093…101 y **`docs/Handoff-E4-Elaborados.md`** (traspaso de E4). Specs y planes en `docs/superpowers/` (gitignoreado: solo en la máquina de quien los escribió).
+**E3 completo** (ventas, POS, pedidos y anulación, verificados navegando por el usuario). **Pendiente:** E4.
 
 **Alcance de core (Fase 2):** `@core/db` (esquema universal + migrator), `@core/ui` (design
 system + primitivos), `@core/main` (auth/RBAC/validación/seguridad web). **Diferido por
@@ -226,6 +226,26 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 | 079 | Fase 2b mejoras UX (ítems 4-6): links de vuelta al producto, alta express, auto-bloqueo por inactividad | Aceptado — implementado |
 | 080 | Fase 3 mejoras UX (PERF-1 + NAV-3): inicio personalizable + favoritos y reorganización del sidebar | Aceptado — implementado |
 | 081 | Fase 3 mejoras UX (SRCH-2/3 + PERF-2 + BUG-2/PRICE-4): `SearchBox` unificado + persistencia de filtros, vistos recientemente (flag), higiene de código muerto y reporte de errores descargable en importaciones | Aceptado — implementado (TDD). SEC-2 y PERF-3 fuera de alcance |
+| 082 | Fase 3 mejoras UX (SEC-2): validación de payloads en el borde y mensajes al usuario | Aceptado — implementado |
+| 083 | Ajustes varios proveedor-cliente-nav (lista de precios del cliente con UI, alta de productos en proveedor) | Aceptado — implementado |
+| 084 | Alta masiva de productos en el proveedor: pantalla completa en vez de modal | Aceptado — implementado |
+| 085 | Fase 3 mejoras UX: SEC-2 en dominios no prioritarios + CajaCierre + nombres de permisos | Aceptado — implementado |
+| 086 | Modos de la app (skin) + fix del selector de Apariencia | Aceptado — implementado |
+| 087 | PERF-3 (opción A): pantalla Roles y permisos (matriz RBAC de solo lectura) | Aceptado — implementado |
+| 088 | Contraste en modo Oscuro + tokens de color semánticos | Aceptado — implementado |
+| 089 | Tipografías bundleadas localmente + nuevo set de 6 | Aceptado — implementado |
+| 090 | Matcheo de Importar Costos contra todo el catálogo + sugerencias inline; Exportar en 8 listados | Aceptado — implementado |
+| 091 | Corte multi-rubro: boundary Opción C, 4 barandas y topología del monorepo (Fase 2) | Aceptado — mergeado (PR #1) |
+| 092 | Elaborados E1: la plataforma va al core por el 2º consumidor real | Aceptado — mergeado |
+| 093 | Elaborados E2: inventario elaborado (stock, producción, catálogo de venta) | Aceptado — mergeado |
+| 094 | AnulacionModal/AnularProduccionModal reusan SupervisorAuthModal (2 pasos) | Aceptado — mergeado (PR #5) |
+| 095 | Elaborados E3a: `confirmarVenta`/`anularVenta` al core | Aceptado — mergeado (PR #6) |
+| 096 | Elaborados E3b: backend de venta (valorizar, confirmar, anular) | Aceptado — mergeado (PR #8) |
+| 097 | Elaborados E3c-1: cobro, ticket (B1) e impresión HTML al core | Aceptado — mergeado (PR #10) |
+| 098 | Elaborados E3c-2: POS de Elaborados | Aceptado — mergeado (PR #11) |
+| 099 | Elaborados: carga inicial de datos (seed base, seed:dev y atajo en el POS) | Aceptado — mergeado (PR #11) |
+| 100 | Elaborados E3d-1: venta en espera y anulación al core | Aceptado — mergeado (PR #12) |
+| 101 | Elaborados E3d-2: pedidos en espera/para llevar y anulación en pantalla | Aceptado — mergeado (PR #13) |
 
 > Detalle completo en `docs/ADR-Log-ferreteria.md`. **Nota:** esta tabla saltea 052–063 (el
 > ADR-Log está más adelantado que este Estado; pendiente de reconciliar).
@@ -279,6 +299,45 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 ---
 
 ## Bitácora de decisiones
+
+- `2026-10-14` — **ADR-101 — Elaborados E3d-2 (pedidos en espera/para llevar y anulación en pantalla) mergeado (PR #13).**
+  Backend `venta.espera:*` y `venta:confirmar` con `venta_en_espera_id`; un pedido no toca stock
+  ni caja y el stock se descuenta una sola vez al confirmar. POS con Guardar pedido, panel de
+  pendientes, retomar con vínculo carrito↔pedido y anulación en ticket y Caja. Fix transversal:
+  `SupervisorAuthModal` traduce errores envueltos de Electron. Gates: core-ui 40 · Retail renderer
+  925 / main 1598 · Elaborados renderer 174 / main 160. E3 completo; siguiente E4 (ver
+  `docs/Handoff-E4-Elaborados.md`).
+
+- `2026-10-13` — **ADR-100 — Elaborados E3d-1 (venta en espera y anulación al core) mergeado (PR #12).**
+  `AnulacionModal` a `@core/ui`; encabezado de la venta en espera (`pausarVentaEspera` con
+  actualización en el lugar, `descartarVentaEspera`, `listarVentasEspera`) a `@core/main`; Retail
+  con wrappers y su suite como oráculo.
+
+- `2026-10-13` — **ADR-099 — Elaborados: carga inicial de datos mergeado (PR #11).**
+  Seed base del rubro una vez por BD, `pnpm seed:base`/`seed:dev` (desde la raíz
+  `seed:*:elaborados`; idempotentes, sin `--force`) y atajo "Cargar catálogo demo" en el POS
+  vacío. Motivo: el spec §7.3 prometía un seed base que nunca se había hecho.
+
+- `2026-10-13` — **ADR-098 — Elaborados E3c-2 (POS de Elaborados) mergeado (PR #11).**
+  `/pos` con categorías, grilla, selector de sabores, carrito valorizado por `venta:cotizar` (el
+  renderer no calcula precios), cobro/ticket/impresión del core, cliente con búsqueda y cta cte,
+  caja obligatoria y `VentaDetalleModal` en Caja.
+
+- `2026-10-13` — **ADR-097 — Elaborados E3c-1 (cobro, ticket B1 e impresión al core) mergeado (PR #10).**
+  B1 (`ComprobantePayload`) en `shared`, `TicketModal` y `ConfirmarVentaModal` en `@core/ui`,
+  `print:html` universal. Convención: `venta.descuento_global` es un porcentaje.
+
+- `2026-10-12` — **ADR-096 — Elaborados E3b (backend de venta) mergeado (PR #8).**
+  `valorizarCarrito` puro, `venta:cotizar/confirmar/anular/get/listByCaja`, política de stock R2 y
+  anulación que invierte los movimientos originales.
+
+- `2026-10-05` — **ADR-095 — Elaborados E3a (`confirmarVenta`/`anularVenta` al core) mergeado (PR #6).**
+  Template method con hooks `validarPrevio`/`aplicarLineas`/`revertirLineas`; el core recibe
+  totales ya calculados y crea el correlativo si falta; Retail con wrappers finos.
+
+- `2026-09-28` — **ADR-094 — `AnulacionModal`/`AnularProduccionModal` reusan `SupervisorAuthModal` en 2 pasos (PR #5).**
+  Cierra uno de los 5 follow-ups de la revisión de ADR-093: ambos modales pasan a una máquina
+  `motivo` → `auth` sin duplicar el formulario de credenciales.
 
 - `2026-09-28` — **ADR-093 — Elaborados E2 (inventario elaborado) implementado y mergeado a `main`.**
   Spec propio (`docs/superpowers/specs/2026-09-24-elaborados-e2-inventario-design.md`) → plan de
