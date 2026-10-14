@@ -6,6 +6,7 @@ import { setupDb, loginAsAdmin, clearSession } from '../../__tests__/helpers';
 import { CONSUMIDOR_FINAL_ID } from '../../catalog/seed';
 import { cajaAbrirHandler, pausarVentaEspera } from '@core/main';
 import { movimientoArticuloCreateHandler } from '../movimiento-articulo';
+import { grupoModificadorOpcionSetHandler } from '../grupo-modificador';
 import { catalogo, stockDe } from './ventaFixtures';
 import {
   ventaCotizarHandler, ventaConfirmarHandler, ventaAnularHandler, ventaGetHandler, ventaCatalogoHandler, registerVentaHandlers,
@@ -130,6 +131,25 @@ describe('venta handlers (Elaborados)', () => {
         .where(eq(schema.movimiento_articulo.referencia_id, r.venta.id)).all();
       expect(movs).toHaveLength(3);
       expect(movs.every((m) => m.tipo === 'salida' && m.motivo === 'venta' && m.cantidad < 0)).toBe(true);
+    });
+
+    it('editar sabores tras una venta no rompe: la línea histórica conserva su opción y la quitada deja de ofrecerse (ADR-102)', () => {
+      const { c, caja } = preparar();
+      ventaConfirmarHandler(db, {
+        caja_id: caja.id, cliente_id: CONSUMIDOR_FINAL_ID,
+        lineas: [pote(c, [c.opChoco.id, c.opDdl.id])],
+        pagos: [{ medio_pago: 'efectivo', monto_centavos: 170000 }],
+      });
+      grupoModificadorOpcionSetHandler(db, {
+        grupo_modificador_id: c.grupo.id,
+        opciones: [{ articulo_id: c.choco.id, nombre: 'Chocolate', recargo_centavos: 0, cantidad: 0, orden: 1 }],
+      });
+      const mods = db.select().from(schema.venta_linea_modificador).all();
+      expect(mods.map((m) => m.grupo_modificador_opcion_id).sort()).toEqual([c.opChoco.id, c.opDdl.id].sort());
+      const pos = ventaCatalogoHandler(db);
+      const grupoPos = pos.productos.find((p) => p.id === c.pote.id)!.grupos[0]!;
+      expect(grupoPos.opciones.map((o) => o.id)).toEqual([c.opChoco.id]);
+      expect(() => ventaCotizarHandler(db, { lineas: [pote(c, [c.opDdl.id])] })).toThrow('OPCION_INVALIDA');
     });
 
     it('reventa que bloquea sin stock → STOCK_INSUFICIENTE y nada se persiste', () => {

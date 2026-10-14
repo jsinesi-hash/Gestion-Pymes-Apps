@@ -1,4 +1,4 @@
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { cajaAbrirHandler, cajaGetActivaHandler } from '@core/main';
 import * as schema from '../db/schema';
@@ -48,7 +48,7 @@ export function seedVentasDemo(db: Db): { creadas: number } {
     .where(eq(schema.grupo_modificador.nombre, GRUPO_SABORES)).get();
   if (!grupo) throw new Error('SEED_VENTAS: falta el grupo "Sabores"');
   const sabores = db.select().from(schema.grupo_modificador_opcion)
-    .where(eq(schema.grupo_modificador_opcion.grupo_modificador_id, grupo.id))
+    .where(and(eq(schema.grupo_modificador_opcion.grupo_modificador_id, grupo.id), eq(schema.grupo_modificador_opcion.activo, true)))
     .orderBy(asc(schema.grupo_modificador_opcion.orden)).all().slice(0, 3);
   if (sabores.length < 3) throw new Error('SEED_VENTAS: el grupo "Sabores" tiene menos de 3 opciones');
   const cliCuenta = clienteConCuentaHolgada(db);

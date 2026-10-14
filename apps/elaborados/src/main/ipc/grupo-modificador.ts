@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
@@ -23,7 +23,8 @@ export function grupoModificadorGetHandler(db: Db, payload: { id: string }) {
   const grupo = db.select().from(schema.grupo_modificador).where(eq(schema.grupo_modificador.id, payload.id)).get();
   if (!grupo) return null;
   const opciones = db.select().from(schema.grupo_modificador_opcion)
-    .where(eq(schema.grupo_modificador_opcion.grupo_modificador_id, grupo.id)).all();
+    .where(and(eq(schema.grupo_modificador_opcion.grupo_modificador_id, grupo.id), eq(schema.grupo_modificador_opcion.activo, true)))
+    .orderBy(asc(schema.grupo_modificador_opcion.orden)).all();
   return { ...grupo, opciones };
 }
 
@@ -62,13 +63,33 @@ export function grupoModificadorOpcionSetHandler(db: Db, payload: unknown) {
   const now = new Date();
   const sync = { version: 1 as const, origin_id: getOriginId(), sync_state: 'pending' as const, updated_at: now };
 
+  // ADR-102: las opciones se referencian desde venta_linea_modificador, así que nunca se borran:
+  // upsert por artículo (conserva el id) y baja lógica de las que ya no vienen.
   db.transaction((tx) => {
-    tx.delete(schema.grupo_modificador_opcion)
-      .where(eq(schema.grupo_modificador_opcion.grupo_modificador_id, v_grupo_id)).run();
+    const existentes = tx.select().from(schema.grupo_modificador_opcion)
+      .where(eq(schema.grupo_modificador_opcion.grupo_modificador_id, v_grupo_id)).all();
+    const porArticulo = new Map(existentes.map((e) => [e.articulo_id, e]));
+    const vigentes = new Set<string>();
     for (const op of v_opciones) {
-      tx.insert(schema.grupo_modificador_opcion).values({
-        id: generateId(), grupo_modificador_id: v_grupo_id, ...op, ...sync,
-      }).run();
+      if (vigentes.has(op.articulo_id)) throw new Error('OPCION_DUPLICADA');
+      vigentes.add(op.articulo_id);
+      const previa = porArticulo.get(op.articulo_id);
+      if (previa) {
+        tx.update(schema.grupo_modificador_opcion)
+          .set({ ...op, activo: true, ...sync, version: previa.version + 1 })
+          .where(eq(schema.grupo_modificador_opcion.id, previa.id)).run();
+      } else {
+        tx.insert(schema.grupo_modificador_opcion).values({
+          id: generateId(), grupo_modificador_id: v_grupo_id, ...op, activo: true, ...sync,
+        }).run();
+      }
+    }
+    for (const e of existentes) {
+      if (e.activo && !vigentes.has(e.articulo_id)) {
+        tx.update(schema.grupo_modificador_opcion)
+          .set({ activo: false, ...sync, version: e.version + 1 })
+          .where(eq(schema.grupo_modificador_opcion.id, e.id)).run();
+      }
     }
   });
 
