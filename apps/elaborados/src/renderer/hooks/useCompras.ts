@@ -28,7 +28,7 @@ export function useCompras() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const [c, p] = await Promise.all([api().compra.list(), api().proveedor.list()]);
+    const [c, p] = await Promise.all([api().compra.list(), api().compra.proveedores()]);
     setCompras(c);
     setProveedores(p);
   }, []);
@@ -46,7 +46,7 @@ export function useCompras() {
   }
 
   async function crearProveedorRapido(razon_social: string): Promise<ProveedorRow> {
-    const p = await api().proveedor.crearRapido({ razon_social });
+    const p = await api().compra.proveedorCrearRapido({ razon_social });
     await load();
     return p;
   }

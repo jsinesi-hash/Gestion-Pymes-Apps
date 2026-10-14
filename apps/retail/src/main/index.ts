@@ -35,7 +35,7 @@ import { registerDashboardClientesHandlers }   from './ipc/dashboard-clientes';
 import { registerDashboardProveedoresHandlers } from './ipc/dashboard-proveedores';
 import { EXPORTADORES_RETAIL } from './ipc/exportar';
 import { registerReportesHandlers } from './ipc/reportes';
-import { registerProveedorHandlers } from './ipc/proveedor';
+import { proveedorHooksRetail } from './ipc/proveedor';
 import { registerProductoProveedorHandlers } from './ipc/producto-proveedor';
 import { registerOcHandlers } from './ipc/ordenes-compra';
 import { registerRecepcionHandlers } from './ipc/recepcion';
@@ -75,6 +75,7 @@ async function createWindow(): Promise<void> {
     navegacion: navegacionRetail,
     exportadores: EXPORTADORES_RETAIL,
     caja: { onCajaCerrada: avisoCierreCaja },
+    proveedor: proveedorHooksRetail,
     imprimirHtml: (h) => printService.printRawHtml(h),
   });
   registerDialogRetailHandlers(ipcMain);
@@ -101,7 +102,6 @@ async function createWindow(): Promise<void> {
   registerDashboardClientesHandlers(ipcMain, db);
   registerDashboardProveedoresHandlers(ipcMain, db);
   registerReportesHandlers(ipcMain, db);
-  registerProveedorHandlers(ipcMain, db);
   registerProductoProveedorHandlers(ipcMain, db);
   registerOcHandlers(ipcMain, db);
   registerRecepcionHandlers(ipcMain, db);

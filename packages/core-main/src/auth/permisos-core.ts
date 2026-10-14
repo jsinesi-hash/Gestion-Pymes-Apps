@@ -14,6 +14,7 @@ export const PERMISOS_CORE: readonly PermisoDef[] = [
   { codigo: 'backup.restaurar',    modulo: 'admin' },
   { codigo: 'export.basico',       modulo: 'export' },
   { codigo: 'export.supervisor',   modulo: 'export' },
+  { codigo: 'proveedor.gestionar', modulo: 'compras' },
 ];
 
 export const OPERADOR_PERMISOS_CORE: readonly string[] = [

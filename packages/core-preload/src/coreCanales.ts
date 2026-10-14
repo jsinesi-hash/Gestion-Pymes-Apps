@@ -40,6 +40,12 @@ export function coreCanales(invoke: Invoke) {
       desactivar: (p: unknown) => invoke('cliente:desactivar', p),
       reactivar: (p: unknown) => invoke('cliente:reactivar', p),
     },
+    proveedor: {
+      list: () => invoke('proveedor:list'),
+      get: (id: string) => invoke('proveedor:get', id),
+      upsert: (p: unknown) => invoke('proveedor:upsert', p),
+      deactivate: (id: string) => invoke('proveedor:deactivate', id),
+    },
     ctacte: {
       list: () => invoke('ctacte:list'),
       getByCliente: (id: string) => invoke('ctacte:getByCliente', id),

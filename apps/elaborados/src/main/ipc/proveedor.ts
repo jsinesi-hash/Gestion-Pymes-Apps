@@ -19,6 +19,9 @@ export function proveedorListHandler(db: Db) {
     .where(eq(schema.proveedor.activo, true)).orderBy(asc(schema.proveedor.razon_social)).all();
 }
 
+// ADR-106: los canales `proveedor:*` son del CRUD universal del core (`proveedor.gestionar`); estos
+// dos son del flujo de compras (`compra.registrar`): el Operador elige/crea proveedor sin gestionarlos.
+
 /**
  * Alta rápida desde la pantalla de compras (ADR-103): solo razón social. Los datos obligatorios
  * del core (documento y condición fiscal) llevan defaults hasta que exista el CRUD completo de
@@ -40,6 +43,6 @@ export function proveedorCrearRapidoHandler(db: Db, payload: unknown) {
 
 export function registerProveedorHandlers(ipcMain: IpcMain, db: Db): void {
   const guard = requirePermission('compra.registrar');
-  ipcMain.handle('proveedor:list', async () => proveedorListHandler(db));
-  ipcMain.handle('proveedor:crear-rapido', guard(async (_e, p) => proveedorCrearRapidoHandler(db, p)));
+  ipcMain.handle('compra:proveedor-list', async () => proveedorListHandler(db));
+  ipcMain.handle('compra:proveedor-crear-rapido', guard(async (_e, p) => proveedorCrearRapidoHandler(db, p)));
 }
