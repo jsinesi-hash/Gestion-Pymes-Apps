@@ -44,6 +44,11 @@ createBridge({
       update:    (p: unknown) => invoke('lista-precio:update', p),
       precioSet: (p: unknown) => invoke('lista-precio:precio-set', p),
     },
+    reporte: {
+      ventasPeriodo: (p: { desde: string; hasta: string }) => invoke('reporte:ventas-periodo', p),
+      ventasProducto: (p: { desde: string; hasta: string }) => invoke('reporte:ventas-producto', p),
+      stockAlertas: () => invoke('reporte:stock-alertas'),
+    },
     categoriaVenta: {
       list:   () => invoke('categoria-venta:list'),
       create: (p: unknown) => invoke('categoria-venta:create', p),

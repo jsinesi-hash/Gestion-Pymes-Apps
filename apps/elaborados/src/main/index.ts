@@ -19,6 +19,8 @@ import { registerProduccionHandlers } from './ipc/produccion';
 import { registerCompraHandlers } from './ipc/compra';
 import { registerProveedorHandlers } from './ipc/proveedor';
 import { registerListaPrecioHandlers } from './ipc/lista-precio';
+import { registerReporteHandlers } from './ipc/reporte';
+import { EXPORTADORES_REPORTES } from './reportes/exportadores';
 import { registerCategoriaVentaHandlers } from './ipc/categoria-venta';
 import { registerGrupoModificadorHandlers } from './ipc/grupo-modificador';
 import { registerProductoVentaHandlers } from './ipc/producto-venta';
@@ -32,6 +34,7 @@ async function createWindow(): Promise<void> {
   registerCoreHandlers(ipcMain, db, {
     migrationsFolder: path.join(__dirname, 'migrations'),
     navegacion: navegacionElaborados,
+    exportadores: EXPORTADORES_REPORTES,
     imprimirHtml: crearImpresorHtml(() => new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false, contextIsolation: true } })),
   });
   registerImpuestoHandlers(ipcMain, db);
@@ -42,6 +45,7 @@ async function createWindow(): Promise<void> {
   registerCompraHandlers(ipcMain, db);
   registerProveedorHandlers(ipcMain, db);
   registerListaPrecioHandlers(ipcMain, db);
+  registerReporteHandlers(ipcMain, db);
   registerCategoriaVentaHandlers(ipcMain, db);
   registerGrupoModificadorHandlers(ipcMain, db);
   registerProductoVentaHandlers(ipcMain, db);
