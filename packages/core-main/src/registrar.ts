@@ -8,6 +8,7 @@ import { registerParametrosHandlers } from './ipc/parametros';
 import { registerGeoHandlers } from './ipc/geo';
 import { registerClienteHandlers } from './ipc/cliente';
 import { registerCtaCteHandlers } from './ipc/ctacte';
+import { registerProveedorHandlers, type ProveedorHooks } from './ipc/proveedor';
 import { registerCajaHandlers, type CajaHooks } from './ipc/caja';
 import { registerBackupHandlers } from './ipc/backup';
 import { registerRestoreHandlers } from './ipc/restore';
@@ -20,6 +21,7 @@ export type CoreHandlersOpts = {
   navegacion: Navegacion;
   exportadores?: readonly Exportador[];
   caja?: CajaHooks;
+  proveedor?: ProveedorHooks;
   imprimirHtml?: ImpresorHtml;
 };
 
@@ -31,6 +33,7 @@ export function registerCoreHandlers(ipcMain: IpcMain, db: BetterSQLite3Database
   registerGeoHandlers(ipcMain, db);
   registerClienteHandlers(ipcMain, db);
   registerCtaCteHandlers(ipcMain, db);
+  registerProveedorHandlers(ipcMain, db, opts.proveedor ?? {});
   registerCajaHandlers(ipcMain, db, opts.caja ?? {});
   registerBackupHandlers(ipcMain, db);
   registerRestoreHandlers(ipcMain, db, { migrationsFolder: opts.migrationsFolder });

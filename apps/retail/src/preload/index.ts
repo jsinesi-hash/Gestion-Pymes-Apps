@@ -203,10 +203,10 @@ createBridge({
     },
     compras: {
       proveedor: {
-        list:       ()           => invoke('compras.proveedor:list'),
-        get:        (id: string) => invoke('compras.proveedor:get', id),
-        upsert:     (p: unknown) => invoke('compras.proveedor:upsert', p),
-        deactivate: (id: string) => invoke('compras.proveedor:deactivate', id),
+        list:       ()           => invoke('proveedor:list'),
+        get:        (id: string) => invoke('proveedor:get', id),
+        upsert:     (p: unknown) => invoke('proveedor:upsert', p),
+        deactivate: (id: string) => invoke('proveedor:deactivate', id),
         productos: {
           listar:     (proveedorId: string)        => invoke('compras.pp:listByProveedor', proveedorId),
           asociar:    (p: unknown)                 => invoke('compras.pp:asociar', p),

@@ -14,6 +14,7 @@ export * from './ipc/parametros';
 export * from './ipc/parametros-cache';
 export * from './ipc/geo';
 export * from './ipc/cliente';
+export * from './ipc/proveedor';
 export * from './precios/lista-efectiva';
 export * from './ipc/backup';
 export * from './ipc/restore';

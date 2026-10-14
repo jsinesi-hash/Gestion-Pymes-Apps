@@ -32,10 +32,8 @@ createBridge({
       get:    (p: { id: string }) => invoke('compra:get', p),
       crear:  (p: unknown) => invoke('compra:crear', p),
       anular: (p: unknown) => invoke('compra:anular', p),
-    },
-    proveedor: {
-      list:        () => invoke('proveedor:list'),
-      crearRapido: (p: unknown) => invoke('proveedor:crear-rapido', p),
+      proveedores:        () => invoke('compra:proveedor-list'),
+      proveedorCrearRapido: (p: unknown) => invoke('compra:proveedor-crear-rapido', p),
     },
     listaPrecio: {
       list:      () => invoke('lista-precio:list'),

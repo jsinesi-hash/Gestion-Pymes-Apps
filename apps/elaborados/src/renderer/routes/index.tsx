@@ -22,6 +22,7 @@ import { ArticulosView } from '../views/stock/ArticulosView';
 import { ConteoView } from '../views/stock/ConteoView';
 import { ProduccionView } from '../views/produccion/ProduccionView';
 import { ComprasView } from '../views/compras/ComprasView';
+import { ProveedoresView } from '../views/compras/ProveedoresView';
 import { ReportesView } from '../views/reportes/ReportesView';
 import { CategoriasVentaView } from '../views/carta/CategoriasVentaView';
 import { ModificadoresView } from '../views/carta/ModificadoresView';
@@ -63,6 +64,7 @@ export const routes: RouteObject[] = [
       { path: 'stock/conteo', element: <ConteoView /> },
       { path: 'produccion', element: <ProduccionView /> },
       { path: 'compras', element: <ComprasView /> },
+      { path: 'compras/proveedores', element: <ProveedoresView /> },
       { path: 'reportes', element: <ReportesView /> },
       { path: 'carta/categorias', element: <CategoriasVentaView /> },
       { path: 'carta/modificadores', element: <ModificadoresView /> },

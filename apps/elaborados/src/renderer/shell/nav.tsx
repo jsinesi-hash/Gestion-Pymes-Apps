@@ -62,9 +62,10 @@ export const NAV_ELABORADOS: NavGroup[] = [
     key: 'compras',
     label: 'Compras',
     icon: I('M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0'),
-    standalone: true,
-    permiso: 'compra.registrar',
-    items: [{ label: 'Compras', to: '/compras', icon: I('M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0'), permiso: 'compra.registrar' }],
+    items: [
+      { label: 'Compras', to: '/compras', icon: I('M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0'), permiso: 'compra.registrar', end: true },
+      { label: 'Proveedores', to: '/compras/proveedores', icon: SVG_CLIENTES, permiso: 'proveedor.gestionar' },
+    ],
   },
   {
     key: 'reportes',

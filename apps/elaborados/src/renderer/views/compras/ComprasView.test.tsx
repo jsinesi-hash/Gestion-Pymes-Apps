@@ -24,8 +24,10 @@ const mockListProv = vi.fn();
 const mockCrearProv = vi.fn();
 
 vi.stubGlobal('elaborados', {
-  compra: { list: mockListCompras, get: vi.fn(), crear: mockCrear, anular: mockAnular },
-  proveedor: { list: mockListProv, crearRapido: mockCrearProv },
+  compra: {
+    list: mockListCompras, get: vi.fn(), crear: mockCrear, anular: mockAnular,
+    proveedores: mockListProv, proveedorCrearRapido: mockCrearProv,
+  },
   articulo: { list: vi.fn().mockResolvedValue(ARTICULOS), get: vi.fn(), create: vi.fn(), update: vi.fn() },
 });
 
