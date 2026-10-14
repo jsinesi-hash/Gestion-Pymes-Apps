@@ -1,6 +1,6 @@
 # ADR-101 — Elaborados E3d-2: pedidos en espera/para llevar y anulación en pantalla
 
-**Estado:** Aceptado — implementado en la rama `e3d2-pedidos-elaborados` (pendiente de click-through y merge)
+**Estado:** Aceptado — implementado y mergeado a `main` (PR #13, 2026-10-14)
 **Fecha:** 2026-10-13
 **Spec:** `docs/superpowers/specs/2026-10-13-elaborados-e3d-espera-anulacion-design.md` (§3)
 **Plan:** `docs/superpowers/plans/2026-10-13-elaborados-e3d2-pedidos-anulacion.md`
@@ -64,4 +64,4 @@ propio ni anular una venta desde pantalla. Con el core ya preparado (ADR-100), e
 Campos estructurados de delivery, integraciones con apps de delivery, reserva de stock, listas de precio (E4).
 
 ## Verificación
-Gates en serie: **core-ui 6 archivos/40 · Retail renderer 144/925 · Retail main 141/1598 (sin cambios) · Elaborados renderer 19/174 · Elaborados main 26/160**; typecheck limpio. Las suites de Retail pasan sin editar aserciones (el único cambio de `core-ui` que lo toca es el `SupervisorAuthModal`, con 4 tests nuevos propios). Revisión final independiente del diff completo (23 archivos): sin hallazgos críticos; el importante (errores envueltos de Electron en el `SupervisorAuthModal`) y los menores baratos (desvincular el pedido con el carrito vacío, `listar` con `venta.crear`, retomar con el catálogo sin cargar, tests de ramas de error) se corrigieron antes del PR. Falta el click-through con el usuario (CLAUDE.md §12).
+Gates en serie: **core-ui 6 archivos/40 · Retail renderer 144/925 · Retail main 141/1598 (sin cambios) · Elaborados renderer 19/174 · Elaborados main 26/160**; typecheck limpio. Las suites de Retail pasan sin editar aserciones (el único cambio de `core-ui` que lo toca es el `SupervisorAuthModal`, con 4 tests nuevos propios). Revisión final independiente del diff completo (23 archivos): sin hallazgos críticos; el importante (errores envueltos de Electron en el `SupervisorAuthModal`) y los menores baratos (desvincular el pedido con el carrito vacío, `listar` con `venta.crear`, retomar con el catálogo sin cargar, tests de ramas de error) se corrigieron antes del PR. Click-through con el usuario confirmado (CLAUDE.md §12).
