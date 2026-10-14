@@ -4787,3 +4787,9 @@ Detalle completo: [`docs/ADR-100 - Elaborados E3d-1 (venta en espera y anulacion
 Backend `venta.espera:pausar/listar/retomar/descartar` y `venta:confirmar` con `venta_en_espera_id`; un pedido guarda líneas y sabores **sin tocar stock ni caja** y el stock se descuenta una sola vez al confirmar. POS con Guardar pedido (alias + observaciones), panel de pendientes con vencimiento, retomar con el carrito vinculado al pedido, y anulación desde el ticket y desde el detalle de Caja. Corrección transversal: `SupervisorAuthModal` traduce los errores envueltos de Electron. Deuda: editar sabores tras la primera venta probablemente rompe (`grupoModificadorOpcionSetHandler`).
 
 Detalle completo: [`docs/ADR-101 - Elaborados E3d-2 (pedidos en espera y anulacion en pantalla).md`](ADR-101%20-%20Elaborados%20E3d-2%20%28pedidos%20en%20espera%20y%20anulacion%20en%20pantalla%29.md).
+
+## ADR-102 — Elaborados E4-PR1: edición de sabores con baja lógica y errores de dominio
+
+**Estado:** Aceptado — implementado en rama `e4-pr1-deuda-opciones` (pendiente de merge) · **Fecha:** 2026-10-14
+
+`grupo_modificador_opcion` gana `activo` (migración 0006). `grupoModificadorOpcionSetHandler` deja de borrar y reinsertar (rompía por FK desde `venta_linea_modificador` tras la primera venta): hace upsert por `articulo_id` conservando el id, reactiva las dadas de baja y da de baja las omitidas. `venta:catalogo`, la validación de `venta:cotizar/confirmar`, `grupo-modificador:get` y el dev-seed filtran `activo=1`; las ventas históricas conservan su opción. `core-ui/lib/errores.ts` muestra el nombre en `STOCK_INSUFICIENTE:<n>` y traduce los códigos de producción/receta (`RECETA_NO_DEFINIDA`, `RINDE_INVALIDO`, `ARTICULO_NO_ELABORADO`, `CANTIDAD_PRODUCIDA_INVALIDA`, `ANULACION_REQUIERE_AUTORIZACION`, `YA_ANULADA`).
