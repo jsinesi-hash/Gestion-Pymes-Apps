@@ -8,7 +8,7 @@ import {
   listaPrecioListHandler, listaPrecioCreateHandler, listaPrecioUpdateHandler,
   listaPrecioPreciosHandler, listaPrecioPrecioSetHandler,
 } from '../lista-precio';
-import { ventaCotizarHandler, ventaConfirmarHandler } from '../venta';
+import { ventaCotizarHandler, ventaConfirmarHandler, ventaCatalogoHandler } from '../venta';
 
 type Db = ReturnType<typeof setupDb>;
 
@@ -67,6 +67,31 @@ describe('lista-precio handlers', () => {
     expect(() => listaPrecioPrecioSetHandler(db, { lista_precio_id: l.id, producto_venta_id: 'x', precio_centavos: 1 })).toThrow('NOT_FOUND');
     expect(() => listaPrecioPrecioSetHandler(db, { lista_precio_id: l.id, producto_venta_id: c.palito.id, precio_centavos: -1 })).toThrow();
     expect(() => listaPrecioPrecioSetHandler(db, { lista_precio_id: l.id, producto_venta_id: c.palito.id, precio_centavos: 1.5 })).toThrow();
+  });
+
+  describe('catálogo del POS con la lista del cliente', () => {
+    const precioPalito = (c: ReturnType<typeof catalogo>, payload?: unknown) =>
+      ventaCatalogoHandler(db, payload).productos.find((p) => p.id === c.palito.id)!.precio_centavos;
+
+    it('sin cliente o cliente sin lista: precio base; con lista: el mismo precio que cotiza', () => {
+      loginAsAdmin(db);
+      const c = catalogo(db);
+      const l = listaPrecioCreateHandler(db, { nombre: 'Mayorista', ajuste_porcentual: -10 });
+      const conLista = clienteConLista(db, l.id);
+      const sinLista = clienteConLista(db);
+      expect(precioPalito(c)).toBe(100000);
+      expect(precioPalito(c, { cliente_id: sinLista.id })).toBe(100000);
+      expect(precioPalito(c, { cliente_id: conLista.id })).toBe(90000);
+      listaPrecioPrecioSetHandler(db, { lista_precio_id: l.id, producto_venta_id: c.palito.id, precio_centavos: 85000 });
+      expect(precioPalito(c, { cliente_id: conLista.id })).toBe(85000);
+      expect(ventaCotizarHandler(db, { cliente_id: conLista.id, lineas: [{ producto_venta_id: c.palito.id, cantidad: 1 }] }).total_centavos).toBe(85000);
+    });
+
+    it('rechaza un cliente_id mal formado', () => {
+      loginAsAdmin(db);
+      catalogo(db);
+      expect(() => ventaCatalogoHandler(db, { cliente_id: 42 })).toThrow();
+    });
   });
 
   describe('cotizar y confirmar con la lista del cliente', () => {

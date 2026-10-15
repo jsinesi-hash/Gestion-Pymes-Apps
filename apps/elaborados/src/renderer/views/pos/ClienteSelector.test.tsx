@@ -67,4 +67,12 @@ describe('ClienteSelector', () => {
     expect(screen.getByText('Juan García')).toBeInTheDocument();
     expect(screen.queryByText('Cliente')).not.toBeInTheDocument();
   });
+
+  it('es controlado: el nombre mostrado sigue al padre, no a lo último que se eligió acá', () => {
+    const { rerender } = render(<ClienteSelector clienteId="c1" nombre="Juan García" onCambiar={vi.fn()} />);
+    expect(screen.getByText('Juan García')).toBeTruthy();
+    rerender(<ClienteSelector clienteId="c2" nombre="Ana Pérez" onCambiar={vi.fn()} />);
+    expect(screen.getByText('Ana Pérez')).toBeTruthy();
+    expect(screen.queryByText('Juan García')).toBeNull();
+  });
 });

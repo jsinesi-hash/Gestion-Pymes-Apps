@@ -38,12 +38,12 @@ const mensaje = (e: unknown): string => (e instanceof Error ? e.message : String
 
 export function PosView() {
   const { caja, isLoading } = useCajaActiva();
-  const { catalogo, error: errorCatalogo, recargar } = usePosCatalogo();
   const { can } = useAuth();
   const [sembrando, setSembrando] = useState(false);
   const [errorSiembra, setErrorSiembra] = useState<string | null>(null);
   const [estado, dispatch] = useReducer(carritoReducer, carritoInicial);
   const [cliente, setCliente] = useState<ClientePos>(CONSUMIDOR_FINAL);
+  const { catalogo, error: errorCatalogo, recargar } = usePosCatalogo(cliente.id);
   const payload = useMemo(() => aPayload(estado), [estado]);
   // ADR-104: el cliente viaja en la cotización para que el main aplique su lista de precios.
   const payloadCotizar = useMemo(() => ({ ...payload, cliente_id: cliente.id }), [payload, cliente.id]);

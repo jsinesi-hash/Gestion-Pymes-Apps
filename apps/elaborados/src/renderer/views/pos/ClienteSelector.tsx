@@ -11,7 +11,7 @@ type ClienteRow = {
   habilita_cuenta_corriente: boolean;
 };
 
-/** `nombre` permite que el padre fije el nombre (p. ej. al retomar un pedido con su cliente). */
+/** Controlado: el padre es dueño del cliente elegido y de su nombre (también al retomar un pedido). */
 type Props = { clienteId: string; nombre?: string; onCambiar: (cliente: ClientePos) => void };
 
 export function ClienteSelector({ clienteId, nombre, onCambiar }: Props) {
@@ -19,7 +19,6 @@ export function ClienteSelector({ clienteId, nombre, onCambiar }: Props) {
   const [clientes, setClientes] = useState<ClienteRow[]>([]);
   const [busqueda, setBusqueda] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [actual, setActual] = useState<string | null>(null);
 
   const abrir = async () => {
     setAbierto(true);
@@ -34,7 +33,6 @@ export function ClienteSelector({ clienteId, nombre, onCambiar }: Props) {
   };
 
   const elegir = (c: ClientePos) => {
-    setActual(c.nombre_completo);
     setAbierto(false);
     onCambiar(c);
   };
@@ -44,7 +42,7 @@ export function ClienteSelector({ clienteId, nombre, onCambiar }: Props) {
     .map((c) => ({ c, nombre: nombreCompletoCliente(c) }))
     .filter(({ c, nombre }) => !q || normalizar(nombre).includes(q) || normalizar(c.numero_documento ?? '').includes(q));
 
-  const nombreActual = clienteId === CONSUMIDOR_FINAL_ID ? CONSUMIDOR_FINAL.nombre_completo : (nombre ?? actual ?? 'Cliente');
+  const nombreActual = clienteId === CONSUMIDOR_FINAL_ID ? CONSUMIDOR_FINAL.nombre_completo : (nombre ?? 'Cliente');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
