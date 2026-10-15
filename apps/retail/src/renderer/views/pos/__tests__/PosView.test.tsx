@@ -156,6 +156,24 @@ describe('PosView', () => {
     expect(screen.getByRole('button', { name: /anular venta/i })).toBeInTheDocument();
   });
 
+  it('el ticket muestra el medio realmente cobrado, no el forma_pago legado', async () => {
+    const legado = { ...mockVentaResult, venta: { ...mockVentaResult.venta, forma_pago: 'tarjeta' } };
+    setupFerreteria({ venta: { confirmar: vi.fn().mockResolvedValue(legado) } });
+    renderPos(false);
+    await waitFor(() => expect(screen.getByPlaceholderText(/escanear/i)).toBeInTheDocument());
+    const input = screen.getByPlaceholderText(/escanear/i);
+    fireEvent.change(input, { target: { value: 'T001' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() => expect(screen.getByText('Tornillo')).toBeInTheDocument());
+    abrirModalPago();
+    await waitFor(() => expect(screen.getByLabelText(/monto/i)).toBeInTheDocument());
+    fireEvent.change(screen.getByLabelText(/monto/i), { target: { value: '1000' } });
+    confirmarEnModal();
+    await waitFor(() => expect(screen.getByText('V-C1-000001')).toBeInTheDocument());
+    expect(screen.getByText('Efectivo')).toBeInTheDocument();
+    expect(screen.queryByText('Tarjeta')).toBeNull();
+  });
+
   it('muestra un error claro cuando la venta falla al confirmar (no lo traga)', async () => {
     setupFerreteria({ venta: { confirmar: vi.fn().mockRejectedValue(new Error('STOCK_INSUFICIENTE')) } });
     renderPos();

@@ -4826,6 +4826,12 @@ Primera pieza de cierre de deuda tras E4. (1) Migración 0009 de Elaborados: ín
 
 ## ADR-108 — Elaborados E5-PR2: precio por lista en las tarjetas del POS y deuda de UX
 
-**Estado:** Aceptado — implementado en rama `e5-pr2-ux-pos` (pendiente de merge) · **Fecha:** 2026-10-15
+**Estado:** Aceptado — mergeado a `main` (PR #22) · **Fecha:** 2026-10-15
 
 (1) `venta:catalogo` acepta `cliente_id` opcional y devuelve `precio_centavos` ya resuelto con `resolverPreciosCliente`, el mismo camino de la cotización: las tarjetas del POS dejan de mostrar el precio base cuando el cliente tiene lista (el renderer sigue sin calcular precios). `usePosCatalogo(clienteId)` recarga el catálogo al cambiar de cliente; el preload pasa el payload. (2) `ClienteSelector` queda totalmente controlado: se elimina el estado interno con el nombre elegido, que podía quedar desfasado del cliente del padre. (3) El alta rápida de proveedor delega en `proveedorUpsertHandler` del core (ADR-106): comparte validación y asigna código `PROV-NNNN`; el documento queda vacío (el core lo admite) en lugar del `"0"` inventado. Sin migración.
+
+## ADR-109 — Retail: el ticket lista todos los medios de pago
+
+**Estado:** Aceptado — implementado en rama `e5-pr3-ticket-multipago` (pendiente de merge) · **Fecha:** 2026-10-15
+
+El ticket del POS de Retail mostraba un único medio porque `ticketDesdeVentaRetail` armaba `pagos` con `venta.forma_pago` (campo legado: primer medio de `venta_pago`). El adaptador recibe ahora un tercer parámetro opcional con los pagos confirmados y los mapea a `PagoComprobante` (medio, monto, recargo); sin pagos conserva el comportamiento anterior (ventas legado). `PosView` guarda los pagos al confirmar, también en el reintento con autorización de Supervisor por límite de crédito. Solo renderer, sin cambios de main ni de contrato; los tests existentes no se tocaron. Con esto se cierra la deuda de E4 (ADR-107 a 109).
