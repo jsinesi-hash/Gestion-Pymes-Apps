@@ -436,6 +436,32 @@ describe('venta handlers (Elaborados)', () => {
     });
   });
 
+  describe('ventaCatalogoHandler — cantidad de consultas', () => {
+    it('no crece con la cantidad de productos (sin consultas en cascada)', () => {
+      loginAsAdmin(db);
+      const c = catalogo(db);
+      const client = (db as unknown as { $client: { prepare: (...a: unknown[]) => unknown } }).$client;
+      const contar = () => {
+        const spy = vi.spyOn(client, 'prepare');
+        ventaCatalogoHandler(db);
+        const n = spy.mock.calls.length;
+        spy.mockRestore();
+        return n;
+      };
+      const base = contar();
+      const now = new Date();
+      for (let i = 0; i < 5; i++) {
+        db.insert(schema.producto_venta).values({
+          id: generateId(), nombre: `Extra ${i}`, categoria_venta_id: c.pote.categoria_venta_id,
+          precio_centavos: 1000, impuesto_id: c.pote.impuesto_id, activo: true,
+          version: 1, origin_id: 'test', sync_state: 'pending', updated_at: now,
+        } as never).run();
+      }
+      expect(contar()).toBe(base);
+      expect(base).toBeLessThanOrEqual(5);
+    });
+  });
+
   describe('registerVentaHandlers', () => {
     it('registra los 6 canales venta:*', () => {
       const handle = vi.fn();

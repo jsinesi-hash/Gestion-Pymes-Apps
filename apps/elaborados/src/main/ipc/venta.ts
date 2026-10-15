@@ -321,32 +321,47 @@ export type GrupoPos = {
 export type ProductoPos = { id: string; nombre: string; categoria_venta_id: string; precio_centavos: number; grupos: GrupoPos[] };
 export type CatalogoPos = { categorias: { id: string; nombre: string; orden: number }[]; productos: ProductoPos[] };
 
-/** Catálogo completo para el POS en una sola llamada (categorías + productos activos con grupos y opciones). */
+/** Catálogo completo para el POS en una sola llamada (categorías + productos activos con grupos y opciones). Cinco consultas, sin importar el tamaño del catálogo. */
 export function ventaCatalogoHandler(db: Db): CatalogoPos {
   requireSession();
   const categorias = db.select().from(schema.categoria_venta)
     .where(eq(schema.categoria_venta.activo, true)).orderBy(asc(schema.categoria_venta.orden), asc(schema.categoria_venta.nombre)).all()
     .map((c) => ({ id: c.id, nombre: c.nombre, orden: c.orden }));
-  const productos = db.select().from(schema.producto_venta)
-    .where(eq(schema.producto_venta.activo, true)).orderBy(asc(schema.producto_venta.nombre)).all()
-    .map((pv): ProductoPos => {
-      const grupos = db.select().from(schema.producto_venta_grupo)
-        .where(eq(schema.producto_venta_grupo.producto_venta_id, pv.id))
-        .orderBy(asc(schema.producto_venta_grupo.orden)).all()
-        .map((g): GrupoPos => {
-          const grupo = db.select().from(schema.grupo_modificador)
-            .where(eq(schema.grupo_modificador.id, g.grupo_modificador_id)).get();
-          const opciones = db.select().from(schema.grupo_modificador_opcion)
-            .where(and(eq(schema.grupo_modificador_opcion.grupo_modificador_id, g.grupo_modificador_id), eq(schema.grupo_modificador_opcion.activo, true)))
-            .orderBy(asc(schema.grupo_modificador_opcion.orden)).all()
-            .map((o) => ({ id: o.id, nombre: o.nombre, recargo_centavos: o.recargo_centavos }));
-          return {
-            grupo_modificador_id: g.grupo_modificador_id, nombre: grupo?.nombre ?? '', min: g.min, max: g.max,
-            cantidad_total: g.cantidad_total, modo_descuento: g.modo_descuento, opciones,
-          };
-        });
-      return { id: pv.id, nombre: pv.nombre, categoria_venta_id: pv.categoria_venta_id, precio_centavos: pv.precio_centavos, grupos };
+  const productosDb = db.select().from(schema.producto_venta)
+    .where(eq(schema.producto_venta.activo, true)).orderBy(asc(schema.producto_venta.nombre)).all();
+  const productoIds = productosDb.map((p) => p.id);
+  const vinculos = productoIds.length === 0 ? [] : db.select().from(schema.producto_venta_grupo)
+    .where(inArray(schema.producto_venta_grupo.producto_venta_id, productoIds))
+    .orderBy(asc(schema.producto_venta_grupo.orden)).all();
+  const grupoIds = [...new Set(vinculos.map((v) => v.grupo_modificador_id))];
+  const nombreGrupo = new Map<string, string>();
+  const opcionesPorGrupo = new Map<string, OpcionPos[]>();
+  if (grupoIds.length > 0) {
+    for (const g of db.select().from(schema.grupo_modificador).where(inArray(schema.grupo_modificador.id, grupoIds)).all()) {
+      nombreGrupo.set(g.id, g.nombre);
+    }
+    const opciones = db.select().from(schema.grupo_modificador_opcion)
+      .where(and(inArray(schema.grupo_modificador_opcion.grupo_modificador_id, grupoIds), eq(schema.grupo_modificador_opcion.activo, true)))
+      .orderBy(asc(schema.grupo_modificador_opcion.orden)).all();
+    for (const o of opciones) {
+      const lista = opcionesPorGrupo.get(o.grupo_modificador_id) ?? [];
+      lista.push({ id: o.id, nombre: o.nombre, recargo_centavos: o.recargo_centavos });
+      opcionesPorGrupo.set(o.grupo_modificador_id, lista);
+    }
+  }
+  const gruposPorProducto = new Map<string, GrupoPos[]>();
+  for (const g of vinculos) {
+    const lista = gruposPorProducto.get(g.producto_venta_id) ?? [];
+    lista.push({
+      grupo_modificador_id: g.grupo_modificador_id, nombre: nombreGrupo.get(g.grupo_modificador_id) ?? '', min: g.min, max: g.max,
+      cantidad_total: g.cantidad_total, modo_descuento: g.modo_descuento, opciones: opcionesPorGrupo.get(g.grupo_modificador_id) ?? [],
     });
+    gruposPorProducto.set(g.producto_venta_id, lista);
+  }
+  const productos = productosDb.map((pv): ProductoPos => ({
+    id: pv.id, nombre: pv.nombre, categoria_venta_id: pv.categoria_venta_id, precio_centavos: pv.precio_centavos,
+    grupos: gruposPorProducto.get(pv.id) ?? [],
+  }));
   return { categorias, productos };
 }
 

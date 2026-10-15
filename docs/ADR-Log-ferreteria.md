@@ -4790,30 +4790,36 @@ Detalle completo: [`docs/ADR-101 - Elaborados E3d-2 (pedidos en espera y anulaci
 
 ## ADR-102 — Elaborados E4-PR1: edición de sabores con baja lógica y errores de dominio
 
-**Estado:** Aceptado — implementado en rama `e4-pr1-deuda-opciones` (pendiente de merge) · **Fecha:** 2026-10-14
+**Estado:** Aceptado — mergeado a `main` (PR #16) · **Fecha:** 2026-10-14
 
 `grupo_modificador_opcion` gana `activo` (migración 0006). `grupoModificadorOpcionSetHandler` deja de borrar y reinsertar (rompía por FK desde `venta_linea_modificador` tras la primera venta): hace upsert por `articulo_id` conservando el id, reactiva las dadas de baja y da de baja las omitidas. `venta:catalogo`, la validación de `venta:cotizar/confirmar`, `grupo-modificador:get` y el dev-seed filtran `activo=1`; las ventas históricas conservan su opción. `core-ui/lib/errores.ts` muestra el nombre en `STOCK_INSUFICIENTE:<n>` y traduce los códigos de producción/receta (`RECETA_NO_DEFINIDA`, `RINDE_INVALIDO`, `ARTICULO_NO_ELABORADO`, `CANTIDAD_PRODUCIDA_INVALIDA`, `ANULACION_REQUIERE_AUTORIZACION`, `YA_ANULADA`).
 
 ## ADR-103 — Elaborados E4-PR2: compras de insumos
 
-**Estado:** Aceptado — implementado en rama `e4-pr2-compras` (pendiente de merge) · **Fecha:** 2026-10-14
+**Estado:** Aceptado — mergeado a `main` (PR #17) · **Fecha:** 2026-10-14
 
 Tablas `compra` (`CP-<terminal>-000001`, proveedor opcional, comprobante en texto libre, `total_centavos`, estado `confirmada|anulada`, motivo de anulación) y `compra_item` (snapshot del nombre, cantidad, costo unitario y subtotal en centavos) — migración 0007. Sin IVA discriminado: el costo del artículo es lo que se paga. Confirmar crea una entrada `movimiento_articulo` (`motivo: 'compra'`, `referencia_tipo: 'compra'`) por ítem con costo promedio ponderado (`costoPromedioEntrada`); si un artículo repite, pondera en orden. Anular exige Supervisor (`verificarSupervisor`), revierte con movimientos `compra_anulacion` en una transacción (política de stock R2: la reventa bloquea con `STOCK_INSUFICIENTE:<nombre>`, el granel puede quedar negativo) y no revierte el costo promedio. Permiso nuevo `compra.registrar` (Operador + Supervisor). Alta rápida de proveedor (`proveedor:crear-rapido`, solo razón social, con defaults DNI "0" / Consumidor Final para las columnas obligatorias del core) hasta el CRUD completo (E4-PR5). Pantalla `/compras` con NAV, ruta y crumb (cubiertos por `nav.test.tsx`). Fuera de alcance: OC/recepción parcial.
 
 ## ADR-104 — Elaborados E4-PR3: listas de precio (header al core)
 
-**Estado:** Aceptado — implementado en rama `e4-pr3-listas-precio` (pendiente de merge) · **Fecha:** 2026-10-14
+**Estado:** Aceptado — mergeado a `main` (PR #18) · **Fecha:** 2026-10-14
 
 Promoción por regla de tres (2º consumidor): `lista_precio` (header completo, tal como lo creó Retail, incluido `modo_calculo`) pasa a `@core/db` (`schema/listas-precio.ts`; el nombre evita la baranda core↛app) y `cliente.lista_precio_id` pasa a FK dura. Retail no cambia su BD (ya tenía el FK en su SQL): solo se mueve la definición TS y su suite queda como oráculo. `resolverListaEfectiva` se mueve a `@core/main` junto a `listaDeCliente` (Retail lo re-exporta). Elaborados: migración 0008 (crea `lista_precio`, `producto_venta_precio` con índice único parcial `WHERE fecha_hasta IS NULL`, y reconstruye `cliente` para agregar el FK — `runMigrations` apaga `foreign_keys`, precedente ADR-050). Precio de un producto en la lista = precio absoluto vigente (SCD2) o, si no hay, el ajuste % de la lista sobre el base (`precioParaLista`, centavos); los recargos de sabor no varían por lista; una lista inactiva se ignora. `venta:cotizar` acepta `cliente_id` y `cargarCatalogo` resuelve los precios por la lista del cliente (`confirmar` y `pausar` ya traían `cliente_id`); el POS manda el cliente en la cotización y re-cotiza al cambiarlo (las tarjetas de la grilla muestran el precio base). Permiso `lista_precio.gestionar` (solo Supervisor). Pantalla Carta → Listas de precio (alta/edición y grilla de precios por producto) y slots `cargarListasPrecio` conectados en `ClienteForm`/`ClienteDetalle`. Fuera de alcance: promociones, recálculo masivo, vigencias y hook `onListaCreada`.
 
 ## ADR-105 — Elaborados E4-PR4: reportes y exportación
 
-**Estado:** Aceptado — implementado en rama `e4-pr4-reportes` (pendiente de merge) · **Fecha:** 2026-10-14
+**Estado:** Aceptado — mergeado a `main` (PR #19) · **Fecha:** 2026-10-14
 
 Sin migración. Pantalla `/reportes` (Supervisor, permiso existente `dashboard.ver`) con filtro de fechas (por defecto el mes en curso) y tres pestañas. **Ventas:** total, neto de IVA, costo y margen por día y del período, más desglose por medio de pago (el efectivo se informa neto de vuelto); el costo sale de los `movimiento_articulo` de venta, que guardan el costo promedio del momento, así que el margen es histórico y exacto (no usa el costo actual). **Productos y sabores:** unidades e importe por producto de venta y ranking de sabores (veces pedido y consumo, desde `venta_linea_modificador`). **Stock:** artículos activos con stock negativo (el reporte que prometió la política R2) y bajo el mínimo. Todas las consultas cuentan **solo ventas `confirmada`** (`en_espera`, `descartada` y `anulada` quedan fuera) y rechazan rangos inválidos (`VALIDATION:desde:TIPO|RANGO`). Cinco exportadores CSV/XLSX (`export.supervisor`) registrados en el registry del core vía `registerCoreHandlers({ exportadores })`; sus definiciones viven en `common/export-reportes.ts` (browser-safe) y el botón es el `ExportarButton` del core (alcance «filtrado» = período en pantalla; «todo» = todo el historial). Fuera de alcance: margen por producto (el costo se registra por artículo y venta, no por línea).
 
 ## ADR-106 — Elaborados E4-PR5: CRUD de proveedor al core
 
-**Estado:** Aceptado — implementado en rama `e4-pr5-proveedores` (pendiente de merge) · **Fecha:** 2026-10-14
+**Estado:** Aceptado — mergeado a `main` (PR #20) · **Fecha:** 2026-10-14
 
 Promoción por regla de tres: el CRUD de proveedor (`list/get/upsert/deactivate`, validación SEC-2, código `PROV-NNNN`) pasa de Retail a `@core/main` (`ipc/proveedor.ts`), con canales universales `proveedor:*` registrados por `registerCoreHandlers` y expuestos por `coreCanales` (`bridge().proveedor.*`). Lo que es de cada app entra por el hook `onProveedorActualizado(db, { id, userId, cambioDefaults })` (opción `proveedor` de `registerCoreHandlers`); un error del hook se loguea y no rompe el upsert. El permiso `proveedor.gestionar` pasa a `PERMISOS_CORE` (solo Supervisor). Retail queda con wrappers finos (`ipc/proveedor.ts`) y su hook (`proveedorHooksRetail`: lotes de precio `PROVIDER_COST_UPDATE` cuando cambian los defaults comerciales), su preload re-apunta `compras.proveedor.*` a los canales del core y su suite es el oráculo (main 1598 / renderer 925 sin cambios). Elaborados: pantalla Compras → Proveedores (contacto básico: razón social, documento, condición fiscal, contacto, teléfono, email, domicilio, observaciones; alta, edición y baja lógica; Supervisor), y sus canales de selección/alta rápida del flujo de compras pasan a `compra:proveedor-list` / `compra:proveedor-crear-rapido` (`compra.registrar`) para no chocar con los del core. Sin migración. Fuera de alcance: defaults comerciales en la UI de Elaborados (las columnas existen, sin motor de costos que las use) y mover el formulario de Retail al core. Con esto E4 queda completo.
+
+## ADR-107 — Elaborados E5-PR1: rendimiento del POS e impresión robusta
+
+**Estado:** Aceptado — implementado en rama `e5-pr1-rendimiento` (pendiente de merge) · **Fecha:** 2026-10-15
+
+Primera pieza de cierre de deuda tras E4. (1) Migración 0009 de Elaborados: índices `idx_venta_linea_venta_id` y `idx_venta_linea_modificador_linea_id` (generada con drizzle-kit desde el esquema). (2) `ventaCatalogoHandler` deja las consultas en cascada (una por producto, grupo y opción) y pasa a cinco consultas en bloque con `inArray` agrupadas en memoria; la salida y el orden son idénticos y un test fija que el número de consultas no crece con el tamaño del catálogo. (3) `crearImpresorHtml` (`@core/main`) cierra la ventana oculta si `loadURL` rechaza y propaga el error. Sin cambios de comportamiento visibles ni de contrato IPC.
