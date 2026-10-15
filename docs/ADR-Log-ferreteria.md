@@ -4820,6 +4820,12 @@ Promoción por regla de tres: el CRUD de proveedor (`list/get/upsert/deactivate`
 
 ## ADR-107 — Elaborados E5-PR1: rendimiento del POS e impresión robusta
 
-**Estado:** Aceptado — implementado en rama `e5-pr1-rendimiento` (pendiente de merge) · **Fecha:** 2026-10-15
+**Estado:** Aceptado — mergeado a `main` (PR #21) · **Fecha:** 2026-10-15
 
 Primera pieza de cierre de deuda tras E4. (1) Migración 0009 de Elaborados: índices `idx_venta_linea_venta_id` y `idx_venta_linea_modificador_linea_id` (generada con drizzle-kit desde el esquema). (2) `ventaCatalogoHandler` deja las consultas en cascada (una por producto, grupo y opción) y pasa a cinco consultas en bloque con `inArray` agrupadas en memoria; la salida y el orden son idénticos y un test fija que el número de consultas no crece con el tamaño del catálogo. (3) `crearImpresorHtml` (`@core/main`) cierra la ventana oculta si `loadURL` rechaza y propaga el error. Sin cambios de comportamiento visibles ni de contrato IPC.
+
+## ADR-108 — Elaborados E5-PR2: precio por lista en las tarjetas del POS y deuda de UX
+
+**Estado:** Aceptado — implementado en rama `e5-pr2-ux-pos` (pendiente de merge) · **Fecha:** 2026-10-15
+
+(1) `venta:catalogo` acepta `cliente_id` opcional y devuelve `precio_centavos` ya resuelto con `resolverPreciosCliente`, el mismo camino de la cotización: las tarjetas del POS dejan de mostrar el precio base cuando el cliente tiene lista (el renderer sigue sin calcular precios). `usePosCatalogo(clienteId)` recarga el catálogo al cambiar de cliente; el preload pasa el payload. (2) `ClienteSelector` queda totalmente controlado: se elimina el estado interno con el nombre elegido, que podía quedar desfasado del cliente del padre. (3) El alta rápida de proveedor delega en `proveedorUpsertHandler` del core (ADR-106): comparte validación y asigna código `PROV-NNNN`; el documento queda vacío (el core lo admite) en lugar del `"0"` inventado. Sin migración.

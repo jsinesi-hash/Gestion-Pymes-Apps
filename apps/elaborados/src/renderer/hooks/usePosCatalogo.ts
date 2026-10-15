@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { bridge, traducirError } from '@core/ui';
 import type { CatalogoPos } from '../views/pos/tipos';
 
-export function usePosCatalogo() {
+/** ADR-108: el catálogo se pide por cliente; el main devuelve los precios ya resueltos por su lista. */
+export function usePosCatalogo(clienteId?: string) {
   const [catalogo, setCatalogo] = useState<CatalogoPos | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -14,7 +15,7 @@ export function usePosCatalogo() {
     setError(null);
     (async () => {
       try {
-        const c = (await (bridge() as any).venta.catalogo()) as CatalogoPos;
+        const c = (await (bridge() as any).venta.catalogo(clienteId ? { cliente_id: clienteId } : undefined)) as CatalogoPos;
         if (vigente) setCatalogo(c);
       } catch (e) {
         if (vigente) setError(traducirError(e).mensaje);
@@ -23,7 +24,7 @@ export function usePosCatalogo() {
       }
     })();
     return () => { vigente = false; };
-  }, [version]);
+  }, [version, clienteId]);
 
   const recargar = useCallback(() => setVersion((v) => v + 1), []);
   return { catalogo, cargando, error, recargar };

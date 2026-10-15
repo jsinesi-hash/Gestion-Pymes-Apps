@@ -238,6 +238,19 @@ describe('PosView', () => {
     expect(screen.getByRole('button', { name: 'Confirmar' })).toBeInTheDocument();
   });
 
+  it('las tarjetas muestran el precio de la lista del cliente (el catálogo se pide por cliente)', async () => {
+    montar();
+    fireEvent.click(await screen.findByRole('button', { name: 'Palito' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'COBRAR' })).toBeEnabled());
+    expect(catalogo).toHaveBeenLastCalledWith({ cliente_id: 'cf000000-0000-0000-0000-000000000001' });
+    catalogo.mockResolvedValue({
+      ...CATALOGO, productos: CATALOGO.productos.map((p: { precio_centavos: number }) => ({ ...p, precio_centavos: 777700 })),
+    });
+    await elegirJuan();
+    await waitFor(() => expect(catalogo).toHaveBeenLastCalledWith({ cliente_id: 'c1' }));
+    expect((await screen.findAllByText(/7\.777/)).length).toBeGreaterThan(0);
+  });
+
   it('Nueva venta devuelve el cliente a Consumidor Final', async () => {
     montar();
     await agregarPalito();

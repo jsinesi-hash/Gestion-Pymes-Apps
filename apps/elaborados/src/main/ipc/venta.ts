@@ -322,8 +322,10 @@ export type ProductoPos = { id: string; nombre: string; categoria_venta_id: stri
 export type CatalogoPos = { categorias: { id: string; nombre: string; orden: number }[]; productos: ProductoPos[] };
 
 /** Catálogo completo para el POS en una sola llamada (categorías + productos activos con grupos y opciones). Cinco consultas, sin importar el tamaño del catálogo. */
-export function ventaCatalogoHandler(db: Db): CatalogoPos {
+export function ventaCatalogoHandler(db: Db, payload?: unknown): CatalogoPos {
   requireSession();
+  // ADR-108: con `cliente_id` el precio ya viene resuelto por la lista del cliente (el renderer no calcula).
+  const clienteId = optId(((payload ?? {}) as Record<string, unknown>)['cliente_id'], 'cliente_id');
   const categorias = db.select().from(schema.categoria_venta)
     .where(eq(schema.categoria_venta.activo, true)).orderBy(asc(schema.categoria_venta.orden), asc(schema.categoria_venta.nombre)).all()
     .map((c) => ({ id: c.id, nombre: c.nombre, orden: c.orden }));
@@ -358,8 +360,9 @@ export function ventaCatalogoHandler(db: Db): CatalogoPos {
     });
     gruposPorProducto.set(g.producto_venta_id, lista);
   }
+  const precios = resolverPreciosCliente(db, clienteId ?? undefined, new Map(productosDb.map((p) => [p.id, p.precio_centavos])));
   const productos = productosDb.map((pv): ProductoPos => ({
-    id: pv.id, nombre: pv.nombre, categoria_venta_id: pv.categoria_venta_id, precio_centavos: pv.precio_centavos,
+    id: pv.id, nombre: pv.nombre, categoria_venta_id: pv.categoria_venta_id, precio_centavos: precios.get(pv.id) ?? pv.precio_centavos,
     grupos: gruposPorProducto.get(pv.id) ?? [],
   }));
   return { categorias, productos };
@@ -370,7 +373,7 @@ export function registerVentaHandlers(ipcMain: IpcMain, db: Db): void {
   ipcMain.handle('venta:cotizar',   guardCrear(async (_e, p) => ventaCotizarHandler(db, p)));
   ipcMain.handle('venta:confirmar', async (_e, p) => ventaConfirmarHandler(db, p)); // permiso verificado adentro
   ipcMain.handle('venta:anular',    async (_e, p) => ventaAnularHandler(db, p));    // permiso + supervisor en el core
-  ipcMain.handle('venta:catalogo', async () => ventaCatalogoHandler(db));
+  ipcMain.handle('venta:catalogo', async (_e, p) => ventaCatalogoHandler(db, p));
   ipcMain.handle('venta:get',       async (_e, p) => ventaGetHandler(db, p));
   ipcMain.handle('venta:listByCaja', async (_e, p) => ventaListByCajaHandler(db, p));
 }

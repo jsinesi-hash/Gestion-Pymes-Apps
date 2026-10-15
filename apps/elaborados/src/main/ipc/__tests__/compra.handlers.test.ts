@@ -124,6 +124,9 @@ describe('compra handlers', () => {
     loginAsAdmin(db);
     const p = proveedorCrearRapidoHandler(db, { razon_social: ' Dulces SRL ' });
     expect(p.razon_social).toBe('Dulces SRL');
+    // Mismo alta que el CRUD del core: código PROV-NNNN y documento vacío (no el "0" inventado).
+    expect(p.codigo).toMatch(/^PROV-\d{4}$/);
+    expect(p.numero_documento).toBe('');
     expect(proveedorListHandler(db).map((x) => x.razon_social)).toEqual(['Dulces SRL']);
     expect(() => proveedorCrearRapidoHandler(db, { razon_social: '  ' })).toThrow();
   });
