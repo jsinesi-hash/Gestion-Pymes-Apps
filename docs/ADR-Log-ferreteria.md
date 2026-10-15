@@ -4832,6 +4832,12 @@ Primera pieza de cierre de deuda tras E4. (1) Migración 0009 de Elaborados: ín
 
 ## ADR-109 — Retail: el ticket lista todos los medios de pago
 
-**Estado:** Aceptado — implementado en rama `e5-pr3-ticket-multipago` (pendiente de merge) · **Fecha:** 2026-10-15
+**Estado:** Aceptado — mergeado a `main` (PR #23) · **Fecha:** 2026-10-15
 
 El ticket del POS de Retail mostraba un único medio porque `ticketDesdeVentaRetail` armaba `pagos` con `venta.forma_pago` (campo legado: primer medio de `venta_pago`). El adaptador recibe ahora un tercer parámetro opcional con los pagos confirmados y los mapea a `PagoComprobante` (medio, monto, recargo); sin pagos conserva el comportamiento anterior (ventas legado). `PosView` guarda los pagos al confirmar, también en el reintento con autorización de Supervisor por límite de crédito. Solo renderer, sin cambios de main ni de contrato; los tests existentes no se tocaron. Con esto se cierra la deuda de E4 (ADR-107 a 109).
+
+## ADR-110 — Elaborados E5-PR1: datos demo gestionables (Configuración → Datos demo)
+
+**Estado:** Aceptado — implementado en rama `e5-pr1-datos-demo` (pendiente de merge) · **Fecha:** 2026-10-15
+
+Primera pieza de E5 (endurecimiento y release 1.0.0; spec `docs/superpowers/specs/2026-10-15-elaborados-e5-release-design.md`). Equivalente a Datos demo de Retail (ADR-062). Migración 0010: tabla `demo_registro` (`tabla`, `registro_id` + campos de sync). `runDemoHeladeriaSeed` pasa a ser atómico (una transacción) y anota por diferencia de ids antes/después todo lo que crea en 12 tablas (artículos, existencias, movimientos, recetas, producciones, categorías, grupos, opciones, productos de venta y sus vínculos); lo que ya existía del seed base (categorías, grupo Sabores) no se registra. Canales `demo-catalog:estado | seed-heladeria | vaciar` (permiso `usuario.administrar`): `seed` solo carga sobre un catálogo sin productos de venta y devuelve el estado; `vaciar` borra únicamente lo registrado en orden seguro por FKs y, si algo fuera del registro depende de lo demo (ventas, compras, movimientos de stock, producciones o recetas propias), falla con `DEMO_EN_USO:<claves>` sin borrar nada (traducido en `@core/ui`). Vista `ConfigDatosDemo` con confirmación en dos pasos, ruta `/config/datos-demo`, ítem en Sistema y crumb. El atajo "Cargar catálogo demo" del POS vacío sigue usando el mismo canal.

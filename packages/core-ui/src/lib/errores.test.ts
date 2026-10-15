@@ -16,3 +16,15 @@ describe('traducirError — códigos de dominio de Elaborados (ADR-102)', () => 
     expect(m).not.toMatch(/No se pudo completar la operación/);
   });
 });
+
+describe('traducirError — DEMO_EN_USO (ADR-110)', () => {
+  it('nombra qué impide vaciar los datos demo', () => {
+    const m = traducirError(new Error('DEMO_EN_USO:ventas,compras')).mensaje;
+    expect(m).toContain('ventas');
+    expect(m).toContain('compras');
+    expect(m).not.toContain('DEMO_EN_USO');
+  });
+  it('sin detalle usa un mensaje genérico', () => {
+    expect(traducirError(new Error('DEMO_EN_USO')).mensaje).toMatch(/datos demo/i);
+  });
+});
