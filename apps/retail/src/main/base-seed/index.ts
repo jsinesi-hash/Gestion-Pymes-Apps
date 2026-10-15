@@ -54,10 +54,12 @@ export function isSeedBaseAplicado(db: Db): boolean {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CLI entry point (solo cuando se invoca directamente, no cuando se importa)
+// CLI entry point (solo cuando se pide explícitamente: BASE_SEED_CLI=1, lo setea scripts/seed-base.cjs)
 // ─────────────────────────────────────────────────────────────────────────────
+// OJO: NO usar `require.main === module`: startup.ts importa este archivo, que queda bundleado en el main de
+// Electron, donde `module` ES el entry y la condición daba true en cada arranque (ADR-111/113).
 
-if (require.main === module) {
+if (process.env['BASE_SEED_CLI'] === '1') {
   (async () => {
     const Database  = (await import('better-sqlite3')).default;
     const { drizzle } = await import('drizzle-orm/better-sqlite3');

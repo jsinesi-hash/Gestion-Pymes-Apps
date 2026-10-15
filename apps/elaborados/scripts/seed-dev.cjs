@@ -15,7 +15,7 @@ const seedScript  = path.resolve(clientDir, 'src/main/dev-seed/index.ts');
 const result = spawnSync(
   electronExe,
   ['--require', tsxCjs, seedScript, ...process.argv.slice(2)],
-  { cwd: clientDir, stdio: 'inherit', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' } }
+  { cwd: clientDir, stdio: 'inherit', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1', DEV_SEED_CLI: '1' } }
 );
 
 process.exit(result.status ?? 1);
