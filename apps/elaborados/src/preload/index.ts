@@ -63,7 +63,9 @@ createBridge({
       create: (p: unknown) => invoke('producto-venta:create', p),
     },
     demoCatalog: {
+      estado:        () => invoke('demo-catalog:estado'),
       seedHeladeria: () => invoke('demo-catalog:seed-heladeria'),
+      vaciar:        () => invoke('demo-catalog:vaciar'),
     },
     venta: {
       cotizar:    (p: unknown) => invoke('venta:cotizar', p),

@@ -76,6 +76,17 @@ const CODIGOS: Record<string, Formateador> = {
   STOCK_INSUFICIENTE: a => ({
     mensaje: a[0] ? `No hay stock suficiente de ${a[0]} para completar la operación.` : 'No hay stock suficiente para completar la operación.',
   }),
+  DEMO_EN_USO: a => {
+    const frase: Record<string, string> = {
+      ventas: 'ventas', compras: 'compras', movimientos: 'movimientos de stock', producciones: 'producciones', recetas: 'recetas propias',
+    };
+    const motivos = (a[0] ?? '').split(',').map((k) => frase[k] ?? k).filter(Boolean);
+    return {
+      mensaje: motivos.length
+        ? `No se pueden vaciar los datos demo: ya tienen ${motivos.join(', ')}. Anulalos o dejá de usarlos primero.`
+        : 'No se pueden vaciar los datos demo porque ya se usaron.',
+    };
+  },
   PRECIO_DESACTUALIZADO: msg('El precio cambió. Requiere autorización del supervisor.'),
   CCC_NO_DISPONIBLE: msg('El cliente no tiene cuenta corriente habilitada.'),
   LIMITE_CREDITO_EXCEDIDO: msg('La venta supera el límite de crédito. Requiere autorización del supervisor.'),

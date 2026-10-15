@@ -8,6 +8,7 @@ import { produccionCrearHandler } from '../ipc/produccion';
 import { categoriaVentaCreateHandler } from '../ipc/categoria-venta';
 import { grupoModificadorCreateHandler, grupoModificadorOpcionSetHandler } from '../ipc/grupo-modificador';
 import { productoVentaCreateHandler } from '../ipc/producto-venta';
+import { snapshotIds, registrarDiferencia } from './demo-registro';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
@@ -30,8 +31,17 @@ function grupoPorNombre(db: Db, nombre: string) {
     ?? grupoModificadorCreateHandler(db, { nombre });
 }
 
+/** Siembra el catálogo demo de forma atómica y anota lo creado en `demo_registro` (ADR-110) para poder vaciarlo. */
 export function runDemoHeladeriaSeed(db: Db): void {
   if (yaSembrado(db)) return;
+  db.transaction((tx) => {
+    const antes = snapshotIds(tx);
+    sembrarDemo(tx);
+    registrarDiferencia(tx, antes);
+  });
+}
+
+function sembrarDemo(db: Db): void {
   const impuesto = db.select().from(schema.impuesto).where(eq(schema.impuesto.predeterminado, true)).get()!;
 
   // ── Insumos ────────────────────────────────────────────────────────────────

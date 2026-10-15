@@ -22,6 +22,7 @@ import { ArticulosView } from '../views/stock/ArticulosView';
 import { ConteoView } from '../views/stock/ConteoView';
 import { ProduccionView } from '../views/produccion/ProduccionView';
 import { ComprasView } from '../views/compras/ComprasView';
+import { ConfigDatosDemo } from '../views/config/ConfigDatosDemo';
 import { ProveedoresView } from '../views/compras/ProveedoresView';
 import { ReportesView } from '../views/reportes/ReportesView';
 import { CategoriasVentaView } from '../views/carta/CategoriasVentaView';
@@ -74,6 +75,7 @@ export const routes: RouteObject[] = [
       { path: 'config/usuarios', element: <ConfigUsuarios /> },
       { path: 'config/roles-permisos', element: <RolesPermisosView /> },
       { path: 'config/backup-restore', element: <ConfigBackupRestore /> },
+      { path: 'config/datos-demo', element: <ConfigDatosDemo /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },
