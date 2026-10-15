@@ -45,6 +45,7 @@ export function PosView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [ventaResult, setVentaResult] = useState<any>(null);
+  const [pagosConfirmados, setPagosConfirmados] = useState<VentaPagoPayload[]>([]);
   const [confirmarOpen, setConfirmarOpen] = useState(false);
   const [cancelarOpen, setCancelarOpen] = useState(false);
   const [pausarOpen, setPausarOpen] = useState(false);
@@ -81,6 +82,7 @@ export function PosView() {
     try {
       const result = await confirmar(pagos, vuelto);
       setConfirmarOpen(false);
+      setPagosConfirmados(pagos);
       setVentaResult(result);
     } catch (e) {
       const msg = e instanceof Error ? e.message : '';
@@ -98,6 +100,7 @@ export function PosView() {
     try {
       const result = await confirmar(limiteAuth.pagos, limiteAuth.vuelto, creds);
       setLimiteAuth(null);
+      setPagosConfirmados(limiteAuth.pagos);
       setVentaResult(result);
     } catch (e) {
       setLimiteAuth(null);
@@ -211,7 +214,7 @@ export function PosView() {
       )}
       {ventaResult && (
         <TicketModal
-          comprobante={ticketDesdeVentaRetail(ventaResult, clienteInfo?.nombre_completo ?? 'Consumidor Final')}
+          comprobante={ticketDesdeVentaRetail(ventaResult, clienteInfo?.nombre_completo ?? 'Consumidor Final', pagosConfirmados)}
           onNuevaVenta={() => { reset(); setVentaResult(null); }}
           onImprimir={(html) => (globalThis as any).ferreteria.catalogo.print.html(html)}
           {...(can('venta.anular')

@@ -27,4 +27,19 @@ describe('ticketDesdeVentaRetail', () => {
   it('marca anulado si la venta está anulada', () => {
     expect(ticketDesdeVentaRetail({ ...result, venta: { ...result.venta, estado: 'anulada' } }, 'X').anulado).toBe(true);
   });
+
+  it('con pagos reales lista cada medio (pago mixto) en vez del forma_pago legado', () => {
+    const c = ticketDesdeVentaRetail(result, 'X', [
+      { medio_pago: 'efectivo', monto_centavos: 40000 },
+      { medio_pago: 'tarjeta', monto_centavos: 60000, recargo_centavos: 3000 },
+    ]);
+    expect(c.pagos).toEqual([
+      { medio: 'efectivo', montoCentavos: 40000 },
+      { medio: 'tarjeta', montoCentavos: 60000, recargoCentavos: 3000 },
+    ]);
+  });
+
+  it('sin pagos (venta recuperada, legado) conserva el medio único de forma_pago', () => {
+    expect(ticketDesdeVentaRetail(result, 'X', []).pagos).toEqual([{ medio: 'tarjeta', montoCentavos: 100000 }]);
+  });
 });
