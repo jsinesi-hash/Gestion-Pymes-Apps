@@ -1,11 +1,14 @@
 {
   "name": "elaborados-client",
-  "version": "1.1.1",
+  "version": "1.0.0",
   "main": ".vite/build/index.js",
   "scripts": {
     "dev": "electron-forge start",
     "build": "electron-forge package",
     "make": "electron-forge make",
+    "dist": "node scripts/dist.cjs",
+    "dist:full": "pnpm rebuild:electron && pnpm dist",
+    "smoke": "node scripts/smoke-packaged.cjs",
     "typecheck": "tsc --noEmit",
     "test": "pnpm run typecheck && vitest run && node scripts/test-node.cjs --serial",
     "rebuild:electron": "electron-rebuild -f -w better-sqlite3",

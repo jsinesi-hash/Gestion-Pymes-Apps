@@ -315,8 +315,11 @@ async function main() {
   console.log('✓ seed:geo completado.');
 }
 
-// Solo correr main() cuando este archivo se invoca directamente (no cuando se importa como módulo)
-if (require.main === module) {
+// Solo correr main() cuando se pide explícitamente como CLI (GEO_SEED_CLI=1, lo setea el lanzador de la app).
+// OJO: NO usar `require.main === module`: este archivo se bundlea dentro del main de Electron de cada app, donde
+// `module` ES el entry y la condición daba true en cada arranque → descargaba el dataset, escribía en
+// %APPDATA%/ferreteria-client/ferreteria.db y terminaba la app con process.exit(1) si fallaba (ADR-111).
+if (process.env['GEO_SEED_CLI'] === '1') {
   main().catch((err) => {
     console.error('\n✗ seed:geo falló:', err.message);
     process.exit(1);

@@ -1,5 +1,5 @@
 appId: com.gestionpymes.elaborados
-productName: Elaborados
+productName: Heladería
 # El exe real lo nombra electron-forge vía packagerConfig.executableName = 'elaborados'
 # Debe coincidir con forge.config.ts.
 executableName: elaborados
@@ -19,16 +19,18 @@ win:
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: false
-  artifactName: "Elaborados-Setup-${version}.${ext}"
+  # ASCII sin acentos ni espacios en el nombre del archivo del instalador.
+  artifactName: "Heladeria-Setup-${version}.${ext}"
   shortcutName: "${productName}"
   uninstallDisplayName: "${productName}"
   createDesktopShortcut: always
-  deleteAppDataOnUninstall: true
+  # La base de la heladería vive en userData: desinstalar NO debe borrarla (a diferencia del entorno de pruebas).
+  deleteAppDataOnUninstall: false
+  # Cierra la app antes de instalar/desinstalar
+  include: scripts/nsis/custom.nsh
 
-# Geo cache bundled en extraResources para primer arranque offline
-extraResources:
-  - from: ../../packages/core-main/geo-cache/
-    to: geo-cache/
+# El geo-cache viaja como extraResource de electron-forge (forge.config.ts): con --prepackaged
+# electron-builder ignora extraResources.
 
 # Excluir archivos de DB y WAL — viven en userData, nunca se distribuyen
 files:
@@ -40,4 +42,4 @@ files:
 asarUnpack:
   - "**/*.node"
 
-# Sin firma de código en esta etapa (ver docs/README-BUILD.md)
+# Sin firma de código, sin auto-update y sin publicación: instalación manual (ADR-111).

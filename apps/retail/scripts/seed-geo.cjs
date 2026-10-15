@@ -16,7 +16,7 @@ const migrationsDir = path.resolve(clientDir, 'src/main/db/migrations');
 const result = spawnSync(
   electronExe,
   ['--require', tsxCjs, seedScript, ...process.argv.slice(2)],
-  { cwd: coreMainDir, stdio: 'inherit', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1', GEO_SEED_MIGRATIONS_DIR: migrationsDir } }
+  { cwd: coreMainDir, stdio: 'inherit', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1', GEO_SEED_CLI: '1', GEO_SEED_MIGRATIONS_DIR: migrationsDir } }
 );
 
 process.exit(result.status ?? 0);
