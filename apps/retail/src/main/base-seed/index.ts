@@ -57,7 +57,7 @@ export function isSeedBaseAplicado(db: Db): boolean {
 // CLI entry point (solo cuando se pide explícitamente: BASE_SEED_CLI=1, lo setea scripts/seed-base.cjs)
 // ─────────────────────────────────────────────────────────────────────────────
 // OJO: NO usar `require.main === module`: startup.ts importa este archivo, que queda bundleado en el main de
-// Electron, donde `module` ES el entry y la condición daba true en cada arranque (ADR-111/112).
+// Electron, donde `module` ES el entry y la condición daba true en cada arranque (ADR-111/113).
 
 if (process.env['BASE_SEED_CLI'] === '1') {
   (async () => {

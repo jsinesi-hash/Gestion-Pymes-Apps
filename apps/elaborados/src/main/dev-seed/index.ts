@@ -89,7 +89,7 @@ function main(): void {
 
 // Solo como CLI explícito (DEV_SEED_CLI=1, lo setea scripts/seed-dev.cjs); importarlo desde los tests no abre
 // ninguna BD. OJO: NO usar `require.main === module`: si algún día este archivo entra al bundle del main de
-// Electron, `module` ES el entry y la condición daría true en cada arranque (ADR-111/112).
+// Electron, `module` ES el entry y la condición daría true en cada arranque (ADR-111/113).
 if (process.env['DEV_SEED_CLI'] === '1') {
   try {
     main();

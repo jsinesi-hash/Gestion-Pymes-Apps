@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-// El CLI de dev-seed se activa solo con DEV_SEED_CLI=1 (ADR-112): `require.main === module` es true en el
+// El CLI de dev-seed se activa solo con DEV_SEED_CLI=1 (ADR-113): `require.main === module` es true en el
 // bundle del main de Electron y autoejecutaría el seed en cada arranque.
 describe('dev-seed/index.ts no se autoejecuta', () => {
   const fuente = fs.readFileSync(path.join(__dirname, '..', 'index.ts'), 'utf8');
