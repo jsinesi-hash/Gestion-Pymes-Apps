@@ -64,6 +64,13 @@
       "when": 1792004729142,
       "tag": "0008_add_listas_precio",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1792070041012,
+      "tag": "0009_add_indices_venta_linea",
+      "breakpoints": true
     }
   ]
 }

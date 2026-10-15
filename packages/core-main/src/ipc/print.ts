@@ -6,7 +6,12 @@ export type ImpresorHtml = (html: string) => Promise<void>;
 export function crearImpresorHtml(createWindow: () => BrowserWindow): ImpresorHtml {
   return async (html) => {
     const win = createWindow();
-    await win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+    try {
+      await win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+    } catch (e) {
+      win.close();
+      throw e;
+    }
     await new Promise<void>((resolve, reject) => {
       win.webContents.print({ silent: false }, (success, reason) => {
         win.close();

@@ -1,4 +1,4 @@
-import { sqliteTable, text, real, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, real, integer, index } from 'drizzle-orm/sqlite-core';
 import { venta } from '@core/db';
 import { articulo } from './stock';
 import { producto_venta, grupo_modificador_opcion } from './venta-catalogo';
@@ -17,7 +17,7 @@ export const venta_linea = sqliteTable('venta_linea', {
   origin_id:  text('origin_id').notNull(),
   sync_state: text('sync_state', { enum: ['pending', 'synced', 'conflict'] }).notNull().default('pending'),
   updated_at: integer('updated_at', { mode: 'timestamp' }).notNull(),
-});
+}, (t) => [index('idx_venta_linea_venta_id').on(t.venta_id)]);
 
 export const venta_linea_modificador = sqliteTable('venta_linea_modificador', {
   id:                          text('id').primaryKey(),
@@ -31,4 +31,4 @@ export const venta_linea_modificador = sqliteTable('venta_linea_modificador', {
   origin_id:  text('origin_id').notNull(),
   sync_state: text('sync_state', { enum: ['pending', 'synced', 'conflict'] }).notNull().default('pending'),
   updated_at: integer('updated_at', { mode: 'timestamp' }).notNull(),
-});
+}, (t) => [index('idx_venta_linea_modificador_linea_id').on(t.venta_linea_id)]);

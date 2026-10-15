@@ -24,4 +24,12 @@ describe('crearImpresorHtml', () => {
     await expect(crearImpresorHtml(() => win as never)('<p>x</p>')).rejects.toThrow('cancelled');
     expect(win.close).toHaveBeenCalledTimes(1);
   });
+
+  it('cierra la ventana y propaga el error si loadURL rechaza', async () => {
+    const win = ventanaFalsa({ ok: true });
+    win.loadURL.mockRejectedValue(new Error('ERR_FAILED'));
+    await expect(crearImpresorHtml(() => win as never)('<p>x</p>')).rejects.toThrow('ERR_FAILED');
+    expect(win.close).toHaveBeenCalledTimes(1);
+    expect(win.webContents.print).not.toHaveBeenCalled();
+  });
 });
