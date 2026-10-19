@@ -3,6 +3,7 @@ import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { eq, and, desc, gte, lte, sql } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import { requirePermission } from '@core/main';
+import { productosBajoMinimo } from '../agenda/bajo-minimo';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
@@ -154,7 +155,7 @@ export function dashboardStockHandler(db: Db): DashboardStock {
     .where(eq(schema.producto.activo, true))
     .all();
 
-  function toAlerta(p: typeof productos[number]): StockAlerta {
+  function toAlerta(p: Pick<typeof productos[number], 'producto_id' | 'sku' | 'nombre_corto' | 'stock_fisico' | 'stock_minimo'>): StockAlerta {
     const u30 = velocidadMap.get(p.producto_id) ?? 0;
     const dias_hasta_agotar = u30 > 0 && p.stock_fisico > 0
       ? Math.floor(p.stock_fisico / (u30 / 30))
@@ -171,8 +172,8 @@ export function dashboardStockHandler(db: Db): DashboardStock {
     .map(toAlerta);
   const sinStockIds = new Set(sin_stock.map(s => s.producto_id));
 
-  const bajo_minimo = productos
-    .filter(p => p.stock_fisico > 0 && p.stock_minimo > 0 && p.stock_fisico <= p.stock_minimo)
+  const bajo_minimo = productosBajoMinimo(db)
+    .filter(p => !p.agotado)
     .map(toAlerta)
     .sort((a, b) => {
       if (a.dias_hasta_agotar === null && b.dias_hasta_agotar === null) return 0;

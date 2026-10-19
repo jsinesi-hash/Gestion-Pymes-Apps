@@ -199,6 +199,20 @@ describe('dashboardStockHandler', () => {
     expect(result.bajo_minimo[0].dias_hasta_agotar).toBe(30);
   });
 
+  it('bajo_minimo excluye agotados (van en sin_stock) e inactivos', () => {
+    const agotado = crearActivo(db, 'Agotado');
+    const inactivo = crearActivo(db, 'Inactivo');
+    const bajo = crearActivo(db, 'Bajo');
+    for (const [p, fisico] of [[agotado, 0], [inactivo, 2], [bajo, 2]] as const) {
+      stockEntradaHandler(db, { producto_id: p.id, cantidad: 5 });
+      db.update(schema.existencias).set({ stock_fisico: fisico, stock_minimo: 10 }).where(eq(schema.existencias.producto_id, p.id)).run();
+    }
+    db.update(schema.producto).set({ activo: false }).where(eq(schema.producto.id, inactivo.id)).run();
+    const result = dashboardStockHandler(db);
+    expect(result.bajo_minimo.map(a => a.producto_id)).toEqual([bajo.id]);
+    expect(result.sin_stock.map(a => a.producto_id)).toEqual([agotado.id]);
+  });
+
   it('sin_movimiento respeta el parámetro del sistema', () => {
     const prod = crearActivo(db, 'Quieto');
     stockEntradaHandler(db, { producto_id: prod.id, cantidad: 5 });
