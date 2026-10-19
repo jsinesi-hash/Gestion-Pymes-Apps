@@ -1,3 +1,4 @@
+import type { RefObject } from 'react';
 import { PosScanBar } from './PosScanBar';
 import { PosClienteSelector } from './PosClienteSelector';
 
@@ -7,10 +8,11 @@ type Props = {
   clienteInfo: { nombre_completo: string; habilita_ccc: boolean } | null;
   onSeleccionarCliente: (id: string, info: { nombre_completo: string; habilita_ccc: boolean } | null) => void;
   clienteId: string | null;
+  buscadorRef?: RefObject<HTMLInputElement> | undefined;
 };
 
 export function PosTopBar({
-  onAdd, disabled, clienteInfo, onSeleccionarCliente, clienteId,
+  onAdd, disabled, clienteInfo, onSeleccionarCliente, clienteId, buscadorRef,
 }: Readonly<Props>) {
   return (
     <div style={{
@@ -23,7 +25,7 @@ export function PosTopBar({
       flexWrap: 'nowrap',
     }}>
       <div style={{ flex: '1 1 220px', minWidth: 0 }}>
-        <PosScanBar onAdd={onAdd} disabled={disabled} clienteId={clienteId} />
+        <PosScanBar onAdd={onAdd} disabled={disabled} clienteId={clienteId} inputRef={buscadorRef} />
       </div>
       <div style={{ flexShrink: 0, minWidth: 0 }}>
         <PosClienteSelector clienteInfo={clienteInfo} onSeleccionar={onSeleccionarCliente} />
