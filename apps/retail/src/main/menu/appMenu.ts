@@ -1,6 +1,7 @@
 import { Menu, dialog, app, shell, type BrowserWindow } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
+import { textoAyudaAtajos } from '../../common/posAtajos';
 import { buildMenuTemplate, type MenuAccion, type AyudaAccion } from './appMenuTemplate';
 
 // Ubicación del manual de usuario (HTML). En producción viaja como extraResource
@@ -23,14 +24,8 @@ function resolveManualPath(): string | null {
   return null;
 }
 
-const ATAJOS = [
-  'Nueva venta            Ctrl+N',
-  'Buscar producto        Ctrl+F',
-  'Cerrar caja            Ctrl+F4',
-  'Ventas en espera       Ctrl+E',
-  'Pantalla completa      F11',
-  'Salir                  Ctrl+Q',
-].join('\n');
+// Generado desde la misma tabla que usa el POS (common/posAtajos.ts).
+const ATAJOS = textoAyudaAtajos();
 
 export interface InstallMenuOpts {
   permisos: Set<string>;

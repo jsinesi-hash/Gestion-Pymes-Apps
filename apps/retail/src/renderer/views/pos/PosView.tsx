@@ -11,6 +11,7 @@ import { ticketDesdeVentaRetail } from './ticketRetail';
 import { PausarEsperaModal } from './PausarEsperaModal';
 import { VentaEsperaDrawer } from './VentaEsperaDrawer';
 import { LimiteCreditoAuthModal } from './LimiteCreditoAuthModal';
+import { usePosHotkeys } from './usePosHotkeys';
 
 /** Traduce los códigos de error de venta a mensajes claros para el operador. */
 function mensajeErrorVenta(codigo: string): string {
@@ -53,6 +54,25 @@ export function PosView() {
   const [limiteAuth, setLimiteAuth] = useState<{ pagos: VentaPagoPayload[]; vuelto: number | null } | null>(null);
   const [avisoConversion, setAvisoConversion] = useState<string | null>(null);
   const [errorConfirmar, setErrorConfirmar] = useState<string | null>(null);
+
+  const buscadorRef = useRef<HTMLInputElement>(null);
+  const tablaRef = useRef<HTMLDivElement>(null);
+  const canOverride = can('precio.override');
+
+  // Atajos del POS (tabla en common/posAtajos.ts). Se desactivan con cualquier modal/drawer abierto.
+  usePosHotkeys({
+    ctx: { lineas: lines.length, loading, cantidadEnEspera, canOverride, multiplicadorPendiente: false },
+    bloqueado: confirmarOpen || cancelarOpen || pausarOpen || esperaDrawerOpen || limiteAuth !== null || ventaResult !== null,
+    onEnfocarBuscador: () => buscadorRef.current?.focus(),
+    onCobrar: () => setConfirmarOpen(true),
+    onDescuentoUltimaLinea: () => {
+      const input = tablaRef.current?.querySelector<HTMLInputElement>('input[data-desc-ultima]');
+      input?.focus();
+      input?.select();
+    },
+    onVentasEspera: () => { recargarVentasEnEspera(); setEsperaDrawerOpen(true); },
+    onPonerEspera: () => setPausarOpen(true),
+  });
 
   // ADR-046 §4: si se navegó desde "Convertir" un presupuesto, precargar el carrito.
   const presupuestoConvertido = useRef<string | null>(null);
@@ -143,6 +163,7 @@ export function PosView() {
         clienteInfo={clienteInfo}
         onSeleccionarCliente={setCliente}
         clienteId={clienteId}
+        buscadorRef={buscadorRef}
       />
       {avisoConversion && (
         <div className="alert-warn" style={{ margin: '4px var(--pad) 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
@@ -170,14 +191,14 @@ export function PosView() {
         </div>
       )}
       <div className="panel" style={{ flex: 1, margin: 'var(--pad)', minHeight: 0 }}>
-        <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+        <div ref={tablaRef} style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
           <PosItemsTable
             lines={lines}
             onCantidad={updateCantidad}
             onDescuentoLinea={updateDescuentoLinea}
             onRemove={removeLine}
             onPresentacion={updatePresentacion}
-            canOverride={can('precio.override')}
+            canOverride={canOverride}
           />
         </div>
       </div>
@@ -185,7 +206,7 @@ export function PosView() {
         totales={totales}
         descuentoGlobalPct={descuentoGlobalPct}
         onDescuentoGlobal={setDescuentoGlobal}
-        canOverride={can('precio.override')}
+        canOverride={canOverride}
         loading={loading}
         linesCount={lines.length}
         error={error}

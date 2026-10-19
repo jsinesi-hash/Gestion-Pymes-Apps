@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, type RefObject } from 'react';
+import { teclaDe } from '../../../common/posAtajos';
 import { useProductosSimilares } from '../../hooks/useProductosSimilares';
 import { useBusquedaSimilaresHabilitado } from '../../hooks/useBusquedaSimilaresHabilitado';
 import { AltaExpressModal } from '../productos/AltaExpressModal';
@@ -7,6 +8,8 @@ type Props = {
   onAdd: (productoId: string, presentacionId?: string | null, factorAStock?: number) => Promise<void>;
   disabled?: boolean;
   clienteId?: string | null;
+  /** Ref externo al input, para que el hook de atajos (F2) pueda enfocarlo. */
+  inputRef?: RefObject<HTMLInputElement> | undefined;
 };
 
 const DEBOUNCE_MS = 300;
@@ -15,14 +18,15 @@ function fmt(centavos: number) {
   return (centavos / 100).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export function PosScanBar({ onAdd, disabled, clienteId }: Readonly<Props>) {
+export function PosScanBar({ onAdd, disabled, clienteId, inputRef: inputRefExterno }: Readonly<Props>) {
   const [value, setValue] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [modoSimilitud, setModoSimilitud] = useState(false);
   const [buscoSinResultado, setBuscoSinResultado] = useState(false);
   const [showAlta, setShowAlta] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRefLocal = useRef<HTMLInputElement>(null);
+  const inputRef = inputRefExterno ?? inputRefLocal;
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const similaresHabilitado = useBusquedaSimilaresHabilitado();
@@ -107,7 +111,7 @@ export function PosScanBar({ onAdd, disabled, clienteId }: Readonly<Props>) {
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           disabled={disabled}
-          placeholder={modoSimilitud ? 'Buscar similares por nombre (ej. pincel 3x8)…' : 'Escanear QR / EAN o buscar por nombre...'}
+          placeholder={modoSimilitud ? 'Buscar similares por nombre (ej. pincel 3x8)…' : `Escanear QR / EAN o buscar por nombre... (${teclaDe('enfocar-buscador')})`}
         />
         {searching && <span style={{ fontSize: 12, opacity: 0.5, marginLeft: 8 }}>...</span>}
         {similaresHabilitado && (

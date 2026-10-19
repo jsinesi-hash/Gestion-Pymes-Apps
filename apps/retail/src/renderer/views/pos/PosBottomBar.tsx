@@ -1,4 +1,13 @@
-import { useEffect } from 'react';
+import { teclaDe, etiquetaTecla } from '../../../common/posAtajos';
+
+/** Rótulo visible de la tecla (decorativo: el nombre accesible del botón no cambia). */
+function Tecla({ accion }: Readonly<{ accion: Parameters<typeof teclaDe>[0] }>) {
+  return (
+    <kbd aria-hidden="true" style={{ marginLeft: 6, fontSize: 11, opacity: 0.7, fontFamily: 'inherit' }}>
+      {etiquetaTecla(teclaDe(accion))}
+    </kbd>
+  );
+}
 
 type Props = {
   totales: {
@@ -49,15 +58,6 @@ export function PosBottomBar({
   onEspera,
   onAbrirEspera,
 }: Readonly<Props>) {
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === 'F9' && !loading && linesCount > 0) { e.preventDefault(); onEspera(); }
-      if (e.key === 'F8' && cantidadEnEspera > 0) { e.preventDefault(); onAbrirEspera(); }
-    }
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [loading, linesCount, onEspera, onAbrirEspera]);
-
   return (
     <div
       style={{
@@ -109,9 +109,9 @@ export function PosBottomBar({
             disabled={cantidadEnEspera === 0}
             className="btn-secondary"
             style={{ position: 'relative', fontSize: 13 }}
-            title="Ventas en espera (F8)"
+            title={`Ventas en espera (${etiquetaTecla(teclaDe('ventas-espera'))})`}
           >
-            Ventas en espera
+            Ventas en espera<Tecla accion="ventas-espera" />
             {cantidadEnEspera > 0 && (
               <span style={{
                 position: 'absolute', top: -6, right: -6,
@@ -130,9 +130,9 @@ export function PosBottomBar({
             disabled={loading || linesCount === 0}
             className="btn-secondary"
             style={{ fontSize: 13 }}
-            title="Poner en espera (F9)"
+            title={`Poner en espera (${etiquetaTecla(teclaDe('poner-espera'))})`}
           >
-            ⏸ Espera
+            ⏸ Espera<Tecla accion="poner-espera" />
           </button>
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -166,6 +166,8 @@ export function PosBottomBar({
           type="button"
           onClick={onConfirmar}
           disabled={loading || linesCount === 0}
+          aria-label={loading ? undefined : 'Confirmar'}
+          title={`Cobrar (${etiquetaTecla(teclaDe('cobrar'))})`}
           className="btn-primary"
           style={{
             padding: '14px 28px',
@@ -174,7 +176,7 @@ export function PosBottomBar({
             ...(linesCount === 0 ? { background: 'var(--line)', boxShadow: 'none' } : {}),
           }}
         >
-          {loading ? 'Procesando...' : 'Confirmar'}
+          {loading ? 'Procesando...' : <>Confirmar<Tecla accion="cobrar" /></>}
         </button>
       </div>
     </div>

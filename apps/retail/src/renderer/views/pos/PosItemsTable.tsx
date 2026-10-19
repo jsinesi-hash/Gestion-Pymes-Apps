@@ -35,7 +35,7 @@ export function PosItemsTable({ lines, onCantidad, onDescuentoLinea, onRemove, o
           </tr>
         </thead>
         <tbody>
-          {lines.map(line => {
+          {lines.map((line, idx) => {
             const lr = resolverPrecio({
               lineas: [{ precioListaCentavos: line.precioListaCentavos, ajustePct: line.ajustePct, descuentoLineaPct: line.descuentoLineaPct, cantidad: line.cantidad }],
               descuentoGlobalPct: 0,
@@ -137,6 +137,8 @@ export function PosItemsTable({ lines, onCantidad, onDescuentoLinea, onRemove, o
                 {canOverride && (
                   <td>
                     <input type="number" value={line.descuentoLineaPct} min={0} max={100}
+                      aria-label={`Desc. % ${line.descripcion}`}
+                      data-desc-ultima={idx === lines.length - 1 ? 'true' : undefined}
                       onChange={e => onDescuentoLinea(line.producto_id, Number.parseFloat(e.target.value) || 0)}
                       className="input num" style={{ width: 60 }}
                     />
