@@ -1,9 +1,10 @@
-import { eq, and, gt, lte, sql } from 'drizzle-orm';
+import { eq, lte, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
 import type { OnCajaCerrada } from '@core/main';
 import type { ComandoAviso } from '../agenda/aviso-servicio';
 import { insertarAvisos, despacharAviso } from '../agenda/aviso-servicio';
+import { productosBajoMinimo } from '../agenda/bajo-minimo';
 
 type Db = BetterSQLite3Database<typeof schema>;
 type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
@@ -37,18 +38,10 @@ function calcularTurno(db: Db, cajaRow: { fecha_apertura: Date }): number {
 }
 
 function bajoMinimo(db: Db) {
-  const rows = db.select({
-    nombre_corto: schema.producto.nombre_corto,
-    stock_fisico: schema.existencias.stock_fisico,
-    stock_minimo: schema.existencias.stock_minimo,
-  }).from(schema.existencias)
-    .innerJoin(schema.producto, eq(schema.producto.id, schema.existencias.producto_id))
-    .where(and(gt(schema.existencias.stock_minimo, 0), sql`${schema.existencias.stock_fisico} <= ${schema.existencias.stock_minimo}`))
-    .all();
-  const ordenados = rows.map((r) => ({ ...r, faltante: r.stock_minimo - r.stock_fisico })).sort((a, b) => b.faltante - a.faltante);
+  const lista = productosBajoMinimo(db);
   return {
-    total: ordenados.length,
-    top: ordenados.slice(0, TOP_BAJO_MINIMO).map(({ nombre_corto, stock_fisico, stock_minimo }) => ({ nombre_corto, stock_fisico, stock_minimo })),
+    total: lista.length,
+    top: lista.slice(0, TOP_BAJO_MINIMO).map(({ nombre_corto, stock_fisico, stock_minimo }) => ({ nombre_corto, stock_fisico, stock_minimo })),
   };
 }
 

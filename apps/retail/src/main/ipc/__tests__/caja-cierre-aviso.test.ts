@@ -70,4 +70,27 @@ describe('construirComandoCierre', () => {
     expect(datos.fondo_inicial).toBe(5000);
     expect(datos.desglose_por_medio_pago[0].forma_pago).toBe('efectivo');
   });
+
+  it('bajo_minimo conserva el formato { total, top[{nombre_corto, stock_fisico, stock_minimo}] } y el tope de 10', () => {
+    sembrarBajoMinimo(db);
+    const now = new Date();
+    const catId = db.select().from(schema.categoria).get()!.id;
+    for (let i = 0; i < 12; i++) {
+      const pid = generateId();
+      db.insert(schema.producto).values({ id: pid, sku: `SKU-X${i}`, sku_secuencial: 100 + i, nombre_corto: `X${i}`, nombre_largo: `X${i}`, unidad_venta: 'u', categoria_id: catId, usuario_creacion_id: 'u1', fecha_creacion: now, origin_id: 't', updated_at: now } as any).run();
+      db.insert(schema.existencias).values({ id: generateId(), producto_id: pid, stock_fisico: 1, stock_minimo: 2, origin_id: 't', updated_at: now } as any).run();
+    }
+    const datos = construirComandoCierre(db, { cajaRow, resumen: resumenBase(), diferencia: 0, monto_contado: 25000, usuarioCierreId: 'u1', now }).datos as any;
+    expect(datos.bajo_minimo.total).toBe(14);
+    expect(datos.bajo_minimo.top).toHaveLength(10);
+    expect(Object.keys(datos.bajo_minimo.top[0]).sort()).toEqual(['nombre_corto', 'stock_fisico', 'stock_minimo']);
+  });
+
+  it('bajo_minimo NO incluye productos inactivos (ADR bajo mínimo único)', () => {
+    sembrarBajoMinimo(db);
+    db.update(schema.producto).set({ activo: false }).where(eq(schema.producto.nombre_corto, 'Tornillo')).run();
+    const datos = construirComandoCierre(db, { cajaRow, resumen: resumenBase(), diferencia: 0, monto_contado: 25000, usuarioCierreId: 'u1', now: new Date() }).datos as any;
+    expect(datos.bajo_minimo.total).toBe(1);
+    expect(datos.bajo_minimo.top.map((p: any) => p.nombre_corto)).toEqual(['Tuerca']);
+  });
 });
