@@ -3,7 +3,7 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession, getOriginId, id as vId, optId, num, int, oneOf, ValidationError } from '@core/main';
+import { getSession, getOriginId, id as vId, optId, num, int, oneOf, ValidationError, requirePermission } from '@core/main';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
@@ -122,7 +122,10 @@ export function listarCambioProgramadoHandler(
 // ── registerCambioProgramadoHandlers ─────────────────────────────────────────
 
 export function registerCambioProgramadoHandlers(ipcMain: IpcMain, db: Db): void {
-  ipcMain.handle('cambioProgramado:crear',    async (_e, p)       => crearCambioProgramadoHandler(db, p));
-  ipcMain.handle('cambioProgramado:cancelar', async (_e, id)      => cancelarCambioProgramadoHandler(db, id));
+  // Revisión 2026-10-20 (P0): programar o cancelar un ajuste de precios es `config.fiscal`.
+  const guard = requirePermission('config.fiscal');
+
+  ipcMain.handle('cambioProgramado:crear',    guard(async (_e, p)  => crearCambioProgramadoHandler(db, p)));
+  ipcMain.handle('cambioProgramado:cancelar', guard(async (_e, id) => cancelarCambioProgramadoHandler(db, id)));
   ipcMain.handle('cambioProgramado:listar',   async (_e, listaId) => listarCambioProgramadoHandler(db, listaId));
 }

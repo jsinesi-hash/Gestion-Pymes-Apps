@@ -3,7 +3,7 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession, getOriginId, centavos, id as vId, resolverListaEfectiva } from '@core/main';
+import { getSession, getOriginId, centavos, id as vId, resolverListaEfectiva, requirePermission } from '@core/main';
 import { getDefaultPresentacionId } from './presentacion';
 
 type Db = BetterSQLite3Database<typeof schema>;
@@ -451,16 +451,21 @@ export function recalcularMasivoHandler(
 // ── registerListaPrecioValorHandlers ─────────────────────────────────────────
 
 export function registerListaPrecioValorHandlers(ipcMain: IpcMain, db: Db): void {
+  // Revisión 2026-10-20 (P0): fijar o recalcular precios es `config.fiscal` (solo Supervisor,
+  // CLAUDE.md §8). Se gatea en el canal y no en el handler porque el scheduler de cambios
+  // programados llama a `recalcularMasivoHandler` sin sesión (callerUserId).
+  const guard = requirePermission('config.fiscal');
+
   ipcMain.handle('listaPrecioValor:getPrecioEnLista', async (_e, p) =>
     getPrecioEnListaHandler(db, p));
-  ipcMain.handle('listaPrecioValor:setManual', async (_e, p) =>
-    setManualHandler(db, p));
+  ipcMain.handle('listaPrecioValor:setManual', guard(async (_e, p) =>
+    setManualHandler(db, p)));
   ipcMain.handle('listaPrecioValor:listarVigentesParaProducto', async (_e, productoId) =>
     listarVigentesParaProductoHandler(db, productoId));
   ipcMain.handle('listaPrecioValor:listarVigentesPorLista', async (_e, listaId) =>
     listarVigentesPorListaHandler(db, listaId));
   ipcMain.handle('listaPrecioValor:contarAfectados', async (_e, p) =>
     contarAfectadosHandler(db, p));
-  ipcMain.handle('listaPrecioValor:recalcularMasivo', async (_e, p) =>
-    recalcularMasivoHandler(db, p));
+  ipcMain.handle('listaPrecioValor:recalcularMasivo', guard(async (_e, p) =>
+    recalcularMasivoHandler(db, p)));
 }

@@ -3,7 +3,9 @@ import path from 'node:path';
 import { createDb, runMigrations } from '@core/db';
 import * as schema from '../../db/schema';
 import { runSeed } from '../../auth/seed';
-import { loginHandler } from '@core/main';
+import { eq } from 'drizzle-orm';
+import { randomUUID } from 'node:crypto';
+import { loginHandler, hashPassword } from '@core/main';
 
 const MIGRATIONS_DIR = path.resolve(__dirname, '../../db/migrations');
 
@@ -22,6 +24,31 @@ export function setupDb() {
 
 export function loginAsAdmin(db: ReturnType<typeof setupDb>) {
   return loginHandler(db, { nombreUsuario: 'admin', password: 'admin1234' }); // NOSONAR
+}
+
+/** Crea (si no existe) un usuario con rol OPERADOR y abre sesión con él. */
+export function loginAsOperador(db: ReturnType<typeof setupDb>) {
+  const rol = db.select().from(schema.rol).where(eq(schema.rol.nombre, 'OPERADOR')).get()!;
+  const now = new Date();
+  const existente = db.select().from(schema.usuario)
+    .where(eq(schema.usuario.nombre_usuario, 'operador1')).get();
+  if (!existente) {
+    db.insert(schema.usuario).values({
+      id: randomUUID(),
+      nombre_usuario: 'operador1',
+      nombre_completo: 'Operador de prueba',
+      hash_password: hashPassword('operador1234'), // NOSONAR
+      rol_id: rol.id,
+      activo: true,
+      usuario_creacion_id: 'system',
+      fecha_creacion: now,
+      version: 1,
+      origin_id: 'system',
+      sync_state: 'synced',
+      updated_at: now,
+    }).run();
+  }
+  return loginHandler(db, { nombreUsuario: 'operador1', password: 'operador1234' }); // NOSONAR
 }
 
 export { clearSession } from '@core/main';

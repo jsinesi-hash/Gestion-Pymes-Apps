@@ -14,7 +14,7 @@ import {
   desactivarUsuarioHandler,
   verifyPasswordHandler,
 } from '@core/main';
-import { setupDb, loginAsAdmin } from './helpers';
+import { setupDb, loginAsAdmin, loginAsOperador } from './helpers';
 
 function createTestDb() {
   const sqlite = new Database(':memory:');
@@ -94,19 +94,11 @@ describe('auth IPC handlers', () => {
   });
 
   describe('desactivarUsuarioHandler', () => {
-    it('rechaza desactivar el único Supervisor activo', () => {
-      const admin = db.select().from(schema.usuario).all()[0];
-      expect(() => desactivarUsuarioHandler(db, { userId: admin.id }))
-        .toThrow('LAST_SUPERVISOR');
-    });
-
-    it('permite desactivar un Supervisor cuando hay otro activo', () => {
+    function agregarSegundoSupervisor() {
       const { randomUUID } = require('node:crypto');
       const supervisorRol = db.select().from(schema.rol).all().find(r => r.nombre === 'SUPERVISOR')!;
       const now = new Date();
       const sync = { version: 1, origin_id: 'system', sync_state: 'synced' as const, updated_at: now };
-
-      // insertar segundo supervisor
       const segundoId = randomUUID();
       db.insert(schema.usuario).values({
         id: segundoId,
@@ -119,13 +111,48 @@ describe('auth IPC handlers', () => {
         fecha_creacion: now,
         ...sync,
       }).run();
+      return segundoId;
+    }
 
-      // desactivar al primero
+    it('sin sesión lanza UNAUTHENTICATED', () => {
+      const admin = db.select().from(schema.usuario).all()[0];
+      expect(() => desactivarUsuarioHandler(db, { userId: admin.id }))
+        .toThrow('UNAUTHENTICATED');
+    });
+
+    it('un Operador (sin usuario.administrar) recibe FORBIDDEN y el usuario sigue activo', () => {
+      const admin = db.select().from(schema.usuario).all().find(u => u.nombre_usuario === 'admin')!;
+      loginAsOperador(db as any);
+      expect(() => desactivarUsuarioHandler(db, { userId: admin.id })).toThrow('FORBIDDEN');
+      const after = db.select().from(schema.usuario).where(eq(schema.usuario.id, admin.id)).get();
+      expect(after!.activo).toBe(true);
+    });
+
+    it('rechaza desactivar el único Supervisor activo', () => {
+      loginAsAdmin(db as any);
+      const admin = db.select().from(schema.usuario).all().find(u => u.nombre_usuario === 'admin')!;
+      expect(() => desactivarUsuarioHandler(db, { userId: admin.id }))
+        .toThrow('LAST_SUPERVISOR');
+    });
+
+    it('permite a un Supervisor desactivar a otro cuando hay otro activo', () => {
+      agregarSegundoSupervisor();
+      loginHandler(db, { nombreUsuario: 'admin2', password: 'pass' }); // NOSONAR
       const admin = db.select().from(schema.usuario).all().find(u => u.nombre_usuario === 'admin')!;
       expect(() => desactivarUsuarioHandler(db, { userId: admin.id })).not.toThrow();
 
       const updated = db.select().from(schema.usuario).where(eq(schema.usuario.id, admin.id)).get();
       expect(updated!.activo).toBe(false);
+    });
+
+    it('un Supervisor no puede desactivarse a sí mismo', () => {
+      agregarSegundoSupervisor();
+      loginAsAdmin(db as any);
+      const admin = db.select().from(schema.usuario).all().find(u => u.nombre_usuario === 'admin')!;
+      expect(() => desactivarUsuarioHandler(db, { userId: admin.id }))
+        .toThrow('AUTO_DESACTIVACION');
+      const after = db.select().from(schema.usuario).where(eq(schema.usuario.id, admin.id)).get();
+      expect(after!.activo).toBe(true);
     });
   });
 

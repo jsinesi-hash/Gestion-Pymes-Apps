@@ -58,6 +58,8 @@ const CODIGOS: Record<string, Formateador> = {
   FORBIDDEN: msg('No tenés permiso para hacer esta acción.'),
   NOT_FOUND: msg('No se encontró el registro. Puede que haya sido eliminado.'),
   NO_CHANGE: msg('No hay cambios para guardar.'),
+  LAST_SUPERVISOR: msg('No se puede desactivar el último supervisor activo.'),
+  AUTO_DESACTIVACION: msg('No podés desactivar tu propio usuario.'),
   CANTIDAD_INVALIDA: msg('Ingresá una cantidad válida.'),
   MOTIVO_REQUERIDO: msg('Ingresá el motivo.'),
   OBSERVACIONES_REQUERIDAS: msg('Ingresá una observación.'),
