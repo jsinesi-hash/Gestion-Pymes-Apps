@@ -36,3 +36,10 @@ describe('códigos de desactivación de usuario (P0 2026-10-20)', () => {
       .toMatch(/propio usuario/);
   });
 });
+
+describe('códigos de presentación en venta (P0 2026-10-20)', () => {
+  it('traduce FACTOR_INVALIDO y PRESENTACION_INVALIDA', () => {
+    expect(traducirError(new Error('FACTOR_INVALIDO')).mensaje).toMatch(/presentación/);
+    expect(traducirError(new Error('PRESENTACION_INVALIDA')).mensaje).toMatch(/presentación/);
+  });
+});

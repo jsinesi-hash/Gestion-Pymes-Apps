@@ -360,6 +360,109 @@ describe('venta handlers', () => {
 
   // ── ventaAnularHandler ───────────────────────────────────────────────────
 
+  // Revisión 2026-10-20 (P0): el stock se validaba línea por línea y el factor de presentación
+  // venía del renderer sin control (factor 0 = vender sin descontar stock).
+  describe('ventaConfirmarHandler — stock agregado y factor de presentación', () => {
+    function stockDe(productoId: string) {
+      return db.select().from(schema.existencias)
+        .where(eq(schema.existencias.producto_id, productoId)).get()!.stock_fisico;
+    }
+
+    function conLineas(base: VentaConfirmarPayload, lineas: VentaConfirmarPayload['lineas']): VentaConfirmarPayload {
+      const total = lineas.reduce((acc, l) => acc + l.subtotal, 0);
+      return {
+        ...base,
+        lineas,
+        subtotal: total,
+        total,
+        pagos: [{ medio_pago: 'efectivo', monto_centavos: Math.round(total * 100) }],
+      };
+    }
+
+    it('rechaza dos líneas del mismo producto que juntas superan el stock (cada una pasa sola)', () => {
+      const { prod } = crearProductoConStock(5);
+      const caja = abrirCaja();
+      const base = makePayload(caja.id, prod.id, 3);
+      const payload = conLineas(base, [base.lineas[0]!, { ...base.lineas[0]! }]); // 3 + 3 > 5
+      expect(() => ventaConfirmarHandler(db, payload)).toThrow('STOCK_INSUFICIENTE');
+      expect(stockDe(prod.id)).toBe(5);
+      expect(db.select().from(schema.venta).all()).toHaveLength(0);
+    });
+
+    it('acepta dos líneas del mismo producto cuya suma es exactamente el stock', () => {
+      const { prod } = crearProductoConStock(6);
+      const caja = abrirCaja();
+      const base = makePayload(caja.id, prod.id, 3);
+      ventaConfirmarHandler(db, conLineas(base, [base.lineas[0]!, { ...base.lineas[0]! }]));
+      expect(stockDe(prod.id)).toBe(0);
+    });
+
+    it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])(
+      'rechaza factor_a_stock_aplicado inválido (%s) sin tocar el stock',
+      (factor) => {
+        const { prod } = crearProductoConStock(5);
+        const caja = abrirCaja();
+        const base = makePayload(caja.id, prod.id, 2);
+        const payload = conLineas(base, [{ ...base.lineas[0]!, factor_a_stock_aplicado: factor }]);
+        expect(() => ventaConfirmarHandler(db, payload)).toThrow('FACTOR_INVALIDO');
+        expect(stockDe(prod.id)).toBe(5);
+      },
+    );
+
+    it('rechaza un factor distinto de 1 cuando la línea no trae presentación', () => {
+      const { prod } = crearProductoConStock(50);
+      const caja = abrirCaja();
+      const base = makePayload(caja.id, prod.id, 2);
+      const payload = conLineas(base, [{ ...base.lineas[0]!, factor_a_stock_aplicado: 0.001 }]);
+      expect(() => ventaConfirmarHandler(db, payload)).toThrow('FACTOR_INVALIDO');
+      expect(stockDe(prod.id)).toBe(50);
+    });
+
+    function crearPresentacion(productoId: string, factor: number) {
+      const unidad = db.select().from(schema.unidad).get()!;
+      const id = generateId();
+      db.insert(schema.producto_presentacion).values({
+        id, producto_id: productoId, unidad_id: unidad.id, factor_a_stock: factor,
+        es_default: false, activo: true, sin_confirmar: false,
+        version: 1, origin_id: 'C1', sync_state: 'pending', updated_at: new Date(),
+      }).run();
+      return id;
+    }
+
+    it('con presentación, descuenta cantidad × factor de la presentación', () => {
+      const { prod } = crearProductoConStock(50);
+      const caja = abrirCaja();
+      const ppId = crearPresentacion(prod.id, 12);
+      const base = makePayload(caja.id, prod.id, 2);
+      ventaConfirmarHandler(db, conLineas(base, [
+        { ...base.lineas[0]!, presentacion_id: ppId, factor_a_stock_aplicado: 12 },
+      ]));
+      expect(stockDe(prod.id)).toBe(26);
+    });
+
+    it('rechaza un factor que no coincide con el de la presentación', () => {
+      const { prod } = crearProductoConStock(50);
+      const caja = abrirCaja();
+      const ppId = crearPresentacion(prod.id, 12);
+      const base = makePayload(caja.id, prod.id, 2);
+      const payload = conLineas(base, [
+        { ...base.lineas[0]!, presentacion_id: ppId, factor_a_stock_aplicado: 1 },
+      ]);
+      expect(() => ventaConfirmarHandler(db, payload)).toThrow('FACTOR_INVALIDO');
+      expect(stockDe(prod.id)).toBe(50);
+    });
+
+    it('rechaza una presentación que no existe o es de otro producto', () => {
+      const { prod } = crearProductoConStock(50);
+      const caja = abrirCaja();
+      const base = makePayload(caja.id, prod.id, 1);
+      const inexistente = conLineas(base, [
+        { ...base.lineas[0]!, presentacion_id: generateId(), factor_a_stock_aplicado: 1 },
+      ]);
+      expect(() => ventaConfirmarHandler(db, inexistente)).toThrow('PRESENTACION_INVALIDA');
+    });
+  });
+
   describe('ventaAnularHandler', () => {
     function supervisorCreds() {
       return { nombre_usuario: 'admin', password: 'admin1234' };
