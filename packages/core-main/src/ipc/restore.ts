@@ -6,6 +6,7 @@ import type * as schema from '@core/db';
 import type { RestoreValidationResult } from '@ferreteria/shared';
 import { getSession } from '../auth/session';
 import { validarBackup, ejecutarRestoreAtomico } from '../backup/restore-engine';
+import { RestoreSwapError, rutaDeBaseDeDatos } from '../backup/swap-bd';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
@@ -42,20 +43,39 @@ export async function restoreEjecutarHandler(
 ): Promise<{ row_counts_antes: Record<string, number>; row_counts_despues: Record<string, number> }> {
   const session = requireSupervisor();
 
-  const resultado = await ejecutarRestoreAtomico({
-    db,
-    dbPath: path.join(app.getPath('userData'), 'ferreteria.db'),
-    fbkPath: payload.ruta,
-    usuarioId: session.userId,
-    migrationsFolder: opts.migrationsFolder,
-    ...(payload.password ? { password: payload.password } : {}),
-  });
+  let resultado;
+  try {
+    resultado = await ejecutarRestoreAtomico({
+      db,
+      // Revisión 2026-10-20 (P0): la ruta sale de la propia conexión. Antes era
+      // `userData/ferreteria.db` fijo y Elaborados (`elaborados.db`) fallaba el swap con la
+      // conexión ya cerrada.
+      dbPath: rutaDeBaseDeDatos(db),
+      fbkPath: payload.ruta,
+      usuarioId: session.userId,
+      migrationsFolder: opts.migrationsFolder,
+      ...(payload.password ? { password: payload.password } : {}),
+    });
+  } catch (e) {
+    if (e instanceof RestoreSwapError) {
+      console.error('[restore] swap fallido, conexión cerrada:', e.message);
+      // Con la BD original en su lugar, reiniciar es seguro y deja la app operativa. Se difiere
+      // para que el renderer alcance a mostrar el error. Si el rollback también falló NO se
+      // reinicia: abriría una BD vacía; la original está en `e.bakPath`.
+      if (e.code === 'RESTORE_SWAP_FALLIDO') {
+        setTimeout(() => { app.relaunch(); app.exit(0); }, REINICIO_TRAS_SWAP_FALLIDO_MS);
+      }
+    }
+    throw e;
+  }
 
   app.relaunch();
   app.exit(0);
 
   return resultado;
 }
+
+const REINICIO_TRAS_SWAP_FALLIDO_MS = 5000;
 
 // ─── Registro ─────────────────────────────────────────────────────────────────
 

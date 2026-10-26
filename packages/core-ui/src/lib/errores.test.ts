@@ -43,3 +43,11 @@ describe('códigos de presentación en venta (P0 2026-10-20)', () => {
     expect(traducirError(new Error('PRESENTACION_INVALIDA')).mensaje).toMatch(/presentación/);
   });
 });
+
+describe('códigos de restauración (P0 2026-10-20)', () => {
+  it('traduce RESTORE_SWAP_FALLIDO, RESTORE_ROLLBACK_FALLIDO y RESTORE_RUTA_BD con detalle técnico', () => {
+    expect(traducirError(new Error('RESTORE_SWAP_FALLIDO: no se pudo colocar la BD (EBUSY)')).mensaje).toMatch(/se reiniciará/);
+    expect(traducirError(new Error('RESTORE_ROLLBACK_FALLIDO: la base original está en datos/app.db.pre-restore.bak')).mensaje).toMatch(/NO reinicies/);
+    expect(traducirError(new Error('RESTORE_RUTA_BD: la conexión actual no corresponde a un archivo')).mensaje).toMatch(/base de datos/);
+  });
+});
