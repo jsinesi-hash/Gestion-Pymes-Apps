@@ -22,4 +22,12 @@ describe('arranque de Elaborados aplica el origin_id de la terminal', () => {
   it('no deja loadTerminalConfig() suelto (valor descartado)', () => {
     expect(fuente).not.toMatch(/^\s*loadTerminalConfig\(\);/m);
   });
+
+  // Revisión 2026-10-20 (P0): sin handlers de uncaughtException/unhandledRejection un error no
+  // capturado en el main cortaba el proceso en plena venta.
+  it('registra los errores no capturados antes de runStartup', () => {
+    const registrar = fuente.indexOf('registrarErroresNoCapturados(');
+    expect(registrar).toBeGreaterThan(-1);
+    expect(registrar).toBeLessThan(fuente.indexOf('await runStartup('));
+  });
 });

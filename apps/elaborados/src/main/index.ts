@@ -9,7 +9,7 @@ if (started) app.quit();
 import { loadTerminalConfig } from './config';
 import { db } from './db/client';
 import { runStartup } from './startup';
-import { registerCoreHandlers, aplicarSeguridadVentana, crearImpresorHtml, aplicarConfigTerminal } from '@core/main';
+import { registerCoreHandlers, aplicarSeguridadVentana, crearImpresorHtml, aplicarConfigTerminal, registrarErroresNoCapturados } from '@core/main';
 import { navegacionElaborados } from '../common/navegacion';
 import { registerImpuestoHandlers } from './ipc/impuesto';
 import { registerArticuloHandlers } from './ipc/articulo';
@@ -29,6 +29,8 @@ import { registerVentaHandlers } from './ipc/venta';
 import { registerVentaEsperaHandlers } from './ipc/venta-espera';
 
 async function createWindow(): Promise<void> {
+  // Revisión 2026-10-20 (P0): errores no capturados al log (no cortan el proceso en plena venta).
+  registrarErroresNoCapturados();
   // Revisión 2026-10-20 (P0): el config de la terminal tiene que llegar al contexto del main;
   // antes se descartaba y todas las terminales grababan origin_id='C1'.
   aplicarConfigTerminal(loadTerminalConfig());
