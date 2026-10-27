@@ -46,7 +46,9 @@ describe('movimiento-stock handlers', () => {
   });
 
   it('el preload no expone movimientoStock.create', () => {
-    const preload = fs.readFileSync(path.join(__dirname, '../../../preload/index.ts'), 'utf8');
+    // El catálogo de canales de la app vive en preload/canales.ts desde ADR-122 (el index.ts solo
+    // lo expone por createBridge).
+    const preload = fs.readFileSync(path.join(__dirname, '../../../preload/canales.ts'), 'utf8');
     expect(preload).not.toContain("'movimiento-stock:create'");
     expect(preload).toContain("'movimiento-stock:list'");
   });

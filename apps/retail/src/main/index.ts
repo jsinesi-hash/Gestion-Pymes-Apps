@@ -6,12 +6,10 @@ import started from 'electron-squirrel-startup';
 // Obligatorio para el instalador Squirrel en Windows; debe ir antes de createWindow
 if (started) app.quit();
 
-import { loadTerminalConfig } from './config';
 import { db } from './db/client';
 import { runStartup } from './startup';
 import { registerCoreHandlers } from '@core/main';
 import { navegacionRetail } from '../common/navegacion';
-import { registerImpuestoHandlers } from './ipc/impuesto';
 import { registerMarcaHandlers } from './ipc/marca';
 import { registerCategoriaHandlers } from './ipc/categoria';
 import { registerUbicacionHandlers } from './ipc/ubicacion';
@@ -60,14 +58,14 @@ import { drenarReintentos } from './agenda/worker-reintentos';
 import { applyPendingCambiosProgramados } from './scheduler/precios';
 import { ElectronPrintService } from '../print/ElectronPrintService';
 import { installAppMenu } from './menu/appMenu';
-import { getSession, aplicarSeguridadVentana, aplicarConfigTerminal, programarTareaSegura, registrarErroresNoCapturados } from '@core/main';
+import { getSession, aplicarSeguridadVentana, iniciarTerminal, programarTareaSegura, registrarErroresNoCapturados } from '@core/main';
 
 async function createWindow(): Promise<void> {
   // Revisión 2026-10-20 (P0): errores no capturados al log (no cortan el proceso en plena venta).
   registrarErroresNoCapturados();
   // Revisión 2026-10-20 (P0): el config de la terminal tiene que llegar al contexto del main;
   // antes se descartaba y todas las terminales grababan origin_id='C1'.
-  aplicarConfigTerminal(loadTerminalConfig());
+  iniciarTerminal(app.getPath('userData'));
   await runStartup(db);
   const printService = new ElectronPrintService(() => new BrowserWindow({
     show: false,
@@ -84,7 +82,6 @@ async function createWindow(): Promise<void> {
   });
   registerDialogRetailHandlers(ipcMain);
 
-  registerImpuestoHandlers(ipcMain, db);
   registerMarcaHandlers(ipcMain, db);
   registerCategoriaHandlers(ipcMain, db);
   registerUbicacionHandlers(ipcMain, db);

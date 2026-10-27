@@ -3,19 +3,14 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
 import {
-  getSession, getOriginId, requirePermission, listaDeCliente,
+  getOriginId, requirePermission, listaDeCliente,
   str, optStr, num, int, bool, id as vId,
+  requireSession,
 } from '@core/main';
 import * as schema from '../db/schema';
 import { precioParaLista } from '../domain/precio-lista';
 
 type Db = BetterSQLite3Database<typeof schema>;
-
-function requireSession() {
-  const session = getSession();
-  if (!session) throw new Error('UNAUTHENTICATED');
-  return session;
-}
 
 /**
  * Precios efectivos de los productos para la lista del cliente (ADR-104). Devuelve el precio base

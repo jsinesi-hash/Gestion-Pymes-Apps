@@ -3,17 +3,11 @@ import { generateId } from '@ferreteria/shared';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
-import { getSession, getOriginId, requirePermission, id, optStr, str, num, centavos, oneOf } from '@core/main';
+import { getOriginId, requirePermission, id, optStr, str, num, centavos, oneOf, requireSession } from '@core/main';
 
 const OC_TIPO = ['manual', 'sugerida'] as const;
 
 type Db = BetterSQLite3Database<typeof schema>;
-
-function requireSession() {
-  const s = getSession();
-  if (!s) throw new Error('UNAUTHENTICATED');
-  return s;
-}
 
 function nextNumeroOC(db: Db, terminal: string): string {
   const clave = `oc_correlativo_${terminal}`;

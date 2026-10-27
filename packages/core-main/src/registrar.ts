@@ -6,6 +6,7 @@ import { registerAuthHandlers } from './ipc/auth';
 import { registerPreferenciasHandlers } from './ipc/preferencias';
 import { registerParametrosHandlers } from './ipc/parametros';
 import { registerGeoHandlers } from './ipc/geo';
+import { registerImpuestoHandlers } from './ipc/impuesto';
 import { registerClienteHandlers } from './ipc/cliente';
 import { registerCtaCteHandlers } from './ipc/ctacte';
 import { registerProveedorHandlers, type ProveedorHooks } from './ipc/proveedor';
@@ -31,6 +32,7 @@ export function registerCoreHandlers(ipcMain: IpcMain, db: BetterSQLite3Database
   registerPreferenciasHandlers(ipcMain, db, opts.navegacion);
   registerParametrosHandlers(ipcMain, db);
   registerGeoHandlers(ipcMain, db);
+  registerImpuestoHandlers(ipcMain, db);
   registerClienteHandlers(ipcMain, db);
   registerCtaCteHandlers(ipcMain, db);
   registerProveedorHandlers(ipcMain, db, opts.proveedor ?? {});

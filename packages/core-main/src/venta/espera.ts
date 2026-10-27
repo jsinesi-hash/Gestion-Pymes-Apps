@@ -5,6 +5,7 @@ import { getSession } from '../auth/session';
 import { getOriginId } from '../context';
 import type { VentaDb, VentaTx, AplicarLineasCtx } from './types';
 
+import { requireSession } from '../auth/guard';
 export type PausarVentaEsperaInput = {
   /** Si viene, actualiza en el lugar esa venta `en_espera` (la app reemplaza las líneas). */
   venta_id?: string;
@@ -34,12 +35,6 @@ export type VentaEsperaResumen = {
   count_items: number;
   vencida: boolean;
 };
-
-function requireSession() {
-  const session = getSession();
-  if (!session) throw new Error('UNAUTHENTICATED');
-  return session;
-}
 
 export function pausarVentaEspera(
   db: VentaDb,

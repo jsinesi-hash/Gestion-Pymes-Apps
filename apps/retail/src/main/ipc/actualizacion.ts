@@ -11,26 +11,26 @@ interface AppLike { getVersion: () => string }
 
 const CLAVE_VERSION_VISTA = 'app_version_vista';
 
-function requireSession() {
+function requireSessionForbidden() {
   const s = getSession();
   if (!s) throw new Error('FORBIDDEN');
   return s;
 }
 
 export function estadoHandler(): EstadoActualizacion {
-  requireSession();
+  requireSessionForbidden();
   return obtenerEstado();
 }
 
 export function instalarYReiniciarHandler(): void {
-  requireSession();
+  requireSessionForbidden();
   instalarYReiniciar();
 }
 
 export interface NotasPostUpdate { version: string; titulo: string; notas: string[] }
 
 export function notasPostUpdateHandler(db: Db, app: AppLike): NotasPostUpdate | null {
-  requireSession();
+  requireSessionForbidden();
   const actual = app.getVersion();
   const row = db.select().from(schema.parametros_sistema)
     .where(eq(schema.parametros_sistema.clave, CLAVE_VERSION_VISTA))
@@ -42,7 +42,7 @@ export function notasPostUpdateHandler(db: Db, app: AppLike): NotasPostUpdate | 
 }
 
 export function marcarVersionVistaHandler(db: Db, app: AppLike): void {
-  const session = requireSession();
+  const session = requireSessionForbidden();
   const actual = app.getVersion();
   const now = new Date();
   db.insert(schema.parametros_sistema)

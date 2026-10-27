@@ -5,7 +5,7 @@ import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '@core/db';
 import { getSession } from '../auth/session';
 import { getOriginId } from '../context';
-import { requirePermission } from '../auth/guard';
+import { requirePermission, requireSession } from '../auth/guard';
 import { str, optStr, optId, oneOf } from '../validation/core';
 
 type Db = BetterSQLite3Database<typeof schema>;
@@ -21,12 +21,6 @@ export type ProveedorHooks = {
 
 const TIPO_DOC = ['DNI', 'CUIT', 'CUIL'] as const;
 const COND_FISCAL = ['Responsable Inscripto', 'Monotributo', 'Consumidor Final', 'Exento'] as const;
-
-function requireSession() {
-  const session = getSession();
-  if (!session) throw new Error('UNAUTHENTICATED');
-  return session;
-}
 
 function queryProveedoresActivos(db: Db) {
   return db.select().from(schema.proveedor).where(eq(schema.proveedor.activo, true)).all();

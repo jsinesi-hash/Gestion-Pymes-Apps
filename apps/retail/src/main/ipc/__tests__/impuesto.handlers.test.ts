@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { setupDb, clearSession } from './helpers';
 import { runCatalogSeed } from '../../catalog/seed';
-import { impuestoListHandler } from '../impuesto';
+import { impuestoListHandler } from '@core/main';
 
 describe('impuesto handlers', () => {
   let db: ReturnType<typeof setupDb>;

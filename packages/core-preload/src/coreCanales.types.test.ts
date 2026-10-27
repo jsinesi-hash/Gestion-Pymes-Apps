@@ -22,6 +22,15 @@ export function _verificacionDeTipos(): void {
   const _n: number = api.auth.login;
 }
 
+describe('coreCanales — impuesto (movido al núcleo, P2 2026-10-20)', () => {
+  it('impuesto.list invoca el canal impuesto:list', async () => {
+    const invocados: string[] = [];
+    const api = coreCanales(async (canal) => { invocados.push(canal); return []; });
+    await api.impuesto.list();
+    expect(invocados).toEqual(['impuesto:list']);
+  });
+});
+
 describe('CoreBridgeApi', () => {
   it('es el tipo de lo que devuelve coreCanales', () => {
     const invocados: string[] = [];

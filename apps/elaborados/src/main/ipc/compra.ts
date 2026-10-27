@@ -3,19 +3,14 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
 import {
-  getSession, getOriginId, requirePermission, verificarSupervisor,
+  getOriginId, requirePermission, verificarSupervisor,
   str, num, int, optStr, optId, arr, id as vId,
+  requireSession,
 } from '@core/main';
 import * as schema from '../db/schema';
 import { costoPromedioEntrada } from '../domain/costo';
 
 type Db = BetterSQLite3Database<typeof schema>;
-
-function requireSession() {
-  const session = getSession();
-  if (!session) throw new Error('UNAUTHENTICATED');
-  return session;
-}
 
 /** Correlativo dentro de la transacción de creación (mismo patrón que produccion.ts). */
 function nextNumeroCompra(tx: Db, terminal: string): string {

@@ -10,6 +10,7 @@ import { num, optStr, oneOf, id as vId } from '../validation/core';
 import { triggerAutoBackup } from './backup';
 import { parametrosGetHandler } from './parametros';
 
+import { requireSession } from '../auth/guard';
 type Db = BetterSQLite3Database<typeof schema>;
 
 export type CajaRow = typeof schema.caja.$inferSelect;
@@ -27,12 +28,6 @@ export type CajaCierreCtx = {
 /** Corre DENTRO de la transacción del cierre. Puede devolver un post-commit (best-effort). */
 export type OnCajaCerrada = (ctx: CajaCierreCtx) => (() => void) | void;
 export type CajaHooks = { onCajaCerrada?: OnCajaCerrada };
-
-function requireSession() {
-  const session = getSession();
-  if (!session) throw new Error('UNAUTHENTICATED');
-  return session;
-}
 
 export function cajaGetActivaHandler(db: Db) {
   const session = requireSession();

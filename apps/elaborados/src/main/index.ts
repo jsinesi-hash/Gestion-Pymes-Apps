@@ -6,12 +6,10 @@ import started from 'electron-squirrel-startup';
 // Obligatorio para el instalador Squirrel en Windows; debe ir antes de createWindow
 if (started) app.quit();
 
-import { loadTerminalConfig } from './config';
 import { db } from './db/client';
 import { runStartup } from './startup';
-import { registerCoreHandlers, aplicarSeguridadVentana, crearImpresorHtml, aplicarConfigTerminal, registrarErroresNoCapturados } from '@core/main';
+import { registerCoreHandlers, aplicarSeguridadVentana, crearImpresorHtml, iniciarTerminal, registrarErroresNoCapturados } from '@core/main';
 import { navegacionElaborados } from '../common/navegacion';
-import { registerImpuestoHandlers } from './ipc/impuesto';
 import { registerArticuloHandlers } from './ipc/articulo';
 import { registerMovimientoArticuloHandlers } from './ipc/movimiento-articulo';
 import { registerRecetaProduccionHandlers } from './ipc/receta-produccion';
@@ -33,7 +31,7 @@ async function createWindow(): Promise<void> {
   registrarErroresNoCapturados();
   // Revisión 2026-10-20 (P0): el config de la terminal tiene que llegar al contexto del main;
   // antes se descartaba y todas las terminales grababan origin_id='C1'.
-  aplicarConfigTerminal(loadTerminalConfig());
+  iniciarTerminal(app.getPath('userData'));
   await runStartup(db);
   registerCoreHandlers(ipcMain, db, {
     migrationsFolder: path.join(__dirname, 'migrations'),
@@ -41,7 +39,6 @@ async function createWindow(): Promise<void> {
     exportadores: EXPORTADORES_REPORTES,
     imprimirHtml: crearImpresorHtml(() => new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false, contextIsolation: true } })),
   });
-  registerImpuestoHandlers(ipcMain, db);
   registerArticuloHandlers(ipcMain, db);
   registerMovimientoArticuloHandlers(ipcMain, db);
   registerRecetaProduccionHandlers(ipcMain, db);

@@ -2,18 +2,12 @@ import { eq, desc } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
-import { getSession, getOriginId, requirePermission, verificarSupervisor, str, num, optStr, arr, id as vId } from '@core/main';
+import { getOriginId, requirePermission, verificarSupervisor, str, num, optStr, arr, id as vId, requireSession } from '@core/main';
 import * as schema from '../db/schema';
 import { escalarReceta } from '../domain/receta';
 import { costoDeLote, costoPromedioEntrada } from '../domain/costo';
 
 type Db = BetterSQLite3Database<typeof schema>;
-
-function requireSession() {
-  const session = getSession();
-  if (!session) throw new Error('UNAUTHENTICATED');
-  return session;
-}
 
 /**
  * Lee e incrementa produccion_correlativo_<terminal> dentro de la transaccion de creacion, para
