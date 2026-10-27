@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import { bridge } from '@core/ui';
 // Resultado del servicio de búsqueda por similitud (espejo de CandidatoSimilarEnriquecido del main).
 export type ProductoSimilar = {
   producto_id: string;
@@ -29,7 +30,7 @@ export function useProductosSimilares(texto: string, opts: Opts = {}) {
     let vigente = true;
     setLoading(true);
     const timer = setTimeout(() => {
-      Promise.resolve((globalThis as any).ferreteria?.catalogo?.producto?.buscarSimilares?.({ texto: q, clienteId, limite, piso }))
+      Promise.resolve(bridge()?.catalogo?.producto?.buscarSimilares?.({ texto: q, clienteId, limite, piso }))
         .then((res: ProductoSimilar[] | null) => { if (vigente) setItems(res ?? []); })
         .catch(() => { if (vigente) setItems([]); })
         .finally(() => { if (vigente) setLoading(false); });

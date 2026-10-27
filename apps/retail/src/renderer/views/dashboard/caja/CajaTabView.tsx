@@ -5,6 +5,7 @@ import {
 import type { Period } from '../hooks/usePeriod';
 import type { DashboardCajaRango } from '../../../../main/ipc/dashboard-caja-rango';
 
+import { bridge } from '@core/ui';
 type PS<T> = { loading: boolean; data: T | null; error: boolean };
 const init = <T,>(): PS<T> => ({ loading: true, data: null, error: false });
 
@@ -19,7 +20,7 @@ export function CajaTabView({ period }: Props) {
 
   useEffect(() => {
     setState(init());
-    (window as any).ferreteria.dashboard
+    bridge().dashboard
       .cajaRango({ desde: period.desde, hasta: period.hasta })
       .then((data: DashboardCajaRango) => setState({ loading: false, data, error: false }))
       .catch(() => setState({ loading: false, data: null, error: true }));

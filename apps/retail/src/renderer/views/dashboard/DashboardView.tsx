@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '@core/ui';
+import { useAuth, bridge } from '@core/ui';
 import { VentasPanel } from './ventas/VentasPanel';
 import { StockPanel } from './stock/StockPanel';
 import { CajaPanel } from './caja/CajaPanel';
@@ -42,7 +42,7 @@ export function DashboardView() {
     if (!can('dashboard.ver')) return;
     if (activeTab !== 'resumen' || resumenLoaded.current) return;
     resumenLoaded.current = true;
-    const f = (window as any).ferreteria.dashboard;
+    const f = bridge().dashboard;
     Promise.allSettled([f.ventas(), f.stock(), f.caja()]).then(([v, s, c]) => {
       setVentas({ loading: false, data: v.status === 'fulfilled' ? v.value : null, error: v.status === 'rejected' });
       setStock ({ loading: false, data: s.status === 'fulfilled' ? s.value : null, error: s.status === 'rejected' });

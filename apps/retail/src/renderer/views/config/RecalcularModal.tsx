@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useMotorPreciosV2Habilitado } from '../../hooks/useMotorPrecios';
-import { useEscapeToClose } from '@core/ui';
+import { useEscapeToClose, bridge } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 
-const f = () => (globalThis as any).ferreteria;
+const f = () => bridge();
 
 // ADR-085 (SEC-2): campos del "programar cambio" que pueden mostrar un error inline.
 // Sus controles llevan un `id` igual a la clave, para poder enfocar el control cuando

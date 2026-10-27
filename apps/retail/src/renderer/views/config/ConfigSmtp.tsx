@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@core/ui';
+import { useAuth, bridge } from '@core/ui';
 
 type Cfg = { host: string; port: number; secure: boolean; from: string; user: string; tiene_password: boolean };
 
@@ -31,7 +31,7 @@ export function ConfigSmtp() {
 
   useEffect(() => {
     if (!acceso) return;
-    const f = (globalThis as any).ferreteria;
+    const f = bridge();
     f.smtp.getConfig().then(setCfg);
     // notif_cierre_caja_email vive en parametros_sistema, que no tiene pantalla propia:
     // se administra desde acá, que es donde el usuario configura el canal email.
@@ -57,7 +57,7 @@ export function ConfigSmtp() {
       );
       if (!ok) return;
     }
-    const f = (globalThis as any).ferreteria;
+    const f = bridge();
     try {
       await f.smtp.setConfig({ host: cfg!.host, port: cfg!.port, secure: cfg!.secure, from: cfg!.from, user: cfg!.user });
       if (password) { await f.smtp.setPassword({ password }); setPassword(''); }
@@ -70,7 +70,7 @@ export function ConfigSmtp() {
   async function probar() {
     setProbando(true); setErr(null); setMsg(null);
     try {
-      const r = await (globalThis as any).ferreteria.smtp.probar();
+      const r = await bridge().smtp.probar();
       if (r.ok) setMsg('Conexión OK.'); else setErr(`Falló la conexión: ${r.error}`);
     } catch (e: any) {
       setErr(e?.message ?? 'Error al probar la conexión.');

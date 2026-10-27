@@ -19,6 +19,7 @@
     "react-dom": "^18.3.0"
   },
   "dependencies": {
+    "@core/preload": "workspace:*",
     "@ferreteria/shared": "workspace:*"
   },
   "devDependencies": {

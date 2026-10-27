@@ -5,7 +5,7 @@ import {
   useAgendaEventos, agendaApi, toDate,
   type AgendaEvento, type EventoOrigen,
 } from '../../hooks/useAgenda';
-import { useEscapeToClose } from '@core/ui';
+import { useEscapeToClose, bridge } from '@core/ui';
 
 const ORIGENES: Array<{ valor: string; label: string }> = [
   { valor: '', label: 'Todos los orígenes' },
@@ -64,7 +64,7 @@ export function AgendaEventosView() {
   useEscapeToClose(() => setDescartar(null), !!descartar && !procesando);
 
   useEffect(() => {
-    const p = (globalThis as any).ferreteria?.parametros?.get?.({ clave: 'agenda_ventana_proximos_dias' });
+    const p = bridge()?.parametros?.get?.({ clave: 'agenda_ventana_proximos_dias' });
     if (p?.then) p.then((v: string | null) => { const n = Number.parseInt(v ?? '14', 10); if (Number.isFinite(n)) setVentanaDias(n); }).catch(() => {});
   }, []);
 

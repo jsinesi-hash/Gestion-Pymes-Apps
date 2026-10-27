@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { bridge } from '@core/ui';
 export type EventoEstado = 'pendiente' | 'completada' | 'pospuesta' | 'descartada';
 export type EventoOrigen = 'rutina' | 'manual' | 'orden_compra' | 'recepcion' | 'bajo_minimo' | 'cierre_caja';
 export type AvisoEstado = 'pendiente' | 'enviado' | 'fallido' | 'descartado';
@@ -89,7 +90,7 @@ type AgendaApi = {
 };
 
 export function agendaApi(): AgendaApi {
-  return (globalThis as any).ferreteria as AgendaApi;
+  return bridge() as AgendaApi;
 }
 
 /** Feature flag agenda_habilitado (ADR-044/047). Default false. */
@@ -97,7 +98,7 @@ export function useAgendaHabilitado(): boolean {
   const [habilitado, setHabilitado] = useState(false);
   useEffect(() => {
     let vigente = true;
-    const p = (globalThis as any).ferreteria?.parametros?.get?.({ clave: 'agenda_habilitado' });
+    const p = bridge()?.parametros?.get?.({ clave: 'agenda_habilitado' });
     if (p && typeof p.then === 'function') {
       p.then((v: string | null) => { if (vigente) setHabilitado(v === 'true'); })
         .catch(() => { if (vigente) setHabilitado(false); });

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
+import { bridge } from '@core/ui';
 type Estado = {
   totalProductos: number;
   productosDemo: number;
@@ -18,7 +19,7 @@ export function ConfigDatosDemo() {
 
   const cargarEstado = useCallback(async () => {
     try {
-      const e = await (globalThis as any).ferreteria.demoCatalog.estado();
+      const e = await bridge().demoCatalog.estado();
       setEstado(e);
     } catch (e: any) {
       setError(e?.message ?? 'No se pudo leer el estado del catálogo.');
@@ -30,7 +31,7 @@ export function ConfigDatosDemo() {
   async function handleCargar() {
     setBusy(true); setError(null); setOk(null);
     try {
-      const res = await (globalThis as any).ferreteria.demoCatalog.cargar();
+      const res = await bridge().demoCatalog.cargar();
       if (res.yaHabiaProductos) {
         setError('El catálogo ya tiene productos: el demo sólo se carga sobre un catálogo vacío.');
       } else {
@@ -48,7 +49,7 @@ export function ConfigDatosDemo() {
     if (!confirm('¿Vaciar el catálogo demo? Se eliminarán los productos de muestra (no toca los productos que hayas cargado vos). Esta acción no se puede deshacer.')) return;
     setBusy(true); setError(null); setOk(null);
     try {
-      const res = await (globalThis as any).ferreteria.demoCatalog.vaciar();
+      const res = await bridge().demoCatalog.vaciar();
       setOk(`Se eliminaron ${res.eliminados} productos demo.`);
       setEstado(res.estado);
     } catch (e: any) {

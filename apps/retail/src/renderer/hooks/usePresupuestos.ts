@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { bridge } from '@core/ui';
 export type PresupuestoEstado = 'borrador' | 'emitido' | 'vencido' | 'convertido' | 'anulado';
 
 export type PresupuestoListado = {
@@ -55,7 +56,7 @@ type PresupuestoApi = {
 };
 
 export function presupuestoApi(): PresupuestoApi {
-  return (globalThis as any).ferreteria.presupuesto;
+  return bridge().presupuesto;
 }
 
 /**
@@ -66,7 +67,7 @@ export function usePresupuestosHabilitado(): boolean {
   const [habilitado, setHabilitado] = useState(false);
   useEffect(() => {
     let vigente = true;
-    const p = (globalThis as any).ferreteria?.parametros?.get?.({ clave: 'presupuestos_habilitado' });
+    const p = bridge()?.parametros?.get?.({ clave: 'presupuestos_habilitado' });
     if (p && typeof p.then === 'function') {
       p.then((v: string | null) => { if (vigente) setHabilitado(v === 'true'); })
         .catch(() => { if (vigente) setHabilitado(false); });

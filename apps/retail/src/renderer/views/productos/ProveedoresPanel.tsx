@@ -7,7 +7,7 @@ import {
   type DefaultsComercialProveedor,
 } from '@ferreteria/shared';
 import { useMotorPreciosV2Habilitado } from '../../hooks/useMotorPrecios';
-import { useEscapeToClose } from '@core/ui';
+import { useEscapeToClose, bridge } from '@core/ui';
 import { useAuth } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 
@@ -74,7 +74,7 @@ function defaultsDe(v: VinculoProveedor): DefaultsComercialProveedor {
   };
 }
 
-const f = () => (globalThis as any).ferreteria;
+const f = () => bridge();
 
 /** Campo de override: vacío = heredar (null). */
 function toNumOrNull(s: string): number | null {

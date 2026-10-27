@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { EtiquetaItem, PerfilEtiqueta, BarcodeTipo } from '@ferreteria/shared';
 import { useFilaNavegable } from '../../hooks/useFilaNavegable';
-import { useToast } from '@core/ui';
+import { useToast, bridge } from '@core/ui';
 
 type Categoria = { id: string; nombre: string };
 type Ubicacion = { id: string; codigo: string };
@@ -34,7 +34,7 @@ function SortIcon({ active, dir }: { active: boolean; dir: 'asc' | 'desc' }) {
   return <span style={{ fontSize: 10, marginLeft: 4 }}>{dir === 'asc' ? '↑' : '↓'}</span>;
 }
 
-const ferreteria = () => (globalThis as any).ferreteria;
+const ferreteria = () => bridge();
 
 const STORAGE_KEY = 'etiquetas:estado';
 

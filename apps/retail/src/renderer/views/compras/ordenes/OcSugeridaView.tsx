@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { bridge } from '@core/ui';
 type ItemSugerido = {
   producto_id: string;
   nombre_corto: string;
@@ -44,7 +45,7 @@ function SortIcon({ dir }: { dir: 'asc' | 'desc' }) {
   return <span style={{ fontSize: 10, marginLeft: 4 }}>{dir === 'asc' ? '↑' : '↓'}</span>;
 }
 
-const f = () => (globalThis as any).ferreteria;
+const f = () => bridge();
 
 export function OcSugeridaView() {
   const navigate = useNavigate();

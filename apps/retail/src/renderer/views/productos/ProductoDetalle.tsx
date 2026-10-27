@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useEscapeAction } from '@core/ui';
+import { useEscapeAction, bridge } from '@core/ui';
 import { useProducto } from '../../hooks/useProducto';
 import { useRegistrarVisto } from '@core/ui';
 import { useExistencias } from '../../hooks/useExistencias';
@@ -36,7 +36,7 @@ export function ProductoDetalle() {
   if (error || !producto) return <div style={{ padding: '2rem', color: 'var(--danger)' }}>Producto no encontrado.</div>;
 
   async function handlePrintLabel() {
-    await (globalThis as any).ferreteria.catalogo.print.productLabel({ id, format: 'label' });
+    await bridge().catalogo.print.productLabel({ id, format: 'label' });
   }
 
   const stockBajoBadge = existencias?.stockMinimo != null && existencias.stockMinimo > 0 && existencias.stockFisico != null && existencias.stockFisico <= existencias.stockMinimo ? ' stock-low' : ' pos';

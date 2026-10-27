@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { bridge } from '@core/ui';
 export type EquivalenciaItem = {
   id: string; producto_id: string; sku: string; nombre_corto: string;
   marca_nombre: string | null; precio_final_centavos: number;
@@ -19,7 +20,7 @@ export function useEquivalencias(productoId: string | undefined, habilitado: boo
     if (!productoId || !habilitado) { setData(VACIO); return; }
     setLoading(true);
     try {
-      const r = await (globalThis as any).ferreteria?.catalogo?.producto?.equivalencia?.list?.({ producto_id: productoId });
+      const r = await bridge()?.catalogo?.producto?.equivalencia?.list?.({ producto_id: productoId });
       setData(r ?? VACIO);
     } catch { setData(VACIO); } finally { setLoading(false); }
   }, [productoId, habilitado]);

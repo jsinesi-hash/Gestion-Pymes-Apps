@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { useAuth } from '@core/ui';
+import { useAuth, bridge } from '@core/ui';
 
 // ADR-049 §4/§8 — detalle de un lote: reporte de impacto + tabla + acciones.
 
-const f = () => (globalThis as any).ferreteria;
+const f = () => bridge();
 
 type Batch = {
   id: string; lista_precio_id: string; lista_nombre: string | null; proveedor_id: string | null; origen: string;

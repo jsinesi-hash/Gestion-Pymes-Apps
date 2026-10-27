@@ -1,12 +1,13 @@
 import { useState, useCallback } from 'react';
 import type { ImportPreviewResult, ImportSummaryResult, ImportRowResult, SummaryRowResult } from '../../main/ipc/importar';
 
+import { bridge } from '@core/ui';
 export type Entidad = 'productos' | 'clientes' | 'proveedores' | 'ubicaciones' | 'stockInicial';
 export type ImportarEstado = 'idle' | 'validating' | 'preview' | 'confirming' | 'done';
 
 type Canal = { validar: (p: unknown) => Promise<unknown>; confirmar: (p: unknown) => Promise<unknown> };
 
-const f = () => (globalThis as any).ferreteria;
+const f = () => bridge();
 
 function canal(entidad: Entidad): Canal {
   const importar = f().importar as Record<Entidad, Canal>;

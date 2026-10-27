@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useCallIpc } from '@core/ui';
+import { useCallIpc, bridge } from '@core/ui';
 
 // ADR-085 (SEC-2): campos del form que pueden mostrar un error inline. Sus inputs llevan
 // un `id` igual a la clave, para poder enfocar el control cuando el backend rechaza por él.
@@ -31,7 +31,7 @@ export function TransportistaForm() {
 
   useEffect(() => {
     if (!id) return;
-    (globalThis as any).ferreteria.transportista.get(id).then((t: any) => {
+    bridge().transportista.get(id).then((t: any) => {
       if (!t) return;
       setForm({
         razon_social:     t.razon_social     ?? '',
@@ -71,7 +71,7 @@ export function TransportistaForm() {
     };
     // ERR-1: callIpc traduce y muestra el error por toast; sólo navegamos si salió bien.
     const r = await callIpc<{ id: string }>(
-      () => (globalThis as any).ferreteria.transportista.upsert(payload),
+      () => bridge().transportista.upsert(payload),
       { success: 'Transportista guardado' },
     );
     setSaving(false);

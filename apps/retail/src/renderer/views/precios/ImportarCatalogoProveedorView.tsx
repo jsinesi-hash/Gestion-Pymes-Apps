@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useImportacionCatalogo } from '../../hooks/useImportacionCatalogo';
-import { useEscapeToClose } from '@core/ui';
+import { useEscapeToClose, bridge } from '@core/ui';
 import { formatCurrency } from '@core/ui';
 
 type Proveedor = { id: string; razon_social: string; codigo: string | null };
@@ -75,7 +75,7 @@ export function ImportarCatalogoProveedorView() {
   useEscapeToClose(() => setModalBuscar(false), modalBuscar);
 
   useEffect(() => {
-    (window as any).ferreteria.compras.proveedor.list().then((list: Proveedor[]) =>
+    bridge().compras.proveedor.list().then((list: Proveedor[]) =>
       setProveedores(list.filter((p: any) => p.activo !== false)),
     );
   }, []);

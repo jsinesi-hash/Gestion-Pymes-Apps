@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import type { Period } from '../hooks/usePeriod';
 import type { DashboardProveedoresRango, DashboardProveedoresEstado } from '../../../../main/ipc/dashboard-proveedores';
 
+import { bridge } from '@core/ui';
 type PS<T> = { loading: boolean; data: T | null; error: boolean };
 const init = <T,>(): PS<T> => ({ loading: true, data: null, error: false });
 
@@ -29,7 +30,7 @@ export function ProveedoresTabView({ period }: Props) {
   useEffect(() => {
     if (!estadoLoaded.current) {
       estadoLoaded.current = true;
-      (window as any).ferreteria.dashboard.proveedoresEstado()
+      bridge().dashboard.proveedoresEstado()
         .then((data: DashboardProveedoresEstado) => setEstado({ loading: false, data, error: false }))
         .catch(() => setEstado({ loading: false, data: null, error: true }));
     }
@@ -37,7 +38,7 @@ export function ProveedoresTabView({ period }: Props) {
 
   useEffect(() => {
     setRango(init());
-    (window as any).ferreteria.dashboard
+    bridge().dashboard
       .proveedoresRango({ desde: period.desde, hasta: period.hasta })
       .then((data: DashboardProveedoresRango) => setRango({ loading: false, data, error: false }))
       .catch(() => setRango({ loading: false, data: null, error: true }));

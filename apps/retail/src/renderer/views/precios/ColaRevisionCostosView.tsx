@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useImportacionCosto } from '../../hooks/useImportacionCosto';
-import { formatCurrency } from '@core/ui';
+import { formatCurrency, bridge } from '@core/ui';
 import { useEscapeToClose } from '@core/ui';
 
 type Candidato = { producto_id: string; sku: string; nombre_corto: string; score: number };
@@ -67,7 +67,7 @@ export function ColaRevisionCostosView() {
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     if (value.trim().length < 2) { setSearchResults([]); return; }
     searchDebounceRef.current = setTimeout(async () => {
-      const result = await (window as any).ferreteria.catalogo.producto.list({ busqueda: value.trim(), activo: true, pageSize: 10 });
+      const result = await bridge().catalogo.producto.list({ busqueda: value.trim(), activo: true, pageSize: 10 });
       setSearchResults(result.items ?? []);
     }, 300);
   }

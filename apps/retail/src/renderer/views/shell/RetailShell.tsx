@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useAuth, AppShell, buscadorClientes } from '@core/ui';
+import { useAuth, AppShell, buscadorClientes, bridge } from '@core/ui';
 import { buildNavRetail } from '../../shell/navRetail';
 import { CRUMBS_RETAIL, LEAF_KEYWORDS_RETAIL } from '../../shell/crumbsRetail';
 import {
@@ -46,7 +46,7 @@ function RetailShellOverlays({ hayModalCore }: Readonly<{ hayModalCore: boolean 
     let vivo = true;
     (async () => {
       try {
-        const est = await (globalThis as any).ferreteria.actualizacion.estado();
+        const est = await bridge().actualizacion.estado();
         if (vivo && est?.estado === 'downloaded' && est.version) setPropuestaVersion(est.version);
       } catch { /* sin updater o backend no disponible: silencioso */ }
     })();
@@ -58,7 +58,7 @@ function RetailShellOverlays({ hayModalCore }: Readonly<{ hayModalCore: boolean 
     let vivo = true;
     (async () => {
       try {
-        const r = await (globalThis as any).ferreteria.actualizacion.notasPostUpdate();
+        const r = await bridge().actualizacion.notasPostUpdate();
         if (vivo && r) setNovedades({ titulo: r.titulo, notas: r.notas });
       } catch { /* silencioso */ }
     })();
@@ -70,7 +70,7 @@ function RetailShellOverlays({ hayModalCore }: Readonly<{ hayModalCore: boolean 
       {!hayModalCore && propuestaVersion && (
         <ActualizacionPropuestaModal
           version={propuestaVersion}
-          onInstalar={() => { (globalThis as any).ferreteria.actualizacion.instalarYReiniciar(); }}
+          onInstalar={() => { bridge().actualizacion.instalarYReiniciar(); }}
           onPosponer={() => { actualizacionPospuestaRef.current = true; setPropuestaVersion(null); }}
         />
       )}
@@ -80,7 +80,7 @@ function RetailShellOverlays({ hayModalCore }: Readonly<{ hayModalCore: boolean 
           titulo={novedades.titulo}
           notas={novedades.notas}
           onContinuar={async () => {
-            try { await (globalThis as any).ferreteria.actualizacion.marcarVersionVista(); } catch { /* noop */ }
+            try { await bridge().actualizacion.marcarVersionVista(); } catch { /* noop */ }
             setNovedades(null);
           }}
         />

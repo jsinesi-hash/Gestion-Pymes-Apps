@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '@core/ui';
+import { useAuth, bridge } from '@core/ui';
 import { ymdLocal, hoyYmd } from '@ferreteria/shared';
 import { agendaApi, toDate, type Rutina, type FrecuenciaTipo } from '../../hooks/useAgenda';
 import { useEscapeToClose } from '@core/ui';
@@ -43,7 +43,7 @@ export function RutinaFormModal(props: Readonly<{ rutina: Rutina | null; onClose
   useEscapeToClose(onClose, !procesando);
 
   useEffect(() => {
-    (globalThis as any).ferreteria?.rol?.list?.()
+    bridge()?.rol?.list?.()
       .then((rs: Array<{ id: string; nombre: string }>) => {
         setRoles(rs);
         if (!destRol && rs.length) setDestRol(rs[0].nombre);

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@core/ui';
+import { useAuth, bridge } from '@core/ui';
 import { VentaDetalleModal } from '../caja/VentaDetalleModal';
 import { ExportarButton } from '@core/ui';
 import { exportReporteVentas, hoyYmd, inicioDelDia, finDelDia, nombreCompletoCliente } from '@ferreteria/shared';
@@ -83,7 +83,7 @@ export function ReporteVentasView() {
 
   useEffect(() => {
     if (!can('dashboard.ver')) return;
-    const f = (window as any).ferreteria;
+    const f = bridge();
     Promise.all([
       f.cliente.list().catch(() => []),
       f.catalogo.categoria.list().catch(() => []),
@@ -113,7 +113,7 @@ export function ReporteVentasView() {
     setLoading(true);
     setError(false);
     try {
-      const r = await (window as any).ferreteria.reportes.detalleVentas(filtros, p, PAGE_SIZE);
+      const r = await bridge().reportes.detalleVentas(filtros, p, PAGE_SIZE);
       setResultado(r);
       setPage(p);
       setFiltrosActivos(filtros as Record<string, unknown>);
@@ -158,7 +158,7 @@ export function ReporteVentasView() {
     if (!text.trim()) { setProdSugs([]); return; }
     prodTimer.current = setTimeout(async () => {
       try {
-        const r = await (window as any).ferreteria.catalogo.producto.list({
+        const r = await bridge().catalogo.producto.list({
           busqueda: text, page: 1, pageSize: 8, activo: true,
         });
         setProdSugs((r.items ?? []).map((p: any) => ({

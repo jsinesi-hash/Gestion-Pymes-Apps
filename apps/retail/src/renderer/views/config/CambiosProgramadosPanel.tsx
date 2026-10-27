@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useCallIpc, useToast } from '@core/ui';
+import { useCallIpc, useToast, bridge } from '@core/ui';
 
-const f = () => (globalThis as any).ferreteria;
+const f = () => bridge();
 
 type Props = { listaId: string };
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useCatalogoContext } from '../context/CatalogoContext';
 
+import { bridge } from '@core/ui';
 export function useProductos(pageSize = 20) {
   const { busqueda, busquedaUbicacion, filtros, sortBy, sortDir, pagina } = useCatalogoContext();
   const [items, setItems] = useState<any[]>([]);
@@ -10,7 +11,7 @@ export function useProductos(pageSize = 20) {
   const fetch = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await (globalThis as any).ferreteria.catalogo.producto.list({
+      const result = await bridge().catalogo.producto.list({
         busqueda: busqueda || undefined,
         busqueda_ubicacion: busquedaUbicacion || undefined,
         ...filtros,

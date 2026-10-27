@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { bridge } from '@core/ui';
 // ADR-049 §4/§8 — listado de lotes de precios.
 
 type BatchRow = {
@@ -17,7 +18,7 @@ type BatchRow = {
   fecha_creacion: number;
 };
 
-const f = () => (globalThis as any).ferreteria;
+const f = () => bridge();
 
 const ESTADO_BADGE: Record<string, string> = {
   borrador: 'off', validado: 'ok', pendiente_aprobacion: 'warn', aprobado: 'ok',

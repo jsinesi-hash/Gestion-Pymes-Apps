@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useListasPrecios } from '../../hooks/useListasPrecios';
-import { useAuth } from '@core/ui';
+import { useAuth, bridge } from '@core/ui';
 import { useMotorPreciosV2Habilitado } from '../../hooks/useMotorPrecios';
 import { RecalcularModal } from './RecalcularModal';
 import { CambiosProgramadosPanel } from './CambiosProgramadosPanel';
@@ -70,7 +70,7 @@ export function VigentesTab({ listaId, listaNombre, onSuccess }: { listaId: stri
   async function load() {
     setLoading(true);
     try {
-      const data = await (globalThis as any).ferreteria.precios.valor.listarVigentesPorLista(listaId);
+      const data = await bridge().precios.valor.listarVigentesPorLista(listaId);
       setRows(data ?? []);
     } finally {
       setLoading(false);
@@ -177,13 +177,19 @@ export function VigentesTab({ listaId, listaNombre, onSuccess }: { listaId: stri
   );
 }
 
-function DetalleAjustesTab({ listaId, listaAjuste }: { listaId: string; listaAjuste: number }) {
+// ADR-081 retiró `precios.detalle.*` del preload (tabla `lista_precio_detalle` inerte), pero esta
+// pestaña legada sigue siendo alcanzable con el flag del motor v2 apagado. Se tolera la ausencia
+// del namespace (tabla vacía) en vez de lanzar un TypeError dentro del efecto (revisión 2026-10-20).
+type DetalleLegado = { listByLista?: (listaId: string) => Promise<any[]> };
+
+export function DetalleAjustesTab({ listaId, listaAjuste }: { listaId: string; listaAjuste: number }) {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    (globalThis as any).ferreteria.precios.detalle.listByLista?.(listaId)
+    const detalle = (bridge().precios as { detalle?: DetalleLegado }).detalle;
+    (detalle?.listByLista?.(listaId) ?? Promise.resolve([]))
       .then((data: any[]) => setRows(data ?? []))
       .catch(() => setRows([]))
       .finally(() => setLoading(false));
@@ -272,9 +278,9 @@ export function ListasPreciosView() {
         ...(motorV2 ? { modo_calculo: form.modo_calculo } : {}),
       };
       if (modal.id) {
-        await (globalThis as any).ferreteria.precios.lista.update({ id: modal.id, ...payload });
+        await bridge().precios.lista.update({ id: modal.id, ...payload });
       } else {
-        await (globalThis as any).ferreteria.precios.lista.create(payload);
+        await bridge().precios.lista.create(payload);
       }
       setModal({ open: false });
       await refetch();
@@ -287,7 +293,7 @@ export function ListasPreciosView() {
 
   async function handleDesactivar(id: string) {
     try {
-      await (globalThis as any).ferreteria.precios.lista.deactivate({ id });
+      await bridge().precios.lista.deactivate({ id });
       if (selectedListaId === id) setSelectedListaId(null);
       await refetch();
     } catch (e: any) {

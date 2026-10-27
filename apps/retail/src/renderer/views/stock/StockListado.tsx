@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { StockEntradaModal } from './StockEntradaModal';
 import { StockAjusteModal } from './StockAjusteModal';
 import { StockMermaModal } from './StockMermaModal';
-import { ExportarButton } from '@core/ui';
+import { ExportarButton, bridge } from '@core/ui';
 import { useFilaNavegable } from '../../hooks/useFilaNavegable';
 import { exportStock } from '@ferreteria/shared';
 
@@ -40,7 +40,7 @@ export function StockListado() {
   const fetchItems = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await (globalThis as any).ferreteria.catalogo.producto.list({
+      const result = await bridge().catalogo.producto.list({
         filterSku: filterSku || undefined,
         filterNombre: filterNombre || undefined,
         stock_status: stockStatus,
@@ -59,7 +59,7 @@ export function StockListado() {
 
   async function fetchCounts() {
     try {
-      const c = await (globalThis as any).ferreteria.catalogo.producto.stockCounts();
+      const c = await bridge().catalogo.producto.stockCounts();
       setCounts(c);
     } catch { /* ignore */ }
   }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { bridge } from '@core/ui';
 export type MovimientoStock = {
   id: string;
   productoId: string;
@@ -22,7 +23,7 @@ export function useMovimientos(productoId: string) {
   const refetch = useCallback(async () => {
     setLoading(true);
     try {
-      const data: any[] = await (globalThis as any).ferreteria.catalogo.movimientoStock.list({ producto_id: productoId }) ?? [];
+      const data: any[] = await bridge().catalogo.movimientoStock.list({ producto_id: productoId }) ?? [];
       setMovimientos(data.map(m => ({
         id: m.id,
         productoId: m.producto_id,

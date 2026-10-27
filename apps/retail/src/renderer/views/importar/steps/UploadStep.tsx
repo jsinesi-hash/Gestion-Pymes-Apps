@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import type { Entidad } from '../../../hooks/useImportar';
 
+import { bridge } from '@core/ui';
 const ENTITY_LABELS: Record<Entidad, string> = {
   productos: 'Productos', clientes: 'Clientes', proveedores: 'Proveedores',
   ubicaciones: 'Ubicaciones', stockInicial: 'Stock inicial',
@@ -11,7 +12,7 @@ const ENTIDAD_CANAL: Record<Entidad, string> = {
   ubicaciones: 'ubicaciones', stockInicial: 'stock-inicial',
 };
 
-const f = () => (window as any).ferreteria;
+const f = () => bridge();
 
 type PlantillaInfo = { csv: string; columnas: string[]; ejemplo: string[]; obligatorias: string[]; orNote?: string };
 

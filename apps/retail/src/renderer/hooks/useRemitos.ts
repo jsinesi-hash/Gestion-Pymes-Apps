@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { bridge } from '@core/ui';
 export type RemitoListado = {
   id: string;
   numero: string;
@@ -36,7 +37,7 @@ type RemitoApi = {
 };
 
 export function remitoApi(): RemitoApi {
-  return (globalThis as any).ferreteria.remito;
+  return bridge().remito;
 }
 
 /**
@@ -48,7 +49,7 @@ export function useRemitosHabilitado(): boolean {
 
   useEffect(() => {
     let vigente = true;
-    (globalThis as any).ferreteria?.parametros
+    bridge()?.parametros
       ?.get({ clave: 'remitos_habilitado' })
       .then((v: string | null) => { if (vigente) setHabilitado(v === 'true'); })
       .catch(() => { if (vigente) setHabilitado(false); });

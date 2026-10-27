@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@core/ui';
+import { useAuth, bridge } from '@core/ui';
 import { useFilaNavegable } from '../../../hooks/useFilaNavegable';
 
 type OcRow = {
@@ -73,7 +73,7 @@ export function OrdenesCompraListado() {
   const [filtroNumero, setFiltroNumero] = useState('');
 
   useEffect(() => {
-    (globalThis as any).ferreteria.compras.oc.list()
+    bridge().compras.oc.list()
       .then((data: OcRow[]) => setOcs(data))
       .finally(() => setLoading(false));
   }, []);

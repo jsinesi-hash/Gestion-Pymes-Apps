@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { margenRealPct, precioConMargen } from '@ferreteria/shared';
-import { useEscapeToClose } from '@core/ui';
+import { useEscapeToClose, bridge } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 
 // ADR-049 §2 — Reglas de margen por lista (reemplaza el tab «Ajustes por producto»).
@@ -38,7 +38,7 @@ const REDONDEO_LABEL: Record<RedondeoModo, string> = {
   ninguno: 'Ninguno', terminacion_90: 'Term. ,90', terminacion_99: 'Term. ,99', multiplo: 'Múltiplo',
 };
 
-const f = () => (globalThis as any).ferreteria;
+const f = () => bridge();
 
 type FormState = {
   tipo: ReglaTipo;

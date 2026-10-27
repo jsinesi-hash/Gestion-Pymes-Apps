@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { SearchBox, usePersistentListState } from '@core/ui';
+import { SearchBox, usePersistentListState, bridge } from '@core/ui';
 import { resaltarCoincidencia } from '@core/ui';
 import { ExportarButton } from '@core/ui';
 import { exportProveedores } from '@ferreteria/shared';
@@ -26,7 +26,7 @@ export function ProveedoresListado() {
 
   useEffect(() => {
     setLoading(true);
-    (globalThis as any).ferreteria.compras.proveedor.list()
+    bridge().compras.proveedor.list()
       .then((data: Proveedor[]) => setProveedores(data))
       .finally(() => setLoading(false));
   }, []);

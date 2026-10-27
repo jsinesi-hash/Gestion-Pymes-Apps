@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useExistencias } from '../../hooks/useExistencias';
-import { useEscapeToClose } from '@core/ui';
+import { useEscapeToClose, bridge } from '@core/ui';
 import { rutearCampoError } from '@core/ui';
 import { useToast } from '@core/ui';
 
@@ -36,11 +36,13 @@ export function StockEntradaModal({ productoId, onSuccess, onClose }: Readonly<S
     setCampoError(null);
     setSubmitting(true);
     try {
-      await (globalThis as any).ferreteria.catalogo.stock.entrada({
+      await bridge().catalogo.stock.entrada({
         producto_id: productoId,
         cantidad: cantidadNum,
-        costo_unitario: !Number.isNaN(costoNum) && costoNum > 0 ? costoNum : undefined,
-        observaciones: observaciones.trim() || undefined,
+        // Las claves opcionales se omiten en vez de enviar `undefined` explícito
+        // (exactOptionalPropertyTypes, payload tipado en el preload). Por IPC es equivalente.
+        ...(!Number.isNaN(costoNum) && costoNum > 0 ? { costo_unitario: costoNum } : {}),
+        ...(observaciones.trim() ? { observaciones: observaciones.trim() } : {}),
       });
       toast.success('Entrada registrada');
       onSuccess();
