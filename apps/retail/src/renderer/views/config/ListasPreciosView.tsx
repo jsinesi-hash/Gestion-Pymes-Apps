@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useListasPrecios } from '../../hooks/useListasPrecios';
-import { useAuth, bridge } from '@core/ui';
+import { useAuth, bridge, propsFilaActivable } from '@core/ui';
 import { useMotorPreciosV2Habilitado } from '../../hooks/useMotorPrecios';
 import { RecalcularModal } from './RecalcularModal';
 import { CambiosProgramadosPanel } from './CambiosProgramadosPanel';
@@ -325,8 +325,9 @@ export function ListasPreciosView() {
               </thead>
               <tbody>
                 {listas.map((lista: any) => (
-                  <tr key={lista.id} style={{ opacity: lista.activo ? 1 : 0.45, cursor: 'pointer', background: lista.id === selectedListaId ? 'var(--row-selected-bg, rgba(0,0,0,.04))' : undefined }}
-                    onClick={() => { setSelectedListaId(lista.id === selectedListaId ? null : lista.id); setTab('vigentes'); }}>
+                  <tr key={lista.id}
+                    {...propsFilaActivable(() => { setSelectedListaId(lista.id === selectedListaId ? null : lista.id); setTab('vigentes'); })}
+                    style={{ opacity: lista.activo ? 1 : 0.45, cursor: 'pointer', background: lista.id === selectedListaId ? 'var(--row-selected-bg, rgba(0,0,0,.04))' : undefined }}>
                     <td>
                       <span className="p-name">{lista.nombre}</span>
                       {lista.predeterminada && (

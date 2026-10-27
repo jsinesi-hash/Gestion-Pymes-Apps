@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useImportacionCatalogo } from '../../hooks/useImportacionCatalogo';
-import { formatCurrency } from '@core/ui';
+import { formatCurrency, propsFilaActivable } from '@core/ui';
 
 type HistorialItem = {
   id: string;
@@ -229,7 +229,7 @@ export function HistorialCatalogosView() {
             </thead>
             <tbody>
               {historialVisible.map(h => (
-                <tr key={h.id} style={{ cursor: 'pointer' }} onClick={() => abrirDetalle(h)}>
+                <tr key={h.id} {...propsFilaActivable(() => abrirDetalle(h))}>
                   <td className="p-name">{h.proveedor}</td>
                   <td className="text-xs text-muted">{h.nombre_archivo}</td>
                   <td className="text-sm">{fmtFecha(h.fecha_importacion)}</td>

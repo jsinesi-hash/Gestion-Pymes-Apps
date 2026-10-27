@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ymdLocal, exportRemitos } from '@ferreteria/shared';
-import { ExportarButton } from '@core/ui';
+import { ExportarButton, propsFilaActivable } from '@core/ui';
 import { useRemitos, remitoApi, type RemitoListado } from '../../hooks/useRemitos';
 import { RemitoDetalleModal } from './RemitoDetalleModal';
 import { EditarRemitoModal } from './EditarRemitoModal';
@@ -237,7 +237,7 @@ export function RemitosView() {
             </thead>
             <tbody>
               {filtrados.map((r) => (
-                <tr key={r.id} style={{ cursor: 'pointer' }} onClick={() => setDetalleId(r.id)}>
+                <tr key={r.id} {...propsFilaActivable(() => setDetalleId(r.id))}>
                   <td className="num" style={{ whiteSpace: 'nowrap' }}>{r.numero}</td>
                   <td>{fmtFecha(r.fecha_emision)}</td>
                   <td className="num">{r.venta_numero_interno ?? '—'}</td>

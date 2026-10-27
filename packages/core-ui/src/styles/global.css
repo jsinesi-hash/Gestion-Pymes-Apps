@@ -665,6 +665,10 @@ tbody tr:hover { background: var(--surface-2); cursor: pointer; }
   transition: .12s;
 }
 .ia:hover { background: var(--surface-2); color: var(--accent); }
+
+/* Filas de tabla operables por teclado (propsFilaActivable). El anillo solo aparece al navegar
+   con teclado (:focus-visible), así que no cambia nada para quien usa el mouse. */
+.fila-activable:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .ia.del:hover { color: var(--danger); }
 .ia svg { width: 16px; height: 16px; }
 

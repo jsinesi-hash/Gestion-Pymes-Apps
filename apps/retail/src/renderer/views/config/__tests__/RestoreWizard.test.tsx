@@ -63,7 +63,7 @@ async function avanzarAConfirmar() {
 describe('RestoreWizard — paso seleccionar', () => {
   it('renderiza el modal con campos de ruta y contraseña', () => {
     renderWizard();
-    expect(screen.getByRole('dialog', { name: 'Wizard de restauración' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Restaurar desde backup' })).toBeInTheDocument();
     expect(screen.getByLabelText('Ruta del archivo .fbk')).toBeInTheDocument();
     expect(screen.getByLabelText(/contraseña/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Validar backup' })).toBeInTheDocument();

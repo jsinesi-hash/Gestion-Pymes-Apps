@@ -73,3 +73,5 @@ export { AnulacionModal } from './views/venta/AnulacionModal';
 export { ConfirmarVentaModal } from './views/venta/ConfirmarVentaModal';
 export type { MedioPago, VentaPagoPayload } from './views/venta/tipos';
 export * from './components/ErrorBoundary';
+export * from './components/Modal';
+export * from './components/filaActivable';

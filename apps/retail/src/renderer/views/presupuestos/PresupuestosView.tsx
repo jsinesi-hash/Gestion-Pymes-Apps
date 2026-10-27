@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ymdLocal, exportPresupuestos } from '@ferreteria/shared';
-import { ExportarButton } from '@core/ui';
+import { ExportarButton, propsFilaActivable } from '@core/ui';
 import {
   usePresupuestos, usePresupuestoConfig, presupuestoApi,
   type PresupuestoListado, type PresupuestoEstado,
@@ -223,7 +223,7 @@ export function PresupuestosView() {
             </thead>
             <tbody>
               {filtrados.map((p) => (
-                <tr key={p.id} style={{ cursor: 'pointer' }} onClick={() => setDetalleId(p.id)}>
+                <tr key={p.id} {...propsFilaActivable(() => setDetalleId(p.id))}>
                   <td className="num">{p.numero ?? '—'}</td>
                   <td>{resaltarCoincidencia(p.cliente_nombre_completo ?? 'Consumidor Final', texto)}</td>
                   <td><EstadoBadge estado={p.estado} /></td>

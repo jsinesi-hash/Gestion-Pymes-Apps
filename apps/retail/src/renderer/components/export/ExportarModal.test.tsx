@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, screen } from '@testing-library/react';
 import { ExportarModal } from '@core/ui';
 import { AuthContext } from '@core/ui';
 
@@ -31,13 +31,30 @@ describe('ExportarModal — cierre con Escape', () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  it('el overlay accesible (role=button) sigue cerrando con Enter/Espacio, sin duplicar el manejo de Escape', () => {
-    const { onClose, container } = renderModal();
+  // Revisión 2026-10-20 (P2): el overlay dejó de ser un `role="button"` (truco para acallar a
+  // SonarCloud). El cierre por teclado es Escape (una sola vez, sin duplicar el manejo), por mouse
+  // la × del encabezado o un click fuera, y el diálogo es modal con nombre accesible.
+  it('el overlay ya no es un control: no hay role=button ni tabindex en él', () => {
+    const { container } = renderModal();
     const overlay = container.querySelector('.modal-overlay') as HTMLElement;
     expect(overlay).toBeTruthy();
+    expect(overlay).not.toHaveAttribute('role');
+    expect(overlay).not.toHaveAttribute('tabindex');
+  });
 
-    fireEvent.keyDown(overlay, { key: 'Enter' });
+  it('un click fuera del diálogo cierra una sola vez (mousedown + click en el overlay)', () => {
+    const { onClose, container } = renderModal();
+    const overlay = container.querySelector('.modal-overlay') as HTMLElement;
+    fireEvent.mouseDown(overlay);
+    fireEvent.click(overlay);
+    expect(onClose).toHaveBeenCalledOnce();
+  });
 
+  it('la × del encabezado cierra y el diálogo es modal con nombre accesible', () => {
+    const { onClose } = renderModal();
+    const dialogo = screen.getByRole('dialog', { name: /Exportar/ });
+    expect(dialogo).toHaveAttribute('aria-modal', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }));
     expect(onClose).toHaveBeenCalledOnce();
   });
 });
