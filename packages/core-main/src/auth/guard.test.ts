@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { setSession, clearSession, requirePermission } from '@core/main';
+import { requirePermission } from './guard';
+import { setSession, clearSession } from './session';
 
 const SESSION_WITH_PERM = {
   userId: 'u1',

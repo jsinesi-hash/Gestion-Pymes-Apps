@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { contentSecurityPolicy, esNavegacionPermitida } from '@core/main';
+import { contentSecurityPolicy, esNavegacionPermitida } from './webSecurity';
 
 describe('contentSecurityPolicy (SEC-1 / ADR-077)', () => {
   const csp = contentSecurityPolicy();

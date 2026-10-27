@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { getSession, getSessionData, setSession, clearSession } from '@core/main';
-import type { CurrentSession, SessionData } from '@core/main';
+import { getSession, getSessionData, setSession, clearSession } from './session';
+import type { CurrentSession, SessionData } from './session';
 
 const mockSession: CurrentSession = {
   userId: 'u1',

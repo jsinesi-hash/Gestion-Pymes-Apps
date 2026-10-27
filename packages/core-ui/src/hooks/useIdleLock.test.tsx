@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useIdleLock } from '@core/ui';
+import { useIdleLock } from './useIdleLock';
 
 describe('useIdleLock', () => {
   it('bloquea tras el timeout de inactividad', () => {

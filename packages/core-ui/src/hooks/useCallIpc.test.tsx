@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook, act, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { ToastProvider, useCallIpc } from '@core/ui';
+import { ToastProvider } from '../components/toast/ToastProvider';
+import { useCallIpc } from './useCallIpc';
 
 const wrapper = ({ children }: { children: ReactNode }) => <ToastProvider>{children}</ToastProvider>;
 
