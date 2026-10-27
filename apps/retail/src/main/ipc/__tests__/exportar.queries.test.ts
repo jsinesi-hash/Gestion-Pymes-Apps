@@ -146,7 +146,7 @@ describe('ventaQueryAll', () => {
       caja_id: caja.id, cliente_id: CF_ID,
       lineas: [{ producto_id: prod.id, descripcion: 'Tornillo', cantidad: 1,
         precio_unitario: 1000, descuento_linea: 0, alicuota_iva: 21, subtotal: 1000 }],
-      descuento_global: 0, subtotal: 1000, importe_iva: 165.29,
+      descuento_global: 0, subtotal: 1000, importe_iva: 173.55,
       total: 1000, ajuste_redondeo: 0,
       pagos: [{ medio_pago: 'efectivo', monto_centavos: 100000 }],
     });
@@ -188,7 +188,7 @@ describe('ventaDetalladoQueryAll', () => {
       caja_id: caja.id, cliente_id: CF_ID,
       lineas: [{ producto_id: prod.id, descripcion: 'Tornillo', cantidad: 2,
         precio_unitario: 1000, descuento_linea: 0, alicuota_iva: 21, subtotal: 2000 }],
-      descuento_global: 0, subtotal: 2000, importe_iva: 330.58,
+      descuento_global: 0, subtotal: 2000, importe_iva: 347.11,
       total: 2000, ajuste_redondeo: 0,
       pagos: [{ medio_pago: 'efectivo', monto_centavos: 200000 }],
     });

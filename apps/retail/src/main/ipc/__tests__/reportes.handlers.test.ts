@@ -231,7 +231,7 @@ describe('detalleVentasHandler', () => {
       caja_id: caja.id, cliente_id: CF_ID,
       lineas: [{ producto_id: prod.id, descripcion: 'Test', cantidad: 1,
         precio_unitario: total, descuento_linea: 0, alicuota_iva: 21, subtotal: total }],
-      descuento_global: 0, subtotal: total, importe_iva: 0, total, ajuste_redondeo: 0,
+      descuento_global: 0, subtotal: total, importe_iva: Math.round(total * 21 / 121 * 100) / 100, total, ajuste_redondeo: 0,
       pagos: [
         { medio_pago: 'efectivo', monto_centavos: 100000 },
         { medio_pago: 'tarjeta',  monto_centavos: 100000 },

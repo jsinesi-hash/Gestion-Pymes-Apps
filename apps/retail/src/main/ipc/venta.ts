@@ -1,7 +1,7 @@
 import { eq, and, asc, gte, lte, inArray } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { generateId, inicioDelDia, finDelDia, nombreCompletoCliente } from '@ferreteria/shared';
+import { generateId, inicioDelDia, finDelDia, nombreCompletoCliente, verificarTotalesVenta } from '@ferreteria/shared';
 import * as schema from '../db/schema';
 import { getSession, verificarSupervisor, optId, arr, num, centavos, oneOf, id as vId, confirmarVenta, anularVenta, ventaListByCajaHandler, type AplicarLineasCtx, type RevertirLineasCtx, type VentaPagoPayload } from '@core/main';
 export type { VentaPagoPayload } from '@core/main';
@@ -85,6 +85,23 @@ function validarFactorDeLinea(db: Db, linea: LineaPayload): number {
 }
 
 function validarLineasPrevio(db: Db, payload: VentaConfirmarPayload): void {
+  // Revisión 2026-10-20 (P1): los totales los calcula el renderer; el main rehace la cuenta en
+  // centavos (misma fórmula del POS) y rechaza lo inconsistente antes de tocar stock o caja.
+  verificarTotalesVenta({
+    lineas: payload.lineas.map((l) => ({
+      cantidad: l.cantidad,
+      precio_unitario: l.precio_unitario,
+      descuento_linea: l.descuento_linea,
+      alicuota_iva: l.alicuota_iva,
+      subtotal: l.subtotal,
+    })),
+    descuento_global: payload.descuento_global,
+    subtotal: payload.subtotal,
+    importe_iva: payload.importe_iva,
+    total: payload.total,
+    ajuste_redondeo: payload.ajuste_redondeo,
+  });
+
   // ADR-049 §9 — lista efectiva del cliente (cliente.lista_precio_id → predeterminada),
   // para re-resolver el precio de cada línea contra el servidor.
   const listaPredeterminadaRow = db.select({ id: schema.lista_precio.id })
