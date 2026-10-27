@@ -5,7 +5,7 @@ import * as schema from '../../db/schema';
 import { runSeed } from '../../auth/seed';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
-import { loginHandler, hashPassword } from '@core/main';
+import { loginHandler, hashPassword, limiteIntentos } from '@core/main';
 
 const MIGRATIONS_DIR = path.resolve(__dirname, '../../db/migrations');
 
@@ -19,6 +19,9 @@ export function createTestDb() {
 export function setupDb() {
   const db = createTestDb();
   runSeed(db);
+  // El límite de intentos de login vive en memoria del proceso: sin esto un test que falla
+  // credenciales arrastraría el bloqueo a los siguientes del mismo archivo.
+  limiteIntentos.reiniciar();
   return db;
 }
 

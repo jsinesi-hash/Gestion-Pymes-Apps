@@ -91,12 +91,47 @@ describe('ConfigMiCuenta', () => {
     await waitFor(() => expect(screen.getByText('Información personal')).toBeInTheDocument());
 
     fireEvent.change(screen.getByLabelText(/^contraseña actual/i), { target: { value: 'current123' } });
-    fireEvent.change(screen.getByLabelText(/^nueva contraseña/i), { target: { value: 'newpass123' } });
-    fireEvent.change(screen.getByLabelText(/confirmar/i), { target: { value: 'newpass123' } });
+    fireEvent.change(screen.getByLabelText(/^nueva contraseña/i), { target: { value: 'Newpass#123' } });
+    fireEvent.change(screen.getByLabelText(/confirmar/i), { target: { value: 'Newpass#123' } });
     fireEvent.click(screen.getByRole('button', { name: /cambiar contraseña/i }));
 
     await waitFor(() => expect(mockChangePassword).toHaveBeenCalledWith(
-      expect.objectContaining({ current_password: 'current123', new_password: 'newpass123' })
+      expect.objectContaining({ current_password: 'current123', new_password: 'Newpass#123' })
     ));
+  });
+
+  // Revisión 2026-10-20 (P1): política de contraseña (8+, mayúscula, número, carácter especial).
+  it.each([
+    ['corta', 'Ab1#xyz', /8 caracteres/],
+    ['sin mayúscula', 'newpass#123', /mayúscula/],
+    ['sin número', 'Newpass#abc', /número/],
+    ['sin carácter especial', 'Newpass1234', /carácter especial/],
+  ])('contraseña nueva %s: avisa y no llama a changePassword', async (_n, nueva, mensaje) => {
+    mockChangePassword.mockClear();
+    renderView();
+    await waitFor(() => expect(screen.getByText('Información personal')).toBeInTheDocument());
+
+    fireEvent.change(screen.getByLabelText(/^contraseña actual/i), { target: { value: 'current123' } });
+    fireEvent.change(screen.getByLabelText(/^nueva contraseña/i), { target: { value: nueva } });
+    fireEvent.change(screen.getByLabelText(/confirmar/i), { target: { value: nueva } });
+    fireEvent.click(screen.getByRole('button', { name: /cambiar contraseña/i }));
+
+    await waitFor(() => expect(screen.getByText(mensaje)).toBeInTheDocument());
+    expect(mockChangePassword).not.toHaveBeenCalled();
+  });
+
+  it('si el main rechaza (p. ej. igual al usuario) muestra el mensaje traducido, no el código', async () => {
+    mockChangePassword.mockReset();
+    mockChangePassword.mockRejectedValue(new Error("Error invoking remote method 'usuario:changePassword': Error: PASSWORD_DEBIL:USUARIO"));
+    renderView();
+    await waitFor(() => expect(screen.getByText('Información personal')).toBeInTheDocument());
+
+    fireEvent.change(screen.getByLabelText(/^contraseña actual/i), { target: { value: 'current123' } });
+    fireEvent.change(screen.getByLabelText(/^nueva contraseña/i), { target: { value: 'Newpass#123' } });
+    fireEvent.change(screen.getByLabelText(/confirmar/i), { target: { value: 'Newpass#123' } });
+    fireEvent.click(screen.getByRole('button', { name: /cambiar contraseña/i }));
+
+    await waitFor(() => expect(screen.getByText(/nombre de usuario/i)).toBeInTheDocument());
+    expect(screen.queryByText(/PASSWORD_DEBIL/)).toBeNull();
   });
 });

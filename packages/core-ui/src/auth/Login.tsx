@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { PasswordInput } from '../components/PasswordInput';
 import { useAppProfile } from '../AppProfile';
+import { traducirError } from '../lib/errores';
 
 export default function Login() {
   const { login } = useAuth();
@@ -19,8 +20,12 @@ export default function Login() {
       setError('');
       await login({ nombreUsuario, password });
       navigate('/');
-    } catch {
-      setError('Credenciales inválidas');
+    } catch (e) {
+      // Revisión 2026-10-20 (P1): tras 3 intentos fallidos la cuenta se bloquea 15 minutos y
+      // se avisa cuánto falta; cualquier otro fallo sigue siendo el genérico (no revela si el
+      // usuario existe).
+      const texto = String((e as { message?: unknown } | null)?.message ?? e);
+      setError(texto.includes('CUENTA_BLOQUEADA') ? traducirError(e).mensaje : 'Credenciales inválidas');
     }
   }
 

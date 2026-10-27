@@ -4,6 +4,8 @@ import { useAppProfile } from '../../AppProfile';
 import { useAuth } from '../../auth/AuthContext';
 import { useInicioPersonalizableHabilitado } from '../../hooks/useInicioPersonalizable';
 import { usePreferencias } from '../../hooks/usePreferencias';
+import { traducirError } from '../../lib/errores';
+import { motivosPasswordDebil, mensajePasswordDebil } from '@ferreteria/shared';
 
 function PasswordInput({ id, value, onChange, required, minLength, placeholder, defaultShowValue, maxLength, pattern, inputMode }: Readonly<{
   id?: string; value: string; onChange: (v: string) => void;
@@ -98,7 +100,10 @@ export function ConfigMiCuenta() {
     e.preventDefault();
     if (!profile) return;
     if (newPassword !== confirmPassword) { setPwdMsg({ ok: false, text: 'Las contraseñas no coinciden.' }); return; }
-    if (newPassword.length < 4) { setPwdMsg({ ok: false, text: 'La contraseña debe tener al menos 4 caracteres.' }); return; }
+    // Revisión 2026-10-20 (P1): política de contraseña. El main la vuelve a aplicar (y además exige
+    // que no sea igual al usuario: acá no se conoce, `profile.nombre_usuario` trae el nombre completo).
+    const [motivo] = motivosPasswordDebil(newPassword);
+    if (motivo) { setPwdMsg({ ok: false, text: mensajePasswordDebil(motivo) }); return; }
     setSavingPwd(true);
     setPwdMsg(null);
     try {
@@ -108,7 +113,9 @@ export function ConfigMiCuenta() {
       setPwdMsg({ ok: true, text: 'Contraseña actualizada.' });
       setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
     } catch (err: any) {
-      const msg = err?.message === 'PASSWORD_INCORRECTA' ? 'Contraseña actual incorrecta.' : err?.message ?? 'Error al cambiar contraseña.';
+      const msg = String(err?.message ?? '').includes('PASSWORD_INCORRECTA')
+        ? 'Contraseña actual incorrecta.'
+        : traducirError(err).mensaje;
       setPwdMsg({ ok: false, text: msg });
     } finally {
       setSavingPwd(false);
@@ -155,7 +162,7 @@ export function ConfigMiCuenta() {
             </div>
             <div className="field">
               <label htmlFor="mc-pwd-nueva">Nueva contraseña *</label>
-              <PasswordInput id="mc-pwd-nueva" value={newPassword} onChange={setNewPassword} required minLength={4} />
+              <PasswordInput id="mc-pwd-nueva" value={newPassword} onChange={setNewPassword} required minLength={8} />
             </div>
             <div className="field">
               <label htmlFor="mc-pwd-confirm">Confirmar nueva contraseña *</label>

@@ -31,3 +31,4 @@ export * from './export/xlsx-writer';
 export * from './seed/geo';
 export * from './ipc/print';
 export * from './tareas';
+export * from './auth/intentos';

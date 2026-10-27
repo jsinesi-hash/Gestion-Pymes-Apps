@@ -1,9 +1,10 @@
 import { eq, and } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { generateId } from '@ferreteria/shared';
+import { generateId, validarPoliticaPassword } from '@ferreteria/shared';
 import * as schema from '@core/db';
 import { verifyPassword, hashPassword } from '../auth/hash';
+import { limiteIntentos } from '../auth/intentos';
 import { getSession, setSession, clearSession, getSessionData } from '../auth/session';
 import type { SessionData } from '../auth/session';
 import { getOriginId } from '../context';
@@ -39,6 +40,10 @@ function parseFavoritos(raw: string | null | undefined): string[] {
 }
 
 export function loginHandler(db: Db, payload: LoginPayload): SessionData {
+  // Revisión 2026-10-20 (P1): 3 fallos seguidos bloquean al usuario 15 minutos. Los usuarios
+  // inexistentes también acumulan, para no revelar si el nombre existe.
+  limiteIntentos.verificar(payload.nombreUsuario);
+
   const user = db
     .select()
     .from(schema.usuario)
@@ -50,9 +55,16 @@ export function loginHandler(db: Db, payload: LoginPayload): SessionData {
     )
     .get();
 
-  if (!user) throw CREDENCIALES_INVALIDAS;
+  if (!user) {
+    limiteIntentos.registrarFallo(payload.nombreUsuario);
+    throw CREDENCIALES_INVALIDAS;
+  }
 
-  if (!verifyPassword(payload.password, user.hash_password)) throw CREDENCIALES_INVALIDAS;
+  if (!verifyPassword(payload.password, user.hash_password)) {
+    limiteIntentos.registrarFallo(payload.nombreUsuario);
+    throw CREDENCIALES_INVALIDAS;
+  }
+  limiteIntentos.registrarExito(payload.nombreUsuario);
 
   // Cargar permisos del rol
   const rolPermisos = db
@@ -137,7 +149,11 @@ export function verifyPasswordHandler(db: Db, payload: { password: string }): bo
   const user = db.select().from(schema.usuario)
     .where(eq(schema.usuario.id, session.userId)).get();
   if (!user) return false;
-  return verifyPassword(payload.password, user.hash_password);
+  limiteIntentos.verificar(user.nombre_usuario);
+  const ok = verifyPassword(payload.password, user.hash_password);
+  if (ok) limiteIntentos.registrarExito(user.nombre_usuario);
+  else limiteIntentos.registrarFallo(user.nombre_usuario);
+  return ok;
 }
 
 export function desactivarUsuarioHandler(
@@ -210,6 +226,8 @@ export function usuarioCreateHandler(db: Db, payload: {
 }) {
   const session = getSession();
   if (!session?.permisos.has('usuario.administrar')) throw new Error('FORBIDDEN');
+  // Revisión 2026-10-20 (P1): política de contraseña (8+, mayúscula, número, carácter especial).
+  validarPoliticaPassword(payload.password, payload.nombre_usuario);
   const existing = db.select({ id: schema.usuario.id }).from(schema.usuario)
     .where(eq(schema.usuario.nombre_usuario, payload.nombre_usuario)).get();
   if (existing) throw new Error('USUARIO_DUPLICADO');
@@ -261,8 +279,15 @@ export function usuarioChangePasswordHandler(db: Db, payload: {
   if (!user) throw new Error('NOT_FOUND');
   if (isSelf) {
     if (!payload.current_password) throw new Error('PASSWORD_REQUERIDA');
-    if (!verifyPassword(payload.current_password, user.hash_password)) throw new Error('PASSWORD_INCORRECTA');
+    limiteIntentos.verificar(user.nombre_usuario);
+    if (!verifyPassword(payload.current_password, user.hash_password)) {
+      limiteIntentos.registrarFallo(user.nombre_usuario);
+      throw new Error('PASSWORD_INCORRECTA');
+    }
+    limiteIntentos.registrarExito(user.nombre_usuario);
   }
+  // Revisión 2026-10-20 (P1): política de contraseña también al cambiarla.
+  validarPoliticaPassword(payload.new_password, user.nombre_usuario);
   const now = new Date();
   db.update(schema.usuario).set({
     hash_password: hashPassword(payload.new_password),

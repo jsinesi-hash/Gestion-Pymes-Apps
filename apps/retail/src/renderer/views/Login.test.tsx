@@ -69,6 +69,26 @@ describe('Login', () => {
   });
 });
 
+describe('Login — bloqueo por intentos (P1 2026-10-20)', () => {
+  beforeEach(() => {
+    mockLogin.mockReset();
+  });
+
+  it('muestra cuánto falta cuando la cuenta está bloqueada, en vez de "Credenciales inválidas"', async () => {
+    mockLogin.mockRejectedValue(new Error("Error invoking remote method 'auth:login': Error: CUENTA_BLOQUEADA:900"));
+    renderLogin();
+    fireEvent.change(screen.getByPlaceholderText('Usuario'), { target: { value: 'admin' } });
+    fireEvent.change(screen.getByPlaceholderText('Contraseña'), { target: { value: 'admin1234' } });
+    fireEvent.click(screen.getByText('Ingresar'));
+    await waitFor(() => {
+      const alerta = screen.getByRole('alert');
+      expect(alerta).toHaveTextContent(/Demasiados intentos/);
+      expect(alerta).toHaveTextContent(/15 minutos/);
+      expect(alerta).not.toHaveTextContent('Credenciales inválidas');
+    });
+  });
+});
+
 describe('Login — ver contraseña', () => {
   beforeEach(() => {
     mockLogin.mockReset();
