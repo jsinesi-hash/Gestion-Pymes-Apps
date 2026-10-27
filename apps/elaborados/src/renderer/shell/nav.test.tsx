@@ -5,6 +5,15 @@ import { NAV_ELABORADOS } from './nav';
 import { CRUMBS_ELABORADOS } from './crumbs';
 import { routes } from '../routes';
 
+describe('árbol de rutas de Elaborados', () => {
+  // Revisión 2026-10-20 (P1): sin errorElement un error del shell muestra la pantalla por defecto
+  // de react-router; los errores de una pantalla los contiene el ErrorBoundary de AppShell.
+  it('la ruta raíz declara un errorElement', () => {
+    const raiz = routes.find((r) => r.path === '/');
+    expect(raiz?.errorElement).toBeDefined();
+  });
+});
+
 describe('NAV de Elaborados', () => {
   const items = NAV_ELABORADOS.flatMap((g) => g.items).filter((i) => i.to);
 
