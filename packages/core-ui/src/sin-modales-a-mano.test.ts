@@ -7,9 +7,9 @@ import path from 'node:path';
 // y que reaparezcan filas `<tr onClick>` que solo se activan con el mouse.
 //
 // TOPE_OVERLAYS_A_MANO solo puede BAJAR: cada lote de migración a `<Modal>` lo reduce a la cantidad
-// que quede (hoy 63 en 46 archivos de las apps; el repo tenía 73). Al llegar a 0 se elimina la
-// excepción y el test pasa a exigir 0.
-const TOPE_OVERLAYS_A_MANO = 63;
+// que quede (hoy 52 en 37 archivos de las apps; el repo tenía 73). Al llegar a 0 se elimina la
+// excepción y el test pasa a exigir 0. Lote A (config y stock de Retail): 63 → 52.
+const TOPE_OVERLAYS_A_MANO = 52;
 
 const raiz = path.resolve(__dirname, '../../..'); // raíz del monorepo
 // CommandPalette tiene su propio overlay (patrón de paleta de comandos) y Modal.tsx es el componente.

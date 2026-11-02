@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth, bridge } from '@core/ui';
-import { useEscapeToClose } from '@core/ui';
+import { useAuth, bridge, Modal } from '@core/ui';
 import { rutearCampoError } from '@core/ui';
 import { useToast } from '@core/ui';
 import { canonicalizarUbicacion } from '@ferreteria/shared';
@@ -130,7 +129,6 @@ function UbicacionModal({ initial, onClose, onSaved }: {
   const [error, setError] = useState<string | null>(null);
   // ADR-082 (SEC-2): error inline ruteado al campo que el backend rechazó.
   const [campoError, setCampoError] = useState<{ campo: string; mensaje: string } | null>(null);
-  useEscapeToClose(onClose, !saving);
 
   const preview = sector && estante && posicion
     ? canonicalizarUbicacion(sector, estante, posicion).codigo : '';
@@ -157,39 +155,36 @@ function UbicacionModal({ initial, onClose, onSaved }: {
   }
 
   return (
-    <div role="dialog" className="modal-overlay">
-      <form className="modal" onSubmit={handleSubmit}>
-        <div className="modal-header"><span className="modal-title">{initial ? `Editar ${initial.codigo}` : 'Nueva ubicación'}</span></div>
-        <div className="modal-body">
-          {!initial && (
-            <div className="flex-row gap-2">
-              <div className="field"><label htmlFor="ub-sector">Sector *</label>
-                <input id="ub-sector" className={`input${campoError?.campo === 'sector' ? ' error' : ''}`} required value={sector} onChange={e => setSector(e.target.value)} autoFocus />
-                {campoError?.campo === 'sector' && <span className="field-error">{campoError.mensaje}</span>}</div>
-              <div className="field"><label htmlFor="ub-estante">Estante *</label>
-                <input id="ub-estante" className={`input${campoError?.campo === 'estante' ? ' error' : ''}`} required value={estante} onChange={e => setEstante(e.target.value)} />
-                {campoError?.campo === 'estante' && <span className="field-error">{campoError.mensaje}</span>}</div>
-              <div className="field"><label htmlFor="ub-posicion">Posición *</label>
-                <input id="ub-posicion" className={`input${campoError?.campo === 'posicion' ? ' error' : ''}`} required value={posicion} onChange={e => setPosicion(e.target.value)} />
-                {campoError?.campo === 'posicion' && <span className="field-error">{campoError.mensaje}</span>}</div>
-            </div>
-          )}
-          {!initial && preview && (
-            <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2 }}>Se guardará como <code>{preview}</code></div>
-          )}
-          <div className="field"><label htmlFor="ub-desc">Descripción</label>
-            <input id="ub-desc" className={`input${campoError?.campo === 'descripcion' ? ' error' : ''}`} value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Opcional" />
-            {campoError?.campo === 'descripcion' && <span className="field-error">{campoError.mensaje}</span>}</div>
-          {error && <div className="alert-danger" role="alert">{error}</div>}
-        </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button type="submit" className="btn-primary" disabled={saving || (!initial && !(sector && estante && posicion))}>
-            {saving ? 'Guardando…' : 'Guardar'}
-          </button>
-        </div>
-      </form>
-    </div>
+    <Modal titulo={initial ? `Editar ${initial.codigo}` : 'Nueva ubicación'} onClose={onClose} bloqueado={saving} ocultarCerrar as="form" onSubmit={handleSubmit}>
+      <div className="modal-body">
+        {!initial && (
+          <div className="flex-row gap-2">
+            <div className="field"><label htmlFor="ub-sector">Sector *</label>
+              <input id="ub-sector" className={`input${campoError?.campo === 'sector' ? ' error' : ''}`} required value={sector} onChange={e => setSector(e.target.value)} autoFocus />
+              {campoError?.campo === 'sector' && <span className="field-error">{campoError.mensaje}</span>}</div>
+            <div className="field"><label htmlFor="ub-estante">Estante *</label>
+              <input id="ub-estante" className={`input${campoError?.campo === 'estante' ? ' error' : ''}`} required value={estante} onChange={e => setEstante(e.target.value)} />
+              {campoError?.campo === 'estante' && <span className="field-error">{campoError.mensaje}</span>}</div>
+            <div className="field"><label htmlFor="ub-posicion">Posición *</label>
+              <input id="ub-posicion" className={`input${campoError?.campo === 'posicion' ? ' error' : ''}`} required value={posicion} onChange={e => setPosicion(e.target.value)} />
+              {campoError?.campo === 'posicion' && <span className="field-error">{campoError.mensaje}</span>}</div>
+          </div>
+        )}
+        {!initial && preview && (
+          <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2 }}>Se guardará como <code>{preview}</code></div>
+        )}
+        <div className="field"><label htmlFor="ub-desc">Descripción</label>
+          <input id="ub-desc" className={`input${campoError?.campo === 'descripcion' ? ' error' : ''}`} value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Opcional" />
+          {campoError?.campo === 'descripcion' && <span className="field-error">{campoError.mensaje}</span>}</div>
+        {error && <div className="alert-danger" role="alert">{error}</div>}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+        <button type="submit" className="btn-primary" disabled={saving || (!initial && !(sector && estante && posicion))}>
+          {saving ? 'Guardando…' : 'Guardar'}
+        </button>
+      </div>
+    </Modal>
   );
 }
 
@@ -200,7 +195,6 @@ function EliminarModal({ ubicacion, destinos, onClose, onDone }: {
   const [reasignarA, setReasignarA] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  useEscapeToClose(onClose, !saving);
   const tieneProductos = ubicacion.cantidad_productos > 0;
 
   async function confirmar() {
@@ -217,32 +211,29 @@ function EliminarModal({ ubicacion, destinos, onClose, onDone }: {
   }
 
   return (
-    <div role="dialog" className="modal-overlay">
-      <div className="modal">
-        <div className="modal-header"><span className="modal-title">Eliminar {ubicacion.codigo}</span></div>
-        <div className="modal-body">
-          {tieneProductos ? (
-            <>
-              <p>Esta ubicación tiene <b>{ubicacion.cantidad_productos}</b> producto(s). Elegí a dónde moverlos antes de darla de baja:</p>
-              <div className="field"><label htmlFor="ub-reasignar">Reasignar productos a</label>
-                <select id="ub-reasignar" className="input" value={reasignarA} onChange={e => setReasignarA(e.target.value)}>
-                  <option value="">Seleccionar…</option>
-                  <option value="__null__">Sin ubicación</option>
-                  {destinos.map(d => <option key={d.id} value={d.id}>{d.codigo}</option>)}
-                </select>
-              </div>
-            </>
-          ) : <p>Se dará de baja la ubicación <code>{ubicacion.codigo}</code>. ¿Confirmás?</p>}
-          {error && <div className="alert-danger" role="alert">{error}</div>}
-        </div>
-        <div className="modal-footer">
-          <button className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button className="btn-primary" onClick={confirmar} disabled={saving || (tieneProductos && !reasignarA)}>
-            {saving ? 'Eliminando…' : 'Eliminar'}
-          </button>
-        </div>
+    <Modal titulo={`Eliminar ${ubicacion.codigo}`} onClose={onClose} bloqueado={saving} ocultarCerrar>
+      <div className="modal-body">
+        {tieneProductos ? (
+          <>
+            <p>Esta ubicación tiene <b>{ubicacion.cantidad_productos}</b> producto(s). Elegí a dónde moverlos antes de darla de baja:</p>
+            <div className="field"><label htmlFor="ub-reasignar">Reasignar productos a</label>
+              <select id="ub-reasignar" className="input" value={reasignarA} onChange={e => setReasignarA(e.target.value)}>
+                <option value="">Seleccionar…</option>
+                <option value="__null__">Sin ubicación</option>
+                {destinos.map(d => <option key={d.id} value={d.id}>{d.codigo}</option>)}
+              </select>
+            </div>
+          </>
+        ) : <p>Se dará de baja la ubicación <code>{ubicacion.codigo}</code>. ¿Confirmás?</p>}
+        {error && <div className="alert-danger" role="alert">{error}</div>}
       </div>
-    </div>
+      <div className="modal-footer">
+        <button className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+        <button className="btn-primary" onClick={confirmar} disabled={saving || (tieneProductos && !reasignarA)}>
+          {saving ? 'Eliminando…' : 'Eliminar'}
+        </button>
+      </div>
+    </Modal>
   );
 }
 
@@ -280,35 +271,32 @@ function DedupBoton({ onDone }: { onDone: () => Promise<void> }) {
     <>
       <button className="btn-secondary" onClick={abrir}>Detectar duplicados</button>
       {open && (
-        <div role="dialog" className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header"><span className="modal-title">Deduplicar ubicaciones</span></div>
-            <div className="modal-body">
-              {error && <div className="alert-danger" role="alert">{error}</div>}
-              {grupos === null && !error && <p>Analizando…</p>}
-              {grupos !== null && grupos.length === 0 && <p>No se detectaron duplicados.</p>}
-              {grupos !== null && grupos.length > 0 && (
-                <>
-                  <p>{grupos.length} grupo(s) con duplicados. Se conservará el código canónico y se reasignarán sus productos:</p>
-                  <ul>
-                    {grupos.map(g => (
-                      <li key={g.codigo}>
-                        <b>{g.codigo}</b> ← se dan de baja {g.duplicados.map(d => d.codigo).join(', ')}
-                        {g.productos_a_reasignar > 0 && ` (${g.productos_a_reasignar} producto/s se mueven a ${g.codigo})`}
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-            </div>
-            <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => { setOpen(false); setGrupos(null); }} disabled={saving}>Cancelar</button>
-              <button className="btn-primary" onClick={aplicar} disabled={saving || !grupos || grupos.length === 0}>
-                {saving ? 'Aplicando…' : 'Fusionar duplicados'}
-              </button>
-            </div>
+        <Modal titulo="Deduplicar ubicaciones">
+          <div className="modal-body">
+            {error && <div className="alert-danger" role="alert">{error}</div>}
+            {grupos === null && !error && <p>Analizando…</p>}
+            {grupos !== null && grupos.length === 0 && <p>No se detectaron duplicados.</p>}
+            {grupos !== null && grupos.length > 0 && (
+              <>
+                <p>{grupos.length} grupo(s) con duplicados. Se conservará el código canónico y se reasignarán sus productos:</p>
+                <ul>
+                  {grupos.map(g => (
+                    <li key={g.codigo}>
+                      <b>{g.codigo}</b> ← se dan de baja {g.duplicados.map(d => d.codigo).join(', ')}
+                      {g.productos_a_reasignar > 0 && ` (${g.productos_a_reasignar} producto/s se mueven a ${g.codigo})`}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </div>
-        </div>
+          <div className="modal-footer">
+            <button className="btn-secondary" onClick={() => { setOpen(false); setGrupos(null); }} disabled={saving}>Cancelar</button>
+            <button className="btn-primary" onClick={aplicar} disabled={saving || !grupos || grupos.length === 0}>
+              {saving ? 'Aplicando…' : 'Fusionar duplicados'}
+            </button>
+          </div>
+        </Modal>
       )}
     </>
   );
