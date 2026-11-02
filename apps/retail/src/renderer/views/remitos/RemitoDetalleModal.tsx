@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { remitoApi } from '../../hooks/useRemitos';
 import { VentaDetalleModal } from '../caja/VentaDetalleModal';
 import { EditarRemitoModal } from './EditarRemitoModal';
-import { useEscapeToClose } from '@core/ui';
+import { Modal } from '@core/ui';
 
 type Props = {
   remitoId: string;
@@ -60,11 +60,6 @@ export function RemitoDetalleModal({ remitoId, onClose }: Readonly<Props>) {
   const [verVenta, setVerVenta] = useState(false);
   const [editar, setEditar] = useState(false);
 
-  // Igual que en VentaDetalleModal: no cerrar con Escape mientras un modal hijo
-  // (editar remito o ver venta) está abierto encima, para que un solo Escape
-  // cierre solo el que está arriba.
-  useEscapeToClose(onClose, !editar && !verVenta);
-
   // `cargar` se reinvoca tras editar, asi que el guard de montaje no puede vivir
   // en el efecto (se recrearia por carga): va en un ref con vida util del componente.
   const vigente = useRef(true);
@@ -86,31 +81,29 @@ export function RemitoDetalleModal({ remitoId, onClose }: Readonly<Props>) {
 
   if (cargando) {
     return (
-      <div className="modal-overlay">
-        <div className="modal" style={{ width: 640 }}>
-          <div className="modal-body" style={{ textAlign: 'center', padding: '2rem' }}>Cargando…</div>
-        </div>
-      </div>
+      <Modal ariaLabel="Cargando remito" ancho={640} onClose={onClose} bloqueado={editar || verVenta}>
+        <div className="modal-body" style={{ textAlign: 'center', padding: '2rem' }}>Cargando…</div>
+      </Modal>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="modal-overlay">
-        <div className="modal" style={{ width: 640 }}>
-          <div className="modal-header"><span className="modal-title">Detalle de remito</span></div>
-          <div className="modal-body"><div className="alert-danger" role="alert">{error ?? 'Remito no encontrado'}</div></div>
-          <div className="modal-footer">
-            <button type="button" className="btn-secondary" onClick={onClose}>Cerrar</button>
-          </div>
+      <Modal ariaLabel="Detalle de remito" ancho={640} onClose={onClose} bloqueado={editar || verVenta}>
+        <div className="modal-header"><span className="modal-title">Detalle de remito</span></div>
+        <div className="modal-body"><div className="alert-danger" role="alert">{error ?? 'Remito no encontrado'}</div></div>
+        <div className="modal-footer">
+          <button type="button" className="btn-secondary" onClick={onClose}>Cerrar</button>
         </div>
-      </div>
+      </Modal>
     );
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal" style={{ width: 640, maxHeight: '90vh', overflow: 'auto' }} role="dialog" aria-label="Detalle de remito">
+    <>
+      {/* Igual que en VentaDetalleModal: `bloqueado` mientras un modal hijo (editar remito o ver venta)
+          está abierto encima, para que un solo Escape cierre solo el que está arriba. */}
+      <Modal ariaLabel="Detalle de remito" ancho={640} onClose={onClose} bloqueado={editar || verVenta} style={{ maxHeight: '90vh', overflow: 'auto' }}>
         <div className="modal-header">
           <div>
             <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '.1em', color: 'var(--ink-3)', fontWeight: 700 }}>
@@ -186,7 +179,7 @@ export function RemitoDetalleModal({ remitoId, onClose }: Readonly<Props>) {
           )}
           <button type="button" className="btn-secondary" onClick={onClose}>Cerrar</button>
         </div>
-      </div>
+      </Modal>
 
       {editar && (
         <EditarRemitoModal
@@ -203,6 +196,6 @@ export function RemitoDetalleModal({ remitoId, onClose }: Readonly<Props>) {
           onAnulada={() => {}}
         />
       )}
-    </div>
+    </>
   );
 }

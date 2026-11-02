@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAvisos, agendaApi, parsePayload, toDate, type Aviso, type AvisoCanal, type AvisoEstado } from '../../hooks/useAgenda';
-import { useEscapeToClose } from '@core/ui';
+import { Modal } from '@core/ui';
 
 const CANALES: Array<{ valor: string; label: string }> = [
   { valor: '', label: 'Todos los canales' },
@@ -52,8 +52,6 @@ export function BandejaAvisosView() {
   const [traza, setTraza] = useState<Aviso | null>(null);
   const [procesando, setProcesando] = useState(false);
   const [accionError, setAccionError] = useState<string | null>(null);
-
-  useEscapeToClose(() => setTraza(null), !!traza);
 
   function handleOrdenar(campo: CampoOrden) {
     if (orden === campo) setOrdenDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -195,24 +193,22 @@ export function BandejaAvisosView() {
       )}
 
       {traza && (
-        <div className="modal-overlay">
-          <div className="modal" style={{ width: 460 }} role="dialog" aria-label="Traza de intentos">
-            <div className="modal-header"><span className="modal-title">Traza del aviso</span></div>
-            <div className="modal-body" style={{ display: 'grid', gap: 6, fontSize: 13 }}>
-              <div><b>Canal:</b> {CANAL_LABEL[traza.canal]}</div>
-              <div><b>Estado:</b> {traza.estado}</div>
-              <div><b>Intentos:</b> {traza.intentos}</div>
-              <div><b>Generado:</b> {fmt(traza.generado_at)}</div>
-              <div><b>Enviado:</b> {fmt(traza.enviado_at)}</div>
-              <div><b>Próximo intento:</b> {fmt(traza.proximo_intento_at)}</div>
-              <div><b>Último error:</b> {traza.ultimo_error ?? '—'}</div>
-              {traza.destinatario_contacto && <div><b>Destino:</b> {traza.destinatario_contacto}</div>}
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn-secondary" onClick={() => setTraza(null)}>Cerrar</button>
-            </div>
+        <Modal ariaLabel="Traza de intentos" ancho={460} onClose={() => setTraza(null)}>
+          <div className="modal-header"><span className="modal-title">Traza del aviso</span></div>
+          <div className="modal-body" style={{ display: 'grid', gap: 6, fontSize: 13 }}>
+            <div><b>Canal:</b> {CANAL_LABEL[traza.canal]}</div>
+            <div><b>Estado:</b> {traza.estado}</div>
+            <div><b>Intentos:</b> {traza.intentos}</div>
+            <div><b>Generado:</b> {fmt(traza.generado_at)}</div>
+            <div><b>Enviado:</b> {fmt(traza.enviado_at)}</div>
+            <div><b>Próximo intento:</b> {fmt(traza.proximo_intento_at)}</div>
+            <div><b>Último error:</b> {traza.ultimo_error ?? '—'}</div>
+            {traza.destinatario_contacto && <div><b>Destino:</b> {traza.destinatario_contacto}</div>}
           </div>
-        </div>
+          <div className="modal-footer">
+            <button type="button" className="btn-secondary" onClick={() => setTraza(null)}>Cerrar</button>
+          </div>
+        </Modal>
       )}
     </div>
   );

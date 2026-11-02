@@ -5,7 +5,7 @@ import {
   useAgendaEventos, agendaApi, toDate,
   type AgendaEvento, type EventoOrigen,
 } from '../../hooks/useAgenda';
-import { useEscapeToClose, bridge } from '@core/ui';
+import { bridge, Modal } from '@core/ui';
 
 const ORIGENES: Array<{ valor: string; label: string }> = [
   { valor: '', label: 'Todos los orígenes' },
@@ -60,8 +60,6 @@ export function AgendaEventosView() {
   const [descartar, setDescartar] = useState<AgendaEvento | null>(null);
   const [procesando, setProcesando] = useState(false);
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
-
-  useEscapeToClose(() => setDescartar(null), !!descartar && !procesando);
 
   useEffect(() => {
     const p = bridge()?.parametros?.get?.({ clave: 'agenda_ventana_proximos_dias' });
@@ -188,19 +186,17 @@ export function AgendaEventosView() {
       )}
 
       {descartar && (
-        <div className="modal-overlay">
-          <div className="modal" style={{ width: 420 }} role="dialog" aria-label="Descartar evento">
-            <div className="modal-header"><span className="modal-title">Descartar «{descartar.titulo}»</span></div>
-            <div className="modal-body" style={{ display: 'grid', gap: 8 }}>
-              <div className="text-muted text-xs">El evento queda descartado y sale del listado activo.</div>
-              {errorAccion && <div className="alert-danger" role="alert">{errorAccion}</div>}
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn-secondary" onClick={() => setDescartar(null)} disabled={procesando}>Cancelar</button>
-              <button type="button" className="btn-danger" onClick={() => accion(() => agendaApi().agenda.descartar({ id: descartar.id }))} disabled={procesando}>Confirmar</button>
-            </div>
+        <Modal ariaLabel="Descartar evento" ancho={420} onClose={() => setDescartar(null)} bloqueado={procesando}>
+          <div className="modal-header"><span className="modal-title">Descartar «{descartar.titulo}»</span></div>
+          <div className="modal-body" style={{ display: 'grid', gap: 8 }}>
+            <div className="text-muted text-xs">El evento queda descartado y sale del listado activo.</div>
+            {errorAccion && <div className="alert-danger" role="alert">{errorAccion}</div>}
           </div>
-        </div>
+          <div className="modal-footer">
+            <button type="button" className="btn-secondary" onClick={() => setDescartar(null)} disabled={procesando}>Cancelar</button>
+            <button type="button" className="btn-danger" onClick={() => accion(() => agendaApi().agenda.descartar({ id: descartar.id }))} disabled={procesando}>Confirmar</button>
+          </div>
+        </Modal>
       )}
     </div>
   );
@@ -282,29 +278,25 @@ function PosponerModal(props: Readonly<{
   const [fecha, setFecha] = useState(manana);
   const [nota, setNota] = useState('');
 
-  useEscapeToClose(onClose, !procesando);
-
   return (
-    <div className="modal-overlay">
-      <div className="modal" style={{ width: 420 }} role="dialog" aria-label="Posponer evento">
-        <div className="modal-header"><span className="modal-title">Posponer «{evento.titulo}»</span></div>
-        <div className="modal-body" style={{ display: 'grid', gap: 8 }}>
-          <label style={{ display: 'grid', gap: 4 }}>
-            Nueva fecha
-            <input className="input" type="datetime-local" value={fecha} onChange={(e) => setFecha(e.target.value)} autoFocus />
-          </label>
-          <label style={{ display: 'grid', gap: 4 }}>
-            Nota (opcional)
-            <input className="input" value={nota} onChange={(e) => setNota(e.target.value)} />
-          </label>
-          {error && <div className="alert-danger" role="alert">{error}</div>}
-        </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={procesando}>Cancelar</button>
-          <button type="button" className="btn-primary" onClick={() => onConfirmar(new Date(fecha).toISOString(), nota)} disabled={procesando}>Posponer</button>
-        </div>
+    <Modal ariaLabel="Posponer evento" ancho={420} onClose={onClose} bloqueado={procesando}>
+      <div className="modal-header"><span className="modal-title">Posponer «{evento.titulo}»</span></div>
+      <div className="modal-body" style={{ display: 'grid', gap: 8 }}>
+        <label style={{ display: 'grid', gap: 4 }}>
+          Nueva fecha
+          <input className="input" type="datetime-local" value={fecha} onChange={(e) => setFecha(e.target.value)} autoFocus />
+        </label>
+        <label style={{ display: 'grid', gap: 4 }}>
+          Nota (opcional)
+          <input className="input" value={nota} onChange={(e) => setNota(e.target.value)} />
+        </label>
+        {error && <div className="alert-danger" role="alert">{error}</div>}
       </div>
-    </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose} disabled={procesando}>Cancelar</button>
+        <button type="button" className="btn-primary" onClick={() => onConfirmar(new Date(fecha).toISOString(), nota)} disabled={procesando}>Posponer</button>
+      </div>
+    </Modal>
   );
 }
 
@@ -315,8 +307,6 @@ function NuevoEventoModal(props: Readonly<{ onClose: () => void; onGuardado: () 
   const [fecha, setFecha] = useState(ymdHmLocal(new Date(Date.now() + 3600000)));
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEscapeToClose(onClose, !procesando);
 
   async function guardar() {
     if (!titulo.trim()) { setError('El título es obligatorio.'); return; }
@@ -329,29 +319,27 @@ function NuevoEventoModal(props: Readonly<{ onClose: () => void; onGuardado: () 
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal" style={{ width: 460 }} role="dialog" aria-label="Nuevo evento">
-        <div className="modal-header"><span className="modal-title">Nuevo evento</span></div>
-        <div className="modal-body" style={{ display: 'grid', gap: 8 }}>
-          <label style={{ display: 'grid', gap: 4 }}>
-            Título
-            <input className="input" value={titulo} onChange={(e) => setTitulo(e.target.value)} autoFocus />
-          </label>
-          <label style={{ display: 'grid', gap: 4 }}>
-            Descripción (opcional)
-            <input className="input" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
-          </label>
-          <label style={{ display: 'grid', gap: 4 }}>
-            Fecha
-            <input className="input" type="datetime-local" value={fecha} onChange={(e) => setFecha(e.target.value)} />
-          </label>
-          {error && <div className="alert-danger" role="alert">{error}</div>}
-        </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={procesando}>Cancelar</button>
-          <button type="button" className="btn-primary" onClick={guardar} disabled={procesando}>Crear evento</button>
-        </div>
+    <Modal ariaLabel="Nuevo evento" ancho={460} onClose={onClose} bloqueado={procesando}>
+      <div className="modal-header"><span className="modal-title">Nuevo evento</span></div>
+      <div className="modal-body" style={{ display: 'grid', gap: 8 }}>
+        <label style={{ display: 'grid', gap: 4 }}>
+          Título
+          <input className="input" value={titulo} onChange={(e) => setTitulo(e.target.value)} autoFocus />
+        </label>
+        <label style={{ display: 'grid', gap: 4 }}>
+          Descripción (opcional)
+          <input className="input" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
+        </label>
+        <label style={{ display: 'grid', gap: 4 }}>
+          Fecha
+          <input className="input" type="datetime-local" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+        </label>
+        {error && <div className="alert-danger" role="alert">{error}</div>}
       </div>
-    </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose} disabled={procesando}>Cancelar</button>
+        <button type="button" className="btn-primary" onClick={guardar} disabled={procesando}>Crear evento</button>
+      </div>
+    </Modal>
   );
 }

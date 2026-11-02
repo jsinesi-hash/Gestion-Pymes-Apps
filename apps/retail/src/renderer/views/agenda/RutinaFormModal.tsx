@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useAuth, bridge } from '@core/ui';
+import { useAuth, bridge, Modal } from '@core/ui';
 import { ymdLocal, hoyYmd } from '@ferreteria/shared';
 import { agendaApi, toDate, type Rutina, type FrecuenciaTipo } from '../../hooks/useAgenda';
-import { useEscapeToClose } from '@core/ui';
 
 const FRECUENCIAS: Array<{ valor: FrecuenciaTipo; label: string }> = [
   { valor: 'unica', label: 'Única vez' },
@@ -39,8 +38,6 @@ export function RutinaFormModal(props: Readonly<{ rutina: Rutina | null; onClose
   const [canalEmail, setCanalEmail] = useState(rutina?.canal_email ?? false);
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEscapeToClose(onClose, !procesando);
 
   useEffect(() => {
     bridge()?.rol?.list?.()
@@ -79,112 +76,110 @@ export function RutinaFormModal(props: Readonly<{ rutina: Rutina | null; onClose
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal" style={{ width: 520 }} role="dialog" aria-label={rutina ? 'Editar rutina' : 'Nueva rutina'}>
-        <div className="modal-header"><span className="modal-title">{rutina ? 'Editar rutina' : 'Nueva rutina'}</span></div>
-        <div className="modal-body" style={{ display: 'grid', gap: 10 }}>
-          <label style={{ display: 'grid', gap: 4 }}>
-            Nombre
-            <input className="input" value={nombre} onChange={(e) => setNombre(e.target.value)} autoFocus />
-          </label>
-          <label style={{ display: 'grid', gap: 4 }}>
-            Descripción (opcional)
-            <input className="input" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
-          </label>
+    <Modal ariaLabel={rutina ? 'Editar rutina' : 'Nueva rutina'} ancho={520} onClose={onClose} bloqueado={procesando}>
+      <div className="modal-header"><span className="modal-title">{rutina ? 'Editar rutina' : 'Nueva rutina'}</span></div>
+      <div className="modal-body" style={{ display: 'grid', gap: 10 }}>
+        <label style={{ display: 'grid', gap: 4 }}>
+          Nombre
+          <input className="input" value={nombre} onChange={(e) => setNombre(e.target.value)} autoFocus />
+        </label>
+        <label style={{ display: 'grid', gap: 4 }}>
+          Descripción (opcional)
+          <input className="input" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
+        </label>
 
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <label style={{ display: 'grid', gap: 4 }}>
+            Frecuencia
+            <select className="input" value={frecuencia} onChange={(e) => setFrecuencia(e.target.value as FrecuenciaTipo)}>
+              {FRECUENCIAS.map((f) => <option key={f.valor} value={f.valor}>{f.label}</option>)}
+            </select>
+          </label>
+          <label style={{ display: 'grid', gap: 4 }}>
+            Hora
+            <input className="input" type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
+          </label>
+        </div>
+
+        {frecuencia === 'cada_n_dias' && (
+          <label style={{ display: 'grid', gap: 4 }}>
+            Cada cuántos días
+            <input className="input" type="number" min={1} value={intervalo} onChange={(e) => setIntervalo(Number(e.target.value))} />
+          </label>
+        )}
+        {frecuencia === 'semanal' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <label style={{ display: 'grid', gap: 4 }}>
-              Frecuencia
-              <select className="input" value={frecuencia} onChange={(e) => setFrecuencia(e.target.value as FrecuenciaTipo)}>
-                {FRECUENCIAS.map((f) => <option key={f.valor} value={f.valor}>{f.label}</option>)}
+              Día de la semana
+              <select className="input" value={diaSemana} onChange={(e) => setDiaSemana(Number(e.target.value))}>
+                {DIAS_SEMANA.map((d, i) => <option key={d} value={i}>{d}</option>)}
               </select>
             </label>
             <label style={{ display: 'grid', gap: 4 }}>
-              Hora
-              <input className="input" type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
-            </label>
-          </div>
-
-          {frecuencia === 'cada_n_dias' && (
-            <label style={{ display: 'grid', gap: 4 }}>
-              Cada cuántos días
+              Cada cuántas semanas
               <input className="input" type="number" min={1} value={intervalo} onChange={(e) => setIntervalo(Number(e.target.value))} />
             </label>
-          )}
-          {frecuencia === 'semanal' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <label style={{ display: 'grid', gap: 4 }}>
-                Día de la semana
-                <select className="input" value={diaSemana} onChange={(e) => setDiaSemana(Number(e.target.value))}>
-                  {DIAS_SEMANA.map((d, i) => <option key={d} value={i}>{d}</option>)}
-                </select>
-              </label>
-              <label style={{ display: 'grid', gap: 4 }}>
-                Cada cuántas semanas
-                <input className="input" type="number" min={1} value={intervalo} onChange={(e) => setIntervalo(Number(e.target.value))} />
-              </label>
-            </div>
-          )}
-          {frecuencia === 'mensual' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <label style={{ display: 'grid', gap: 4 }}>
-                Día del mes (31 = último)
-                <input className="input" type="number" min={1} max={31} value={diaMes} onChange={(e) => setDiaMes(Number(e.target.value))} />
-              </label>
-              <label style={{ display: 'grid', gap: 4 }}>
-                Cada cuántos meses
-                <input className="input" type="number" min={1} value={intervalo} onChange={(e) => setIntervalo(Number(e.target.value))} />
-              </label>
-            </div>
-          )}
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <label style={{ display: 'grid', gap: 4 }}>
-              {frecuencia === 'unica' ? 'Fecha' : 'Desde'}
-              <input className="input" type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
-            </label>
-            {frecuencia !== 'unica' && (
-              <label style={{ display: 'grid', gap: 4 }}>
-                Hasta (opcional)
-                <input className="input" type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} />
-              </label>
-            )}
           </div>
-
+        )}
+        {frecuencia === 'mensual' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <label style={{ display: 'grid', gap: 4 }}>
-              Responsable
-              <select className="input" value={destTipo} onChange={(e) => setDestTipo(e.target.value as 'usuario' | 'rol')}>
-                <option value="usuario">Yo ({session?.nombreCompleto ?? 'usuario actual'})</option>
-                <option value="rol">Un rol</option>
+              Día del mes (31 = último)
+              <input className="input" type="number" min={1} max={31} value={diaMes} onChange={(e) => setDiaMes(Number(e.target.value))} />
+            </label>
+            <label style={{ display: 'grid', gap: 4 }}>
+              Cada cuántos meses
+              <input className="input" type="number" min={1} value={intervalo} onChange={(e) => setIntervalo(Number(e.target.value))} />
+            </label>
+          </div>
+        )}
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <label style={{ display: 'grid', gap: 4 }}>
+            {frecuencia === 'unica' ? 'Fecha' : 'Desde'}
+            <input className="input" type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
+          </label>
+          {frecuencia !== 'unica' && (
+            <label style={{ display: 'grid', gap: 4 }}>
+              Hasta (opcional)
+              <input className="input" type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} />
+            </label>
+          )}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <label style={{ display: 'grid', gap: 4 }}>
+            Responsable
+            <select className="input" value={destTipo} onChange={(e) => setDestTipo(e.target.value as 'usuario' | 'rol')}>
+              <option value="usuario">Yo ({session?.nombreCompleto ?? 'usuario actual'})</option>
+              <option value="rol">Un rol</option>
+            </select>
+          </label>
+          {destTipo === 'rol' && (
+            <label style={{ display: 'grid', gap: 4 }}>
+              Rol
+              <select className="input" value={destRol} onChange={(e) => setDestRol(e.target.value)}>
+                {roles.map((r) => <option key={r.id} value={r.nombre}>{r.nombre}</option>)}
               </select>
             </label>
-            {destTipo === 'rol' && (
-              <label style={{ display: 'grid', gap: 4 }}>
-                Rol
-                <select className="input" value={destRol} onChange={(e) => setDestRol(e.target.value)}>
-                  {roles.map((r) => <option key={r.id} value={r.nombre}>{r.nombre}</option>)}
-                </select>
-              </label>
-            )}
-          </div>
-
-          <div style={{ display: 'flex', gap: 16, fontSize: 13 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <input type="checkbox" checked={canalInApp} onChange={(e) => setCanalInApp(e.target.checked)} /> En la app
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <input type="checkbox" checked={canalEmail} onChange={(e) => setCanalEmail(e.target.checked)} /> Email
-            </label>
-          </div>
-
-          {error && <div className="alert-danger" role="alert">{error}</div>}
+          )}
         </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={procesando}>Cancelar</button>
-          <button type="button" className="btn-primary" onClick={guardar} disabled={procesando}>{rutina ? 'Guardar' : 'Crear rutina'}</button>
+
+        <div style={{ display: 'flex', gap: 16, fontSize: 13 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <input type="checkbox" checked={canalInApp} onChange={(e) => setCanalInApp(e.target.checked)} /> En la app
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <input type="checkbox" checked={canalEmail} onChange={(e) => setCanalEmail(e.target.checked)} /> Email
+          </label>
         </div>
+
+        {error && <div className="alert-danger" role="alert">{error}</div>}
       </div>
-    </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose} disabled={procesando}>Cancelar</button>
+        <button type="button" className="btn-primary" onClick={guardar} disabled={procesando}>{rutina ? 'Guardar' : 'Crear rutina'}</button>
+      </div>
+    </Modal>
   );
 }

@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react';
 import { ymdLocal, exportRemitos } from '@ferreteria/shared';
-import { ExportarButton, propsFilaActivable } from '@core/ui';
+import { ExportarButton, propsFilaActivable, Modal } from '@core/ui';
 import { useRemitos, remitoApi, type RemitoListado } from '../../hooks/useRemitos';
 import { RemitoDetalleModal } from './RemitoDetalleModal';
 import { EditarRemitoModal } from './EditarRemitoModal';
-import { useEscapeToClose } from '@core/ui';
 import { SearchBox, usePersistentListState, useCallIpc } from '@core/ui';
 import { resaltarCoincidencia } from '@core/ui';
 
@@ -75,7 +74,6 @@ export function RemitosView() {
   const callIpc = useCallIpc();
 
   // Modal inline de conformar/anular (no un componente propio como los demás de este archivo).
-  useEscapeToClose(() => setAccion(null), !!accion);
 
   function handleOrdenar(campo: CampoOrden) {
     if (orden === campo) setOrdenDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -274,47 +272,45 @@ export function RemitosView() {
       )}
 
       {accion && (
-        <div className="modal-overlay">
-          <div className="modal" style={{ width: 460 }} role="dialog" aria-label={accion.tipo === 'conformar' ? 'Conformar remito' : 'Anular remito'}>
-            <div className="modal-header">
-              <span className="modal-title">
-                {accion.tipo === 'conformar' ? 'Conformar' : 'Anular'} {accion.remito.numero}
-              </span>
-            </div>
-            <div className="modal-body" style={{ display: 'grid', gap: 8 }}>
-              <label htmlFor="accion-valor">
-                {accion.tipo === 'conformar' ? 'Recibido por' : 'Motivo de la anulación'}
-              </label>
-              <input
-                id="accion-valor"
-                className="input"
-                value={valor}
-                onChange={(e) => setValor(e.target.value)}
-                autoFocus
-              />
-              {accion.tipo === 'anular' && (
-                <div className="text-muted text-xs">
-                  Anular libera las cantidades entregadas: vuelven a quedar pendientes.
-                  No genera movimientos de stock.
-                </div>
-              )}
-              {errorAccion && <div className="alert-danger" role="alert">{errorAccion}</div>}
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn-secondary" onClick={() => setAccion(null)}>
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className={accion.tipo === 'anular' ? 'btn-danger' : 'btn-primary'}
-                onClick={confirmarAccion}
-                disabled={procesando}
-              >
-                {accion.tipo === 'conformar' ? 'Confirmar entrega' : 'Confirmar anulación'}
-              </button>
-            </div>
+        <Modal ariaLabel={accion.tipo === 'conformar' ? 'Conformar remito' : 'Anular remito'} ancho={460} onClose={() => setAccion(null)}>
+          <div className="modal-header">
+            <span className="modal-title">
+              {accion.tipo === 'conformar' ? 'Conformar' : 'Anular'} {accion.remito.numero}
+            </span>
           </div>
-        </div>
+          <div className="modal-body" style={{ display: 'grid', gap: 8 }}>
+            <label htmlFor="accion-valor">
+              {accion.tipo === 'conformar' ? 'Recibido por' : 'Motivo de la anulación'}
+            </label>
+            <input
+              id="accion-valor"
+              className="input"
+              value={valor}
+              onChange={(e) => setValor(e.target.value)}
+              autoFocus
+            />
+            {accion.tipo === 'anular' && (
+              <div className="text-muted text-xs">
+                Anular libera las cantidades entregadas: vuelven a quedar pendientes.
+                No genera movimientos de stock.
+              </div>
+            )}
+            {errorAccion && <div className="alert-danger" role="alert">{errorAccion}</div>}
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn-secondary" onClick={() => setAccion(null)}>
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className={accion.tipo === 'anular' ? 'btn-danger' : 'btn-primary'}
+              onClick={confirmarAccion}
+              disabled={procesando}
+            >
+              {accion.tipo === 'conformar' ? 'Confirmar entrega' : 'Confirmar anulación'}
+            </button>
+          </div>
+        </Modal>
       )}
 
       {detalleId && (
