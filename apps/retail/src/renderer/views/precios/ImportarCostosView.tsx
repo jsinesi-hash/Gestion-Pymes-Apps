@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, type CSSProperties } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useImportacionCosto } from '../../hooks/useImportacionCosto';
-import { formatCurrency, bridge } from '@core/ui';
+import { formatCurrency, bridge, Modal } from '@core/ui';
 import { useImportacionCostoWizard } from '../../context/ImportacionCostoWizardContext';
 import { descargarReporteImportacion, type ColumnaReporte } from '../../lib/reporteImportacion';
 
@@ -222,59 +222,57 @@ function ConsultarProductosModal({ proveedorId, onClose }: { proveedorId: string
   }
 
   return (
-    <div className="modal-overlay" role="dialog" aria-label="Consultar productos" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal" style={{ width: 620 }}>
-        <div className="modal-header">
-          <span className="modal-title">Consultar productos</span>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Cerrar">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        </div>
-        <div className="modal-body">
-          <p style={{ fontSize: 13, color: 'var(--ink-2)', marginBottom: 10 }}>
-            Buscá por nombre, código interno (SKU) o EAN para chequear los datos de un producto sin salir de la importación. El código del proveedor es el que tiene guardado este producto para el proveedor de la carga.
-          </p>
-          <div className="field">
-            <label>BUSCAR</label>
-            <input
-              autoFocus
-              className="input"
-              value={search}
-              onChange={e => handleSearch(e.target.value)}
-              placeholder="Nombre, SKU o EAN…"
-            />
-          </div>
-          {buscando && <div className="text-sm text-muted" style={{ marginTop: 8 }}>Buscando…</div>}
-          {!buscando && resultados.length > 0 && (
-            <div className="table-wrap" style={{ marginTop: 10, maxHeight: 320 }}>
-              <table style={{ fontSize: 13 }}>
-                <thead>
-                  <tr><th>Código interno</th><th>EAN</th><th>Cód. proveedor</th><th>Descripción</th></tr>
-                </thead>
-                <tbody>
-                  {resultados.map(p => (
-                    <tr key={p.id}>
-                      <td className="num">{p.sku}</td>
-                      <td className="num">{p.gtin_barcode ?? '—'}</td>
-                      <td className="num">{p.codigo_proveedor ?? '—'}</td>
-                      <td>{p.nombre_corto}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-          {!buscando && search.trim().length >= 2 && resultados.length === 0 && (
-            <div className="text-sm text-muted" style={{ marginTop: 8 }}>Sin resultados.</div>
-          )}
-        </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose}>Cerrar</button>
-        </div>
+    <Modal ariaLabel="Consultar productos" ancho={620} onClose={onClose} cerrarAlClickFuera>
+      <div className="modal-header">
+        <span className="modal-title">Consultar productos</span>
+        <button type="button" className="icon-btn" onClick={onClose} aria-label="Cerrar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
       </div>
-    </div>
+      <div className="modal-body">
+        <p style={{ fontSize: 13, color: 'var(--ink-2)', marginBottom: 10 }}>
+          Buscá por nombre, código interno (SKU) o EAN para chequear los datos de un producto sin salir de la importación. El código del proveedor es el que tiene guardado este producto para el proveedor de la carga.
+        </p>
+        <div className="field">
+          <label>BUSCAR</label>
+          <input
+            autoFocus
+            className="input"
+            value={search}
+            onChange={e => handleSearch(e.target.value)}
+            placeholder="Nombre, SKU o EAN…"
+          />
+        </div>
+        {buscando && <div className="text-sm text-muted" style={{ marginTop: 8 }}>Buscando…</div>}
+        {!buscando && resultados.length > 0 && (
+          <div className="table-wrap" style={{ marginTop: 10, maxHeight: 320 }}>
+            <table style={{ fontSize: 13 }}>
+              <thead>
+                <tr><th>Código interno</th><th>EAN</th><th>Cód. proveedor</th><th>Descripción</th></tr>
+              </thead>
+              <tbody>
+                {resultados.map(p => (
+                  <tr key={p.id}>
+                    <td className="num">{p.sku}</td>
+                    <td className="num">{p.gtin_barcode ?? '—'}</td>
+                    <td className="num">{p.codigo_proveedor ?? '—'}</td>
+                    <td>{p.nombre_corto}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {!buscando && search.trim().length >= 2 && resultados.length === 0 && (
+          <div className="text-sm text-muted" style={{ marginTop: 8 }}>Sin resultados.</div>
+        )}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose}>Cerrar</button>
+      </div>
+    </Modal>
   );
 }
 
@@ -596,30 +594,28 @@ export function ImportarCostosView() {
       {modalConfirmarAbierto && (() => {
         const cantidad = filas.filter(f => f.estado === 'matched').length;
         return (
-          <div className="modal-overlay" role="dialog" aria-label="Confirmar importación">
-            <div className="modal">
-              <div className="modal-header">
-                <span className="modal-title">Confirmar importación</span>
-              </div>
-              <div className="modal-body">
-                <p>Se va a actualizar el costo de <strong>{cantidad} producto{cantidad !== 1 ? 's' : ''}</strong> para <strong>{proveedorActual?.razon_social ?? ''}</strong>.</p>
-                <p>Esta acción no se puede deshacer desde acá — quedará registrada en el Historial de importaciones.</p>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setModalConfirmarAbierto(false)}>
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  className="btn-primary"
-                  onClick={async () => { setModalConfirmarAbierto(false); await handleConfirmar(); }}
-                  disabled={loading}
-                >
-                  {loading ? 'Aplicando…' : 'Confirmar'}
-                </button>
-              </div>
+          <Modal ariaLabel="Confirmar importación">
+            <div className="modal-header">
+              <span className="modal-title">Confirmar importación</span>
             </div>
-          </div>
+            <div className="modal-body">
+              <p>Se va a actualizar el costo de <strong>{cantidad} producto{cantidad !== 1 ? 's' : ''}</strong> para <strong>{proveedorActual?.razon_social ?? ''}</strong>.</p>
+              <p>Esta acción no se puede deshacer desde acá — quedará registrada en el Historial de importaciones.</p>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn-secondary" onClick={() => setModalConfirmarAbierto(false)}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={async () => { setModalConfirmarAbierto(false); await handleConfirmar(); }}
+                disabled={loading}
+              >
+                {loading ? 'Aplicando…' : 'Confirmar'}
+              </button>
+            </div>
+          </Modal>
         );
       })()}
 

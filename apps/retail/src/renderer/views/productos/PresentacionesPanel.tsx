@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useEscapeToClose, bridge } from '@core/ui';
+import { bridge, Modal } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 
 type Presentacion = {
@@ -37,8 +37,6 @@ export function PresentacionesPanel({ productoId }: Readonly<{ productoId: strin
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [aviso, setAviso] = useState<string | null>(null);
   const callIpc = useCallIpc();
-
-  useEscapeToClose(() => setModal(null), !!modal);
 
   async function load() {
     const [pps, uns] = await Promise.all([
@@ -211,65 +209,63 @@ export function PresentacionesPanel({ productoId }: Readonly<{ productoId: strin
       </div>
 
       {modal && (
-        <div className="modal-overlay" onClick={() => setModal(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
-            <div className="modal-header">
-              <h2>{modal.mode === 'create' ? 'Nueva presentación' : 'Editar presentación'}</h2>
-              <button className="ia" aria-label="Cerrar" onClick={() => setModal(null)}>&#x2715;</button>
-            </div>
-            <form onSubmit={handleSubmit} style={{ padding: 'var(--pad)', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <label>
-                <div className="label-txt">Unidad</div>
-                <select
-                  id="unidad_id"
-                  className={`input${errors.unidad_id ? ' error' : ''}`}
-                  value={formUnidadId}
-                  onChange={e => { setFormUnidadId(e.target.value); setErrors(prev => { const n = { ...prev }; delete n.unidad_id; return n; }); }}
-                  required
-                >
-                  <option value="">— seleccionar —</option>
-                  {unidades.map(u => (
-                    <option key={u.id} value={u.id}>{u.nombre} ({u.abreviatura})</option>
-                  ))}
-                </select>
-                {errors.unidad_id && <span className="field-error">{errors.unidad_id}</span>}
-              </label>
-              <label>
-                <div className="label-txt">Factor a stock</div>
-                <input
-                  id="factor_a_stock"
-                  type="number"
-                  className={`input num${errors.factor_a_stock ? ' error' : ''}`}
-                  value={formFactor}
-                  min={0.001}
-                  step={0.001}
-                  onChange={e => { setFormFactor(Number(e.target.value)); setErrors(prev => { const n = { ...prev }; delete n.factor_a_stock; return n; }); }}
-                  required
-                />
-                <div className="text-muted text-xs" style={{ marginTop: 2 }}>
-                  1 unidad de presentación = {formFactor} en stock
-                </div>
-                {errors.factor_a_stock && <span className="field-error">{errors.factor_a_stock}</span>}
-              </label>
-              <label>
-                <div className="label-txt">GTIN / EAN (opcional)</div>
-                <input
-                  id="gtin_barcode"
-                  type="text"
-                  className={`input${errors.gtin_barcode ? ' error' : ''}`}
-                  value={formGtin}
-                  onChange={e => { setFormGtin(e.target.value); setErrors(prev => { const n = { ...prev }; delete n.gtin_barcode; return n; }); }}
-                  placeholder="Dejar vacío si no aplica"
-                />
-                {errors.gtin_barcode && <span className="field-error">{errors.gtin_barcode}</span>}
-              </label>
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                <button type="button" className="btn-secondary" onClick={() => setModal(null)}>Cancelar</button>
-                <button type="submit" className="btn" disabled={saving}>{saving ? 'Guardando...' : 'Guardar'}</button>
-              </div>
-            </form>
+        <Modal ariaLabel={modal.mode === 'create' ? 'Nueva presentación' : 'Editar presentación'} onClose={() => setModal(null)} cerrarAlClickFuera style={{ maxWidth: 400 }}>
+          <div className="modal-header">
+            <h2>{modal.mode === 'create' ? 'Nueva presentación' : 'Editar presentación'}</h2>
+            <button className="ia" aria-label="Cerrar" onClick={() => setModal(null)}>&#x2715;</button>
           </div>
-        </div>
+          <form onSubmit={handleSubmit} style={{ padding: 'var(--pad)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <label>
+              <div className="label-txt">Unidad</div>
+              <select
+                id="unidad_id"
+                className={`input${errors.unidad_id ? ' error' : ''}`}
+                value={formUnidadId}
+                onChange={e => { setFormUnidadId(e.target.value); setErrors(prev => { const n = { ...prev }; delete n.unidad_id; return n; }); }}
+                required
+              >
+                <option value="">— seleccionar —</option>
+                {unidades.map(u => (
+                  <option key={u.id} value={u.id}>{u.nombre} ({u.abreviatura})</option>
+                ))}
+              </select>
+              {errors.unidad_id && <span className="field-error">{errors.unidad_id}</span>}
+            </label>
+            <label>
+              <div className="label-txt">Factor a stock</div>
+              <input
+                id="factor_a_stock"
+                type="number"
+                className={`input num${errors.factor_a_stock ? ' error' : ''}`}
+                value={formFactor}
+                min={0.001}
+                step={0.001}
+                onChange={e => { setFormFactor(Number(e.target.value)); setErrors(prev => { const n = { ...prev }; delete n.factor_a_stock; return n; }); }}
+                required
+              />
+              <div className="text-muted text-xs" style={{ marginTop: 2 }}>
+                1 unidad de presentación = {formFactor} en stock
+              </div>
+              {errors.factor_a_stock && <span className="field-error">{errors.factor_a_stock}</span>}
+            </label>
+            <label>
+              <div className="label-txt">GTIN / EAN (opcional)</div>
+              <input
+                id="gtin_barcode"
+                type="text"
+                className={`input${errors.gtin_barcode ? ' error' : ''}`}
+                value={formGtin}
+                onChange={e => { setFormGtin(e.target.value); setErrors(prev => { const n = { ...prev }; delete n.gtin_barcode; return n; }); }}
+                placeholder="Dejar vacío si no aplica"
+              />
+              {errors.gtin_barcode && <span className="field-error">{errors.gtin_barcode}</span>}
+            </label>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button type="button" className="btn-secondary" onClick={() => setModal(null)}>Cancelar</button>
+              <button type="submit" className="btn" disabled={saving}>{saving ? 'Guardando...' : 'Guardar'}</button>
+            </div>
+          </form>
+        </Modal>
       )}
     </div>
   );

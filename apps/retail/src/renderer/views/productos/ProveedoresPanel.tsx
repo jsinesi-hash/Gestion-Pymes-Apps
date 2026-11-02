@@ -7,7 +7,7 @@ import {
   type DefaultsComercialProveedor,
 } from '@ferreteria/shared';
 import { useMotorPreciosV2Habilitado } from '../../hooks/useMotorPrecios';
-import { useEscapeToClose, bridge } from '@core/ui';
+import { useEscapeToClose, bridge, Modal } from '@core/ui';
 import { useAuth } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 
@@ -129,7 +129,6 @@ export function ProveedoresPanel({ productoId }: Readonly<{ productoId: string }
   const [addForm, setAddForm] = useState<AddForm>(ADD_FORM_INICIAL);
   const [savingAdd, setSavingAdd] = useState(false);
 
-  useEscapeToClose(() => { setEditId(null); setForm(null); }, !!form);
   useEscapeToClose(cerrarAlta, showAdd);
 
   async function load() {
@@ -472,60 +471,58 @@ export function ProveedoresPanel({ productoId }: Readonly<{ productoId: string }
       )}
 
       {form && (
-        <div className="modal-overlay" onClick={() => { setEditId(null); setForm(null); }}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 420 }}>
-            <div className="modal-header" style={{ padding: '12px var(--pad)' }}>
-              <h2 style={{ fontSize: 15, margin: 0 }}>Ajustes de costo del producto</h2>
-              <button className="ia" aria-label="Cerrar" onClick={() => { setEditId(null); setForm(null); }}>&#x2715;</button>
+        <Modal ariaLabel="Ajustes de costo del producto" onClose={() => { setEditId(null); setForm(null); }} cerrarAlClickFuera style={{ maxWidth: 420 }}>
+          <div className="modal-header" style={{ padding: '12px var(--pad)' }}>
+            <h2 style={{ fontSize: 15, margin: 0 }}>Ajustes de costo del producto</h2>
+            <button className="ia" aria-label="Cerrar" onClick={() => { setEditId(null); setForm(null); }}>&#x2715;</button>
+          </div>
+          <div style={{ padding: 'var(--pad)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="text-muted text-xs">
+              Los campos traen el <b>valor vigente</b> del proveedor. Cambiá un % para fijarlo propio del producto;
+              dejalo igual (o vacío) para <b>seguir heredando</b>. El Costo bruto es propio del producto.
             </div>
-            <div style={{ padding: 'var(--pad)', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div className="text-muted text-xs">
-                Los campos traen el <b>valor vigente</b> del proveedor. Cambiá un % para fijarlo propio del producto;
-                dejalo igual (o vacío) para <b>seguir heredando</b>. El Costo bruto es propio del producto.
-              </div>
+            <label>
+              <span style={ovLabelStyle}>Costo bruto ($)</span>
+              <input id="pp_ov_costo_bruto" className="input num" style={ovInputStyle} type="number" step="0.01" value={form.costo_bruto}
+                onChange={e => setForm({ ...form, costo_bruto: e.target.value })} />
+            </label>
+            {/* Campos de a pares (uno al lado del otro), no apilados (ADR-052). */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
               <label>
-                <span style={ovLabelStyle}>Costo bruto ($)</span>
-                <input id="pp_ov_costo_bruto" className="input num" style={ovInputStyle} type="number" step="0.01" value={form.costo_bruto}
-                  onChange={e => setForm({ ...form, costo_bruto: e.target.value })} />
+                <span style={ovLabelStyle}>Bonif. %</span>
+                <input id="pp_ov_bonificacion_pct" className="input num" style={ovInputStyle} type="number" step="0.01" value={form.bonificacion_pct}
+                  onChange={e => setForm({ ...form, bonificacion_pct: e.target.value })} />
               </label>
-              {/* Campos de a pares (uno al lado del otro), no apilados (ADR-052). */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
-                <label>
-                  <span style={ovLabelStyle}>Bonif. %</span>
-                  <input id="pp_ov_bonificacion_pct" className="input num" style={ovInputStyle} type="number" step="0.01" value={form.bonificacion_pct}
-                    onChange={e => setForm({ ...form, bonificacion_pct: e.target.value })} />
-                </label>
-                <label>
-                  <span style={ovLabelStyle}>Cost. fin. %</span>
-                  <input id="pp_ov_costo_financiero_pct" className="input num" style={ovInputStyle} type="number" step="0.01" value={form.costo_financiero_pct}
-                    onChange={e => setForm({ ...form, costo_financiero_pct: e.target.value })} />
-                </label>
-                <label title="Flete % (prorrateo)">
-                  <span style={ovLabelStyle}>Flete %</span>
-                  <input id="pp_ov_flete_pct" className="input num" style={ovInputStyle} type="number" step="0.01" value={form.flete_pct}
-                    onChange={e => setForm({ ...form, flete_pct: e.target.value })} />
-                </label>
-                <label title="Flete $ absoluto — pisa al %">
-                  <span style={ovLabelStyle}>Flete $</span>
-                  <input id="pp_ov_flete_centavos" className="input num" style={ovInputStyle} type="number" step="0.01" value={form.flete}
-                    placeholder="peso/vol."
-                    onChange={e => setForm({ ...form, flete: e.target.value })} />
-                </label>
-                <label>
-                  <span style={ovLabelStyle}>Otros $</span>
-                  <input id="pp_ov_otros_costos_centavos" className="input num" style={ovInputStyle} type="number" step="0.01" value={form.otros}
-                    placeholder="opcional"
-                    onChange={e => setForm({ ...form, otros: e.target.value })} />
-                </label>
-              </div>
-              {error && <div className="alert-error">{error}</div>}
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                <button type="button" className="btn-secondary" onClick={() => { setEditId(null); setForm(null); }}>Cancelar</button>
-                <button type="button" className="btn-primary" disabled={saving} onClick={guardarOverride}>{saving ? 'Guardando...' : 'Guardar'}</button>
-              </div>
+              <label>
+                <span style={ovLabelStyle}>Cost. fin. %</span>
+                <input id="pp_ov_costo_financiero_pct" className="input num" style={ovInputStyle} type="number" step="0.01" value={form.costo_financiero_pct}
+                  onChange={e => setForm({ ...form, costo_financiero_pct: e.target.value })} />
+              </label>
+              <label title="Flete % (prorrateo)">
+                <span style={ovLabelStyle}>Flete %</span>
+                <input id="pp_ov_flete_pct" className="input num" style={ovInputStyle} type="number" step="0.01" value={form.flete_pct}
+                  onChange={e => setForm({ ...form, flete_pct: e.target.value })} />
+              </label>
+              <label title="Flete $ absoluto — pisa al %">
+                <span style={ovLabelStyle}>Flete $</span>
+                <input id="pp_ov_flete_centavos" className="input num" style={ovInputStyle} type="number" step="0.01" value={form.flete}
+                  placeholder="peso/vol."
+                  onChange={e => setForm({ ...form, flete: e.target.value })} />
+              </label>
+              <label>
+                <span style={ovLabelStyle}>Otros $</span>
+                <input id="pp_ov_otros_costos_centavos" className="input num" style={ovInputStyle} type="number" step="0.01" value={form.otros}
+                  placeholder="opcional"
+                  onChange={e => setForm({ ...form, otros: e.target.value })} />
+              </label>
+            </div>
+            {error && <div className="alert-error">{error}</div>}
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button type="button" className="btn-secondary" onClick={() => { setEditId(null); setForm(null); }}>Cancelar</button>
+              <button type="button" className="btn-primary" disabled={saving} onClick={guardarOverride}>{saving ? 'Guardando...' : 'Guardar'}</button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

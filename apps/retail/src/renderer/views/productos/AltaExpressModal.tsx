@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useCallIpc, bridge } from '@core/ui';
+import { useCallIpc, bridge, Modal } from '@core/ui';
 
 // PROD-3 (ADR-079): alta rápida de producto desde puntos de captura (POS, OC) que no
 // tienen el producto todavía. Sólo nombre + precio; el resto (categoría, unidad, IVA)
@@ -59,39 +59,37 @@ export function AltaExpressModal({ nombreInicial = '', onCreado, onClose }: Read
   }
 
   return (
-    <div className="modal-overlay" role="button" tabIndex={0} aria-label="Cerrar" onClick={onClose} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClose(); }}>
-      <form className="modal" role="dialog" aria-modal="true" tabIndex={-1} style={{ width: 420 }} onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()} onSubmit={handleSubmit}>
-        <div className="modal-header">
-          <span className="modal-title">Alta rápida de producto</span>
-          <button type="button" className="ia" onClick={onClose} aria-label="Cerrar">×</button>
+    <Modal ariaLabel="Alta rápida de producto" ancho={420} onClose={onClose} cerrarAlClickFuera as="form" onSubmit={handleSubmit}>
+      <div className="modal-header">
+        <span className="modal-title">Alta rápida de producto</span>
+        <button type="button" className="ia" onClick={onClose} aria-label="Cerrar">×</button>
+      </div>
+      <div className="modal-body">
+        <div className="field">
+          <label htmlFor="ax-nombre">Nombre</label>
+          <input id="ax-nombre" className="input" ref={nombreRef} value={nombre}
+            onChange={e => setNombre(e.target.value)}
+            onBlur={() => setErrNombre(validarNombre(nombre))} />
+          {errNombre && <div className="field-error">{errNombre}</div>}
         </div>
-        <div className="modal-body">
-          <div className="field">
-            <label htmlFor="ax-nombre">Nombre</label>
-            <input id="ax-nombre" className="input" ref={nombreRef} value={nombre}
-              onChange={e => setNombre(e.target.value)}
-              onBlur={() => setErrNombre(validarNombre(nombre))} />
-            {errNombre && <div className="field-error">{errNombre}</div>}
-          </div>
-          <div className="field">
-            <label htmlFor="ax-precio">Precio de venta ($)</label>
-            <input id="ax-precio" className="input num" ref={precioRef} inputMode="decimal" value={precio}
-              onChange={e => setPrecio(e.target.value)}
-              onBlur={() => setErrPrecio(validarPrecio(precio))} placeholder="0.00" />
-            {errPrecio && <div className="field-error">{errPrecio}</div>}
-          </div>
-          <div className="field">
-            <label htmlFor="ax-ean">Código de barras (opcional)</label>
-            <input id="ax-ean" className="input num" value={ean} onChange={e => setEan(e.target.value)} />
-          </div>
+        <div className="field">
+          <label htmlFor="ax-precio">Precio de venta ($)</label>
+          <input id="ax-precio" className="input num" ref={precioRef} inputMode="decimal" value={precio}
+            onChange={e => setPrecio(e.target.value)}
+            onBlur={() => setErrPrecio(validarPrecio(precio))} placeholder="0.00" />
+          {errPrecio && <div className="field-error">{errPrecio}</div>}
         </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button type="submit" className="btn-primary" disabled={saving}>
-            {saving ? 'Creando…' : 'Crear producto'}
-          </button>
+        <div className="field">
+          <label htmlFor="ax-ean">Código de barras (opcional)</label>
+          <input id="ax-ean" className="input num" value={ean} onChange={e => setEan(e.target.value)} />
         </div>
-      </form>
-    </div>
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+        <button type="submit" className="btn-primary" disabled={saving}>
+          {saving ? 'Creando…' : 'Crear producto'}
+        </button>
+      </div>
+    </Modal>
   );
 }
