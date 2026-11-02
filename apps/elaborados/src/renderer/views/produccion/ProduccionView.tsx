@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth, useEscapeToClose, useToast, SupervisorAuthModal } from '@core/ui';
+import { useAuth, useToast, SupervisorAuthModal, Modal } from '@core/ui';
 import { useProduccion, type ProduccionRow } from '../../hooks/useProduccion';
 import { useArticulos } from '../../hooks/useArticulos';
 
@@ -83,8 +83,6 @@ function NuevaProduccionModal({ elaborados, onClose, onCrear }: {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEscapeToClose(onClose, !saving);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const cant = Number(cantidad);
@@ -111,35 +109,33 @@ function NuevaProduccionModal({ elaborados, onClose, onCrear }: {
   }
 
   return (
-    <div role="dialog" className="modal-overlay">
-      <form className="modal" onSubmit={handleSubmit}>
-        <div className="modal-header"><span className="modal-title">Nueva producción</span></div>
-        <div className="modal-body">
-          <div className="field">
-            <label htmlFor="produccion-articulo">Sabor / elaborado *</label>
-            <select id="produccion-articulo" className="input" value={articuloId} onChange={(e) => setArticuloId(e.target.value)}>
-              {elaborados.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="produccion-cantidad">Cantidad producida (kg) *</label>
-            <input id="produccion-cantidad" className="input" type="number" step="any" min="0.001" required
-              value={cantidad} onChange={(e) => setCantidad(e.target.value)} autoFocus />
-          </div>
-          <div className="field">
-            <label htmlFor="produccion-obs">Observaciones</label>
-            <input id="produccion-obs" className="input" type="text" value={observaciones} onChange={(e) => setObservaciones(e.target.value)} />
-          </div>
-          {error && <div className="alert-danger" role="alert">{error}</div>}
+    <Modal ariaLabel="Nueva producción" onClose={onClose} bloqueado={saving} as="form" onSubmit={handleSubmit}>
+      <div className="modal-header"><span className="modal-title">Nueva producción</span></div>
+      <div className="modal-body">
+        <div className="field">
+          <label htmlFor="produccion-articulo">Sabor / elaborado *</label>
+          <select id="produccion-articulo" className="input" value={articuloId} onChange={(e) => setArticuloId(e.target.value)}>
+            {elaborados.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+          </select>
         </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button type="submit" className="btn-primary" disabled={!articuloId || !cantidad || saving}>
-            {saving ? 'Confirmando…' : 'Confirmar producción'}
-          </button>
+        <div className="field">
+          <label htmlFor="produccion-cantidad">Cantidad producida (kg) *</label>
+          <input id="produccion-cantidad" className="input" type="number" step="any" min="0.001" required
+            value={cantidad} onChange={(e) => setCantidad(e.target.value)} autoFocus />
         </div>
-      </form>
-    </div>
+        <div className="field">
+          <label htmlFor="produccion-obs">Observaciones</label>
+          <input id="produccion-obs" className="input" type="text" value={observaciones} onChange={(e) => setObservaciones(e.target.value)} />
+        </div>
+        {error && <div className="alert-danger" role="alert">{error}</div>}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+        <button type="submit" className="btn-primary" disabled={!articuloId || !cantidad || saving}>
+          {saving ? 'Confirmando…' : 'Confirmar producción'}
+        </button>
+      </div>
+    </Modal>
   );
 }
 
@@ -152,8 +148,6 @@ function AnularProduccionModal({ produccion, onClose, onAnular }: {
   const [motivo, setMotivo] = useState('');
   const [step, setStep] = useState<'motivo' | 'auth'>('motivo');
   const [error, setError] = useState<string | null>(null);
-
-  useEscapeToClose(onClose, step === 'motivo');
 
   function handleContinuar(e: React.FormEvent) {
     e.preventDefault();
@@ -177,23 +171,21 @@ function AnularProduccionModal({ produccion, onClose, onAnular }: {
   }
 
   return (
-    <div role="dialog" className="modal-overlay">
-      <form className="modal" onSubmit={handleContinuar}>
-        <div className="modal-header"><span className="modal-title">Anular producción {produccion.numero}</span></div>
-        <div className="modal-body">
-          <div className="field">
-            <label htmlFor="anular-motivo">Motivo *</label>
-            <input id="anular-motivo" className="input" type="text" required value={motivo}
-              onChange={(e) => { setMotivo(e.target.value); setError(null); }} autoFocus />
-          </div>
-          <p style={{ fontSize: '0.85rem', opacity: 0.75 }}>Requiere autorización de un Supervisor.</p>
-          {error && <div className="alert-danger" role="alert">{error}</div>}
+    <Modal ariaLabel={`Anular producción ${produccion.numero}`} onClose={onClose} bloqueado={step !== 'motivo'} as="form" onSubmit={handleContinuar}>
+      <div className="modal-header"><span className="modal-title">Anular producción {produccion.numero}</span></div>
+      <div className="modal-body">
+        <div className="field">
+          <label htmlFor="anular-motivo">Motivo *</label>
+          <input id="anular-motivo" className="input" type="text" required value={motivo}
+            onChange={(e) => { setMotivo(e.target.value); setError(null); }} autoFocus />
         </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
-          <button type="submit" className="btn-primary">Continuar</button>
-        </div>
-      </form>
-    </div>
+        <p style={{ fontSize: '0.85rem', opacity: 0.75 }}>Requiere autorización de un Supervisor.</p>
+        {error && <div className="alert-danger" role="alert">{error}</div>}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
+        <button type="submit" className="btn-primary">Continuar</button>
+      </div>
+    </Modal>
   );
 }

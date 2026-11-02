@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth, useEscapeToClose, useToast, traducirError } from '@core/ui';
+import { useAuth, useToast, traducirError, Modal } from '@core/ui';
 import { useGruposModificador, type OpcionModificador } from '../../hooks/useGruposModificador';
 import { useArticulos } from '../../hooks/useArticulos';
 
@@ -75,8 +75,6 @@ function OpcionesModal({ grupoId, articulos, onClose, obtener, setOpciones }: {
   const [error, setError] = useState<string | null>(null);
   const elegibles = articulos.filter((a) => a.tipo === 'elaborado');
 
-  useEscapeToClose(onClose, !saving);
-
   useEffect(() => {
     obtener(grupoId).then((g) => {
       if (g) { setNombreGrupo(g.nombre); setLocalOpciones(g.opciones); }
@@ -105,31 +103,29 @@ function OpcionesModal({ grupoId, articulos, onClose, obtener, setOpciones }: {
   if (loading) return null;
 
   return (
-    <div role="dialog" className="modal-overlay">
-      <form className="modal" onSubmit={handleSubmit}>
-        <div className="modal-header"><span className="modal-title">Opciones — {nombreGrupo}</span></div>
-        <div className="modal-body">
-          {opciones.map((op, i) => (
-            <div key={i} className="flex-row gap-2">
-              <select className="input" value={op.articulo_id}
-                onChange={(e) => {
-                  const art = elegibles.find((a) => a.id === e.target.value)!;
-                  setLocalOpciones(opciones.map((o, idx) => idx === i ? { ...o, articulo_id: art.id, nombre: art.nombre } : o));
-                }}>
-                {elegibles.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
-              </select>
-              <input className="input" type="number" placeholder="Recargo (centavos)" value={op.recargo_centavos}
-                onChange={(e) => setLocalOpciones(opciones.map((o, idx) => idx === i ? { ...o, recargo_centavos: Number(e.target.value) } : o))} />
-            </div>
-          ))}
-          <button type="button" className="btn-secondary btn-sm" onClick={agregarOpcion}>+ Agregar opción</button>
-          {error && <div className="alert-danger" role="alert">{error}</div>}
-        </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar'}</button>
-        </div>
-      </form>
-    </div>
+    <Modal ariaLabel={`Opciones de ${nombreGrupo}`} onClose={onClose} bloqueado={saving} as="form" onSubmit={handleSubmit}>
+      <div className="modal-header"><span className="modal-title">Opciones — {nombreGrupo}</span></div>
+      <div className="modal-body">
+        {opciones.map((op, i) => (
+          <div key={i} className="flex-row gap-2">
+            <select className="input" value={op.articulo_id}
+              onChange={(e) => {
+                const art = elegibles.find((a) => a.id === e.target.value)!;
+                setLocalOpciones(opciones.map((o, idx) => idx === i ? { ...o, articulo_id: art.id, nombre: art.nombre } : o));
+              }}>
+              {elegibles.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+            </select>
+            <input className="input" type="number" placeholder="Recargo (centavos)" value={op.recargo_centavos}
+              onChange={(e) => setLocalOpciones(opciones.map((o, idx) => idx === i ? { ...o, recargo_centavos: Number(e.target.value) } : o))} />
+          </div>
+        ))}
+        <button type="button" className="btn-secondary btn-sm" onClick={agregarOpcion}>+ Agregar opción</button>
+        {error && <div className="alert-danger" role="alert">{error}</div>}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+        <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar'}</button>
+      </div>
+    </Modal>
   );
 }

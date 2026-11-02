@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AnulacionModal, bridge, formatPesos, traducirError, useAuth, useEscapeToClose } from '@core/ui';
+import { AnulacionModal, bridge, formatPesos, traducirError, useAuth, Modal } from '@core/ui';
 
 type Modificador = { id: string; descripcion: string };
 type Linea = {
@@ -15,7 +15,6 @@ type Props = { ventaId: string; onClose: () => void };
 
 /** Detalle de solo lectura de una venta; es el slot `renderVentaDetalle` de CajaView. */
 export function VentaDetalleModal({ ventaId, onClose }: Readonly<Props>) {
-  useEscapeToClose(onClose);
   const [detalle, setDetalle] = useState<Detalle | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,8 +38,8 @@ export function VentaDetalleModal({ ventaId, onClose }: Readonly<Props>) {
   }, [ventaId, recarga]);
 
   return (
-    <div role="dialog" aria-label="Detalle de venta" className="modal-overlay">
-      <div className="modal" style={{ width: 560 }}>
+    <>
+      <Modal ariaLabel="Detalle de venta" ancho={560} onClose={onClose}>
         <div className="modal-header"><span className="modal-title">Detalle de venta</span></div>
         <div className="modal-body">
           {cargando && <p>Cargando…</p>}
@@ -76,7 +75,7 @@ export function VentaDetalleModal({ ventaId, onClose }: Readonly<Props>) {
           )}
           <button type="button" className="btn-secondary" onClick={onClose}>Cerrar</button>
         </div>
-      </div>
+      </Modal>
       {anulando && (
         <AnulacionModal
           ventaId={ventaId}
@@ -84,6 +83,6 @@ export function VentaDetalleModal({ ventaId, onClose }: Readonly<Props>) {
           onCancel={() => setAnulando(false)}
         />
       )}
-    </div>
+    </>
   );
 }

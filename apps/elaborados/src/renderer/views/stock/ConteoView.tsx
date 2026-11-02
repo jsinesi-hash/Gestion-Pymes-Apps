@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth, useToast, useEscapeToClose, rutearCampoError, traducirError } from '@core/ui';
+import { useAuth, useToast, rutearCampoError, traducirError, Modal } from '@core/ui';
 import { useArticulos, type ArticuloRow } from '../../hooks/useArticulos';
 
 export function ConteoView() {
@@ -96,8 +96,6 @@ function AjusteModal({ articulo, onClose, onAjustar }: {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEscapeToClose(onClose, !saving);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const destino = Number(nuevoStock);
@@ -115,33 +113,31 @@ function AjusteModal({ articulo, onClose, onAjustar }: {
   }
 
   return (
-    <div role="dialog" className="modal-overlay">
-      <form className="modal" onSubmit={handleSubmit}>
-        <div className="modal-header"><span className="modal-title">Ajustar stock — {articulo.nombre}</span></div>
-        <div className="modal-body">
-          <div className="field">
-            <label htmlFor="conteo-motivo">Motivo *</label>
-            <select id="conteo-motivo" className="input" value={motivo} onChange={(e) => setMotivo(e.target.value as 'conteo' | 'merma')}>
-              <option value="conteo">Conteo (ajuste de inventario)</option>
-              <option value="merma">Merma / rotura</option>
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="conteo-stock">Stock actual: {articulo.stock ?? 0} {articulo.unidad}. Nuevo stock *</label>
-            <input id="conteo-stock" className="input" type="number" step="any" required autoFocus
-              value={nuevoStock} onChange={(e) => setNuevoStock(e.target.value)} />
-          </div>
-          <div className="field">
-            <label htmlFor="conteo-obs">Observaciones</label>
-            <input id="conteo-obs" className="input" type="text" value={observaciones} onChange={(e) => setObservaciones(e.target.value)} />
-          </div>
-          {error && <div className="alert-danger" role="alert">{error}</div>}
+    <Modal ariaLabel={`Ajustar stock de ${articulo.nombre}`} onClose={onClose} bloqueado={saving} as="form" onSubmit={handleSubmit}>
+      <div className="modal-header"><span className="modal-title">Ajustar stock — {articulo.nombre}</span></div>
+      <div className="modal-body">
+        <div className="field">
+          <label htmlFor="conteo-motivo">Motivo *</label>
+          <select id="conteo-motivo" className="input" value={motivo} onChange={(e) => setMotivo(e.target.value as 'conteo' | 'merma')}>
+            <option value="conteo">Conteo (ajuste de inventario)</option>
+            <option value="merma">Merma / rotura</option>
+          </select>
         </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar'}</button>
+        <div className="field">
+          <label htmlFor="conteo-stock">Stock actual: {articulo.stock ?? 0} {articulo.unidad}. Nuevo stock *</label>
+          <input id="conteo-stock" className="input" type="number" step="any" required autoFocus
+            value={nuevoStock} onChange={(e) => setNuevoStock(e.target.value)} />
         </div>
-      </form>
-    </div>
+        <div className="field">
+          <label htmlFor="conteo-obs">Observaciones</label>
+          <input id="conteo-obs" className="input" type="text" value={observaciones} onChange={(e) => setObservaciones(e.target.value)} />
+        </div>
+        {error && <div className="alert-danger" role="alert">{error}</div>}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+        <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar'}</button>
+      </div>
+    </Modal>
   );
 }

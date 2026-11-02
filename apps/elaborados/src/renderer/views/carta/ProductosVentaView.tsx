@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth, useEscapeToClose, useToast, traducirError, bridge } from '@core/ui';
+import { useAuth, useToast, traducirError, bridge, Modal } from '@core/ui';
 import { useProductosVenta } from '../../hooks/useProductosVenta';
 import { useCategoriasVenta } from '../../hooks/useCategoriasVenta';
 import { useArticulos } from '../../hooks/useArticulos';
@@ -79,8 +79,6 @@ function ProductoVentaModal({ categorias, articulos, grupos, onClose, onCrear }:
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEscapeToClose(onClose, !saving);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const precioCentavos = Math.round(Number(precio) * 100);
@@ -104,66 +102,64 @@ function ProductoVentaModal({ categorias, articulos, grupos, onClose, onCrear }:
   }
 
   return (
-    <div role="dialog" className="modal-overlay">
-      <form className="modal" onSubmit={handleSubmit}>
-        <div className="modal-header"><span className="modal-title">Nuevo producto de venta</span></div>
-        <div className="modal-body">
-          <div className="field">
-            <label htmlFor="pv-nombre">Nombre *</label>
-            <input id="pv-nombre" className="input" type="text" required autoFocus value={nombre} onChange={(e) => setNombre(e.target.value)} />
-          </div>
-          <div className="field">
-            <label htmlFor="pv-categoria">Categoría *</label>
-            <select id="pv-categoria" className="input" value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)}>
-              {categorias.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+    <Modal ariaLabel="Nuevo producto de venta" onClose={onClose} bloqueado={saving} as="form" onSubmit={handleSubmit}>
+      <div className="modal-header"><span className="modal-title">Nuevo producto de venta</span></div>
+      <div className="modal-body">
+        <div className="field">
+          <label htmlFor="pv-nombre">Nombre *</label>
+          <input id="pv-nombre" className="input" type="text" required autoFocus value={nombre} onChange={(e) => setNombre(e.target.value)} />
+        </div>
+        <div className="field">
+          <label htmlFor="pv-categoria">Categoría *</label>
+          <select id="pv-categoria" className="input" value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)}>
+            {categorias.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor="pv-precio">Precio ($) *</label>
+          <input id="pv-precio" className="input" type="number" step="0.01" required value={precio} onChange={(e) => setPrecio(e.target.value)} />
+        </div>
+        <div className="field">
+          <label>Componente fijo (envase/insumo directo)</label>
+          <div className="flex-row gap-2">
+            <select className="input" value={componenteArticuloId} onChange={(e) => setComponenteArticuloId(e.target.value)}>
+              <option value="">Sin componente fijo</option>
+              {articulos.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
             </select>
+            <input className="input" type="number" step="any" value={componenteCantidad} onChange={(e) => setComponenteCantidad(e.target.value)} />
           </div>
-          <div className="field">
-            <label htmlFor="pv-precio">Precio ($) *</label>
-            <input id="pv-precio" className="input" type="number" step="0.01" required value={precio} onChange={(e) => setPrecio(e.target.value)} />
-          </div>
-          <div className="field">
-            <label>Componente fijo (envase/insumo directo)</label>
-            <div className="flex-row gap-2">
-              <select className="input" value={componenteArticuloId} onChange={(e) => setComponenteArticuloId(e.target.value)}>
-                <option value="">Sin componente fijo</option>
-                {articulos.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+        </div>
+        <div className="field">
+          <label>Grupo de modificadores</label>
+          <select className="input" value={grupoId} onChange={(e) => setGrupoId(e.target.value)}>
+            <option value="">Sin modificadores</option>
+            {grupos.map((g) => <option key={g.id} value={g.id}>{g.nombre}</option>)}
+          </select>
+        </div>
+        {grupoId && (
+          <>
+            <div className="field">
+              <label htmlFor="pv-modo">Modo de descuento</label>
+              <select id="pv-modo" className="input" value={modoDescuento} onChange={(e) => setModoDescuento(e.target.value as any)}>
+                <option value="reparto">Reparto (cantidad total dividida entre las opciones elegidas)</option>
+                <option value="por_opcion">Por opción (cada opción consume su propia cantidad)</option>
+                <option value="sin_descuento">Sin descuento (no toca stock)</option>
               </select>
-              <input className="input" type="number" step="any" value={componenteCantidad} onChange={(e) => setComponenteCantidad(e.target.value)} />
             </div>
-          </div>
-          <div className="field">
-            <label>Grupo de modificadores</label>
-            <select className="input" value={grupoId} onChange={(e) => setGrupoId(e.target.value)}>
-              <option value="">Sin modificadores</option>
-              {grupos.map((g) => <option key={g.id} value={g.id}>{g.nombre}</option>)}
-            </select>
-          </div>
-          {grupoId && (
-            <>
+            {modoDescuento === 'reparto' && (
               <div className="field">
-                <label htmlFor="pv-modo">Modo de descuento</label>
-                <select id="pv-modo" className="input" value={modoDescuento} onChange={(e) => setModoDescuento(e.target.value as any)}>
-                  <option value="reparto">Reparto (cantidad total dividida entre las opciones elegidas)</option>
-                  <option value="por_opcion">Por opción (cada opción consume su propia cantidad)</option>
-                  <option value="sin_descuento">Sin descuento (no toca stock)</option>
-                </select>
+                <label htmlFor="pv-cant-total">Cantidad total a repartir</label>
+                <input id="pv-cant-total" className="input" type="number" step="any" value={cantidadTotal} onChange={(e) => setCantidadTotal(e.target.value)} />
               </div>
-              {modoDescuento === 'reparto' && (
-                <div className="field">
-                  <label htmlFor="pv-cant-total">Cantidad total a repartir</label>
-                  <input id="pv-cant-total" className="input" type="number" step="any" value={cantidadTotal} onChange={(e) => setCantidadTotal(e.target.value)} />
-                </div>
-              )}
-            </>
-          )}
-          {error && <div className="alert-danger" role="alert">{error}</div>}
-        </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar'}</button>
-        </div>
-      </form>
-    </div>
+            )}
+          </>
+        )}
+        {error && <div className="alert-danger" role="alert">{error}</div>}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+        <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar'}</button>
+      </div>
+    </Modal>
   );
 }
