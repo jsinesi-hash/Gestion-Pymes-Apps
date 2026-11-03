@@ -3,16 +3,10 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession, arr, num, id as vId, pausarVentaEspera, listarVentasEspera, descartarVentaEspera } from '@core/main';
+import { arr, num, id as vId, pausarVentaEspera, listarVentasEspera, descartarVentaEspera, requireSession } from '@core/main';
 import type { LineaPayload } from './venta';
 
 type Db = BetterSQLite3Database<typeof schema>;
-
-function requireSession() {
-  const session = getSession();
-  if (!session) throw new Error('UNAUTHENTICATED');
-  return session;
-}
 
 export type PausarPayload = {
   caja_id: string;

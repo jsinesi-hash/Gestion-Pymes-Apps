@@ -5,17 +5,11 @@ import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '@core/db';
 import { getSession } from '../auth/session';
 import { getOriginId } from '../context';
-import { requirePermission } from '../auth/guard';
+import { requirePermission, requireSession } from '../auth/guard';
 import { id, centavos, oneOf, optStr } from '../validation/core';
 import { cajaGetActivaHandler } from './caja';
 
 type Db = BetterSQLite3Database<typeof schema>;
-
-function requireSession() {
-  const s = getSession();
-  if (!s) throw new Error('UNAUTHENTICATED');
-  return s;
-}
 
 export function ctacteListHandler(db: Db) {
   requireSession();

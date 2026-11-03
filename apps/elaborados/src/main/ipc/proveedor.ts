@@ -1,16 +1,10 @@
 import { eq, asc } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { getSession, requirePermission, str, proveedorUpsertHandler } from '@core/main';
+import { requirePermission, str, proveedorUpsertHandler, requireSession } from '@core/main';
 import * as schema from '../db/schema';
 
 type Db = BetterSQLite3Database<typeof schema>;
-
-function requireSession() {
-  const session = getSession();
-  if (!session) throw new Error('UNAUTHENTICATED');
-  return session;
-}
 
 export function proveedorListHandler(db: Db) {
   requireSession();

@@ -10,6 +10,10 @@ export type CoreBridgeApi = ReturnType<typeof coreCanales>;
 export function coreCanales(invoke: Invoke) {
   return {
     getVersion: () => invoke('app:version'),
+    // Revisión 2026-10-20 (P2): el catálogo de impuestos es universal (tabla en @core/db).
+    impuesto: {
+      list: () => invoke('impuesto:list'),
+    },
     auth: {
       login:  (creds: unknown) => invoke('auth:login', creds),
       logout: () => invoke('auth:logout'),

@@ -3,18 +3,12 @@ import { generateId } from '@ferreteria/shared';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
-import { getSession, getOriginId, str, optStr, optId } from '@core/main';
+import { getOriginId, str, optStr, optId, requireSession } from '@core/main';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
-function requireSessionOrThrow() {
-  const session = getSession();
-  if (!session) throw new Error('UNAUTHENTICATED');
-  return session;
-}
-
 export function transportistaListHandler(db: Db, payload: { incluirInactivos?: boolean } = {}) {
-  requireSessionOrThrow();
+  requireSession();
   const q = db.select().from(schema.transportista);
   if (payload.incluirInactivos) return q.all();
   return q.where(eq(schema.transportista.activo, true)).all();
@@ -36,12 +30,12 @@ export function transportistaQueryAll(db: Db) {
 }
 
 export function transportistaGetHandler(db: Db, id: string) {
-  requireSessionOrThrow();
+  requireSession();
   return db.select().from(schema.transportista).where(eq(schema.transportista.id, id)).get() ?? null;
 }
 
 export function transportistaUpsertHandler(db: Db, payload: unknown) {
-  const session = requireSessionOrThrow();
+  const session = requireSession();
   const now = new Date();
   const sync = { version: 1 as const, origin_id: getOriginId(), sync_state: 'pending' as const, updated_at: now };
 
@@ -88,7 +82,7 @@ export function transportistaUpsertHandler(db: Db, payload: unknown) {
 }
 
 export function transportistaDeactivateHandler(db: Db, id: string) {
-  const session = requireSessionOrThrow();
+  const session = requireSession();
   const now = new Date();
   db.update(schema.transportista).set({
     activo: false,

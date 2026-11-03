@@ -3,16 +3,10 @@ import { generateId } from '@ferreteria/shared';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
-import { getSession, getOriginId, requirePermission, id, optStr, num, centavos, arr } from '@core/main';
+import { getOriginId, requirePermission, id, optStr, num, centavos, arr, requireSession } from '@core/main';
 import { crearBatchesPorEventoDeCosto } from '../precios/motor';
 
 type Db = BetterSQLite3Database<typeof schema>;
-
-function requireSession() {
-  const s = getSession();
-  if (!s) throw new Error('UNAUTHENTICATED');
-  return s;
-}
 
 function actualizarCppYProveedor(
   tx: Db,

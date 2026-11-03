@@ -4,25 +4,27 @@ import path from 'node:path';
 
 // main/index.ts importa `electron` y no se puede ejecutar en el runner, así que el invariante
 // se fija sobre el fuente (mismo recurso que base-seed.cli-guard.test.ts). Revisión 2026-10-20:
-// `loadTerminalConfig()` se llamaba y su resultado se descartaba, por lo que el origin_id de toda
-// terminal quedaba en 'C1'. El config tiene que llegar a `aplicarConfigTerminal` ANTES de
-// registrar handlers y de `runStartup`.
-describe('arranque de Retail aplica el origin_id de la terminal', () => {
+// el origin_id de la terminal tiene que aplicarse al contexto del main ANTES de registrar handlers
+// y de `runStartup` (P0, ADR-115). Desde P2 lo hace `iniciarTerminal` de @core/main, que reemplazó
+// al `config.ts` duplicado de cada app.
+describe('arranque de Retail inicializa la terminal (origin_id)', () => {
   const fuente = fs.readFileSync(path.join(__dirname, '..', 'index.ts'), 'utf8')
     .split('\n').filter((l) => !l.trim().startsWith('//')).join('\n');
 
-  it('pasa loadTerminalConfig() a aplicarConfigTerminal', () => {
-    expect(fuente).toMatch(/aplicarConfigTerminal\(\s*loadTerminalConfig\(\)\s*\)/);
+  it("llama a iniciarTerminal(app.getPath('userData'))", () => {
+    expect(fuente).toMatch(/iniciarTerminal\(\s*app\.getPath\(\s*'userData'\s*\)\s*\)/);
   });
 
   it('lo hace antes de runStartup y de registrar handlers', () => {
-    const aplicar = fuente.indexOf('aplicarConfigTerminal(');
-    expect(aplicar).toBeGreaterThan(-1);
-    expect(aplicar).toBeLessThan(fuente.indexOf('await runStartup('));
-    expect(aplicar).toBeLessThan(fuente.indexOf('registerCoreHandlers('));
+    const iniciar = fuente.indexOf('iniciarTerminal(');
+    expect(iniciar).toBeGreaterThan(-1);
+    expect(iniciar).toBeLessThan(fuente.indexOf('await runStartup('));
+    expect(iniciar).toBeLessThan(fuente.indexOf('registerCoreHandlers('));
   });
 
-  it('no deja loadTerminalConfig() suelto (valor descartado)', () => {
-    expect(fuente).not.toMatch(/^\s*loadTerminalConfig\(\);/m);
+  it('ya no usa el config.ts local ni deja el resultado descartado', () => {
+    expect(fuente).not.toMatch(/loadTerminalConfig/);
+    expect(fuente).not.toMatch(/from '\.\/config'/);
+    expect(fs.existsSync(path.join(__dirname, '..', 'config.ts'))).toBe(false);
   });
 });

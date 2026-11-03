@@ -3,7 +3,7 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId, inicioDelDia, finDelDia, nombreCompletoCliente, verificarTotalesVenta } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession, verificarSupervisor, optId, arr, num, centavos, oneOf, id as vId, confirmarVenta, anularVenta, ventaListByCajaHandler, type AplicarLineasCtx, type RevertirLineasCtx, type VentaPagoPayload } from '@core/main';
+import { verificarSupervisor, optId, arr, num, centavos, oneOf, id as vId, confirmarVenta, anularVenta, ventaListByCajaHandler, type AplicarLineasCtx, type RevertirLineasCtx, type VentaPagoPayload, requireSession } from '@core/main';
 export type { VentaPagoPayload } from '@core/main';
 export { ventaListByCajaHandler };
 import { marcarPresupuestoConvertido } from './presupuesto';
@@ -48,12 +48,6 @@ export type VentaAnularPayload = {
   motivo: string;
   supervisor_credenciales: { nombre_usuario: string; password: string };
 };
-
-function requireSession() {
-  const session = getSession();
-  if (!session) throw new Error('UNAUTHENTICATED');
-  return session;
-}
 
 // Tolerancia para comparar stock fraccionario (productos que permiten fracción) sin que el error
 // de coma flotante rechace una venta que consume exactamente el stock.

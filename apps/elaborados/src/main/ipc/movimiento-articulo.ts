@@ -2,17 +2,11 @@ import { eq, desc } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
-import { getSession, getOriginId, requirePermission, str, num, optStr, oneOf } from '@core/main';
+import { getOriginId, requirePermission, str, num, optStr, oneOf, requireSession } from '@core/main';
 import * as schema from '../db/schema';
 import { costoPromedioEntrada } from '../domain/costo';
 
 type Db = BetterSQLite3Database<typeof schema>;
-
-function requireSession() {
-  const session = getSession();
-  if (!session) throw new Error('UNAUTHENTICATED');
-  return session;
-}
 
 export function movimientoArticuloListHandler(db: Db, payload: { articulo_id: string }) {
   requireSession();

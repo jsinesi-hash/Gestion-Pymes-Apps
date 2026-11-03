@@ -3,24 +3,26 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 // Ver apps/retail/src/main/__tests__/arranque.origin-id.test.ts: mismo invariante para
-// Elaborados (revisión 2026-10-20, P0).
-describe('arranque de Elaborados aplica el origin_id de la terminal', () => {
+// Elaborados (revisión 2026-10-20, P0 y P2).
+describe('arranque de Elaborados inicializa la terminal (origin_id)', () => {
   const fuente = fs.readFileSync(path.join(__dirname, '..', 'index.ts'), 'utf8')
     .split('\n').filter((l) => !l.trim().startsWith('//')).join('\n');
 
-  it('pasa loadTerminalConfig() a aplicarConfigTerminal', () => {
-    expect(fuente).toMatch(/aplicarConfigTerminal\(\s*loadTerminalConfig\(\)\s*\)/);
+  it("llama a iniciarTerminal(app.getPath('userData'))", () => {
+    expect(fuente).toMatch(/iniciarTerminal\(\s*app\.getPath\(\s*'userData'\s*\)\s*\)/);
   });
 
   it('lo hace antes de runStartup y de registrar handlers', () => {
-    const aplicar = fuente.indexOf('aplicarConfigTerminal(');
-    expect(aplicar).toBeGreaterThan(-1);
-    expect(aplicar).toBeLessThan(fuente.indexOf('await runStartup('));
-    expect(aplicar).toBeLessThan(fuente.indexOf('registerCoreHandlers('));
+    const iniciar = fuente.indexOf('iniciarTerminal(');
+    expect(iniciar).toBeGreaterThan(-1);
+    expect(iniciar).toBeLessThan(fuente.indexOf('await runStartup('));
+    expect(iniciar).toBeLessThan(fuente.indexOf('registerCoreHandlers('));
   });
 
-  it('no deja loadTerminalConfig() suelto (valor descartado)', () => {
-    expect(fuente).not.toMatch(/^\s*loadTerminalConfig\(\);/m);
+  it('ya no usa el config.ts local ni deja el resultado descartado', () => {
+    expect(fuente).not.toMatch(/loadTerminalConfig/);
+    expect(fuente).not.toMatch(/from '\.\/config'/);
+    expect(fs.existsSync(path.join(__dirname, '..', 'config.ts'))).toBe(false);
   });
 
   // Revisión 2026-10-20 (P0): sin handlers de uncaughtException/unhandledRejection un error no

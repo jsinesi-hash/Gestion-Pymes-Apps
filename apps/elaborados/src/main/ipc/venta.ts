@@ -1,9 +1,10 @@
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import {
-  getSession, confirmarVenta, anularVenta, ventaListByCajaHandler, requirePermission,
+  confirmarVenta, anularVenta, ventaListByCajaHandler, requirePermission,
   str, optStr, optId, num, centavos, oneOf, arr, id as vId,
   type VentaPagoPayload, type AplicarLineasCtx,
+  requireSession,
 } from '@core/main';
 import type { IpcMain } from 'electron';
 import { generateId, nombreCompletoCliente } from '@ferreteria/shared';
@@ -19,12 +20,6 @@ type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
 
 /** Absorbe el error de punto flotante acumulado en el stock (0.3 − 0.1 − 0.2 ≠ 0). `+ 0` normaliza -0. */
 const redondear6 = (n: number) => Math.round(n * 1e6) / 1e6 + 0;
-
-function requireSession() {
-  const session = getSession();
-  if (!session) throw new Error('UNAUTHENTICATED');
-  return session;
-}
 
 // ── Parseo de payload (SEC-2: forma y tipo en el borde) ──────────────────────
 

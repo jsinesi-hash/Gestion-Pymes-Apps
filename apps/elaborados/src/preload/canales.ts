@@ -6,9 +6,6 @@ import type { Invoke, BridgeDeps } from '@core/preload';
 
 export function canalesElaborados(invoke: Invoke, ipcRenderer: BridgeDeps['ipcRenderer']) {
   return {
-    impuesto: {
-      list: () => invoke('impuesto:list'),
-    },
     articulo: {
       list:   () => invoke('articulo:list'),
       get:    (p: { id: string }) => invoke('articulo:get', p),
