@@ -60,9 +60,11 @@ import { drenarReintentos } from './agenda/worker-reintentos';
 import { applyPendingCambiosProgramados } from './scheduler/precios';
 import { ElectronPrintService } from '../print/ElectronPrintService';
 import { installAppMenu } from './menu/appMenu';
-import { getSession, aplicarSeguridadVentana, aplicarConfigTerminal } from '@core/main';
+import { getSession, aplicarSeguridadVentana, aplicarConfigTerminal, programarTareaSegura, registrarErroresNoCapturados } from '@core/main';
 
 async function createWindow(): Promise<void> {
+  // Revisión 2026-10-20 (P0): errores no capturados al log (no cortan el proceso en plena venta).
+  registrarErroresNoCapturados();
   // Revisión 2026-10-20 (P0): el config de la terminal tiene que llegar al contexto del main;
   // antes se descartaba y todas las terminales grababan origin_id='C1'.
   aplicarConfigTerminal(loadTerminalConfig());
@@ -126,17 +128,17 @@ async function createWindow(): Promise<void> {
   // ADR-047: catch-up de agenda al abrir (materializa rutinas vencidas mientras estuvo cerrada).
   try { ejecutarCatchUp(db, new Date()); } catch (e) { console.error('[agenda] catch-up fallo:', e); }
   // ADR-047: worker de reintentos de avisos — al abrir y cada 60s mientras la app este abierta.
-  void drenarReintentos(db, new Date()).catch((e) => console.error('[agenda] worker inicial:', e));
-  setInterval(() => { void drenarReintentos(db, new Date()).catch(() => {}); }, 60 * 1000);
+  // Revisión 2026-10-20 (P0): cada job corre por `programarTareaSegura`: un error de SQLite
+  // (SQLITE_BUSY, tabla ausente tras un restore) se registra con el nombre del job en vez de
+  // tumbar el proceso main o dejar el intervalo muerto sin rastro.
+  programarTareaSegura('avisos-reintentos', 60 * 1000, () => drenarReintentos(db, new Date()), undefined, { ejecutarAlInicio: true });
 
   // ADR-034: aplicar cambios de precio programados al arrancar y cada 1 hora
-  applyPendingCambiosProgramados(db);
-  setInterval(() => applyPendingCambiosProgramados(db), 60 * 60 * 1000);
+  programarTareaSegura('cambios-programados', 60 * 60 * 1000, () => applyPendingCambiosProgramados(db), undefined, { ejecutarAlInicio: true });
 
   // ADR-046 §3: job de vencimiento de presupuestos. Corre al arrancar y cada 24h;
   // marca emitido -> vencido con compare-and-swap (no pisa conversiones en curso).
-  presupuestoVencerLoteHandler(db);
-  setInterval(() => presupuestoVencerLoteHandler(db), 24 * 60 * 60 * 1000);
+  programarTareaSegura('presupuestos-vencidos', 24 * 60 * 60 * 1000, () => presupuestoVencerLoteHandler(db), undefined, { ejecutarAlInicio: true });
 
   const win = new BrowserWindow({
     width: 1280,
