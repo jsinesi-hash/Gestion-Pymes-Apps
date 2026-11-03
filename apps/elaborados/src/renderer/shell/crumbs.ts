@@ -20,4 +20,5 @@ export const CRUMBS_ELABORADOS: Seccion[] = [
   { grupo: 'Sistema', base: '/config/roles-permisos', baseLabel: 'Roles y permisos' },
   { grupo: 'Sistema', base: '/config/backup-restore', baseLabel: 'Backup/Restore' },
   { grupo: 'Sistema', base: '/config/datos-demo', baseLabel: 'Datos demo' },
+  { grupo: 'Sistema', base: '/config/smtp', baseLabel: 'Email / SMTP' },
 ];

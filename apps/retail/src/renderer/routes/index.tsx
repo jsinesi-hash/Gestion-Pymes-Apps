@@ -19,7 +19,7 @@ import { RetailShell } from '../views/shell/RetailShell';
 import { PosSessionProvider } from '../context/PosSessionContext';
 import { PosView } from '../views/pos/PosView';
 import { ListasPreciosView } from '../views/config/ListasPreciosView';
-import { ConfigSmtp } from '../views/config/ConfigSmtp';
+import { ConfigSmtp } from '@core/ui';
 import { ConfigDatosDemo } from '../views/config/ConfigDatosDemo';
 import { ConfigSinonimos } from '../views/config/ConfigSinonimos';
 import { FuncionalidadesView } from '../views/config/FuncionalidadesView';

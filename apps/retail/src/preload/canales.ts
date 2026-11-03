@@ -128,12 +128,6 @@ export function canalesRetail(invoke: Invoke, ipcRenderer: BridgeDeps['ipcRender
         html:          (h: string)  => invoke('print:html', h),
       },
     },
-    smtp: {
-      getConfig:   ()           => invoke('smtp:getConfig'),
-      setConfig:   (p: unknown) => invoke('smtp:setConfig', p),
-      setPassword: (p: unknown) => invoke('smtp:setPassword', p),
-      probar:      ()           => invoke('smtp:probar'),
-    },
     venta: {
       // Payload tipado (revisión 2026-10-20, P1): el renderer verifica la forma al compilar.
       confirmar:  (p: VentaConfirmarPayload) =>

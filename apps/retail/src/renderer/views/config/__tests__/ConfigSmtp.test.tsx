@@ -1,8 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { ConfigSmtp } from '../ConfigSmtp';
+import { ConfigSmtp, AuthContext } from '@core/ui';
 
-vi.mock('@core/ui', async (importOriginal) => ({ ...(await importOriginal<any>()), useAuth: () => ({ can: () => true }) }));
+// ConfigSmtp vive en @core/ui (ADR-142) y lee la sesión del contexto: se le da un Supervisor con permiso.
+const sesionSupervisor = { session: null, can: () => true, login: async () => {}, logout: async () => {}, actualizarPreferencias: () => {} };
+function renderSmtp() {
+  return render(<AuthContext.Provider value={sesionSupervisor}><ConfigSmtp /></AuthContext.Provider>);
+}
+
 
 const getConfig = vi.fn();
 const setConfig = vi.fn().mockResolvedValue(undefined);
@@ -27,14 +32,14 @@ beforeEach(() => {
 
 describe('ConfigSmtp', () => {
   it('carga la config y muestra que hay contraseña guardada', async () => {
-    render(<ConfigSmtp />);
+    renderSmtp();
     await waitFor(() => expect(getConfig).toHaveBeenCalled());
     expect(await screen.findByDisplayValue('smtp.x')).toBeInTheDocument();
     expect(screen.getByText(/guardada/i)).toBeInTheDocument();
   });
 
   it('probar conexión muestra el resultado', async () => {
-    render(<ConfigSmtp />);
+    renderSmtp();
     await waitFor(() => expect(getConfig).toHaveBeenCalled());
     fireEvent.click(screen.getByRole('button', { name: /probar/i }));
     await waitFor(() => expect(probar).toHaveBeenCalled());
@@ -43,7 +48,7 @@ describe('ConfigSmtp', () => {
 
   it('probar conexión muestra el error cuando la IPC rechaza (antes fallaba en silencio)', async () => {
     probar.mockRejectedValue(new Error('ECONNREFUSED'));
-    render(<ConfigSmtp />);
+    renderSmtp();
     await waitFor(() => expect(getConfig).toHaveBeenCalled());
     fireEvent.click(screen.getByRole('button', { name: /probar/i }));
 
@@ -53,7 +58,7 @@ describe('ConfigSmtp', () => {
   });
 
   it('guardar llama a setConfig con los valores del form', async () => {
-    render(<ConfigSmtp />);
+    renderSmtp();
     await screen.findByDisplayValue('smtp.x');
     fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
     await waitFor(() => expect(setConfig).toHaveBeenCalled());
@@ -65,14 +70,14 @@ describe('ConfigSmtp', () => {
 
   it('avisa cuando el Usuario no tiene forma de dirección de correo', async () => {
     getConfig.mockResolvedValue({ host: 'smtp.gmail.com', port: 587, secure: false, from: 'a@x.com', user: 'Secreta123@@', tiene_password: true });
-    render(<ConfigSmtp />);
+    renderSmtp();
     await screen.findByDisplayValue('Secreta123@@');
     expect(screen.getByText(/no parece una dirección/i)).toBeInTheDocument();
   });
 
   it('no avisa cuando el Usuario es una dirección válida', async () => {
     getConfig.mockResolvedValue({ host: 'smtp.gmail.com', port: 587, secure: false, from: 'a@x.com', user: 'a@gmail.com', tiene_password: true });
-    render(<ConfigSmtp />);
+    renderSmtp();
     await screen.findByDisplayValue('a@gmail.com');
     expect(screen.queryByText(/no parece una dirección/i)).not.toBeInTheDocument();
   });
@@ -80,7 +85,7 @@ describe('ConfigSmtp', () => {
   it('si se cancela la confirmación, no guarda nada', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(false);
     getConfig.mockResolvedValue({ host: 'smtp.gmail.com', port: 587, secure: false, from: 'a@x.com', user: 'Secreta123@@', tiene_password: true });
-    render(<ConfigSmtp />);
+    renderSmtp();
     await screen.findByDisplayValue('Secreta123@@');
     fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
     await waitFor(() => expect(window.confirm).toHaveBeenCalled());
@@ -89,14 +94,14 @@ describe('ConfigSmtp', () => {
 
   it('avisa si el puerto 465 se usa sin conexión segura', async () => {
     getConfig.mockResolvedValue({ host: 'smtp.gmail.com', port: 465, secure: false, from: 'a@x.com', user: 'a@gmail.com', tiene_password: true });
-    render(<ConfigSmtp />);
+    renderSmtp();
     await screen.findByDisplayValue('465');
     expect(screen.getByText(/TLS directa: marcá/i)).toBeInTheDocument();
   });
 
   it('avisa si el puerto 587 se usa con conexión segura tildada', async () => {
     getConfig.mockResolvedValue({ host: 'smtp.gmail.com', port: 587, secure: true, from: 'a@x.com', user: 'a@gmail.com', tiene_password: true });
-    render(<ConfigSmtp />);
+    renderSmtp();
     await screen.findByDisplayValue('587');
     expect(screen.getByText(/usa STARTTLS: destildá/i)).toBeInTheDocument();
   });
@@ -106,7 +111,7 @@ describe('ConfigSmtp', () => {
 
   it('refleja el estado del aviso de cierre por email', async () => {
     paramGet.mockResolvedValue('true');
-    render(<ConfigSmtp />);
+    renderSmtp();
     await screen.findByDisplayValue('smtp.x');
     await waitFor(() => expect(paramGet).toHaveBeenCalledWith({ clave: 'notif_cierre_caja_email' }));
     expect(screen.getByLabelText(/avisar los cierres de caja por email/i)).toBeChecked();
@@ -114,7 +119,7 @@ describe('ConfigSmtp', () => {
 
   it('guardar persiste el flag de aviso de cierre', async () => {
     paramGet.mockResolvedValue('false');
-    render(<ConfigSmtp />);
+    renderSmtp();
     await screen.findByDisplayValue('smtp.x');
     fireEvent.click(screen.getByLabelText(/avisar los cierres de caja por email/i));
     fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
@@ -122,7 +127,7 @@ describe('ConfigSmtp', () => {
   });
 
   it('muestra la ayuda sobre contraseñas de aplicación', async () => {
-    render(<ConfigSmtp />);
+    renderSmtp();
     await screen.findByDisplayValue('smtp.x');
     expect(screen.getByText(/contraseña de aplicación/i)).toBeInTheDocument();
   });
