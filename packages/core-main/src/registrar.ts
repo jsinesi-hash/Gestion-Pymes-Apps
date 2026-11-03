@@ -17,6 +17,8 @@ import { registerRestoreHandlers } from './ipc/restore';
 import { registerDialogHandlers } from './ipc/dialog';
 import { registerMenuHandlers } from './ipc/menu';
 import { registerSistemaHandlers } from './ipc/sistema';
+import { registerSmtpHandlers } from './ipc/smtp';
+import { crearEnviadorSmtpReal } from './correo/enviador-smtp';
 import { registerVentaListByCajaHandler } from './venta/listar-por-caja';
 import { registerPrintHtmlHandler, type ImpresorHtml } from './ipc/print';
 import { registerExportarHandlers, crearExportarEjecutar, EXPORTADORES_CORE, type Exportador } from './ipc/exportar';
@@ -30,13 +32,16 @@ export type CoreHandlersOpts = {
   imprimirHtml?: ImpresorHtml;
   /** Reconstruye el menú nativo según la sesión; la app lo inyecta (el core no conoce su menú). */
   reconstruirMenu?: () => void;
-  /** Correo saliente de la app (recuperación de contraseña, ADR-137). Sin él, la recuperación no se ofrece. */
+  /**
+   * Correo saliente (recuperación de contraseña, ADR-137). Por defecto, el SMTP que el Supervisor configura en
+   * Configuración → Email / SMTP (ADR-142); la recuperación solo se ofrece si está completo. Override para pruebas.
+   */
   enviadorCorreo?: EnviadorCorreo;
 };
 
 /** Registra TODOS los canales IPC universales. Lo llama el main/index.ts de cada app. */
 export function registerCoreHandlers(ipcMain: IpcMain, db: BetterSQLite3Database<typeof coreSchema>, opts: CoreHandlersOpts): void {
-  registerAuthHandlers(ipcMain, db, opts.enviadorCorreo ?? null);
+  registerAuthHandlers(ipcMain, db, opts.enviadorCorreo ?? crearEnviadorSmtpReal(db));
   registerPreferenciasHandlers(ipcMain, db, opts.navegacion);
   registerParametrosHandlers(ipcMain, db);
   registerGeoHandlers(ipcMain, db);
@@ -51,6 +56,7 @@ export function registerCoreHandlers(ipcMain: IpcMain, db: BetterSQLite3Database
   registerVentaListByCajaHandler(ipcMain, db as never);
   registerMenuHandlers(ipcMain, opts.reconstruirMenu);
   registerSistemaHandlers(ipcMain);
+  registerSmtpHandlers(ipcMain, db);
   registerExportarHandlers(ipcMain, db, crearExportarEjecutar([...EXPORTADORES_CORE, ...(opts.exportadores ?? [])]));
   if (opts.imprimirHtml) registerPrintHtmlHandler(ipcMain, opts.imprimirHtml);
 }

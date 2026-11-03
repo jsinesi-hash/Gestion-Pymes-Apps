@@ -56,3 +56,21 @@ describe('registerCoreHandlers', () => {
     await expect(Promise.resolve(registrar().get('menu:rebuild')!({}))).resolves.toBeUndefined();
   });
 });
+
+// ADR-142: el SMTP (configuración, clave, enviador y pantalla) pasó de Retail al núcleo para que la
+// recuperación de contraseña (ADR-137) la tengan todas las apps.
+describe('registerCoreHandlers — SMTP en el núcleo (ADR-142)', () => {
+  it('registra los cuatro canales smtp:*', () => {
+    const c = canalesRegistrados();
+    for (const esperado of ['smtp:getConfig', 'smtp:setConfig', 'smtp:setPassword', 'smtp:probar']) {
+      expect(c).toContain(esperado);
+    }
+  });
+
+  it('la recuperación de contraseña respeta un enviador de correo inyectado (override)', async () => {
+    const disponible = registrar({ enviadorCorreo: { disponible: () => true, enviar: async () => {} } }).get('auth:recuperacionDisponible')!;
+    const noDisponible = registrar({ enviadorCorreo: { disponible: () => false, enviar: async () => {} } }).get('auth:recuperacionDisponible')!;
+    expect(await disponible({})).toBe(true);
+    expect(await noDisponible({})).toBe(false);
+  });
+});

@@ -1,8 +1,6 @@
 import nodemailer from 'nodemailer';
 import type { CanalAdapter, AvisoParaEnviar, ResultadoEnvio } from './tipos';
-import type { SmtpConfig } from './smtp-config';
-import { leerSmtpConfig } from './smtp-config';
-import { leerPasswordSmtp } from '../../seguridad/smtp-secret';
+import { leerSmtpConfig, leerPasswordSmtp, type SmtpConfig } from '@core/main';
 
 export interface EmailAdapterDeps {
   getConfig: () => SmtpConfig | Promise<SmtpConfig>;

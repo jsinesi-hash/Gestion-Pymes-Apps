@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { crearEnviadorSmtp, type EnviadorSmtpDeps } from '../enviador-correo';
-import type { SmtpConfig } from '../../agenda/canales/smtp-config';
+import { crearEnviadorSmtp, type EnviadorSmtpDeps } from './enviador-smtp';
+import type { SmtpConfig } from './smtp-config';
 
 // ADR-137: el enviador de correo de Retail para la recuperación de contraseña reutiliza la
 // configuración SMTP (servidor en parametros_sistema, clave en safeStorage) de la agenda.
@@ -77,5 +77,23 @@ describe('crearEnviadorSmtp — enviar', () => {
   it('propaga el error del servidor de correo (el núcleo decide qué responder)', async () => {
     const a = armar({ sendMail: vi.fn().mockRejectedValue(new Error('ECONNREFUSED')) });
     await expect(a.enviador.enviar(MENSAJE)).rejects.toThrow('ECONNREFUSED');
+  });
+});
+
+// ADR-142: la clave del servidor vive en safeStorage; descifrarla es un acceso al sistema operativo.
+describe('crearEnviadorSmtp — la clave solo se lee si la configuración está completa', () => {
+  it('disponible() con configuración incompleta no lee la clave', () => {
+    const a = armar({ config: { ...CONFIG, host: '' } });
+    const getPassword = vi.fn(() => 'secreto');
+    const enviador = crearEnviadorSmtp({ getConfig: () => ({ ...CONFIG, host: '' }), getPassword, createTransport: a.createTransport as never });
+    expect(enviador.disponible()).toBe(false);
+    expect(getPassword).not.toHaveBeenCalled();
+  });
+
+  it('disponible() con configuración completa sí consulta la clave', () => {
+    const getPassword = vi.fn(() => 'secreto');
+    const enviador = crearEnviadorSmtp({ getConfig: () => CONFIG, getPassword, createTransport: vi.fn() as never });
+    expect(enviador.disponible()).toBe(true);
+    expect(getPassword).toHaveBeenCalledTimes(1);
   });
 });

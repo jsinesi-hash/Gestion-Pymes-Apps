@@ -12,7 +12,6 @@ import { db } from './db/client';
 import { runStartup } from './startup';
 import { registerCoreHandlers, activarFirmaBackup, activarLockoutPersistente, activarRegistroErrores } from '@core/main';
 import { navegacionRetail } from '../common/navegacion';
-import { crearEnviadorSmtpReal } from './seguridad/enviador-correo';
 import { registerMarcaHandlers } from './ipc/marca';
 import { registerCategoriaHandlers } from './ipc/categoria';
 import { registerUbicacionHandlers } from './ipc/ubicacion';
@@ -26,7 +25,6 @@ import { registerListaPrecioHandlers } from './ipc/lista-precio';
 import { registerReglaPrecioHandlers } from './ipc/regla-precio';
 import { registerPriceBatchHandlers } from './ipc/price-batch';
 import { avisoCierreCaja } from './ipc/caja-cierre-aviso';
-import { registerSmtpHandlers } from './ipc/smtp';
 import { registerVentaHandlers } from './ipc/venta';
 import { registerImportarHandlers } from './ipc/importar';
 import { registerDashboardHandlers } from './ipc/dashboard';
@@ -86,8 +84,6 @@ async function createWindow(): Promise<void> {
     caja: { onCajaCerrada: avisoCierreCaja },
     proveedor: proveedorHooksRetail,
     imprimirHtml: (h) => printService.printRawHtml(h),
-    // ADR-137: recuperación de contraseña por mail con el SMTP configurado en Retail.
-    enviadorCorreo: crearEnviadorSmtpReal(db),
   });
   registerDialogRetailHandlers(ipcMain);
 
@@ -103,7 +99,6 @@ async function createWindow(): Promise<void> {
   registerListaPrecioHandlers(ipcMain, db);
   registerReglaPrecioHandlers(ipcMain, db);
   registerPriceBatchHandlers(ipcMain, db);
-  registerSmtpHandlers(ipcMain, db);
   registerVentaHandlers(ipcMain, db);
   registerImportarHandlers(ipcMain, db);
   registerDashboardHandlers(ipcMain, db);
