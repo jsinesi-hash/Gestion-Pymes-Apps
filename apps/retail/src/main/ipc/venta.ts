@@ -55,6 +55,35 @@ function requireSession() {
   return session;
 }
 
+// Tolerancia para comparar stock fraccionario (productos que permiten fracción) sin que el error
+// de coma flotante rechace una venta que consume exactamente el stock.
+const EPS_STOCK = 1e-9;
+
+/**
+ * Revisión 2026-10-20 (P0): `factor_a_stock_aplicado` lo manda el renderer y define cuánto stock
+ * se descuenta (cantidad × factor); con factor 0 se vendía sin descontar. Acá se verifica que sea
+ * finito y > 0, y que coincida con la presentación de la línea (o sea 1 si no trae presentación).
+ * Devuelve el factor validado.
+ */
+function validarFactorDeLinea(db: Db, linea: LineaPayload): number {
+  const factor = linea.factor_a_stock_aplicado ?? 1.0;
+  if (!Number.isFinite(factor) || factor <= 0) throw new Error('FACTOR_INVALIDO');
+
+  if (linea.presentacion_id) {
+    const pp = db.select().from(schema.producto_presentacion)
+      .where(and(
+        eq(schema.producto_presentacion.id, linea.presentacion_id),
+        eq(schema.producto_presentacion.producto_id, linea.producto_id),
+        eq(schema.producto_presentacion.activo, true),
+      )).get();
+    if (!pp) throw new Error('PRESENTACION_INVALIDA');
+    if (Math.abs(pp.factor_a_stock - factor) > EPS_STOCK) throw new Error('FACTOR_INVALIDO');
+  } else if (Math.abs(factor - 1) > EPS_STOCK) {
+    throw new Error('FACTOR_INVALIDO');
+  }
+  return factor;
+}
+
 function validarLineasPrevio(db: Db, payload: VentaConfirmarPayload): void {
   // ADR-049 §9 — lista efectiva del cliente (cliente.lista_precio_id → predeterminada),
   // para re-resolver el precio de cada línea contra el servidor.
@@ -65,21 +94,26 @@ function validarLineasPrevio(db: Db, payload: VentaConfirmarPayload): void {
     : null;
 
   let precioDesactualizado = false;
+  // Revisión 2026-10-20 (P0): el stock se compara por producto, no por línea. Dos líneas del
+  // mismo producto (p. ej. distinta presentación) pasaban cada una sola y dejaban stock negativo.
+  const stockPedido = new Map<string, number>();
 
   for (const linea of payload.lineas) {
     const prod = db.select().from(schema.producto)
       .where(eq(schema.producto.id, linea.producto_id)).get();
     if (!prod?.activo) throw new Error('PRODUCTO_INACTIVO');
+    const factor = validarFactorDeLinea(db, linea);
+    const cantidadStock = linea.cantidad * factor;
+    const pedido = (stockPedido.get(linea.producto_id) ?? 0) + cantidadStock;
+    stockPedido.set(linea.producto_id, pedido);
     const ex = db.select().from(schema.existencias)
       .where(eq(schema.existencias.producto_id, linea.producto_id)).get();
-    const cantidadStock = linea.cantidad * (linea.factor_a_stock_aplicado ?? 1.0);
-    if (!ex || ex.stock_fisico < cantidadStock) throw new Error('STOCK_INSUFICIENTE');
+    if (!ex || ex.stock_fisico + EPS_STOCK < pedido) throw new Error('STOCK_INSUFICIENTE');
 
     // ADR-049 §9 — el servidor re-resuelve el precio de lista y lo compara contra el
     // recibido (mismo factor de presentación y descuento de línea que aplicó el cliente).
     if (listaEfectivaId) {
       const resuelto = getPrecioEnListaHandler(db, { productoId: linea.producto_id, listaId: listaEfectivaId });
-      const factor = linea.factor_a_stock_aplicado ?? 1.0;
       const listaCentavos = Math.round(resuelto.precio_centavos * factor);
       const esperadoCentavos = Math.round(listaCentavos * (1 - linea.descuento_linea / 100));
       const recibidoCentavos = Math.round(linea.precio_unitario * 100);
@@ -132,6 +166,8 @@ function aplicarLineasRetail(tx: Tx, payload: VentaConfirmarPayload, ctx: Aplica
     const ex = tx.select().from(schema.existencias)
       .where(eq(schema.existencias.producto_id, linea.producto_id)).get()!;
     const stockResultante = ex.stock_fisico - cantidadStockLinea;
+    // Red de seguridad dentro de la transacción: la validación previa corre fuera de ella.
+    if (stockResultante < -EPS_STOCK) throw new Error('STOCK_INSUFICIENTE');
 
     // ADR-049 §9 — costo neto del momento (habilita margen real por venta en el
     // Dashboard); null si el producto no tiene proveedor preferido con costo.

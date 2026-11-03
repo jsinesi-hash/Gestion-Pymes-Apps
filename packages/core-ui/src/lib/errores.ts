@@ -58,6 +58,8 @@ const CODIGOS: Record<string, Formateador> = {
   FORBIDDEN: msg('No tenés permiso para hacer esta acción.'),
   NOT_FOUND: msg('No se encontró el registro. Puede que haya sido eliminado.'),
   NO_CHANGE: msg('No hay cambios para guardar.'),
+  FACTOR_INVALIDO: msg('La presentación de un producto no coincide con la cargada. Volvé a agregarlo al carrito.'),
+  PRESENTACION_INVALIDA: msg('La presentación de un producto ya no está disponible. Volvé a agregarlo al carrito.'),
   LAST_SUPERVISOR: msg('No se puede desactivar el último supervisor activo.'),
   AUTO_DESACTIVACION: msg('No podés desactivar tu propio usuario.'),
   CANTIDAD_INVALIDA: msg('Ingresá una cantidad válida.'),
