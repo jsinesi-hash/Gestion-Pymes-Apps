@@ -10,6 +10,9 @@ import { limiteIntentos } from '../auth/intentos';
 import { getSession, setSession, clearSession, getSessionData } from '../auth/session';
 import type { SessionData } from '../auth/session';
 import { getOriginId } from '../context';
+import {
+  recuperacionDisponibleHandler, recuperarSolicitarHandler, recuperarConfirmarHandler, type EnviadorCorreo,
+} from '../auth/recuperacion';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
@@ -423,12 +426,16 @@ export function permisoMatrizHandler(db: Db) {
   return { roles, permisos, porRol };
 }
 
-export function registerAuthHandlers(ipcMain: IpcMain, db: Db): void {
+export function registerAuthHandlers(ipcMain: IpcMain, db: Db, enviadorCorreo: EnviadorCorreo | null = null): void {
   ipcMain.handle('auth:login', async (_event, payload: LoginPayload) =>
     loginHandler(db, payload)
   );
   ipcMain.handle('auth:cambiarPasswordVencida', async (_e, p) => cambiarPasswordVencidaHandler(db, p));
   ipcMain.handle('auth:completarEmail', async (_e, p) => completarEmailHandler(db, p));
+  // ADR-137: recuperación de contraseña por mail (pre-sesión; sin enviador no está disponible).
+  ipcMain.handle('auth:recuperacionDisponible', async () => recuperacionDisponibleHandler(enviadorCorreo));
+  ipcMain.handle('auth:recuperarSolicitar', async (_e, p) => recuperarSolicitarHandler(db, p, enviadorCorreo));
+  ipcMain.handle('auth:recuperarConfirmar', async (_e, p) => recuperarConfirmarHandler(db, p));
   ipcMain.handle('auth:logout', async () => logoutHandler());
   ipcMain.handle('auth:whoami', async () => whoamiHandler());
   ipcMain.handle('auth:verifyPassword', async (_e, p) => verifyPasswordHandler(db, p));

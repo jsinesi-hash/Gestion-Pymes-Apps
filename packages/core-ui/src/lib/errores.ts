@@ -150,6 +150,7 @@ const CODIGOS: Record<string, Formateador> = {
   EMAIL_REQUERIDO: msg('Ingresá un correo electrónico.'),
   EMAIL_INVALIDO: msg('El correo electrónico no es válido.'),
   EMAIL_YA_CARGADO: msg('Este usuario ya tiene un correo electrónico cargado.'),
+  CODIGO_INVALIDO: msg('El código es incorrecto o venció. Pedí uno nuevo.'),
   SUPERVISOR_INVALIDO: msg('Las credenciales del supervisor son inválidas.'),
   // Sinónimos / equivalencias
   CANONICO_REQUERIDO: msg('Ingresá el término canónico.'),

@@ -3,6 +3,7 @@ import type { Navegacion } from '@ferreteria/shared';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import type * as coreSchema from '@core/db';
 import { registerAuthHandlers } from './ipc/auth';
+import type { EnviadorCorreo } from './auth/recuperacion';
 import { registerPreferenciasHandlers } from './ipc/preferencias';
 import { registerParametrosHandlers } from './ipc/parametros';
 import { registerGeoHandlers } from './ipc/geo';
@@ -28,11 +29,13 @@ export type CoreHandlersOpts = {
   imprimirHtml?: ImpresorHtml;
   /** Reconstruye el menú nativo según la sesión; la app lo inyecta (el core no conoce su menú). */
   reconstruirMenu?: () => void;
+  /** Correo saliente de la app (recuperación de contraseña, ADR-137). Sin él, la recuperación no se ofrece. */
+  enviadorCorreo?: EnviadorCorreo;
 };
 
 /** Registra TODOS los canales IPC universales. Lo llama el main/index.ts de cada app. */
 export function registerCoreHandlers(ipcMain: IpcMain, db: BetterSQLite3Database<typeof coreSchema>, opts: CoreHandlersOpts): void {
-  registerAuthHandlers(ipcMain, db);
+  registerAuthHandlers(ipcMain, db, opts.enviadorCorreo ?? null);
   registerPreferenciasHandlers(ipcMain, db, opts.navegacion);
   registerParametrosHandlers(ipcMain, db);
   registerGeoHandlers(ipcMain, db);

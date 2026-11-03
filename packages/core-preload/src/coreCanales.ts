@@ -21,6 +21,11 @@ export function coreCanales(invoke: Invoke) {
         invoke('auth:cambiarPasswordVencida', p),
       completarEmail: (p: { nombreUsuario: string; password: string; email: string }) =>
         invoke('auth:completarEmail', p),
+      // ADR-137: recuperación de contraseña por mail (pre-sesión).
+      recuperacionDisponible: (): Promise<boolean> => invoke('auth:recuperacionDisponible'),
+      recuperarSolicitar: (p: { identificador: string }): Promise<{ ok: true }> => invoke('auth:recuperarSolicitar', p),
+      recuperarConfirmar: (p: { identificador: string; codigo: string; passwordNueva: string }): Promise<void> =>
+        invoke('auth:recuperarConfirmar', p),
       logout: () => invoke('auth:logout'),
       whoami: () => invoke('auth:whoami'),
       verifyPassword: (p: unknown) => invoke('auth:verifyPassword', p),

@@ -35,5 +35,6 @@ export * from './seed/geo';
 export * from './ipc/print';
 export * from './tareas';
 export * from './auth/intentos';
+export * from './auth/recuperacion';
 export * from './terminal';
 export * from './userdata-aislado';

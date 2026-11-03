@@ -12,6 +12,7 @@ import { db } from './db/client';
 import { runStartup } from './startup';
 import { registerCoreHandlers, activarFirmaBackup } from '@core/main';
 import { navegacionRetail } from '../common/navegacion';
+import { crearEnviadorSmtpReal } from './seguridad/enviador-correo';
 import { registerMarcaHandlers } from './ipc/marca';
 import { registerCategoriaHandlers } from './ipc/categoria';
 import { registerUbicacionHandlers } from './ipc/ubicacion';
@@ -85,6 +86,8 @@ async function createWindow(): Promise<void> {
     caja: { onCajaCerrada: avisoCierreCaja },
     proveedor: proveedorHooksRetail,
     imprimirHtml: (h) => printService.printRawHtml(h),
+    // ADR-137: recuperación de contraseña por mail con el SMTP configurado en Retail.
+    enviadorCorreo: crearEnviadorSmtpReal(db),
   });
   registerDialogRetailHandlers(ipcMain);
 
