@@ -31,6 +31,12 @@ function createTestDb() {
   sqlite.exec("ALTER TABLE `usuario_preferencias` ADD `favoritos` text DEFAULT '[]' NOT NULL;");
   // ADR-086 (0048): columna `skin`.
   sqlite.exec("ALTER TABLE `usuario_preferencias` ADD `skin` text DEFAULT 'actual' NOT NULL;");
+  // ADR-136 (0050): `usuario.password_changed_at`. Este harness liviano no corre el migrator
+  // completo: se aplica el SQL real de la migración para que la tabla siga el schema de Drizzle.
+  const sql0050 = fs.readFileSync(
+    path.resolve(__dirname, '../../db/migrations/0050_adr136_password_vigencia.sql'), 'utf8'
+  );
+  for (const stmt of sql0050.split('--> statement-breakpoint').map(s => s.trim()).filter(Boolean)) sqlite.exec(stmt);
   return drizzle(sqlite, { schema });
 }
 
@@ -40,6 +46,9 @@ describe('auth IPC handlers', () => {
   beforeEach(() => {
     db = createTestDb();
     runSeed(db);
+    // ADR-136: el seed deja al admin sin mail ni fecha de contraseña; estos tests prueban login y
+    // sesión, no la vigencia (eso está en auth.vigencia.db.test.ts del núcleo).
+    db.update(schema.usuario).set({ email: 'usuario@prueba.local', password_changed_at: new Date() }).run();
     clearSession();
   });
 
@@ -105,6 +114,8 @@ describe('auth IPC handlers', () => {
         nombre_usuario: 'admin2',
         nombre_completo: 'Admin 2',
         hash_password: hashPassword('pass'),
+        email: 'admin2@prueba.local',
+        password_changed_at: now,
         rol_id: supervisorRol.id,
         activo: true,
         usuario_creacion_id: 'system',

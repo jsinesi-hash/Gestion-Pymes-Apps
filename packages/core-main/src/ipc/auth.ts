@@ -1,7 +1,9 @@
 import { eq, and } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { generateId, validarPoliticaPassword } from '@ferreteria/shared';
+import {
+  generateId, validarPoliticaPassword, passwordVencida, diasRestantesPassword, emailValido, normalizarEmail,
+} from '@ferreteria/shared';
 import * as schema from '@core/db';
 import { verifyPassword, hashPassword } from '../auth/hash';
 import { limiteIntentos } from '../auth/intentos';
@@ -39,33 +41,53 @@ function parseFavoritos(raw: string | null | undefined): string[] {
   }
 }
 
-export function loginHandler(db: Db, payload: LoginPayload): SessionData {
-  // Revisión 2026-10-20 (P1): 3 fallos seguidos bloquean al usuario 15 minutos. Los usuarios
-  // inexistentes también acumulan, para no revelar si el nombre existe.
-  limiteIntentos.verificar(payload.nombreUsuario);
+type Usuario = typeof schema.usuario.$inferSelect;
+
+/**
+ * Verifica nombre de usuario y contraseña con el límite de intentos (3 fallos bloquean 15 minutos;
+ * los usuarios inexistentes también acumulan, para no revelar si el nombre existe). No abre sesión.
+ * Lo usan el login y los dos pasos previos a la sesión (cambio de clave vencida y carga del mail).
+ */
+function verificarCredenciales(db: Db, nombreUsuario: string, password: string): Usuario {
+  limiteIntentos.verificar(nombreUsuario);
 
   const user = db
     .select()
     .from(schema.usuario)
     .where(
       and(
-        eq(schema.usuario.nombre_usuario, payload.nombreUsuario),
+        eq(schema.usuario.nombre_usuario, nombreUsuario),
         eq(schema.usuario.activo, true)
       )
     )
     .get();
 
   if (!user) {
-    limiteIntentos.registrarFallo(payload.nombreUsuario);
+    limiteIntentos.registrarFallo(nombreUsuario);
     throw CREDENCIALES_INVALIDAS;
   }
 
-  if (!verifyPassword(payload.password, user.hash_password)) {
-    limiteIntentos.registrarFallo(payload.nombreUsuario);
+  if (!verifyPassword(password, user.hash_password)) {
+    limiteIntentos.registrarFallo(nombreUsuario);
     throw CREDENCIALES_INVALIDAS;
   }
-  limiteIntentos.registrarExito(payload.nombreUsuario);
+  limiteIntentos.registrarExito(nombreUsuario);
+  return user;
+}
 
+const tieneEmail = (user: Usuario): boolean => normalizarEmail(user.email) !== '';
+
+/**
+ * ADR-136: sin sesión no hay forma de saltearse el bloqueo. Con la clave vencida o sin mail el login
+ * verifica las credenciales pero NO crea la sesión: el renderer muestra el paso que corresponde y
+ * vuelve a enviar las credenciales a `auth:cambiarPasswordVencida` o `auth:completarEmail`.
+ */
+function exigirCuentaAlDia(user: Usuario): void {
+  if (passwordVencida(user.password_changed_at)) throw new Error('PASSWORD_VENCIDA');
+  if (!tieneEmail(user)) throw new Error('EMAIL_REQUERIDO');
+}
+
+function abrirSesion(db: Db, user: Usuario): SessionData {
   // Cargar permisos del rol
   const rolPermisos = db
     .select({ permiso_id: schema.rol_permiso.permiso_id })
@@ -127,10 +149,59 @@ export function loginHandler(db: Db, payload: LoginPayload): SessionData {
     rolNombre: rolRow?.nombre ?? '',
     permisos: codigos,
     preferencias,
+    passwordDiasRestantes: diasRestantesPassword(user.password_changed_at),
   };
 
   setSession(currentSession, sessionData);
   return sessionData;
+}
+
+export function loginHandler(db: Db, payload: LoginPayload): SessionData {
+  const user = verificarCredenciales(db, payload.nombreUsuario, payload.password);
+  exigirCuentaAlDia(user);
+  return abrirSesion(db, user);
+}
+
+/**
+ * Paso previo a la sesión cuando la contraseña venció (ADR-136). Solo sirve si de verdad venció:
+ * no es una forma de cambiar contraseñas sin sesión.
+ */
+export function cambiarPasswordVencidaHandler(db: Db, payload: {
+  nombreUsuario: string; passwordActual: string; passwordNueva: string;
+}): SessionData {
+  const user = verificarCredenciales(db, payload.nombreUsuario, payload.passwordActual);
+  if (!passwordVencida(user.password_changed_at)) throw new Error('PASSWORD_NO_VENCIDA');
+  if (payload.passwordNueva === payload.passwordActual) throw new Error('PASSWORD_IGUAL_A_LA_ACTUAL');
+  validarPoliticaPassword(payload.passwordNueva, user.nombre_usuario);
+  const now = new Date();
+  db.update(schema.usuario).set({
+    hash_password: hashPassword(payload.passwordNueva),
+    password_changed_at: now,
+    version: user.version + 1, updated_at: now,
+    usuario_modificacion_id: user.id, fecha_actualizacion: now,
+  }).where(eq(schema.usuario.id, user.id)).run();
+  const actualizado = db.select().from(schema.usuario).where(eq(schema.usuario.id, user.id)).get()!;
+  // La clave ya quedó cambiada; si además falta el mail, el renderer sigue con `auth:completarEmail`.
+  if (!tieneEmail(actualizado)) throw new Error('EMAIL_REQUERIDO');
+  return abrirSesion(db, actualizado);
+}
+
+/** Paso previo a la sesión para usuarios sin mail (ADR-136). Solo sirve si el mail está vacío. */
+export function completarEmailHandler(db: Db, payload: {
+  nombreUsuario: string; password: string; email: string;
+}): SessionData {
+  const user = verificarCredenciales(db, payload.nombreUsuario, payload.password);
+  if (passwordVencida(user.password_changed_at)) throw new Error('PASSWORD_VENCIDA');
+  if (tieneEmail(user)) throw new Error('EMAIL_YA_CARGADO');
+  const email = normalizarEmail(payload.email);
+  if (!emailValido(email)) throw new Error('EMAIL_INVALIDO');
+  const now = new Date();
+  db.update(schema.usuario).set({
+    email,
+    version: user.version + 1, updated_at: now,
+    usuario_modificacion_id: user.id, fecha_actualizacion: now,
+  }).where(eq(schema.usuario.id, user.id)).run();
+  return abrirSesion(db, db.select().from(schema.usuario).where(eq(schema.usuario.id, user.id)).get()!);
 }
 
 export function logoutHandler(): void {
@@ -228,6 +299,10 @@ export function usuarioCreateHandler(db: Db, payload: {
   if (!session?.permisos.has('usuario.administrar')) throw new Error('FORBIDDEN');
   // Revisión 2026-10-20 (P1): política de contraseña (8+, mayúscula, número, carácter especial).
   validarPoliticaPassword(payload.password, payload.nombre_usuario);
+  // ADR-136: el mail es obligatorio (recuperación de contraseña) y se guarda normalizado.
+  const email = normalizarEmail(payload.email);
+  if (!email) throw new Error('EMAIL_REQUERIDO');
+  if (!emailValido(email)) throw new Error('EMAIL_INVALIDO');
   const existing = db.select({ id: schema.usuario.id }).from(schema.usuario)
     .where(eq(schema.usuario.nombre_usuario, payload.nombre_usuario)).get();
   if (existing) throw new Error('USUARIO_DUPLICADO');
@@ -235,7 +310,7 @@ export function usuarioCreateHandler(db: Db, payload: {
   const id = generateId();
   db.insert(schema.usuario).values({
     id, nombre_usuario: payload.nombre_usuario, nombre_completo: payload.nombre_completo,
-    email: payload.email ?? null, hash_password: hashPassword(payload.password),
+    email, hash_password: hashPassword(payload.password), password_changed_at: now,
     rol_id: payload.rol_id, activo: true,
     usuario_creacion_id: session!.userId, fecha_creacion: now,
     version: 1, origin_id: getOriginId(), sync_state: 'pending', updated_at: now,
@@ -262,7 +337,13 @@ export function usuarioUpdateHandler(db: Db, payload: {
     usuario_modificacion_id: session.userId, fecha_actualizacion: now,
   };
   if (payload.nombre_completo !== undefined) updates.nombre_completo = payload.nombre_completo;
-  if (payload.email !== undefined) updates.email = payload.email || null;
+  if (payload.email !== undefined) {
+    // ADR-136: el mail es obligatorio, no se puede vaciar.
+    const email = normalizarEmail(payload.email);
+    if (!email) throw new Error('EMAIL_REQUERIDO');
+    if (!emailValido(email)) throw new Error('EMAIL_INVALIDO');
+    updates.email = email;
+  }
   if (payload.rol_id !== undefined && canAdmin) updates.rol_id = payload.rol_id;
   db.update(schema.usuario).set(updates).where(eq(schema.usuario.id, payload.id)).run();
 }
@@ -291,6 +372,9 @@ export function usuarioChangePasswordHandler(db: Db, payload: {
   const now = new Date();
   db.update(schema.usuario).set({
     hash_password: hashPassword(payload.new_password),
+    // ADR-136: el propio usuario reinicia el plazo; si un Supervisor restablece la clave de otro,
+    // queda vencida (NULL) y esa persona debe cambiarla al ingresar.
+    password_changed_at: isSelf ? now : null,
     version: user.version + 1, updated_at: now,
     usuario_modificacion_id: session.userId, fecha_actualizacion: now,
   }).where(eq(schema.usuario.id, payload.target_user_id)).run();
@@ -343,6 +427,8 @@ export function registerAuthHandlers(ipcMain: IpcMain, db: Db): void {
   ipcMain.handle('auth:login', async (_event, payload: LoginPayload) =>
     loginHandler(db, payload)
   );
+  ipcMain.handle('auth:cambiarPasswordVencida', async (_e, p) => cambiarPasswordVencidaHandler(db, p));
+  ipcMain.handle('auth:completarEmail', async (_e, p) => completarEmailHandler(db, p));
   ipcMain.handle('auth:logout', async () => logoutHandler());
   ipcMain.handle('auth:whoami', async () => whoamiHandler());
   ipcMain.handle('auth:verifyPassword', async (_e, p) => verifyPasswordHandler(db, p));

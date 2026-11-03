@@ -13,6 +13,7 @@ const mockData: SessionData = {
   nombreCompleto: 'Juan Pérez',
   rolId: 'r1',
   rolNombre: 'Admin',
+  passwordDiasRestantes: 30,
   permisos: ['venta.crear', 'caja.operar'],
   preferencias: {
     tema: 'claro',

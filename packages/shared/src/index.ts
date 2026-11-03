@@ -28,6 +28,7 @@ export { canonicalizarUbicacion, canonicalizarCodigoUbicacion } from './ubicacio
 export type { BooleanoParse } from './booleano.js';
 export { parseBooleanoImport } from './booleano.js';
 export { normalizar } from './texto.js';
+export { PASSWORD_VIGENCIA_DIAS, passwordVencida, diasRestantesPassword, emailValido, normalizarEmail } from './password-vigencia.js';
 export type { DelimitadorCsv, OpcionesCsv } from './csv.js';
 export { leerCsv, detectarDelimitador } from './csv.js';
 export { tokenizar, canonizarTokens, coeficienteDice, similitudNombres } from './similitud.js';

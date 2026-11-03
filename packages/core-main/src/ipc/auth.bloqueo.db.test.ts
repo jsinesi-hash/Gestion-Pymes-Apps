@@ -109,7 +109,7 @@ describe('política de contraseña en usuarioCreateHandler / usuarioChangePasswo
     return db.select().from(schema.rol).where(eq(schema.rol.nombre, 'OPERADOR')).get()!;
   }
   const alta = (password: string, nombre_usuario = 'nuevo') => ({
-    nombre_usuario, nombre_completo: 'Nuevo Usuario', password, rol_id: rolOperador().id,
+    nombre_usuario, nombre_completo: 'Nuevo Usuario', email: 'nuevo@ejemplo.com', password, rol_id: rolOperador().id,
   });
 
   it.each([

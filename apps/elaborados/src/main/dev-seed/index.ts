@@ -9,7 +9,7 @@
 // Idempotente y SIN --force (ADR-099): cada paso se saltea si ya hay datos de su tipo y lo
 // informa como "ya sembrado". Para empezar de cero, borrar el archivo de la BD.
 // BD: DB_PATH si está definida; si no %APPDATA%/elaborados-client/elaborados.db (ver db.ts).
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { runSeed, loginHandler } from '@core/main';
 import * as schema from '../db/schema';
@@ -43,6 +43,14 @@ export function ejecutarSeedDev(db: Db, opts: { soloBase?: boolean } = {}): Resu
   log({ paso: 'rubro (categorías de venta y grupo Sabores)', estado: 'hecho' });
 
   if (opts.soloBase) return { pasos };
+
+  // ADR-136: el seed de auth deja al admin sin mail ni fecha de contraseña (en una instalación real
+  // el primer ingreso obliga a cargarlos). Este seed es de DESARROLLO/demo y opera sin la pantalla de
+  // login: completa solo lo que falta, sin pisar lo que alguien haya cargado después.
+  db.update(schema.usuario).set({ email: 'admin@demo.local' })
+    .where(and(eq(schema.usuario.nombre_usuario, 'admin'), isNull(schema.usuario.email))).run();
+  db.update(schema.usuario).set({ password_changed_at: new Date() })
+    .where(and(eq(schema.usuario.nombre_usuario, 'admin'), isNull(schema.usuario.password_changed_at))).run();
 
   // Los handlers del demo y de venta exigen sesión.
   loginHandler(db, { nombreUsuario: 'admin', password: 'admin1234' }); // NOSONAR — credenciales del seed de auth

@@ -215,13 +215,13 @@ function UsuarioModal({ roles, user, onClose, onSuccess, onDesactivar }: Readonl
     try {
       const f = bridge();
       if (isEdit) {
-        await f.usuario.update({ id: user!.id, nombre_completo: nombre.trim(), email: email.trim() || undefined, rol_id: rolId });
+        await f.usuario.update({ id: user!.id, nombre_completo: nombre.trim(), email: email.trim(), rol_id: rolId });
       } else {
         if (!password) { setError('La contraseña es requerida.'); return; }
         // Revisión 2026-10-20 (P1): política de contraseña (también la valida el main).
         const [motivo] = motivosPasswordDebil(password, nombreUsuario);
         if (motivo) { setError(mensajePasswordDebil(motivo)); return; }
-        await f.usuario.create({ nombre_usuario: nombreUsuario.trim(), nombre_completo: nombre.trim(), email: email.trim() || undefined, password, rol_id: rolId });
+        await f.usuario.create({ nombre_usuario: nombreUsuario.trim(), nombre_completo: nombre.trim(), email: email.trim(), password, rol_id: rolId });
       }
       onSuccess();
     } catch (err: any) {
@@ -245,8 +245,8 @@ function UsuarioModal({ roles, user, onClose, onSuccess, onDesactivar }: Readonl
             </div>
           )}
           <div className="field">
-            <label htmlFor="um-email">Email</label>
-            <input id="um-email" className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Opcional" />
+            <label htmlFor="um-email">Email *</label>
+            <input id="um-email" className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="Para recuperar la contraseña" />
           </div>
           {!isEdit && (
             <>
@@ -307,6 +307,7 @@ function ChangePasswordModal({ user, onClose, onSuccess }: Readonly<{ user: Usua
     <Modal titulo={`Cambiar contraseña — ${user.nombre_completo}`} ancho={360} onClose={onClose} bloqueado={saving} cerrarAlClickFuera>
       <form onSubmit={handleSubmit}>
         <div className="modal-body">
+          <p className="text-sm text-muted">La persona va a tener que cambiar esta contraseña al ingresar.</p>
           <div className="field">
             <label htmlFor="cpm-pwd-nueva">Nueva contraseña *</label>
             <PasswordInput id="cpm-pwd-nueva" value={newPassword} onChange={setNewPassword} required minLength={8} autoFocus />

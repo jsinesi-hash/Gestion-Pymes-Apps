@@ -14,6 +14,12 @@ function createTestDb() {
   );
   const stmts = sql.split('--> statement-breakpoint').map(s => s.trim()).filter(Boolean);
   for (const stmt of stmts) sqlite.exec(stmt);
+  // ADR-136 (0050): `usuario.password_changed_at`. Este harness liviano no corre el migrator
+  // completo: se aplica el SQL real de la migración para que la tabla siga el schema de Drizzle.
+  const sql0050 = fs.readFileSync(
+    path.resolve(__dirname, '../../db/migrations/0050_adr136_password_vigencia.sql'), 'utf8'
+  );
+  for (const stmt of sql0050.split('--> statement-breakpoint').map(s => s.trim()).filter(Boolean)) sqlite.exec(stmt);
   return drizzle(sqlite, { schema });
 }
 

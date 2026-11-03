@@ -743,7 +743,7 @@ describe('Guard: import.masiva', () => {
     clearSession();
     setSession(
       { userId: 'u2', rolId: 'operador', permisos: new Set([]) },
-      { id: 'u2', nombreCompleto: 'Operador', rolId: 'operador', rolNombre: '', permisos: [], preferencias: { tema: 'claro', acento: 'amber', ui_font: 'Hanken Grotesk', densidad: 'comfortable', skin: 'actual', pantalla_inicio: null, favoritos: [] } },
+      { id: 'u2', nombreCompleto: 'Operador', rolId: 'operador', rolNombre: '', permisos: [], passwordDiasRestantes: 30, preferencias: { tema: 'claro', acento: 'amber', ui_font: 'Hanken Grotesk', densidad: 'comfortable', skin: 'actual', pantalla_inicio: null, favoritos: [] } },
     );
     const handler = requirePermission('import.masiva')(async () => 'ok');
     await expect(handler(null)).rejects.toMatchObject({ code: 'FORBIDDEN', permiso: 'import.masiva' });

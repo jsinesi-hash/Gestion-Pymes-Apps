@@ -19,10 +19,22 @@ export function createTestDb() {
 export function setupDb() {
   const db = createTestDb();
   runSeed(db);
+  marcarUsuariosAlDia(db);
   // El límite de intentos de login vive en memoria del proceso: sin esto un test que falla
   // credenciales arrastraría el bloqueo a los siguientes del mismo archivo.
   limiteIntentos.reiniciar();
   return db;
+}
+
+/**
+ * ADR-136: el seed crea al `admin` sin mail ni fecha de cambio de contraseña (en una instalación real
+ * el primer ingreso obliga a cambiar la clave y cargar el mail). Los tests que solo necesitan iniciar
+ * sesión parten de usuarios al día; los que prueban la vigencia lo pisan explícitamente.
+ */
+export function marcarUsuariosAlDia(db: ReturnType<typeof createTestDb>) {
+  db.update(schema.usuario)
+    .set({ email: 'usuario@prueba.local', password_changed_at: new Date() })
+    .run();
 }
 
 export function loginAsAdmin(db: ReturnType<typeof setupDb>) {
@@ -41,6 +53,8 @@ export function loginAsOperador(db: ReturnType<typeof setupDb>) {
       nombre_usuario: 'operador1',
       nombre_completo: 'Operador de prueba',
       hash_password: hashPassword('operador1234'), // NOSONAR
+      email: 'operador@prueba.local',
+      password_changed_at: now,
       rol_id: rol.id,
       activo: true,
       usuario_creacion_id: 'system',

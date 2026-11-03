@@ -21,7 +21,7 @@ type Db = ReturnType<typeof setupDb>;
 
 const SESS_SIN_PERM = { userId: 'u-op', rolId: 'rol-op', permisos: new Set<string>(['venta.crear']) };
 const DATA_SIN_PERM = {
-  id: 'u-op', nombreCompleto: 'Operador', rolId: 'rol-op', rolNombre: '', permisos: ['venta.crear'],
+  id: 'u-op', nombreCompleto: 'Operador', rolId: 'rol-op', rolNombre: '', permisos: ['venta.crear'], passwordDiasRestantes: 30,
   preferencias: { tema: 'claro' as const, acento: 'amber' as const, ui_font: 'Hanken Grotesk' as const, densidad: 'comfortable' as const, skin: 'actual' as const, pantalla_inicio: null, favoritos: [] },
 };
 

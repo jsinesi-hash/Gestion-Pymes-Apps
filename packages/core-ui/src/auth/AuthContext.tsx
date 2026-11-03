@@ -7,6 +7,8 @@ export type SessionData = {
   rolId: string;
   rolNombre: string;
   permisos: string[];
+  /** Días que le quedan a la contraseña antes de vencer (0..30, ADR-136). */
+  passwordDiasRestantes?: number;
   preferencias: {
     tema: 'claro' | 'oscuro';
     acento: 'amber' | 'blue' | 'green' | 'violet' | 'brick';
@@ -30,6 +32,11 @@ type AuthContextValue = {
   login: (creds: LoginCreds) => Promise<void>;
   logout: () => Promise<void>;
   actualizarPreferencias: (patch: Partial<SessionData['preferencias']>) => void;
+  // ADR-136: pasos previos a la sesión. Opcionales en el tipo para no obligar a cada test a
+  // armar un proveedor completo; `AuthProvider` siempre los entrega.
+  cambiarPasswordVencida?: (p: { nombreUsuario: string; passwordActual: string; passwordNueva: string }) => Promise<void>;
+  completarEmail?: (p: { nombreUsuario: string; password: string; email: string }) => Promise<void>;
+  actualizarSesion?: (patch: Partial<SessionData>) => void;
 };
 
 export const AuthContext = createContext<AuthContextValue>({
@@ -83,14 +90,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  function abrirSesion(data: SessionData): void {
+    setSession(data);
+    applyPreferences(data.preferencias);
+    rebuildMenu();
+  }
+
   async function login(creds: LoginCreds): Promise<void> {
     const ferreteria = bridge();
     if (ferreteria?.auth?.login) {
-      const data: SessionData = await ferreteria.auth.login(creds);
-      setSession(data);
-      applyPreferences(data.preferencias);
-      rebuildMenu();
+      abrirSesion(await ferreteria.auth.login(creds));
     }
+  }
+
+  async function cambiarPasswordVencida(p: { nombreUsuario: string; passwordActual: string; passwordNueva: string }): Promise<void> {
+    abrirSesion(await bridge().auth.cambiarPasswordVencida(p));
+  }
+
+  async function completarEmail(p: { nombreUsuario: string; password: string; email: string }): Promise<void> {
+    abrirSesion(await bridge().auth.completarEmail(p));
+  }
+
+  function actualizarSesion(patch: Partial<SessionData>): void {
+    setSession((prev) => (prev ? { ...prev, ...patch } : prev));
   }
 
   async function logout(): Promise<void> {
@@ -113,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   if (loading) return null;
 
   return (
-    <AuthContext.Provider value={{ session, can, login, logout, actualizarPreferencias }}>
+    <AuthContext.Provider value={{ session, can, login, logout, actualizarPreferencias, cambiarPasswordVencida, completarEmail, actualizarSesion }}>
       {children}
     </AuthContext.Provider>
   );
