@@ -49,3 +49,5 @@ export type { ItemComprobante, CondicionFiscalComprobante, ReceptorComprobante, 
 export { ivaPorAlicuota } from './comprobante.js';
 export { verificarTotalesVenta } from './totales-venta.js';
 export type { LineaTotalesVenta, TotalesVentaInput } from './totales-venta.js';
+export { PASSWORD_MIN_LARGO, motivosPasswordDebil, validarPoliticaPassword, mensajePasswordDebil } from './password.js';
+export type { MotivoPasswordDebil } from './password.js';

@@ -3,6 +3,7 @@
 // de SQLite (p. ej. "UNIQUE constraint failed: producto.gtin_barcode"), a veces envuelto
 // por Electron ("Error invoking remote method '…': Error: …"). Este módulo es puro y
 // testeable con vitest/jsdom, sin Electron.
+import { mensajePasswordDebil, type MotivoPasswordDebil } from '@ferreteria/shared';
 
 /** Acción opcional que un error puede ofrecer (p. ej. abrir el registro en conflicto). */
 export type AccionError = { etiqueta: string; tipo: string; payload?: unknown };
@@ -65,6 +66,15 @@ const CODIGOS: Record<string, Formateador> = {
   RESTORE_RUTA_BD: msg('No se pudo determinar el archivo de la base de datos. Avisá a soporte.'),
   TOTALES_INCONSISTENTES: msg('Los importes de la venta no coinciden con sus líneas. Revisá el carrito y volvé a intentar.'),
   PRECIO_INVALIDO: msg('Hay una línea con un precio inválido. Revisá el carrito.'),
+  CUENTA_BLOQUEADA: (args) => {
+    const segundos = Number(args[0]);
+    const minutos = Number.isFinite(segundos) && segundos > 0 ? Math.ceil(segundos / 60) : 15;
+    return { mensaje: `Demasiados intentos fallidos. Esperá ${minutos} ${minutos === 1 ? 'minuto' : 'minutos'} para volver a intentar.` };
+  },
+  PASSWORD_DEBIL: (args) => {
+    const motivo = args[0] as MotivoPasswordDebil;
+    return { mensaje: mensajePasswordDebil(motivo) ?? 'La contraseña no cumple los requisitos de seguridad.' };
+  },
   LAST_SUPERVISOR: msg('No se puede desactivar el último supervisor activo.'),
   AUTO_DESACTIVACION: msg('No podés desactivar tu propio usuario.'),
   CANTIDAD_INVALIDA: msg('Ingresá una cantidad válida.'),

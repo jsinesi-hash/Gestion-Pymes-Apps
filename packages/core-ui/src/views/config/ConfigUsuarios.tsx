@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../auth/AuthContext';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 import { traducirError } from '../../lib/errores';
+import { motivosPasswordDebil, mensajePasswordDebil } from '@ferreteria/shared';
 
 type Usuario = {
   id: string; nombre_usuario: string; nombre_completo: string;
@@ -219,11 +220,14 @@ function UsuarioModal({ roles, user, onClose, onSuccess, onDesactivar }: Readonl
         await f.usuario.update({ id: user!.id, nombre_completo: nombre.trim(), email: email.trim() || undefined, rol_id: rolId });
       } else {
         if (!password) { setError('La contraseña es requerida.'); return; }
+        // Revisión 2026-10-20 (P1): política de contraseña (también la valida el main).
+        const [motivo] = motivosPasswordDebil(password, nombreUsuario);
+        if (motivo) { setError(mensajePasswordDebil(motivo)); return; }
         await f.usuario.create({ nombre_usuario: nombreUsuario.trim(), nombre_completo: nombre.trim(), email: email.trim() || undefined, password, rol_id: rolId });
       }
       onSuccess();
     } catch (err: any) {
-      const msg = err?.message === 'USUARIO_DUPLICADO' ? 'El nombre de usuario ya existe.' : (err?.message ?? 'Error');
+      const msg = err?.message === 'USUARIO_DUPLICADO' ? 'El nombre de usuario ya existe.' : traducirError(err).mensaje;
       setError(msg);
     } finally { setSaving(false); }
   }
@@ -255,11 +259,11 @@ function UsuarioModal({ roles, user, onClose, onSuccess, onDesactivar }: Readonl
               <>
                 <div className="field">
                   <label htmlFor="um-pwd">Contraseña *</label>
-                  <PasswordInput id="um-pwd" value={password} onChange={setPassword} required minLength={4} />
+                  <PasswordInput id="um-pwd" value={password} onChange={setPassword} required minLength={8} />
                 </div>
                 <div className="field">
                   <label htmlFor="um-pwd-confirm">Confirmar contraseña *</label>
-                  <PasswordInput id="um-pwd-confirm" value={confirmPassword} onChange={setConfirmPassword} required minLength={4} />
+                  <PasswordInput id="um-pwd-confirm" value={confirmPassword} onChange={setConfirmPassword} required minLength={8} />
                 </div>
               </>
             )}
@@ -297,13 +301,15 @@ function ChangePasswordModal({ user, onClose, onSuccess }: Readonly<{ user: Usua
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (newPassword !== confirm) { setError('Las contraseñas no coinciden.'); return; }
-    if (newPassword.length < 4) { setError('Mínimo 4 caracteres.'); return; }
+    // Revisión 2026-10-20 (P1): política de contraseña (también la valida el main).
+    const [motivo] = motivosPasswordDebil(newPassword, user.nombre_usuario);
+    if (motivo) { setError(mensajePasswordDebil(motivo)); return; }
     setSaving(true); setError(null);
     try {
       await bridge().usuario.changePassword({ target_user_id: user.id, new_password: newPassword });
       onSuccess();
     } catch (err: any) {
-      setError(err?.message ?? 'Error');
+      setError(traducirError(err).mensaje);
     } finally { setSaving(false); }
   }
 
@@ -318,7 +324,7 @@ function ChangePasswordModal({ user, onClose, onSuccess }: Readonly<{ user: Usua
           <div className="modal-body">
             <div className="field">
               <label htmlFor="cpm-pwd-nueva">Nueva contraseña *</label>
-              <PasswordInput id="cpm-pwd-nueva" value={newPassword} onChange={setNewPassword} required minLength={4} autoFocus />
+              <PasswordInput id="cpm-pwd-nueva" value={newPassword} onChange={setNewPassword} required minLength={8} autoFocus />
             </div>
             <div className="field">
               <label htmlFor="cpm-pwd-confirm">Confirmar *</label>

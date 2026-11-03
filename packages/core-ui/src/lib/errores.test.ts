@@ -52,6 +52,26 @@ describe('códigos de restauración (P0 2026-10-20)', () => {
   });
 });
 
+describe('códigos de login y contraseña (P1 2026-10-20)', () => {
+  it('CUENTA_BLOQUEADA muestra los minutos restantes, también envuelto por Electron', () => {
+    expect(traducirError(new Error('CUENTA_BLOQUEADA:900')).mensaje).toMatch(/15 minutos/);
+    expect(traducirError(new Error('CUENTA_BLOQUEADA:61')).mensaje).toMatch(/2 minutos/);
+    expect(traducirError(new Error('CUENTA_BLOQUEADA:30')).mensaje).toMatch(/1 minuto\b/);
+    expect(traducirError(new Error("Error invoking remote method 'auth:login': Error: CUENTA_BLOQUEADA:900")).mensaje)
+      .toMatch(/Demasiados intentos/);
+  });
+
+  it.each([
+    ['LARGO', /8 caracteres/],
+    ['MAYUSCULA', /mayúscula/],
+    ['NUMERO', /número/],
+    ['ESPECIAL', /carácter especial/],
+    ['USUARIO', /nombre de usuario/],
+  ])('PASSWORD_DEBIL:%s tiene un mensaje claro', (motivo, patron) => {
+    expect(traducirError(new Error(`PASSWORD_DEBIL:${motivo}`)).mensaje).toMatch(patron);
+  });
+});
+
 describe('códigos de totales de venta (P1 2026-10-20)', () => {
   it('traduce TOTALES_INCONSISTENTES y PRECIO_INVALIDO', () => {
     expect(traducirError(new Error('TOTALES_INCONSISTENTES')).mensaje).toMatch(/no coinciden/);
