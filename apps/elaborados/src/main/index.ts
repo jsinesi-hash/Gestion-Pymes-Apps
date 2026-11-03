@@ -2,6 +2,8 @@
 import path from 'node:path';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import started from 'electron-squirrel-startup';
+// Antes de cualquier módulo que abra la BD (GESTION_USER_DATA_DIR redirige userData).
+import './userdata-aislado';
 
 // Obligatorio para el instalador Squirrel en Windows; debe ir antes de createWindow
 if (started) app.quit();

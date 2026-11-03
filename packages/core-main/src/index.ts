@@ -34,3 +34,4 @@ export * from './ipc/print';
 export * from './tareas';
 export * from './auth/intentos';
 export * from './terminal';
+export * from './userdata-aislado';
