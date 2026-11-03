@@ -144,6 +144,11 @@ export function desactivarUsuarioHandler(
   db: Db,
   payload: { userId: string }
 ): void {
+  // Revisión 2026-10-20 (P0): era el único handler de gestión de usuarios sin guard.
+  const session = getSession();
+  if (!session) throw new Error('UNAUTHENTICATED');
+  if (!session.permisos.has('usuario.administrar')) throw new Error('FORBIDDEN');
+
   const user = db
     .select()
     .from(schema.usuario)
@@ -172,6 +177,8 @@ export function desactivarUsuarioHandler(
 
     if (activeSupervisors.length === 1) throw LAST_SUPERVISOR_ERROR;
   }
+
+  if (user.id === session.userId) throw new Error('AUTO_DESACTIVACION');
 
   db.update(schema.usuario)
     .set({ activo: false })

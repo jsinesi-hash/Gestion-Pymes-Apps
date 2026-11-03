@@ -2,6 +2,7 @@ import { bridge } from '../../bridge';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../auth/AuthContext';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { traducirError } from '../../lib/errores';
 
 type Usuario = {
   id: string; nombre_usuario: string; nombre_completo: string;
@@ -90,7 +91,7 @@ export function ConfigUsuarios() {
       await bridge().usuario.desactivar({ userId: u.id });
       cargar();
     } catch (e: any) {
-      setError(e?.message === 'LAST_SUPERVISOR' ? 'No se puede desactivar el último supervisor activo.' : (e?.message ?? 'Error'));
+      setError(traducirError(e).mensaje);
     }
   }
 
@@ -176,7 +177,7 @@ export function ConfigUsuarios() {
               await bridge().usuario.desactivar({ userId: (modal as any).user.id });
               setModal(null); cargar();
             } catch (e: any) {
-              setError(e?.message === 'LAST_SUPERVISOR' ? 'No se puede desactivar el último supervisor activo.' : (e?.message ?? 'Error'));
+              setError(traducirError(e).mensaje);
               setModal(null);
             }
           }}
