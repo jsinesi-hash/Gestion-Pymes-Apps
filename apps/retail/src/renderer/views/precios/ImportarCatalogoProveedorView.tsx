@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useImportacionCatalogo } from '../../hooks/useImportacionCatalogo';
-import { useEscapeToClose, bridge } from '@core/ui';
+import { bridge, Modal } from '@core/ui';
 import { formatCurrency } from '@core/ui';
 
 type Proveedor = { id: string; razon_social: string; codigo: string | null };
@@ -71,8 +71,6 @@ export function ImportarCatalogoProveedorView() {
   const [buscarQuery, setBuscarQuery] = useState('');
   const [buscarResultados, setBuscarResultados] = useState<ProductoConsulta[]>([]);
   const buscarDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEscapeToClose(() => setModalBuscar(false), modalBuscar);
 
   useEffect(() => {
     bridge().compras.proveedor.list().then((list: Proveedor[]) =>
@@ -394,66 +392,62 @@ export function ImportarCatalogoProveedorView() {
       )}
 
       {modalConfirmar && (
-        <div className="modal-overlay" role="dialog" aria-label="Confirmar catálogo">
-          <div className="modal">
-            <div className="modal-header"><span className="modal-title">Confirmar catálogo</span></div>
-            <div className="modal-body">
-              <p>Se van a <strong>crear {counts.crear}</strong> y <strong>actualizar {counts.actualizar}</strong> vínculos con <strong>{proveedorActual?.razon_social ?? ''}</strong>.</p>
-              <p className="text-sm text-muted">A los productos que hoy no tienen proveedor preferido, este proveedor les queda como preferido.</p>
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn-secondary" onClick={() => setModalConfirmar(false)}>Cancelar</button>
-              <button type="button" className="btn-primary" onClick={handleConfirmar} disabled={loading}>{loading ? 'Aplicando…' : 'Confirmar'}</button>
-            </div>
+        <Modal ariaLabel="Confirmar catálogo">
+          <div className="modal-header"><span className="modal-title">Confirmar catálogo</span></div>
+          <div className="modal-body">
+            <p>Se van a <strong>crear {counts.crear}</strong> y <strong>actualizar {counts.actualizar}</strong> vínculos con <strong>{proveedorActual?.razon_social ?? ''}</strong>.</p>
+            <p className="text-sm text-muted">A los productos que hoy no tienen proveedor preferido, este proveedor les queda como preferido.</p>
           </div>
-        </div>
+          <div className="modal-footer">
+            <button type="button" className="btn-secondary" onClick={() => setModalConfirmar(false)}>Cancelar</button>
+            <button type="button" className="btn-primary" onClick={handleConfirmar} disabled={loading}>{loading ? 'Aplicando…' : 'Confirmar'}</button>
+          </div>
+        </Modal>
       )}
 
       {/* Modal Consultar productos (solo lectura) */}
       {modalBuscar && (
-        <div className="modal-overlay" role="dialog" aria-label="Consultar productos" onClick={e => { if (e.target === e.currentTarget) setModalBuscar(false); }}>
-          <div className="modal" style={{ width: 520 }}>
-            <div className="modal-header">
-              <span className="modal-title">Consultar productos</span>
-              <button type="button" className="icon-btn" onClick={() => setModalBuscar(false)} aria-label="Cerrar">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            </div>
-            <div className="modal-body">
-              <p className="text-sm text-muted" style={{ marginBottom: 8 }}>
-                Buscá un producto del catálogo por nombre, SKU o EAN. Se muestra el código que este proveedor ya tiene para el producto (si está vinculado).
-              </p>
-              <div className="field">
-                <label>BUSCAR PRODUCTO</label>
-                <div className="search" style={{ background: 'var(--surface)', border: '1px solid var(--line)' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-                  <input autoFocus value={buscarQuery} onChange={e => handleBuscar(e.target.value)} placeholder="Nombre, SKU o EAN…" />
-                </div>
-              </div>
-              {buscarResultados.length > 0 && (
-                <div style={{ border: '1px solid var(--line)', borderRadius: 10, overflow: 'hidden', maxHeight: 240, overflowY: 'auto' }}>
-                  {buscarResultados.map((p, i) => (
-                    <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '9px var(--pad)', borderBottom: i < buscarResultados.length - 1 ? '1px solid var(--line)' : 'none' }}>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 600, fontSize: 14 }}>{p.nombre_corto}</div>
-                        <div className="num" style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>{p.sku}{p.gtin_barcode ? ` · EAN ${p.gtin_barcode}` : ''}</div>
-                      </div>
-                      {p.codigo_proveedor
-                        ? <span className="tag num" title="Código de este proveedor">{p.codigo_proveedor}</span>
-                        : <span className="text-xs text-muted">sin vincular</span>}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {buscarQuery.trim().length >= 2 && buscarResultados.length === 0 && (
-                <div className="text-sm text-muted" style={{ padding: '8px 2px' }}>Sin resultados.</div>
-              )}
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn-secondary" onClick={() => setModalBuscar(false)}>Cerrar</button>
-            </div>
+        <Modal ariaLabel="Consultar productos" ancho={520} onClose={() => setModalBuscar(false)} cerrarAlClickFuera>
+          <div className="modal-header">
+            <span className="modal-title">Consultar productos</span>
+            <button type="button" className="icon-btn" onClick={() => setModalBuscar(false)} aria-label="Cerrar">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
-        </div>
+          <div className="modal-body">
+            <p className="text-sm text-muted" style={{ marginBottom: 8 }}>
+              Buscá un producto del catálogo por nombre, SKU o EAN. Se muestra el código que este proveedor ya tiene para el producto (si está vinculado).
+            </p>
+            <div className="field">
+              <label>BUSCAR PRODUCTO</label>
+              <div className="search" style={{ background: 'var(--surface)', border: '1px solid var(--line)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input autoFocus value={buscarQuery} onChange={e => handleBuscar(e.target.value)} placeholder="Nombre, SKU o EAN…" />
+              </div>
+            </div>
+            {buscarResultados.length > 0 && (
+              <div style={{ border: '1px solid var(--line)', borderRadius: 10, overflow: 'hidden', maxHeight: 240, overflowY: 'auto' }}>
+                {buscarResultados.map((p, i) => (
+                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '9px var(--pad)', borderBottom: i < buscarResultados.length - 1 ? '1px solid var(--line)' : 'none' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: 14 }}>{p.nombre_corto}</div>
+                      <div className="num" style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>{p.sku}{p.gtin_barcode ? ` · EAN ${p.gtin_barcode}` : ''}</div>
+                    </div>
+                    {p.codigo_proveedor
+                      ? <span className="tag num" title="Código de este proveedor">{p.codigo_proveedor}</span>
+                      : <span className="text-xs text-muted">sin vincular</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+            {buscarQuery.trim().length >= 2 && buscarResultados.length === 0 && (
+              <div className="text-sm text-muted" style={{ padding: '8px 2px' }}>Sin resultados.</div>
+            )}
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn-secondary" onClick={() => setModalBuscar(false)}>Cerrar</button>
+          </div>
+        </Modal>
       )}
 
       {/* PASO 3 — resultado */}

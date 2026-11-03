@@ -1,14 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ymdLocal, exportPresupuestos } from '@ferreteria/shared';
-import { ExportarButton, propsFilaActivable } from '@core/ui';
+import { ExportarButton, propsFilaActivable, Modal } from '@core/ui';
 import {
   usePresupuestos, usePresupuestoConfig, presupuestoApi,
   type PresupuestoListado, type PresupuestoEstado,
 } from '../../hooks/usePresupuestos';
 import { PresupuestoFormModal } from './PresupuestoFormModal';
 import { PresupuestoDetalleModal } from './PresupuestoDetalleModal';
-import { useEscapeToClose } from '@core/ui';
 import { SearchBox, usePersistentListState, useCallIpc } from '@core/ui';
 import { resaltarCoincidencia } from '@core/ui';
 
@@ -114,9 +113,6 @@ export function PresupuestosView() {
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
   const [errorValidezEmitir, setErrorValidezEmitir] = useState<string | null>(null);
   const callIpc = useCallIpc();
-
-  useEscapeToClose(() => setEmitir(null), !!emitir && !procesando);
-  useEscapeToClose(() => setAnular(null), !!anular && !procesando);
 
   function abrirNuevo() { setEditarId(null); setFormAbierto(true); }
   function abrirEditar(p: PresupuestoListado) { setEditarId(p.id); setFormAbierto(true); }
@@ -267,43 +263,39 @@ export function PresupuestosView() {
       )}
 
       {emitir && (
-        <div className="modal-overlay">
-          <div className="modal" style={{ width: 420 }} role="dialog" aria-label="Emitir presupuesto">
-            <div className="modal-header"><span className="modal-title">Emitir presupuesto</span></div>
-            <div className="modal-body" style={{ display: 'grid', gap: 8 }}>
-              <div className="text-muted text-xs">
-                Al emitir se asigna número, se congela el precio de cada línea y se calcula la fecha de validez.
-              </div>
-              <label style={{ display: 'grid', gap: 4 }}>
-                Validez (días)
-                <input id="validez_dias" className={`input${errorValidezEmitir ? ' error' : ''}`} type="number" min={1} value={validezEmitir}
-                  onChange={(e) => { setValidezEmitir(Number(e.target.value)); setErrorValidezEmitir(null); }} autoFocus />
-                {errorValidezEmitir && <span className="field-error">{errorValidezEmitir}</span>}
-              </label>
-              {errorAccion && <div className="alert-danger" role="alert">{errorAccion}</div>}
+        <Modal ariaLabel="Emitir presupuesto" ancho={420} onClose={() => setEmitir(null)} bloqueado={procesando}>
+          <div className="modal-header"><span className="modal-title">Emitir presupuesto</span></div>
+          <div className="modal-body" style={{ display: 'grid', gap: 8 }}>
+            <div className="text-muted text-xs">
+              Al emitir se asigna número, se congela el precio de cada línea y se calcula la fecha de validez.
             </div>
-            <div className="modal-footer">
-              <button type="button" className="btn-secondary" onClick={() => setEmitir(null)} disabled={procesando}>Cancelar</button>
-              <button type="button" className="btn-primary" onClick={confirmarEmitir} disabled={procesando}>Confirmar emisión</button>
-            </div>
+            <label style={{ display: 'grid', gap: 4 }}>
+              Validez (días)
+              <input id="validez_dias" className={`input${errorValidezEmitir ? ' error' : ''}`} type="number" min={1} value={validezEmitir}
+                onChange={(e) => { setValidezEmitir(Number(e.target.value)); setErrorValidezEmitir(null); }} autoFocus />
+              {errorValidezEmitir && <span className="field-error">{errorValidezEmitir}</span>}
+            </label>
+            {errorAccion && <div className="alert-danger" role="alert">{errorAccion}</div>}
           </div>
-        </div>
+          <div className="modal-footer">
+            <button type="button" className="btn-secondary" onClick={() => setEmitir(null)} disabled={procesando}>Cancelar</button>
+            <button type="button" className="btn-primary" onClick={confirmarEmitir} disabled={procesando}>Confirmar emisión</button>
+          </div>
+        </Modal>
       )}
 
       {anular && (
-        <div className="modal-overlay">
-          <div className="modal" style={{ width: 420 }} role="dialog" aria-label="Anular presupuesto">
-            <div className="modal-header"><span className="modal-title">Anular {anular.numero ?? 'borrador'}</span></div>
-            <div className="modal-body" style={{ display: 'grid', gap: 8 }}>
-              <div className="text-muted text-xs">El presupuesto queda anulado y deja de estar disponible.</div>
-              {errorAccion && <div className="alert-danger" role="alert">{errorAccion}</div>}
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn-secondary" onClick={() => setAnular(null)} disabled={procesando}>Cancelar</button>
-              <button type="button" className="btn-danger" onClick={confirmarAnular} disabled={procesando}>Confirmar anulación</button>
-            </div>
+        <Modal ariaLabel="Anular presupuesto" ancho={420} onClose={() => setAnular(null)} bloqueado={procesando}>
+          <div className="modal-header"><span className="modal-title">Anular {anular.numero ?? 'borrador'}</span></div>
+          <div className="modal-body" style={{ display: 'grid', gap: 8 }}>
+            <div className="text-muted text-xs">El presupuesto queda anulado y deja de estar disponible.</div>
+            {errorAccion && <div className="alert-danger" role="alert">{errorAccion}</div>}
           </div>
-        </div>
+          <div className="modal-footer">
+            <button type="button" className="btn-secondary" onClick={() => setAnular(null)} disabled={procesando}>Cancelar</button>
+            <button type="button" className="btn-danger" onClick={confirmarAnular} disabled={procesando}>Confirmar anulación</button>
+          </div>
+        </Modal>
       )}
     </div>
   );

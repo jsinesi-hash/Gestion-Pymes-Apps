@@ -6,7 +6,7 @@ import { useMarcas } from '../../hooks/useMarcas';
 import { useImpuestos } from '../../hooks/useImpuestos';
 import { useUbicaciones } from '../../hooks/useUbicaciones';
 import { useUnidades } from '../../hooks/useUnidades';
-import { useEscapeToClose, bridge } from '@core/ui';
+import { bridge, Modal } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 
 type FormState = {
@@ -68,8 +68,6 @@ export function ProductoForm() {
   const [saving, setSaving] = useState(false);
   const [showMarcaModal, setShowMarcaModal] = useState(false);
   const [newMarcaNombre, setNewMarcaNombre] = useState('');
-
-  useEscapeToClose(() => setShowMarcaModal(false), showMarcaModal);
 
   useEffect(() => {
     if (!producto || !modoEdicion) return;
@@ -344,25 +342,23 @@ export function ProductoForm() {
       </form>
 
       {showMarcaModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <span className="modal-title">Nueva marca</span>
-            </div>
-            <div className="modal-body">
-              <div className="field">
-                <label htmlFor="nueva-marca-nombre">Nombre</label>
-                <input id="nueva-marca-nombre" className="input" value={newMarcaNombre}
-                  onChange={e => setNewMarcaNombre(e.target.value)}
-                  placeholder="Nombre de la marca" autoFocus />
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowMarcaModal(false)}>Cancelar</button>
-              <button className="btn-primary" onClick={handleCreateMarca}>Crear</button>
+        <Modal ariaLabel="Nueva marca" onClose={() => setShowMarcaModal(false)}>
+          <div className="modal-header">
+            <span className="modal-title">Nueva marca</span>
+          </div>
+          <div className="modal-body">
+            <div className="field">
+              <label htmlFor="nueva-marca-nombre">Nombre</label>
+              <input id="nueva-marca-nombre" className="input" value={newMarcaNombre}
+                onChange={e => setNewMarcaNombre(e.target.value)}
+                placeholder="Nombre de la marca" autoFocus />
             </div>
           </div>
-        </div>
+          <div className="modal-footer">
+            <button className="btn-secondary" onClick={() => setShowMarcaModal(false)}>Cancelar</button>
+            <button className="btn-primary" onClick={handleCreateMarca}>Crear</button>
+          </div>
+        </Modal>
       )}
     </>
   );

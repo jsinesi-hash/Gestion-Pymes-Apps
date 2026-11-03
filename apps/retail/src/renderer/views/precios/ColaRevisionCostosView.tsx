@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useImportacionCosto } from '../../hooks/useImportacionCosto';
-import { formatCurrency, bridge } from '@core/ui';
-import { useEscapeToClose } from '@core/ui';
+import { formatCurrency, bridge, Modal } from '@core/ui';
 
 type Candidato = { producto_id: string; sku: string; nombre_corto: string; score: number };
 
@@ -42,9 +41,6 @@ export function ColaRevisionCostosView() {
   const [editCosto, setEditCosto] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEscapeToClose(() => closeModal(), !!selectedFila);
-  useEscapeToClose(() => closeEditModal(), !!editingFila);
 
   const loadCola = useCallback(async () => {
     setLoading(true);
@@ -324,164 +320,160 @@ export function ColaRevisionCostosView() {
 
       {/* Modal de asignación */}
       {selectedFila && (
-        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) closeModal(); }}>
-          <div className="modal" style={{ width: 480 }}>
-            <div className="modal-header">
-              <span className="modal-title">Asignar a producto del catálogo</span>
-              <button type="button" className="icon-btn" onClick={closeModal} aria-label="Cerrar">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
-            </div>
+        <Modal ariaLabel="Asignar a producto del catálogo" ancho={480} onClose={() => closeModal()} cerrarAlClickFuera>
+          <div className="modal-header">
+            <span className="modal-title">Asignar a producto del catálogo</span>
+            <button type="button" className="icon-btn" onClick={closeModal} aria-label="Cerrar">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
 
-            <div className="modal-body">
-              <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6 }}>
-                Buscá el producto del catálogo que corresponde a esta fila de <strong>{selectedFila.razon_social}</strong>.
-                El costo <span className="num" style={{ fontWeight: 700 }}>
-                  {selectedFila.costo_nuevo_centavos != null ? formatCurrency(selectedFila.costo_nuevo_centavos) : '—'}
-                </span> se asignará al vínculo proveedor–producto.
+          <div className="modal-body">
+            <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6 }}>
+              Buscá el producto del catálogo que corresponde a esta fila de <strong>{selectedFila.razon_social}</strong>.
+              El costo <span className="num" style={{ fontWeight: 700 }}>
+                {selectedFila.costo_nuevo_centavos != null ? formatCurrency(selectedFila.costo_nuevo_centavos) : '—'}
+              </span> se asignará al vínculo proveedor–producto.
+            </p>
+
+            {selectedFila.nombre_producto_archivo && (
+              <p style={{ fontSize: 12.5, color: 'var(--ink-3)', marginTop: -4 }}>
+                Nombre en el archivo: <strong style={{ color: 'var(--ink-2)' }}>{selectedFila.nombre_producto_archivo}</strong>
               </p>
+            )}
 
-              {selectedFila.nombre_producto_archivo && (
-                <p style={{ fontSize: 12.5, color: 'var(--ink-3)', marginTop: -4 }}>
-                  Nombre en el archivo: <strong style={{ color: 'var(--ink-2)' }}>{selectedFila.nombre_producto_archivo}</strong>
-                </p>
-              )}
-
-              {selectedFila.candidatos.length > 0 && (
-                <div className="field">
-                  <label>SUGERENCIAS POR NOMBRE</label>
-                  <div style={{ border: '1px solid var(--line)', borderRadius: 10, overflow: 'hidden' }}>
-                    {selectedFila.candidatos.map((c, i) => (
-                      <div
-                        key={c.producto_id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => elegirCandidato(c)}
-                        onKeyDown={e => { if (e.key === 'Enter') elegirCandidato(c); }}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px var(--pad)', cursor: 'pointer', borderBottom: i < selectedFila.candidatos.length - 1 ? '1px solid var(--line)' : 'none', background: selectedProducto?.id === c.producto_id ? 'var(--accent-soft)' : 'transparent' }}
-                      >
-                        <span style={{ fontWeight: 600, fontSize: 13.5 }}>{c.nombre_corto}</span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span className="num p-code">{c.sku}</span>
-                          <span className="num" style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent-strong)' }}>{pct(c.score)}</span>
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
+            {selectedFila.candidatos.length > 0 && (
               <div className="field">
-                <label>BUSCAR OTRO PRODUCTO</label>
-                <div className="search" style={{ background: 'var(--surface)', border: '1px solid var(--line)' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-                  </svg>
-                  <input
-                    autoFocus
-                    value={search}
-                    onChange={e => handleSearch(e.target.value)}
-                    placeholder="Nombre o SKU…"
-                  />
-                </div>
-              </div>
-
-              {searchResults.length > 0 && (
-                <div style={{ border: '1px solid var(--line)', borderRadius: 10, overflow: 'hidden', maxHeight: 200, overflowY: 'auto' }}>
-                  {searchResults.map((p, i) => (
+                <label>SUGERENCIAS POR NOMBRE</label>
+                <div style={{ border: '1px solid var(--line)', borderRadius: 10, overflow: 'hidden' }}>
+                  {selectedFila.candidatos.map((c, i) => (
                     <div
-                      key={p.id}
+                      key={c.producto_id}
                       role="button"
                       tabIndex={0}
-                      onClick={() => { setSelectedProducto(p); setOrigenSel('manual'); setSearchResults([]); setSearch(p.nombre_corto); }}
-                      onKeyDown={e => { if (e.key === 'Enter') { setSelectedProducto(p); setOrigenSel('manual'); setSearchResults([]); setSearch(p.nombre_corto); } }}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px var(--pad)', cursor: 'pointer', borderBottom: i < searchResults.length - 1 ? '1px solid var(--line)' : 'none', background: selectedProducto?.id === p.id ? 'var(--accent-soft)' : 'transparent' }}
+                      onClick={() => elegirCandidato(c)}
+                      onKeyDown={e => { if (e.key === 'Enter') elegirCandidato(c); }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px var(--pad)', cursor: 'pointer', borderBottom: i < selectedFila.candidatos.length - 1 ? '1px solid var(--line)' : 'none', background: selectedProducto?.id === c.producto_id ? 'var(--accent-soft)' : 'transparent' }}
                     >
-                      <span style={{ fontWeight: 600, fontSize: 14 }}>{p.nombre_corto}</span>
-                      <span className="num p-code">{p.sku}</span>
+                      <span style={{ fontWeight: 600, fontSize: 13.5 }}>{c.nombre_corto}</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span className="num p-code">{c.sku}</span>
+                        <span className="num" style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent-strong)' }}>{pct(c.score)}</span>
+                      </span>
                     </div>
                   ))}
                 </div>
-              )}
+              </div>
+            )}
 
-              {selectedProducto && !searchResults.length && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px var(--pad)', background: 'var(--accent-soft)', borderRadius: 10, border: '1px solid rgba(232,115,10,.25)' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-strong)" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent-strong)' }}>{selectedProducto.nombre_corto}</span>
-                  <span className="num" style={{ fontSize: 11.5, color: 'var(--ink-3)', marginLeft: 4 }}>{selectedProducto.sku}</span>
-                </div>
-              )}
-
-              {error && <div className="alert-danger">{error}</div>}
+            <div className="field">
+              <label>BUSCAR OTRO PRODUCTO</label>
+              <div className="search" style={{ background: 'var(--surface)', border: '1px solid var(--line)' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <input
+                  autoFocus
+                  value={search}
+                  onChange={e => handleSearch(e.target.value)}
+                  placeholder="Nombre o SKU…"
+                />
+              </div>
             </div>
 
-            <div className="modal-footer">
-              <button type="button" className="btn-secondary" onClick={closeModal}>Cancelar</button>
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={handleResolver}
-                disabled={!selectedProducto || resolving !== null}
-                style={{ opacity: !selectedProducto || resolving !== null ? 0.5 : 1 }}
-              >
-                {resolving ? 'Asignando…' : 'Confirmar asignación'}
-              </button>
-            </div>
+            {searchResults.length > 0 && (
+              <div style={{ border: '1px solid var(--line)', borderRadius: 10, overflow: 'hidden', maxHeight: 200, overflowY: 'auto' }}>
+                {searchResults.map((p, i) => (
+                  <div
+                    key={p.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => { setSelectedProducto(p); setOrigenSel('manual'); setSearchResults([]); setSearch(p.nombre_corto); }}
+                    onKeyDown={e => { if (e.key === 'Enter') { setSelectedProducto(p); setOrigenSel('manual'); setSearchResults([]); setSearch(p.nombre_corto); } }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px var(--pad)', cursor: 'pointer', borderBottom: i < searchResults.length - 1 ? '1px solid var(--line)' : 'none', background: selectedProducto?.id === p.id ? 'var(--accent-soft)' : 'transparent' }}
+                  >
+                    <span style={{ fontWeight: 600, fontSize: 14 }}>{p.nombre_corto}</span>
+                    <span className="num p-code">{p.sku}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {selectedProducto && !searchResults.length && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px var(--pad)', background: 'var(--accent-soft)', borderRadius: 10, border: '1px solid rgba(232,115,10,.25)' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-strong)" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent-strong)' }}>{selectedProducto.nombre_corto}</span>
+                <span className="num" style={{ fontSize: 11.5, color: 'var(--ink-3)', marginLeft: 4 }}>{selectedProducto.sku}</span>
+              </div>
+            )}
+
+            {error && <div className="alert-danger">{error}</div>}
           </div>
-        </div>
+
+          <div className="modal-footer">
+            <button type="button" className="btn-secondary" onClick={closeModal}>Cancelar</button>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={handleResolver}
+              disabled={!selectedProducto || resolving !== null}
+              style={{ opacity: !selectedProducto || resolving !== null ? 0.5 : 1 }}
+            >
+              {resolving ? 'Asignando…' : 'Confirmar asignación'}
+            </button>
+          </div>
+        </Modal>
       )}
 
       {/* Modal de edición de datos crudos */}
       {editingFila && (
-        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) closeEditModal() }}>
-          <div className="modal" style={{ width: 460 }}>
-            <div className="modal-header">
-              <span className="modal-title">Editar datos de la fila</span>
-              <button type="button" className="icon-btn" onClick={() => closeEditModal()} aria-label="Cerrar">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
-            </div>
+        <Modal ariaLabel="Editar datos de la fila" ancho={460} onClose={() => closeEditModal()} cerrarAlClickFuera>
+          <div className="modal-header">
+            <span className="modal-title">Editar datos de la fila</span>
+            <button type="button" className="icon-btn" onClick={() => closeEditModal()} aria-label="Cerrar">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
 
-            <div className="modal-body">
-              {Object.keys(editDatos).map(col => (
-                <div key={col} className="field">
-                  <label>{col}</label>
-                  <input
-                    value={editDatos[col]}
-                    onChange={e => setEditDatos(prev => ({ ...prev, [col]: e.target.value }))}
-                  />
-                </div>
-              ))}
-              <div className="field">
-                <label>COSTO ($)</label>
+          <div className="modal-body">
+            {Object.keys(editDatos).map(col => (
+              <div key={col} className="field">
+                <label>{col}</label>
                 <input
-                  className="num"
-                  value={editCosto}
-                  onChange={e => setEditCosto(e.target.value)}
-                  placeholder="0.00"
+                  value={editDatos[col]}
+                  onChange={e => setEditDatos(prev => ({ ...prev, [col]: e.target.value }))}
                 />
               </div>
-              {error && <div className="alert-danger">{error}</div>}
+            ))}
+            <div className="field">
+              <label>COSTO ($)</label>
+              <input
+                className="num"
+                value={editCosto}
+                onChange={e => setEditCosto(e.target.value)}
+                placeholder="0.00"
+              />
             </div>
-
-            <div className="modal-footer">
-              <button type="button" className="btn-secondary" onClick={() => closeEditModal()}>Cancelar</button>
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={handleActualizar}
-                disabled={savingEdit}
-                style={{ opacity: savingEdit ? 0.5 : 1 }}
-              >
-                {savingEdit ? 'Guardando…' : 'Guardar cambios'}
-              </button>
-            </div>
+            {error && <div className="alert-danger">{error}</div>}
           </div>
-        </div>
+
+          <div className="modal-footer">
+            <button type="button" className="btn-secondary" onClick={() => closeEditModal()}>Cancelar</button>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={handleActualizar}
+              disabled={savingEdit}
+              style={{ opacity: savingEdit ? 0.5 : 1 }}
+            >
+              {savingEdit ? 'Guardando…' : 'Guardar cambios'}
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );
