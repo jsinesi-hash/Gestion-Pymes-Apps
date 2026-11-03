@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth, bridge } from '@core/ui';
-import { useEscapeToClose } from '@core/ui';
+import { useAuth, bridge, Modal } from '@core/ui';
 import { rutearCampoError } from '@core/ui';
 import { useToast } from '@core/ui';
 import { ExportarButton } from '@core/ui';
@@ -175,8 +174,6 @@ function CategoriaModal({ categorias, initial, onClose, onSaved }: {
 
   const padresDisponibles = categorias.filter(c => c.id !== initial?.id && c.activo);
 
-  useEscapeToClose(onClose, !saving);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!nombre.trim()) return;
@@ -209,42 +206,37 @@ function CategoriaModal({ categorias, initial, onClose, onSaved }: {
   }
 
   return (
-    <div role="dialog" className="modal-overlay">
-      <form className="modal" onSubmit={handleSubmit}>
-        <div className="modal-header">
-          <span className="modal-title">{initial ? 'Editar categoría' : 'Nueva categoría'}</span>
+    <Modal titulo={initial ? 'Editar categoría' : 'Nueva categoría'} onClose={onClose} bloqueado={saving} ocultarCerrar as="form" onSubmit={handleSubmit}>
+      <div className="modal-body">
+        <div className="field">
+          <label htmlFor="cat-nombre">Nombre *</label>
+          <input id="cat-nombre" className={`input${campoError?.campo === 'nombre' ? ' error' : ''}`} type="text" required
+            value={nombre} onChange={e => setNombre(e.target.value)} autoFocus />
+          {campoError?.campo === 'nombre' && <span className="field-error">{campoError.mensaje}</span>}
         </div>
-        <div className="modal-body">
-          <div className="field">
-            <label htmlFor="cat-nombre">Nombre *</label>
-            <input id="cat-nombre" className={`input${campoError?.campo === 'nombre' ? ' error' : ''}`} type="text" required
-              value={nombre} onChange={e => setNombre(e.target.value)} autoFocus />
-            {campoError?.campo === 'nombre' && <span className="field-error">{campoError.mensaje}</span>}
-          </div>
-          <div className="field">
-            <label htmlFor="cat-desc">Descripción</label>
-            <input id="cat-desc" className="input" type="text"
-              value={descripcion} onChange={e => setDescripcion(e.target.value)} />
-          </div>
-          <div className="field">
-            <label htmlFor="cat-padre">Categoría padre</label>
-            <select id="cat-padre" className="input"
-              value={padreId} onChange={e => setPadreId(e.target.value)}>
-              <option value="">— Sin padre —</option>
-              {padresDisponibles.map(c => (
-                <option key={c.id} value={c.id}>{c.nombre}</option>
-              ))}
-            </select>
-          </div>
-          {error && <div className="alert-danger" role="alert">{error}</div>}
+        <div className="field">
+          <label htmlFor="cat-desc">Descripción</label>
+          <input id="cat-desc" className="input" type="text"
+            value={descripcion} onChange={e => setDescripcion(e.target.value)} />
         </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button type="submit" className="btn-primary" disabled={!nombre.trim() || saving}>
-            {saving ? 'Guardando…' : 'Guardar'}
-          </button>
+        <div className="field">
+          <label htmlFor="cat-padre">Categoría padre</label>
+          <select id="cat-padre" className="input"
+            value={padreId} onChange={e => setPadreId(e.target.value)}>
+            <option value="">— Sin padre —</option>
+            {padresDisponibles.map(c => (
+              <option key={c.id} value={c.id}>{c.nombre}</option>
+            ))}
+          </select>
         </div>
-      </form>
-    </div>
+        {error && <div className="alert-danger" role="alert">{error}</div>}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+        <button type="submit" className="btn-primary" disabled={!nombre.trim() || saving}>
+          {saving ? 'Guardando…' : 'Guardar'}
+        </button>
+      </div>
+    </Modal>
   );
 }

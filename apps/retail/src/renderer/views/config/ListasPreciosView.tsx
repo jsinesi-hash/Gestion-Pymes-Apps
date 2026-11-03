@@ -1,12 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useListasPrecios } from '../../hooks/useListasPrecios';
-import { useAuth, bridge, propsFilaActivable } from '@core/ui';
+import { useAuth, bridge, propsFilaActivable, Modal } from '@core/ui';
 import { useMotorPreciosV2Habilitado } from '../../hooks/useMotorPrecios';
 import { RecalcularModal } from './RecalcularModal';
 import { CambiosProgramadosPanel } from './CambiosProgramadosPanel';
 import { ReglasTab } from './ReglasTab';
-import { useEscapeToClose } from '@core/ui';
 
 type ModoCalculo = 'margen_costo' | 'pct_sobre_lista' | 'manual';
 
@@ -416,70 +415,65 @@ export function ListasPreciosView() {
       )}
 
       {modal.open && (
-        <div className="modal-overlay" role="dialog"> {/* NOSONAR */}
-          <div className="modal">
-            <div className="modal-header">
-              <span className="modal-title">{modal.id ? 'Editar lista' : 'Nueva lista'}</span>
+        <Modal titulo={modal.id ? 'Editar lista' : 'Nueva lista'}>
+          <div className="modal-body">
+            <div className="field">
+              <label htmlFor="lp-nombre">Nombre</label>
+              <input id="lp-nombre" aria-label="nombre" className="input"
+                value={form.nombre}
+                onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
+              />
             </div>
-            <div className="modal-body">
+            <div className="field">
+              <label htmlFor="lp-tipo">Tipo</label>
+              <select id="lp-tipo" className="input"
+                value={form.tipo}
+                onChange={e => setForm(f => ({ ...f, tipo: e.target.value as 'general' | 'especial' }))}
+              >
+                <option value="general">Tipo general</option>
+                <option value="especial">Tipo especial</option>
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="lp-ajuste">Ajuste porcentual (con signo, ej. -10 o +5)</label>
+              <input id="lp-ajuste" type="number" aria-label="ajuste porcentual" className="input num"
+                value={form.ajuste_porcentual}
+                onChange={e => setForm(f => ({ ...f, ajuste_porcentual: e.target.value }))}
+              />
+            </div>
+            {motorV2 && (
               <div className="field">
-                <label htmlFor="lp-nombre">Nombre</label>
-                <input id="lp-nombre" aria-label="nombre" className="input"
-                  value={form.nombre}
-                  onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="lp-tipo">Tipo</label>
-                <select id="lp-tipo" className="input"
-                  value={form.tipo}
-                  onChange={e => setForm(f => ({ ...f, tipo: e.target.value as 'general' | 'especial' }))}
+                <label htmlFor="lp-modo">Modo de cálculo</label>
+                <select id="lp-modo" aria-label="modo de cálculo" className="input"
+                  value={form.modo_calculo}
+                  onChange={e => setForm(f => ({ ...f, modo_calculo: e.target.value as ModoCalculo }))}
                 >
-                  <option value="general">Tipo general</option>
-                  <option value="especial">Tipo especial</option>
+                  <option value="pct_sobre_lista">% sobre lista</option>
+                  <option value="margen_costo">Margen sobre costo</option>
+                  <option value="manual">Manual</option>
                 </select>
-              </div>
-              <div className="field">
-                <label htmlFor="lp-ajuste">Ajuste porcentual (con signo, ej. -10 o +5)</label>
-                <input id="lp-ajuste" type="number" aria-label="ajuste porcentual" className="input num"
-                  value={form.ajuste_porcentual}
-                  onChange={e => setForm(f => ({ ...f, ajuste_porcentual: e.target.value }))}
-                />
-              </div>
-              {motorV2 && (
-                <div className="field">
-                  <label htmlFor="lp-modo">Modo de cálculo</label>
-                  <select id="lp-modo" aria-label="modo de cálculo" className="input"
-                    value={form.modo_calculo}
-                    onChange={e => setForm(f => ({ ...f, modo_calculo: e.target.value as ModoCalculo }))}
-                  >
-                    <option value="pct_sobre_lista">% sobre lista</option>
-                    <option value="margen_costo">Margen sobre costo</option>
-                    <option value="manual">Manual</option>
-                  </select>
-                  <div className="text-muted text-xs" style={{ marginTop: 2 }}>
-                    «Margen sobre costo» usa las reglas de la lista; el ajuste % solo aplica en «% sobre lista».
-                  </div>
+                <div className="text-muted text-xs" style={{ marginTop: 2 }}>
+                  «Margen sobre costo» usa las reglas de la lista; el ajuste % solo aplica en «% sobre lista».
                 </div>
-              )}
-              <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 600 }}>
-                <input type="checkbox"
-                  checked={form.predeterminada}
-                  onChange={e => setForm(f => ({ ...f, predeterminada: e.target.checked }))}
-                />
-                {' '}Marcar como predeterminada
-              </label>
-              {error && <div className="alert-danger" role="alert">{error}</div>}
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn-secondary" onClick={() => setModal({ open: false })}>Cancelar</button>
-              <button type="button" className="btn-primary" onClick={handleGuardar}
-                disabled={saving || !form.nombre.trim()} style={{ opacity: saving ? 0.7 : 1 }}>
-                Guardar
-              </button>
-            </div>
+              </div>
+            )}
+            <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 600 }}>
+              <input type="checkbox"
+                checked={form.predeterminada}
+                onChange={e => setForm(f => ({ ...f, predeterminada: e.target.checked }))}
+              />
+              {' '}Marcar como predeterminada
+            </label>
+            {error && <div className="alert-danger" role="alert">{error}</div>}
           </div>
-        </div>
+          <div className="modal-footer">
+            <button type="button" className="btn-secondary" onClick={() => setModal({ open: false })}>Cancelar</button>
+            <button type="button" className="btn-primary" onClick={handleGuardar}
+              disabled={saving || !form.nombre.trim()} style={{ opacity: saving ? 0.7 : 1 }}>
+              Guardar
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );

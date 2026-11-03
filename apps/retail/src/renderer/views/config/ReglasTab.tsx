@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { margenRealPct, precioConMargen } from '@ferreteria/shared';
-import { useEscapeToClose, bridge } from '@core/ui';
+import { bridge, Modal } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 
 // ADR-049 §2 — Reglas de margen por lista (reemplaza el tab «Ajustes por producto»).
@@ -75,8 +75,6 @@ export function ReglasTab({ listaId }: Readonly<{ listaId: string }>) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [filtro, setFiltro] = useState('');
   const callIpc = useCallIpc();
-
-  useEscapeToClose(() => setModal(null), !!modal);
 
   async function load() {
     const data = await f().precios?.reglas?.listByLista?.(listaId).catch(() => []);
@@ -264,96 +262,90 @@ export function ReglasTab({ listaId }: Readonly<{ listaId: string }>) {
       </div>
 
       {modal && (
-        <div className="modal-overlay" onClick={() => setModal(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 440 }}>
-            <div className="modal-header">
-              <h2>{modal.id ? 'Editar regla' : 'Nueva regla'}</h2>
-              <button className="ia" aria-label="Cerrar" onClick={() => setModal(null)}>&#x2715;</button>
-            </div>
-            <div style={{ padding: 'var(--pad)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <Modal titulo={modal.id ? 'Editar regla' : 'Nueva regla'} onClose={() => setModal(null)} cerrarAlClickFuera style={{ maxWidth: 440 }}>
+          <div style={{ padding: 'var(--pad)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <label>
+              <div className="label-txt">Tipo</div>
+              <select id="tipo" className={`input${errors.tipo ? ' error' : ''}`} aria-label="tipo de regla" value={form.tipo}
+                onChange={e => { setField('tipo', e.target.value as ReglaTipo); setField('objetivo_id', ''); }}>
+                <option value="lista">Lista (base)</option>
+                <option value="rubro">Rubro</option>
+                <option value="marca">Marca</option>
+                <option value="proveedor">Proveedor</option>
+                <option value="producto">Producto</option>
+              </select>
+              {errors.tipo && <span className="field-error">{errors.tipo}</span>}
+            </label>
+            {form.tipo !== 'lista' && (
               <label>
-                <div className="label-txt">Tipo</div>
-                <select id="tipo" className={`input${errors.tipo ? ' error' : ''}`} aria-label="tipo de regla" value={form.tipo}
-                  onChange={e => { setField('tipo', e.target.value as ReglaTipo); setField('objetivo_id', ''); }}>
-                  <option value="lista">Lista (base)</option>
-                  <option value="rubro">Rubro</option>
-                  <option value="marca">Marca</option>
-                  <option value="proveedor">Proveedor</option>
-                  <option value="producto">Producto</option>
+                <div className="label-txt">Objetivo</div>
+                <select id="objetivo_id" className={`input${errors.objetivo_id ? ' error' : ''}`} aria-label="objetivo" value={form.objetivo_id}
+                  onChange={e => setField('objetivo_id', e.target.value)}>
+                  <option value="">— seleccionar —</option>
+                  {opcionesDe(form.tipo).map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}
                 </select>
-                {errors.tipo && <span className="field-error">{errors.tipo}</span>}
+                {errors.objetivo_id && <span className="field-error">{errors.objetivo_id}</span>}
               </label>
-              {form.tipo !== 'lista' && (
-                <label>
-                  <div className="label-txt">Objetivo</div>
-                  <select id="objetivo_id" className={`input${errors.objetivo_id ? ' error' : ''}`} aria-label="objetivo" value={form.objetivo_id}
-                    onChange={e => setField('objetivo_id', e.target.value)}>
-                    <option value="">— seleccionar —</option>
-                    {opcionesDe(form.tipo).map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}
-                  </select>
-                  {errors.objetivo_id && <span className="field-error">{errors.objetivo_id}</span>}
+            )}
+            <label>
+              <div className="label-txt">Margen % (markup sobre costo)</div>
+              <input id="margen_pct" className={`input num${errors.margen_pct ? ' error' : ''}`} type="number" step="0.01" aria-label="margen" value={form.margen_pct}
+                onChange={e => setField('margen_pct', e.target.value)} />
+              {errors.margen_pct && <span className="field-error">{errors.margen_pct}</span>}
+              <div className="text-muted text-xs" style={{ marginTop: 2 }}>
+                Margen real sobre precio: <b>{margenRealDeMarkup(markupNum).toFixed(1)}%</b>
+              </div>
+            </label>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <label style={{ flex: 1 }}>
+                <div className="label-txt">Margen mín. %</div>
+                <input id="margen_min_pct" className={`input num${errors.margen_min_pct ? ' error' : ''}`} type="number" step="0.01" value={form.margen_min_pct}
+                  placeholder="—" onChange={e => setField('margen_min_pct', e.target.value)} />
+                {errors.margen_min_pct && <span className="field-error">{errors.margen_min_pct}</span>}
+              </label>
+              <label style={{ flex: 1 }}>
+                <div className="label-txt">Margen máx. %</div>
+                <input id="margen_max_pct" className={`input num${errors.margen_max_pct ? ' error' : ''}`} type="number" step="0.01" value={form.margen_max_pct}
+                  placeholder="—" onChange={e => setField('margen_max_pct', e.target.value)} />
+                {errors.margen_max_pct && <span className="field-error">{errors.margen_max_pct}</span>}
+              </label>
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <label style={{ flex: 1 }}>
+                <div className="label-txt">Redondeo</div>
+                <select id="redondeo_modo" className={`input${errors.redondeo_modo ? ' error' : ''}`} aria-label="redondeo" value={form.redondeo_modo}
+                  onChange={e => setField('redondeo_modo', e.target.value as RedondeoModo)}>
+                  <option value="ninguno">Ninguno</option>
+                  <option value="terminacion_90">Terminación ,90</option>
+                  <option value="terminacion_99">Terminación ,99</option>
+                  <option value="multiplo">Múltiplo</option>
+                </select>
+                {errors.redondeo_modo && <span className="field-error">{errors.redondeo_modo}</span>}
+              </label>
+              {form.redondeo_modo === 'multiplo' && (
+                <label style={{ flex: 1 }}>
+                  <div className="label-txt">Valor (centavos)</div>
+                  <input id="redondeo_valor" className={`input num${errors.redondeo_valor ? ' error' : ''}`} type="number" value={form.redondeo_valor}
+                    placeholder="100 = $1" onChange={e => setField('redondeo_valor', e.target.value)} />
+                  {errors.redondeo_valor && <span className="field-error">{errors.redondeo_valor}</span>}
                 </label>
               )}
-              <label>
-                <div className="label-txt">Margen % (markup sobre costo)</div>
-                <input id="margen_pct" className={`input num${errors.margen_pct ? ' error' : ''}`} type="number" step="0.01" aria-label="margen" value={form.margen_pct}
-                  onChange={e => setField('margen_pct', e.target.value)} />
-                {errors.margen_pct && <span className="field-error">{errors.margen_pct}</span>}
-                <div className="text-muted text-xs" style={{ marginTop: 2 }}>
-                  Margen real sobre precio: <b>{margenRealDeMarkup(markupNum).toFixed(1)}%</b>
-                </div>
+              <label style={{ flex: 1 }}>
+                <div className="label-txt">Prioridad</div>
+                <input id="prioridad" className={`input num${errors.prioridad ? ' error' : ''}`} type="number" value={form.prioridad}
+                  onChange={e => setField('prioridad', e.target.value)} />
+                {errors.prioridad && <span className="field-error">{errors.prioridad}</span>}
               </label>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <label style={{ flex: 1 }}>
-                  <div className="label-txt">Margen mín. %</div>
-                  <input id="margen_min_pct" className={`input num${errors.margen_min_pct ? ' error' : ''}`} type="number" step="0.01" value={form.margen_min_pct}
-                    placeholder="—" onChange={e => setField('margen_min_pct', e.target.value)} />
-                  {errors.margen_min_pct && <span className="field-error">{errors.margen_min_pct}</span>}
-                </label>
-                <label style={{ flex: 1 }}>
-                  <div className="label-txt">Margen máx. %</div>
-                  <input id="margen_max_pct" className={`input num${errors.margen_max_pct ? ' error' : ''}`} type="number" step="0.01" value={form.margen_max_pct}
-                    placeholder="—" onChange={e => setField('margen_max_pct', e.target.value)} />
-                  {errors.margen_max_pct && <span className="field-error">{errors.margen_max_pct}</span>}
-                </label>
-              </div>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <label style={{ flex: 1 }}>
-                  <div className="label-txt">Redondeo</div>
-                  <select id="redondeo_modo" className={`input${errors.redondeo_modo ? ' error' : ''}`} aria-label="redondeo" value={form.redondeo_modo}
-                    onChange={e => setField('redondeo_modo', e.target.value as RedondeoModo)}>
-                    <option value="ninguno">Ninguno</option>
-                    <option value="terminacion_90">Terminación ,90</option>
-                    <option value="terminacion_99">Terminación ,99</option>
-                    <option value="multiplo">Múltiplo</option>
-                  </select>
-                  {errors.redondeo_modo && <span className="field-error">{errors.redondeo_modo}</span>}
-                </label>
-                {form.redondeo_modo === 'multiplo' && (
-                  <label style={{ flex: 1 }}>
-                    <div className="label-txt">Valor (centavos)</div>
-                    <input id="redondeo_valor" className={`input num${errors.redondeo_valor ? ' error' : ''}`} type="number" value={form.redondeo_valor}
-                      placeholder="100 = $1" onChange={e => setField('redondeo_valor', e.target.value)} />
-                    {errors.redondeo_valor && <span className="field-error">{errors.redondeo_valor}</span>}
-                  </label>
-                )}
-                <label style={{ flex: 1 }}>
-                  <div className="label-txt">Prioridad</div>
-                  <input id="prioridad" className={`input num${errors.prioridad ? ' error' : ''}`} type="number" value={form.prioridad}
-                    onChange={e => setField('prioridad', e.target.value)} />
-                  {errors.prioridad && <span className="field-error">{errors.prioridad}</span>}
-                </label>
-              </div>
-              {error && <div className="alert-error">{error}</div>}
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                <button type="button" className="btn-secondary" onClick={() => setModal(null)}>Cancelar</button>
-                <button type="button" className="btn-primary" disabled={saving} onClick={guardar}>
-                  {saving ? 'Guardando...' : 'Guardar'}
-                </button>
-              </div>
+            </div>
+            {error && <div className="alert-error">{error}</div>}
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button type="button" className="btn-secondary" onClick={() => setModal(null)}>Cancelar</button>
+              <button type="button" className="btn-primary" disabled={saving} onClick={guardar}>
+                {saving ? 'Guardando...' : 'Guardar'}
+              </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

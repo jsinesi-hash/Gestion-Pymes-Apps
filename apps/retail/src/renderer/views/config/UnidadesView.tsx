@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth, bridge } from '@core/ui';
-import { useEscapeToClose } from '@core/ui';
+import { useAuth, bridge, Modal } from '@core/ui';
 import { rutearCampoError } from '@core/ui';
 import { useToast } from '@core/ui';
 import { ExportarButton } from '@core/ui';
@@ -185,8 +184,6 @@ function UnidadModal({ initial, onClose, onSaved }: {
   // ADR-082 (SEC-2): error inline ruteado al campo que el backend rechazó.
   const [campoError, setCampoError] = useState<{ campo: string; mensaje: string } | null>(null);
 
-  useEscapeToClose(onClose, !saving);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!nombre.trim() || !abreviatura.trim()) return;
@@ -218,60 +215,53 @@ function UnidadModal({ initial, onClose, onSaved }: {
   }
 
   return (
-    <div role="dialog" className="modal-overlay">
-      <form className="modal" onSubmit={handleSubmit}>
-        <div className="modal-header">
-          <span className="modal-title">
-            {initial ? 'Editar unidad' : 'Nueva unidad'}
+    <Modal titulo={initial ? 'Editar unidad' : 'Nueva unidad'} onClose={onClose} bloqueado={saving} ocultarCerrar as="form" onSubmit={handleSubmit}>
+      <div className="modal-body">
+        <div className="field">
+          <label htmlFor="unidad-nombre">Nombre *</label>
+          <input
+            id="unidad-nombre"
+            className={`input${campoError?.campo === 'nombre' ? ' error' : ''}`}
+            type="text"
+            required
+            value={nombre}
+            onChange={e => setNombre(e.target.value)}
+            autoFocus
+            placeholder="Ej: Unidad, Kilogramo, Metro"
+          />
+          {campoError?.campo === 'nombre' && <span className="field-error">{campoError.mensaje}</span>}
+        </div>
+        <div className="field">
+          <label htmlFor="unidad-abr">Abreviatura *</label>
+          <input
+            id="unidad-abr"
+            className={`input${campoError?.campo === 'abreviatura' ? ' error' : ''}`}
+            type="text"
+            required
+            value={abreviatura}
+            onChange={e => setAbreviatura(e.target.value)}
+            placeholder="Ej: u, kg, m"
+            style={{ textTransform: 'lowercase' }}
+          />
+          {campoError?.campo === 'abreviatura' && <span className="field-error">{campoError.mensaje}</span>}
+          <span style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2 }}>
+            Única. Se usa en stock y presentaciones.
           </span>
         </div>
-        <div className="modal-body">
-          <div className="field">
-            <label htmlFor="unidad-nombre">Nombre *</label>
-            <input
-              id="unidad-nombre"
-              className={`input${campoError?.campo === 'nombre' ? ' error' : ''}`}
-              type="text"
-              required
-              value={nombre}
-              onChange={e => setNombre(e.target.value)}
-              autoFocus
-              placeholder="Ej: Unidad, Kilogramo, Metro"
-            />
-            {campoError?.campo === 'nombre' && <span className="field-error">{campoError.mensaje}</span>}
-          </div>
-          <div className="field">
-            <label htmlFor="unidad-abr">Abreviatura *</label>
-            <input
-              id="unidad-abr"
-              className={`input${campoError?.campo === 'abreviatura' ? ' error' : ''}`}
-              type="text"
-              required
-              value={abreviatura}
-              onChange={e => setAbreviatura(e.target.value)}
-              placeholder="Ej: u, kg, m"
-              style={{ textTransform: 'lowercase' }}
-            />
-            {campoError?.campo === 'abreviatura' && <span className="field-error">{campoError.mensaje}</span>}
-            <span style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2 }}>
-              Única. Se usa en stock y presentaciones.
-            </span>
-          </div>
-          {error && <div className="alert-danger" role="alert">{error}</div>}
-        </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={!nombre.trim() || !abreviatura.trim() || saving}
-          >
-            {saving ? 'Guardando…' : 'Guardar'}
-          </button>
-        </div>
-      </form>
-    </div>
+        {error && <div className="alert-danger" role="alert">{error}</div>}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          className="btn-primary"
+          disabled={!nombre.trim() || !abreviatura.trim() || saving}
+        >
+          {saving ? 'Guardando…' : 'Guardar'}
+        </button>
+      </div>
+    </Modal>
   );
 }
