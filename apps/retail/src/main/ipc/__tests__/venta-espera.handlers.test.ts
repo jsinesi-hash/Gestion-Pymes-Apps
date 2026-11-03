@@ -8,6 +8,7 @@ import { productoCreateHandler } from '../producto';
 import { stockEntradaHandler } from '../stock';
 import { cajaAbrirHandler, cajaCerrarHandler } from '@core/main';
 import { ventaConfirmarHandler, ventaListByCajaHandler, type VentaConfirmarPayload } from '../venta';
+import { redondearPeso } from '@ferreteria/shared';
 import {
   ventaEsperaPausarHandler,
   ventaEsperaListarHandler,
@@ -294,5 +295,96 @@ describe('venta-espera handlers', () => {
     // Sigue en en_espera (no auto-descarta)
     const ventaRow = db.select().from(schema.venta).where(eq(schema.venta.id, venta_id)).get()!;
     expect(ventaRow.estado).toBe('en_espera');
+  });
+
+
+  // ── pausar: los totales se verifican en el main, igual que al confirmar ─────────────────────────
+  // Revisión 2026-10-20 (P1): `confirmarVenta` rehace la cuenta en centavos, pero pausar guardaba
+  // subtotal, IVA, total y ajuste tal como llegaban del renderer (límite declarado en el ADR de
+  // totales). Una venta en espera con totales inconsistentes se listaba con un total falso.
+  describe('pausar verifica los totales como la confirmación', () => {
+    const contarVentas = () => db.select().from(schema.venta).all().length;
+    const contarDetalles = () => db.select().from(schema.venta_detalle).all().length;
+
+    function preparar() {
+      const { prod } = crearProductoConStock(10);
+      const caja = abrirCaja();
+      return { prod, caja };
+    }
+
+    function rechaza(mutar: (p: PausarPayload) => void, codigo: string) {
+      const { prod, caja } = preparar();
+      const p = makePausarPayload(caja.id, prod.id, 2, 1000);
+      mutar(p);
+      expect(() => ventaEsperaPausarHandler(db, p)).toThrow(codigo);
+      // No queda nada a medias: ni la cabecera ni las líneas.
+      expect(contarVentas()).toBe(0);
+      expect(contarDetalles()).toBe(0);
+    }
+
+    it('rechaza un total que no coincide con las líneas', () => {
+      rechaza((p) => { p.total = 1; }, 'TOTALES_INCONSISTENTES');
+    });
+
+    it('rechaza un subtotal general inconsistente', () => {
+      rechaza((p) => { p.subtotal = 1999; }, 'TOTALES_INCONSISTENTES');
+    });
+
+    it('rechaza el subtotal de una línea que no es precio × cantidad', () => {
+      rechaza((p) => { p.lineas[0]!.subtotal = 1; }, 'TOTALES_INCONSISTENTES');
+    });
+
+    it('rechaza un IVA inconsistente', () => {
+      rechaza((p) => { p.importe_iva = 0; }, 'TOTALES_INCONSISTENTES');
+    });
+
+    it('rechaza un ajuste de redondeo que no corresponde', () => {
+      rechaza((p) => { p.ajuste_redondeo = 0.5; }, 'TOTALES_INCONSISTENTES');
+    });
+
+    it('rechaza un descuento global fuera de rango', () => {
+      rechaza((p) => { p.descuento_global = 150; }, 'DESCUENTO_INVALIDO');
+    });
+
+    it('rechaza una línea con cantidad cero', () => {
+      rechaza((p) => { p.lineas[0]!.cantidad = 0; }, 'CANTIDAD_INVALIDA');
+    });
+
+    it('rechaza un precio unitario negativo', () => {
+      rechaza((p) => { p.lineas[0]!.precio_unitario = -5; }, 'PRECIO_INVALIDO');
+    });
+
+    it('acepta un carrito con descuento global y redondeo calculados como el POS', () => {
+      const { prod, caja } = preparar();
+      const p = makePausarPayload(caja.id, prod.id, 3, 333.33);
+      p.descuento_global = 10;
+      const conDescuento = Math.round(Math.round(333.33 * 100) * 3 * (1 - 10 / 100));
+      const red = redondearPeso(conDescuento);
+      p.total = red.totalCentavos / 100;
+      p.ajuste_redondeo = red.ajusteRedondeoCentavos / 100;
+      p.subtotal = Math.round(333.33 * 100) * 3 / 100;
+      p.lineas[0]!.subtotal = p.subtotal;
+      p.importe_iva = Math.round(p.subtotal * 21 / 121 * 100) / 100;
+      const r = ventaEsperaPausarHandler(db, p);
+      expect(r.venta_id).toBeTruthy();
+      expect(contarVentas()).toBe(1);
+    });
+
+    it('acepta el IVA sin redondear a centavos (el renderer lo calcula en float)', () => {
+      const { prod, caja } = preparar();
+      const p = makePausarPayload(caja.id, prod.id, 2, 1000);
+      p.importe_iva = (2 * 1000 * 21) / 121; // float sin redondear, como lo manda el renderer
+      expect(() => ventaEsperaPausarHandler(db, p)).not.toThrow();
+    });
+
+    it('un carrito inconsistente no ocupa un lugar del tope de ventas en espera', () => {
+      const { prod, caja } = preparar();
+      const mala = makePausarPayload(caja.id, prod.id, 2, 1000);
+      mala.total = 1;
+      expect(() => ventaEsperaPausarHandler(db, mala)).toThrow('TOTALES_INCONSISTENTES');
+      const buena = makePausarPayload(caja.id, prod.id, 2, 1000);
+      expect(() => ventaEsperaPausarHandler(db, buena)).not.toThrow();
+      expect(ventaEsperaListarHandler(db)).toHaveLength(1);
+    });
   });
 });

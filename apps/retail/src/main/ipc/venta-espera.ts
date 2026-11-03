@@ -4,7 +4,7 @@ import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
 import * as schema from '../db/schema';
 import { arr, num, id as vId, pausarVentaEspera, listarVentasEspera, descartarVentaEspera, requireSession } from '@core/main';
-import type { LineaPayload } from './venta';
+import { verificarTotalesDePayload, type LineaPayload } from './venta';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
@@ -69,6 +69,9 @@ export function ventaEsperaPausarHandler(db: Db, rawPayload: unknown): { venta_i
     };
   });
   const payload = rawPayload as PausarPayload;
+
+  // Los totales se verifican como al confirmar: nada se guarda ni ocupa un lugar del tope si no cierran.
+  verificarTotalesDePayload(payload);
 
   return pausarVentaEspera(db, {
     caja_id: payload.caja_id,

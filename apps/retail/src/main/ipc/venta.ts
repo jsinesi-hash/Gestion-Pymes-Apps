@@ -78,9 +78,15 @@ function validarFactorDeLinea(db: Db, linea: LineaPayload): number {
   return factor;
 }
 
-function validarLineasPrevio(db: Db, payload: VentaConfirmarPayload): void {
-  // Revisión 2026-10-20 (P1): los totales los calcula el renderer; el main rehace la cuenta en
-  // centavos (misma fórmula del POS) y rechaza lo inconsistente antes de tocar stock o caja.
+/**
+ * Revisión 2026-10-20 (P1): los totales los calcula el renderer; el main rehace la cuenta en
+ * centavos (misma fórmula del POS) y rechaza lo inconsistente. Lo usan la confirmación (antes de
+ * tocar stock o caja) y el pausado de una venta en espera: una venta en espera no impacta stock ni
+ * caja, pero se lista con su total y no puede quedar guardada con uno falso.
+ */
+export function verificarTotalesDePayload(
+  payload: Pick<VentaConfirmarPayload, 'lineas' | 'descuento_global' | 'subtotal' | 'importe_iva' | 'total' | 'ajuste_redondeo'>,
+): void {
   verificarTotalesVenta({
     lineas: payload.lineas.map((l) => ({
       cantidad: l.cantidad,
@@ -95,6 +101,10 @@ function validarLineasPrevio(db: Db, payload: VentaConfirmarPayload): void {
     total: payload.total,
     ajuste_redondeo: payload.ajuste_redondeo,
   });
+}
+
+function validarLineasPrevio(db: Db, payload: VentaConfirmarPayload): void {
+  verificarTotalesDePayload(payload);
 
   // ADR-049 §9 — lista efectiva del cliente (cliente.lista_precio_id → predeterminada),
   // para re-resolver el precio de cada línea contra el servidor.
