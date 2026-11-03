@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { remitoApi } from '../../hooks/useRemitos';
 import { useTransportistas } from '../../hooks/useTransportistas';
-import { useEscapeToClose } from '@core/ui';
+import { Modal } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 
 // ADR-085 (SEC-2): campos de cabecera con control propio en este form, mapeados al
@@ -40,8 +40,6 @@ export function EditarRemitoModal({ remitoId, onClose, onEditado }: Readonly<Pro
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [guardando, setGuardando] = useState(false);
   const callIpc = useCallIpc();
-
-  useEscapeToClose(onClose);
 
   useEffect(() => {
     let vigente = true;
@@ -134,93 +132,89 @@ export function EditarRemitoModal({ remitoId, onClose, onEditado }: Readonly<Pro
 
   if (cargando) {
     return (
-      <div className="modal-overlay">
-        <div className="modal" style={{ width: 720 }}>
-          <div className="modal-body" style={{ textAlign: 'center', padding: '2rem' }}>Cargando…</div>
-        </div>
-      </div>
+      <Modal ariaLabel="Cargando remito" ancho={720} onClose={onClose}>
+        <div className="modal-body" style={{ textAlign: 'center', padding: '2rem' }}>Cargando…</div>
+      </Modal>
     );
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal" style={{ width: 720, maxHeight: '90vh', overflow: 'auto' }} role="dialog" aria-label="Editar remito">
-        <div className="modal-header">
-          <span className="modal-title">Editar remito</span>
-        </div>
-
-        <div className="modal-body">
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th className="r">Máximo</th>
-                  <th className="r">Cantidad a entregar</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lineas.map((l) => (
-                  <tr key={l.remito_linea_id}>
-                    <td>{l.descripcion}</td>
-                    <td className="r num">{l.maximo} {l.unidad ?? ''}</td>
-                    <td className="r">
-                      <input
-                        type="number"
-                        min="0"
-                        step="any"
-                        className="input"
-                        style={{ width: 90, textAlign: 'right' }}
-                        aria-label={`Cantidad a entregar de ${l.descripcion}`}
-                        value={cantidades[l.remito_linea_id] ?? ''}
-                        onChange={(e) => setCantidades((c) => ({ ...c, [l.remito_linea_id]: e.target.value }))}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div style={{ display: 'grid', gap: 12, marginTop: 16 }}>
-            <div className="field">
-              <label htmlFor="editar-remito-domicilio">Domicilio de entrega</label>
-              <input
-                id="editar-remito-domicilio"
-                className={`input${fieldErrors.domicilio_entrega ? ' error' : ''}`}
-                value={domicilio}
-                onChange={(e) => { setDomicilio(e.target.value); setFieldErrors((prev) => ({ ...prev, domicilio_entrega: '' })); }}
-              />
-              {fieldErrors.domicilio_entrega && <span className="field-error">{fieldErrors.domicilio_entrega}</span>}
-            </div>
-
-            <div className="field">
-              <label htmlFor="editar-remito-transportista">Transportista</label>
-              <select
-                id="editar-remito-transportista"
-                className={`input${fieldErrors.transportista_id ? ' error' : ''}`}
-                value={transportistaId}
-                onChange={(e) => { setTransportistaId(e.target.value); setFieldErrors((prev) => ({ ...prev, transportista_id: '' })); }}
-              >
-                <option value="">Seleccionar…</option>
-                {transportistas.map((t) => (
-                  <option key={t.id} value={t.id}>{t.razon_social}</option>
-                ))}
-              </select>
-              {fieldErrors.transportista_id && <span className="field-error">{fieldErrors.transportista_id}</span>}
-            </div>
-          </div>
-
-          {error && <div className="alert-danger" role="alert" style={{ marginTop: 12 }}>{error}</div>}
-        </div>
-
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
-          <button type="button" className="btn-primary" onClick={guardar} disabled={guardando}>
-            {guardando ? 'Guardando…' : 'Guardar cambios'}
-          </button>
-        </div>
+    <Modal ariaLabel="Editar remito" ancho={720} onClose={onClose} style={{ maxHeight: '90vh', overflow: 'auto' }}>
+      <div className="modal-header">
+        <span className="modal-title">Editar remito</span>
       </div>
-    </div>
+
+      <div className="modal-body">
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th className="r">Máximo</th>
+                <th className="r">Cantidad a entregar</th>
+              </tr>
+            </thead>
+            <tbody>
+              {lineas.map((l) => (
+                <tr key={l.remito_linea_id}>
+                  <td>{l.descripcion}</td>
+                  <td className="r num">{l.maximo} {l.unidad ?? ''}</td>
+                  <td className="r">
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      className="input"
+                      style={{ width: 90, textAlign: 'right' }}
+                      aria-label={`Cantidad a entregar de ${l.descripcion}`}
+                      value={cantidades[l.remito_linea_id] ?? ''}
+                      onChange={(e) => setCantidades((c) => ({ ...c, [l.remito_linea_id]: e.target.value }))}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div style={{ display: 'grid', gap: 12, marginTop: 16 }}>
+          <div className="field">
+            <label htmlFor="editar-remito-domicilio">Domicilio de entrega</label>
+            <input
+              id="editar-remito-domicilio"
+              className={`input${fieldErrors.domicilio_entrega ? ' error' : ''}`}
+              value={domicilio}
+              onChange={(e) => { setDomicilio(e.target.value); setFieldErrors((prev) => ({ ...prev, domicilio_entrega: '' })); }}
+            />
+            {fieldErrors.domicilio_entrega && <span className="field-error">{fieldErrors.domicilio_entrega}</span>}
+          </div>
+
+          <div className="field">
+            <label htmlFor="editar-remito-transportista">Transportista</label>
+            <select
+              id="editar-remito-transportista"
+              className={`input${fieldErrors.transportista_id ? ' error' : ''}`}
+              value={transportistaId}
+              onChange={(e) => { setTransportistaId(e.target.value); setFieldErrors((prev) => ({ ...prev, transportista_id: '' })); }}
+            >
+              <option value="">Seleccionar…</option>
+              {transportistas.map((t) => (
+                <option key={t.id} value={t.id}>{t.razon_social}</option>
+              ))}
+            </select>
+            {fieldErrors.transportista_id && <span className="field-error">{fieldErrors.transportista_id}</span>}
+          </div>
+        </div>
+
+        {error && <div className="alert-danger" role="alert" style={{ marginTop: 12 }}>{error}</div>}
+      </div>
+
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
+        <button type="button" className="btn-primary" onClick={guardar} disabled={guardando}>
+          {guardando ? 'Guardando…' : 'Guardar cambios'}
+        </button>
+      </div>
+    </Modal>
   );
 }

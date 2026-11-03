@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { remitoApi, type LineaPendiente } from '../../hooks/useRemitos';
 import { useTransportistas } from '../../hooks/useTransportistas';
-import { useEscapeToClose } from '@core/ui';
+import { Modal } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 
 // ADR-085 (SEC-2): campos de cabecera con control propio en este form, mapeados al
@@ -34,8 +34,6 @@ export function GenerarRemitoModal({ ventaId, onClose, onCreado }: Readonly<Prop
   const [emitiendo, setEmitiendo] = useState(false);
   const { transportistas } = useTransportistas();
   const callIpc = useCallIpc();
-
-  useEscapeToClose(onClose);
 
   useEffect(() => {
     let vigente = true;
@@ -105,114 +103,112 @@ export function GenerarRemitoModal({ ventaId, onClose, onCreado }: Readonly<Prop
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal" style={{ width: 720, maxHeight: '90vh', overflow: 'auto' }} role="dialog" aria-label="Generar remito">
-        <div className="modal-header">
-          <span className="modal-title">Generar remito</span>
-        </div>
+    <Modal ariaLabel="Generar remito" ancho={720} onClose={onClose} style={{ maxHeight: '90vh', overflow: 'auto' }}>
+      <div className="modal-header">
+        <span className="modal-title">Generar remito</span>
+      </div>
 
-        <div className="modal-body">
-          {cargando && <div className="text-muted">Cargando líneas…</div>}
+      <div className="modal-body">
+        {cargando && <div className="text-muted">Cargando líneas…</div>}
 
-          {!cargando && lineas.length === 0 && (
-            <div className="text-muted">No hay líneas pendientes de entrega para esta venta.</div>
-          )}
+        {!cargando && lineas.length === 0 && (
+          <div className="text-muted">No hay líneas pendientes de entrega para esta venta.</div>
+        )}
 
-          {lineas.length > 0 && (
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Producto</th>
-                    <th className="r">Vendido</th>
-                    <th className="r">Entregado</th>
-                    <th className="r">Pendiente</th>
-                    <th className="r">A entregar</th>
+        {lineas.length > 0 && (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th className="r">Vendido</th>
+                  <th className="r">Entregado</th>
+                  <th className="r">Pendiente</th>
+                  <th className="r">A entregar</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lineas.map((l) => (
+                  <tr key={l.venta_detalle_id}>
+                    <td>{l.descripcion}</td>
+                    <td className="r num">{l.cantidad_vendida}</td>
+                    <td className="r num">{l.cantidad_entregada}</td>
+                    <td className="r num">{l.cantidad_pendiente} {l.unidad ?? ''}</td>
+                    <td className="r">
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        className="input"
+                        style={{ width: 90, textAlign: 'right' }}
+                        aria-label={`Cantidad a entregar de ${l.descripcion}`}
+                        value={cantidades[l.venta_detalle_id] ?? ''}
+                        onChange={(e) => setCantidades((c) => ({ ...c, [l.venta_detalle_id]: e.target.value }))}
+                      />
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {lineas.map((l) => (
-                    <tr key={l.venta_detalle_id}>
-                      <td>{l.descripcion}</td>
-                      <td className="r num">{l.cantidad_vendida}</td>
-                      <td className="r num">{l.cantidad_entregada}</td>
-                      <td className="r num">{l.cantidad_pendiente} {l.unidad ?? ''}</td>
-                      <td className="r">
-                        <input
-                          type="number"
-                          min="0"
-                          step="any"
-                          className="input"
-                          style={{ width: 90, textAlign: 'right' }}
-                          aria-label={`Cantidad a entregar de ${l.descripcion}`}
-                          value={cantidades[l.venta_detalle_id] ?? ''}
-                          onChange={(e) => setCantidades((c) => ({ ...c, [l.venta_detalle_id]: e.target.value }))}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          <div style={{ display: 'grid', gap: 12, marginTop: 16 }}>
-            <div className="field">
-              <label htmlFor="remito-domicilio">Domicilio de entrega</label>
-              <input
-                id="remito-domicilio"
-                className={`input${fieldErrors.domicilio_entrega ? ' error' : ''}`}
-                value={domicilio}
-                onChange={(e) => { setDomicilio(e.target.value); setFieldErrors((prev) => ({ ...prev, domicilio_entrega: '' })); }}
-                placeholder="Si difiere del domicilio del cliente"
-              />
-              {fieldErrors.domicilio_entrega && <span className="field-error">{fieldErrors.domicilio_entrega}</span>}
-            </div>
-
-            <div className="field">
-              <label htmlFor="remito-transportista">Transportista</label>
-              <select
-                id="remito-transportista"
-                className={`input${fieldErrors.transportista_id ? ' error' : ''}`}
-                value={transportistaId}
-                onChange={(e) => { setTransportistaId(e.target.value); setFieldErrors((prev) => ({ ...prev, transportista_id: '' })); }}
-              >
-                <option value="">Seleccionar…</option>
-                {transportistas.map((t) => (
-                  <option key={t.id} value={t.id}>{t.razon_social}</option>
                 ))}
-              </select>
-              {fieldErrors.transportista_id && <span className="field-error">{fieldErrors.transportista_id}</span>}
-            </div>
+              </tbody>
+            </table>
+          </div>
+        )}
 
-            <div className="field">
-              <label htmlFor="remito-observaciones">Observaciones</label>
-              <textarea
-                id="remito-observaciones"
-                className={`input${fieldErrors.observaciones ? ' error' : ''}`}
-                rows={2}
-                value={observaciones}
-                onChange={(e) => { setObservaciones(e.target.value); setFieldErrors((prev) => ({ ...prev, observaciones: '' })); }}
-              />
-              {fieldErrors.observaciones && <span className="field-error">{fieldErrors.observaciones}</span>}
-            </div>
+        <div style={{ display: 'grid', gap: 12, marginTop: 16 }}>
+          <div className="field">
+            <label htmlFor="remito-domicilio">Domicilio de entrega</label>
+            <input
+              id="remito-domicilio"
+              className={`input${fieldErrors.domicilio_entrega ? ' error' : ''}`}
+              value={domicilio}
+              onChange={(e) => { setDomicilio(e.target.value); setFieldErrors((prev) => ({ ...prev, domicilio_entrega: '' })); }}
+              placeholder="Si difiere del domicilio del cliente"
+            />
+            {fieldErrors.domicilio_entrega && <span className="field-error">{fieldErrors.domicilio_entrega}</span>}
           </div>
 
-          {error && <div className="alert-danger" role="alert" style={{ marginTop: 12 }}>{error}</div>}
+          <div className="field">
+            <label htmlFor="remito-transportista">Transportista</label>
+            <select
+              id="remito-transportista"
+              className={`input${fieldErrors.transportista_id ? ' error' : ''}`}
+              value={transportistaId}
+              onChange={(e) => { setTransportistaId(e.target.value); setFieldErrors((prev) => ({ ...prev, transportista_id: '' })); }}
+            >
+              <option value="">Seleccionar…</option>
+              {transportistas.map((t) => (
+                <option key={t.id} value={t.id}>{t.razon_social}</option>
+              ))}
+            </select>
+            {fieldErrors.transportista_id && <span className="field-error">{fieldErrors.transportista_id}</span>}
+          </div>
+
+          <div className="field">
+            <label htmlFor="remito-observaciones">Observaciones</label>
+            <textarea
+              id="remito-observaciones"
+              className={`input${fieldErrors.observaciones ? ' error' : ''}`}
+              rows={2}
+              value={observaciones}
+              onChange={(e) => { setObservaciones(e.target.value); setFieldErrors((prev) => ({ ...prev, observaciones: '' })); }}
+            />
+            {fieldErrors.observaciones && <span className="field-error">{fieldErrors.observaciones}</span>}
+          </div>
         </div>
 
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={emitir}
-            disabled={emitiendo || cargando || lineas.length === 0}
-          >
-            {emitiendo ? 'Emitiendo…' : 'Emitir remito'}
-          </button>
-        </div>
+        {error && <div className="alert-danger" role="alert" style={{ marginTop: 12 }}>{error}</div>}
       </div>
-    </div>
+
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={emitir}
+          disabled={emitiendo || cargando || lineas.length === 0}
+        >
+          {emitiendo ? 'Emitiendo…' : 'Emitir remito'}
+        </button>
+      </div>
+    </Modal>
   );
 }

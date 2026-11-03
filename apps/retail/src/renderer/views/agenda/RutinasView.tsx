@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useRutinas, agendaApi, toDate, type Rutina, type FrecuenciaTipo } from '../../hooks/useAgenda';
 import { RutinaFormModal } from './RutinaFormModal';
-import { useEscapeToClose } from '@core/ui';
+import { Modal } from '@core/ui';
 
 const FREC_LABEL: Record<FrecuenciaTipo, string> = {
   unica: 'Única', diaria: 'Diaria', semanal: 'Semanal', mensual: 'Mensual', cada_n_dias: 'Cada N días',
@@ -30,8 +30,6 @@ export function RutinasView() {
   const [eliminar, setEliminar] = useState<Rutina | null>(null);
   const [procesando, setProcesando] = useState(false);
   const [accionError, setAccionError] = useState<string | null>(null);
-
-  useEscapeToClose(() => setEliminar(null), !!eliminar && !procesando);
 
   function handleOrdenar(campo: CampoOrden) {
     if (orden === campo) setOrdenDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -145,19 +143,17 @@ export function RutinasView() {
       )}
 
       {eliminar && (
-        <div className="modal-overlay">
-          <div className="modal" style={{ width: 420 }} role="dialog" aria-label="Eliminar rutina">
-            <div className="modal-header"><span className="modal-title">Eliminar «{eliminar.nombre}»</span></div>
-            <div className="modal-body">
-              <div className="text-muted text-xs">La rutina se da de baja y deja de generar eventos. Los eventos ya creados no se tocan.</div>
-              {accionError && <div className="alert-danger" role="alert" style={{ marginTop: 8 }}>{accionError}</div>}
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn-secondary" onClick={() => setEliminar(null)} disabled={procesando}>Cancelar</button>
-              <button type="button" className="btn-danger" disabled={procesando} onClick={() => accion(() => agendaApi().rutina.eliminar({ id: eliminar.id }))}>Eliminar</button>
-            </div>
+        <Modal ariaLabel="Eliminar rutina" ancho={420} onClose={() => setEliminar(null)} bloqueado={procesando}>
+          <div className="modal-header"><span className="modal-title">Eliminar «{eliminar.nombre}»</span></div>
+          <div className="modal-body">
+            <div className="text-muted text-xs">La rutina se da de baja y deja de generar eventos. Los eventos ya creados no se tocan.</div>
+            {accionError && <div className="alert-danger" role="alert" style={{ marginTop: 8 }}>{accionError}</div>}
           </div>
-        </div>
+          <div className="modal-footer">
+            <button type="button" className="btn-secondary" onClick={() => setEliminar(null)} disabled={procesando}>Cancelar</button>
+            <button type="button" className="btn-danger" disabled={procesando} onClick={() => accion(() => agendaApi().rutina.eliminar({ id: eliminar.id }))}>Eliminar</button>
+          </div>
+        </Modal>
       )}
     </div>
   );
