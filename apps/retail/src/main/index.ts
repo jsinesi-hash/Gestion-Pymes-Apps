@@ -60,10 +60,12 @@ import { drenarReintentos } from './agenda/worker-reintentos';
 import { applyPendingCambiosProgramados } from './scheduler/precios';
 import { ElectronPrintService } from '../print/ElectronPrintService';
 import { installAppMenu } from './menu/appMenu';
-import { getSession, aplicarSeguridadVentana } from '@core/main';
+import { getSession, aplicarSeguridadVentana, aplicarConfigTerminal } from '@core/main';
 
 async function createWindow(): Promise<void> {
-  loadTerminalConfig();
+  // Revisión 2026-10-20 (P0): el config de la terminal tiene que llegar al contexto del main;
+  // antes se descartaba y todas las terminales grababan origin_id='C1'.
+  aplicarConfigTerminal(loadTerminalConfig());
   await runStartup(db);
   const printService = new ElectronPrintService(() => new BrowserWindow({
     show: false,
