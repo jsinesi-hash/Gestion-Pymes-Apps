@@ -3,7 +3,9 @@
 > Fuente de verdad sobre qué está hecho, qué está en curso y qué viene después.
 > Actualizar al completar cada fase o tomar una decisión de diseño significativa.
 
-**Última actualización:** 2026-11-03 (**`venta:listByCaja` y `menu:rebuild` al núcleo — ADR-132** — rama `refactor/canales-listbycaja-menu-rebuild` (apilada sobre #48): ambos canales pasan a `registerCoreHandlers`/`coreCanales`; `venta:listByCaja` ahora exige sesión, `menu:rebuild` usa la costura `reconstruirMenu` (Retail la inyecta, Elaborados queda en no-op) y core-ui pierde dos casts. Se sacaron los duplicados de registro y de preload en ambas apps.)
+**Última actualización:** 2026-11-03 (**Un solo lector de CSV — ADR-133** — rama `refactor/csv-parser-unico` (apilada sobre #49): `leerCsv`/`detectarDelimitador` en `@ferreteria/shared` reemplazan a los cuatro parsers (importar datos, costos, sinónimos, seed de geografía). Correcciones de paso: BOM de Excel aceptado, `""` y saltos de línea dentro de comillas leídos bien en todos, y las filas de solo delimitadores ya no llegan como filas vacías.)
+
+**Anterior:** 2026-11-03 (**`venta:listByCaja` y `menu:rebuild` al núcleo — ADR-132** — rama `refactor/canales-listbycaja-menu-rebuild` (apilada sobre #48): ambos canales pasan a `registerCoreHandlers`/`coreCanales`; `venta:listByCaja` ahora exige sesión, `menu:rebuild` usa la costura `reconstruirMenu` (Retail la inyecta, Elaborados queda en no-op) y core-ui pierde dos casts. Se sacaron los duplicados de registro y de preload en ambas apps.)
 
 **Anterior:** 2026-11-02 (**`impuesto:list` exige sesión — ADR-131** — rama `fix/impuesto-list-requiere-sesion` (apilada sobre #47): era el único canal de lectura del catálogo que respondía sin login; `impuestoListHandler` ahora llama a `requireSession()` y lanza `UNAUTHENTICATED`. Tests en Retail y Elaborados; los consumidores de renderer ya corren post-login. Corregidos de paso dos `\f` del ADR-130 que se habían grabado como salto de página.)
 

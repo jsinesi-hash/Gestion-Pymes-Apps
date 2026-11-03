@@ -6,6 +6,14 @@ import { parseCsvContent, mapearFila } from '../importacion-costo.parser';
 // delimitador auto-detectado (`;` o `,`).
 
 describe('parseCsvContent', () => {
+  it('quita el BOM: el primer encabezado se reconoce', () => {
+    const { headers } = parseCsvContent('\uFEFFCOSTO;EAN\n10;779');
+    expect(headers.get('COSTO')).toBe(0);
+  });
+  it('"" dentro de comillas es una comilla (antes se perdía)', () => {
+    const { rows } = parseCsvContent('COSTO,DESCRIPCION\n10,"Tubo 1"" galv"');
+    expect(rows[0]).toEqual(['10', 'Tubo 1" galv']);
+  });
   it('parsea CSV con delimitador coma', () => {
     const csv = 'COD_PRODUCTO_PROV,COSTO,EAN\nPROV-001,125.00,7791234567890\nPROV-002,80.00,';
     const { headers, rows } = parseCsvContent(csv);

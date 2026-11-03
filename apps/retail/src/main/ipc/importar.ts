@@ -1,7 +1,7 @@
 ﻿import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { eq, and } from 'drizzle-orm';
-import { generateId, formatSku, canonicalizarUbicacion, canonicalizarCodigoUbicacion, parseBooleanoImport } from '@ferreteria/shared';
+import { generateId, formatSku, canonicalizarUbicacion, canonicalizarCodigoUbicacion, parseBooleanoImport, leerCsv } from '@ferreteria/shared';
 import { getOriginId, getSession, requirePermission } from '@core/main';
 import * as schema from '../db/schema';
 import { clienteUpsertHandler } from '@core/main';
@@ -41,33 +41,10 @@ export type ImportSummaryResult = {
   stats: { created: number; updated: number; error: number };
 };
 
+// El lector es el único de @ferreteria/shared (`leerCsv`): delimitador del encabezado, celdas
+// recortadas y filas vacías descartadas, como antes.
 export function csvToRows(text: string): string[][] {
-  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
-    .split('\n').filter(l => l.trim() !== '');
-  if (lines.length === 0) return [];
-
-  const header = lines[0];
-  const sepChar = (header.split(';').length - 1) >= (header.split(',').length - 1) ? ';' : ',';
-
-  return lines.map(line => {
-    const fields: string[] = [];
-    let current = '';
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') {
-        if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
-        else { inQuotes = !inQuotes; }
-      } else if (ch === sepChar && !inQuotes) {
-        fields.push(current.trim());
-        current = '';
-      } else {
-        current += ch;
-      }
-    }
-    fields.push(current.trim());
-    return fields;
-  });
+  return leerCsv(text, { delimitador: 'auto', recortar: true });
 }
 
 function buildRaw(headers: string[], row: string[]): Record<string, string> {
