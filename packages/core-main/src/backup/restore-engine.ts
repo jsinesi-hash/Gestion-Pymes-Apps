@@ -10,6 +10,7 @@ import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import type * as schema from '@core/db';
 import type { BackupManifest, RestoreCompatibilidad, RestoreValidationResult } from '@ferreteria/shared';
 import { crearBackup, descifrarAES } from './engine';
+import { intercambiarBaseDeDatos } from './swap-bd';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
@@ -228,18 +229,13 @@ export async function ejecutarRestoreAtomico(opts: EjecutarRestoreOpts): Promise
       throw new Error('La base de datos restaurada no pasó la verificación de integridad final');
     }
 
-    // Cerrar conexión actual + swap atómico
-    ((db as any).$client).close();
-
-    const bakPath = dbPath + '.pre-restore.bak';
-    fs.renameSync(dbPath, bakPath);
-    try {
-      fs.renameSync(tempRestoring, dbPath);
-      fs.unlinkSync(bakPath);
-    } catch (swapErr) {
-      try { fs.renameSync(bakPath, dbPath); } catch { /* no se puede revertir */ }
-      throw swapErr;
-    }
+    // Cerrar conexión actual + swap atómico. Si falla lanza RestoreSwapError (la conexión ya
+    // está cerrada: el handler IPC decide si reiniciar la app o dejarla como está).
+    intercambiarBaseDeDatos({
+      dbPath,
+      tempPath: tempRestoring,
+      cerrarConexion: () => ((db as any).$client).close(),
+    });
 
     // Auditoría: insertar en restore_log (ADR-022) sobre la DB ya restaurada
     try {

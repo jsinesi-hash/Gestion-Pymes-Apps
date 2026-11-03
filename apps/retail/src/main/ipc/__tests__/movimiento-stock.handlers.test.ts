@@ -1,10 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
+import type { IpcMain } from 'electron';
 import * as schema from '../../db/schema';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
 import { runCatalogSeed } from '../../catalog/seed';
 import { categoriaCreateHandler } from '../categoria';
 import { productoCreateHandler } from '../producto';
-import { movimientoStockListHandler, movimientoStockCreateHandler } from '../movimiento-stock';
+import { movimientoStockListHandler, registerMovimientoStockHandlers } from '../movimiento-stock';
 
 type Db = ReturnType<typeof setupDb>;
 function createTestProduct(db: Db) {
@@ -26,13 +29,25 @@ describe('movimiento-stock handlers', () => {
     expect(movs[0].motivo).toBe('inicial');
   });
 
-  it('create ajuste actualiza stock en existencias', () => {
-    loginAsAdmin(db);
-    const p = createTestProduct(db);
-    movimientoStockCreateHandler(db, { producto_id: p.id, tipo: 'ajuste', motivo: 'ajuste_conteo', cantidad: 10 });
-    const movs = movimientoStockListHandler(db, { producto_id: p.id });
-    expect(movs).toHaveLength(2);
-    const ajuste = movs.find(m => m.motivo === 'ajuste_conteo')!;
-    expect(ajuste.stock_resultante).toBe(10);
+  // Revisión 2026-10-20 (P0): `movimiento-stock:create` aceptaba tipo/motivo/cantidad arbitrarios
+  // con solo sesión (incluso NaN o negativos) y esquivaba `stock.ajustar`/`stock.entrada`. Ninguna
+  // pantalla lo usaba: el stock manual pasa por los canales `stock:*`, que sí validan y exigen
+  // permiso. Se eliminó el canal en vez de endurecerlo.
+  it('el registro solo expone la lectura: no existe movimiento-stock:create', () => {
+    const canales: string[] = [];
+    const ipcMain = { handle: (canal: string) => { canales.push(canal); } } as unknown as IpcMain;
+    registerMovimientoStockHandlers(ipcMain, db);
+    expect(canales).toEqual(['movimiento-stock:list']);
+  });
+
+  it('el módulo ya no exporta un handler de creación', async () => {
+    const modulo = await import('../movimiento-stock');
+    expect('movimientoStockCreateHandler' in modulo).toBe(false);
+  });
+
+  it('el preload no expone movimientoStock.create', () => {
+    const preload = fs.readFileSync(path.join(__dirname, '../../../preload/index.ts'), 'utf8');
+    expect(preload).not.toContain("'movimiento-stock:create'");
+    expect(preload).toContain("'movimiento-stock:list'");
   });
 });

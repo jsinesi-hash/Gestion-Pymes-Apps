@@ -109,7 +109,6 @@ createBridge({
       },
       movimientoStock: {
         list: (p: unknown) => invoke('movimiento-stock:list', p),
-        create: (p: unknown) => invoke('movimiento-stock:create', p),
       },
       stock: {
         entrada:          (p: StockEntradaPayload) => invoke('stock:entrada', p),
