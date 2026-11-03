@@ -40,6 +40,8 @@ export const usuario = sqliteTable('usuario', {
   hash_password:   text('hash_password').notNull(),
   rol_id:          text('rol_id').notNull().references(() => rol.id),
   email:           text('email'),
+  // ADR-136: último cambio de contraseña; vence a los 30 días. NULL = nunca registrado (cuenta como vencida).
+  password_changed_at: integer('password_changed_at', { mode: 'timestamp' }),
   activo:          integer('activo', { mode: 'boolean' }).notNull().default(true),
   ultimo_acceso:   integer('ultimo_acceso', { mode: 'timestamp' }),
   usuario_creacion_id: text('usuario_creacion_id').notNull(),

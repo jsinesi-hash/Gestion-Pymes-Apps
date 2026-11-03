@@ -132,3 +132,136 @@ describe('Login — ver contraseña', () => {
     expect(campo).toHaveValue('secreto');
   });
 });
+
+// ADR-136: con la contraseña vencida o sin mail el login no abre sesión; la pantalla muestra el paso
+// que corresponde y reenvía las credenciales.
+describe('Login — contraseña vencida y mail obligatorio (ADR-136)', () => {
+  const mockCambiar = vi.fn();
+  const mockCompletar = vi.fn();
+  const NUEVA = 'Nueva#2026x';
+
+  function renderPasos() {
+    return render(
+      <AppProfileProvider value={{ nombreApp: 'Ferretería', navegacion: navegacionRetail }}>
+        <AuthContext.Provider value={{
+          session: null, can: () => false, login: mockLogin, logout: async () => {}, actualizarPreferencias: () => {},
+          cambiarPasswordVencida: mockCambiar, completarEmail: mockCompletar,
+        }}>
+          <MemoryRouter initialEntries={['/login']}>
+            <Login />
+            <SondaRuta />
+          </MemoryRouter>
+        </AuthContext.Provider>
+      </AppProfileProvider>
+    );
+  }
+
+  async function ingresarCon(codigo: string) {
+    mockLogin.mockRejectedValue(new Error(codigo));
+    renderPasos();
+    fireEvent.change(screen.getByPlaceholderText('Usuario'), { target: { value: 'ana' } });
+    fireEvent.change(screen.getByPlaceholderText('Contraseña'), { target: { value: 'Vieja#2026x' } });
+    fireEvent.click(screen.getByText('Ingresar'));
+  }
+
+  beforeEach(() => {
+    mockLogin.mockReset(); mockCambiar.mockReset(); mockCompletar.mockReset();
+    ultimaRuta = '';
+  });
+
+  it('PASSWORD_VENCIDA muestra el paso de cambio y no navega', async () => {
+    await ingresarCon('PASSWORD_VENCIDA');
+    expect(await screen.findByText(/tu contraseña venció/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Nueva contraseña')).toBeInTheDocument();
+    expect(ultimaRuta).toBe('/login');
+  });
+
+  it('cambia la contraseña con la actual tipeada y navega a /', async () => {
+    mockCambiar.mockResolvedValue(undefined);
+    await ingresarCon('PASSWORD_VENCIDA');
+    fireEvent.change(await screen.findByPlaceholderText('Nueva contraseña'), { target: { value: NUEVA } });
+    fireEvent.change(screen.getByPlaceholderText('Repetir la nueva contraseña'), { target: { value: NUEVA } });
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar contraseña' }));
+    await waitFor(() => {
+      expect(mockCambiar).toHaveBeenCalledWith({ nombreUsuario: 'ana', passwordActual: 'Vieja#2026x', passwordNueva: NUEVA });
+      expect(ultimaRuta).toBe('/');
+    });
+  });
+
+  it('contraseñas que no coinciden: avisa y no llama al main', async () => {
+    await ingresarCon('PASSWORD_VENCIDA');
+    fireEvent.change(await screen.findByPlaceholderText('Nueva contraseña'), { target: { value: NUEVA } });
+    fireEvent.change(screen.getByPlaceholderText('Repetir la nueva contraseña'), { target: { value: NUEVA + 'x' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar contraseña' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(/no coinciden/i);
+    expect(mockCambiar).not.toHaveBeenCalled();
+  });
+
+  it('contraseña débil: muestra el motivo y no llama al main', async () => {
+    await ingresarCon('PASSWORD_VENCIDA');
+    fireEvent.change(await screen.findByPlaceholderText('Nueva contraseña'), { target: { value: 'corta' } });
+    fireEvent.change(screen.getByPlaceholderText('Repetir la nueva contraseña'), { target: { value: 'corta' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar contraseña' }));
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(mockCambiar).not.toHaveBeenCalled();
+  });
+
+  it('si el main rechaza el cambio, muestra el error traducido y se queda en el paso', async () => {
+    mockCambiar.mockRejectedValue(new Error('PASSWORD_IGUAL_A_LA_ACTUAL'));
+    await ingresarCon('PASSWORD_VENCIDA');
+    fireEvent.change(await screen.findByPlaceholderText('Nueva contraseña'), { target: { value: NUEVA } });
+    fireEvent.change(screen.getByPlaceholderText('Repetir la nueva contraseña'), { target: { value: NUEVA } });
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar contraseña' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(/distinta de la actual/i);
+    expect(ultimaRuta).toBe('/login');
+  });
+
+  it('EMAIL_REQUERIDO muestra el paso del mail; uno inválido no llama al main', async () => {
+    await ingresarCon('EMAIL_REQUERIDO');
+    fireEvent.change(await screen.findByPlaceholderText('nombre@ejemplo.com'), { target: { value: 'no-es-mail' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar correo' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(/correo electrónico válido/i);
+    expect(mockCompletar).not.toHaveBeenCalled();
+  });
+
+  it('carga el mail con las credenciales tipeadas y navega a /', async () => {
+    mockCompletar.mockResolvedValue(undefined);
+    await ingresarCon('EMAIL_REQUERIDO');
+    fireEvent.change(await screen.findByPlaceholderText('nombre@ejemplo.com'), { target: { value: 'ana@ejemplo.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar correo' }));
+    await waitFor(() => {
+      expect(mockCompletar).toHaveBeenCalledWith({ nombreUsuario: 'ana', password: 'Vieja#2026x', email: 'ana@ejemplo.com' });
+      expect(ultimaRuta).toBe('/');
+    });
+  });
+
+  it('si tras cambiar la clave falta el mail, sigue con el mail usando la clave NUEVA', async () => {
+    mockCambiar.mockRejectedValue(new Error('EMAIL_REQUERIDO'));
+    mockCompletar.mockResolvedValue(undefined);
+    await ingresarCon('PASSWORD_VENCIDA');
+    fireEvent.change(await screen.findByPlaceholderText('Nueva contraseña'), { target: { value: NUEVA } });
+    fireEvent.change(screen.getByPlaceholderText('Repetir la nueva contraseña'), { target: { value: NUEVA } });
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar contraseña' }));
+    fireEvent.change(await screen.findByPlaceholderText('nombre@ejemplo.com'), { target: { value: 'ana@ejemplo.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar correo' }));
+    await waitFor(() => {
+      expect(mockCompletar).toHaveBeenCalledWith({ nombreUsuario: 'ana', password: NUEVA, email: 'ana@ejemplo.com' });
+    });
+  });
+
+  it('«Volver» regresa a las credenciales y limpia las contraseñas', async () => {
+    await ingresarCon('PASSWORD_VENCIDA');
+    fireEvent.click(await screen.findByRole('button', { name: 'Volver' }));
+    expect(screen.getByPlaceholderText('Contraseña')).toHaveValue('');
+    expect(screen.getByText('Ingresar')).toBeInTheDocument();
+  });
+
+  it('otros errores del login siguen mostrando el mensaje genérico', async () => {
+    mockLogin.mockRejectedValue(new Error('Credenciales inválidas'));
+    renderPasos();
+    fireEvent.change(screen.getByPlaceholderText('Usuario'), { target: { value: 'ana' } });
+    fireEvent.change(screen.getByPlaceholderText('Contraseña'), { target: { value: 'mal' } });
+    fireEvent.click(screen.getByText('Ingresar'));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Credenciales inválidas');
+  });
+});

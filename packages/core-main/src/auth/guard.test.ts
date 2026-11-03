@@ -13,6 +13,7 @@ const SESSION_DATA = {
   nombreCompleto: 'Admin',
   rolId: 'r1',
   rolNombre: '',
+  passwordDiasRestantes: 30,
   permisos: ['venta.crear'],
   preferencias: { tema: 'claro' as const, acento: 'amber' as const, ui_font: 'Hanken Grotesk' as const, densidad: 'comfortable' as const, skin: 'actual' as const, pantalla_inicio: null, favoritos: [] },
 };

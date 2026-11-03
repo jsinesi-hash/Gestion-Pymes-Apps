@@ -298,7 +298,7 @@ describe('Guard: FORBIDDEN sin dashboard.ver', () => {
     clearSession();
     setSession(
       { userId: 'u2', rolId: 'op', permisos: new Set([]) },
-      { id: 'u2', nombreCompleto: 'Op', rolId: 'op', rolNombre: '', permisos: [], preferencias: { tema: 'claro', acento: 'amber', ui_font: 'Hanken Grotesk', densidad: 'comfortable', skin: 'actual', pantalla_inicio: null, favoritos: [] } },
+      { id: 'u2', nombreCompleto: 'Op', rolId: 'op', rolNombre: '', permisos: [], passwordDiasRestantes: 30, preferencias: { tema: 'claro', acento: 'amber', ui_font: 'Hanken Grotesk', densidad: 'comfortable', skin: 'actual', pantalla_inicio: null, favoritos: [] } },
     );
   });
 

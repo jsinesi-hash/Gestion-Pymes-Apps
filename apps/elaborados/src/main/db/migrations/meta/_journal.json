@@ -78,6 +78,13 @@
       "when": 1792087042973,
       "tag": "0010_add_demo_registro",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1792173442973,
+      "tag": "0011_adr136_password_vigencia",
+      "breakpoints": true
     }
   ]
 }

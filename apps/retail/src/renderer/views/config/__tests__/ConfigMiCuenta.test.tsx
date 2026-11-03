@@ -135,3 +135,78 @@ describe('ConfigMiCuenta', () => {
     expect(screen.queryByText(/PASSWORD_DEBIL/)).toBeNull();
   });
 });
+
+// ADR-136: «Mi cuenta» muestra cuántos días le quedan a la contraseña y, al cambiarla, el plazo vuelve a 30.
+describe('ConfigMiCuenta — vigencia de la contraseña (ADR-136)', () => {
+  const actualizarSesion = vi.fn();
+
+  function renderConDias(dias: number | undefined) {
+    const auth = buildAuth();
+    return render(
+      <AppProfileProvider value={{ nombreApp: 'Ferretería', navegacion: navegacionRetail }}>
+        <AuthContext.Provider value={{
+          ...auth,
+          session: { ...auth.session, ...(dias === undefined ? {} : { passwordDiasRestantes: dias }) },
+          actualizarSesion,
+        }}>
+          <MemoryRouter>
+            <ConfigMiCuenta />
+          </MemoryRouter>
+        </AuthContext.Provider>
+      </AppProfileProvider>
+    );
+  }
+
+  beforeEach(() => {
+    actualizarSesion.mockReset();
+    mockWhoami.mockResolvedValue({ id: 'u1', nombreCompleto: 'Juan Perez' });
+    (window as any).ferreteria.usuario.list = vi.fn().mockResolvedValue([
+      { id: 'u1', nombre_usuario: 'jperez', nombre_completo: 'Juan Perez', email: 'juan@ejemplo.com' },
+    ]);
+  });
+
+  it('muestra los días que quedan', async () => {
+    renderConDias(12);
+    expect(await screen.findByTestId('password-vigencia')).toHaveTextContent('Tu contraseña vence en 12 días.');
+  });
+
+  it('con 1 día usa el singular', async () => {
+    renderConDias(1);
+    expect(await screen.findByTestId('password-vigencia')).toHaveTextContent('Tu contraseña vence en 1 día.');
+  });
+
+  it('con 0 días avisa que vence hoy', async () => {
+    renderConDias(0);
+    expect(await screen.findByTestId('password-vigencia')).toHaveTextContent('Tu contraseña vence hoy.');
+  });
+
+  it('sin el dato (sesión de un main anterior) no muestra nada', async () => {
+    renderConDias(undefined);
+    await screen.findByRole('button', { name: 'Cambiar contraseña' });
+    expect(screen.queryByTestId('password-vigencia')).not.toBeInTheDocument();
+  });
+});
+
+describe('ConfigMiCuenta — al cambiar la contraseña el plazo vuelve a 30 días (ADR-136)', () => {
+  it('actualiza la sesión con 30 días tras un cambio exitoso', async () => {
+    const actualizarSesion = vi.fn();
+    const auth = buildAuth();
+    (window as any).ferreteria.usuario.list = vi.fn().mockResolvedValue([
+      { id: 'u1', nombre_usuario: 'jperez', nombre_completo: 'Juan Perez', email: 'juan@ejemplo.com' },
+    ]);
+    render(
+      <AppProfileProvider value={{ nombreApp: 'Ferretería', navegacion: navegacionRetail }}>
+        <AuthContext.Provider value={{ ...auth, session: { ...auth.session, passwordDiasRestantes: 3 }, actualizarSesion }}>
+          <MemoryRouter>
+            <ConfigMiCuenta />
+          </MemoryRouter>
+        </AuthContext.Provider>
+      </AppProfileProvider>
+    );
+    fireEvent.change(await screen.findByLabelText(/contraseña actual/i), { target: { value: 'Vieja#2026x' } });
+    fireEvent.change(screen.getByLabelText(/^nueva contraseña/i), { target: { value: 'Nueva#2026x' } });
+    fireEvent.change(screen.getByLabelText(/confirmar nueva contraseña/i), { target: { value: 'Nueva#2026x' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar contraseña' }));
+    await waitFor(() => expect(actualizarSesion).toHaveBeenCalledWith({ passwordDiasRestantes: 30 }));
+  });
+});

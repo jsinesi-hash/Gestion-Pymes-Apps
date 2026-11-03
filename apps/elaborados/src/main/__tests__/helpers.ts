@@ -19,10 +19,26 @@ export function setupDb() {
   const db = createTestDb();
   runSeed(db, { permisos: PERMISOS_ELABORADOS, operador: OPERADOR_PERMISOS_ELABORADOS });
   asegurarConsumidorFinal(db);
+  marcarUsuariosAlDia(db);
   return db;
 }
 
-export const loginAsAdmin = (db: ReturnType<typeof setupDb>) =>
-  loginHandler(db, { nombreUsuario: 'admin', password: 'admin1234' }); // NOSONAR
+/**
+ * ADR-136: el seed crea al `admin` sin mail ni fecha de cambio de contraseña (en una instalación real
+ * el primer ingreso obliga a cambiar la clave y cargar el mail). Los tests que solo necesitan iniciar
+ * sesión parten de usuarios al día; los que prueban la vigencia lo pisan explícitamente.
+ */
+export function marcarUsuariosAlDia(db: ReturnType<typeof createTestDb>) {
+  db.update(schema.usuario)
+    .set({ email: 'usuario@prueba.local', password_changed_at: new Date() })
+    .run();
+}
+
+// Los tests que arman la base con `createTestDb` + `runSeed` (sin `setupDb`) también entran como
+// admin: el helper lo deja al día antes de iniciar sesión (ADR-136).
+export const loginAsAdmin = (db: ReturnType<typeof setupDb>) => {
+  marcarUsuariosAlDia(db);
+  return loginHandler(db, { nombreUsuario: 'admin', password: 'admin1234' }); // NOSONAR
+};
 
 export { clearSession } from '@core/main';

@@ -351,6 +351,13 @@
       "when": 1794787200000,
       "tag": "0049_adr089_tipografias",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1794873600000,
+      "tag": "0050_adr136_password_vigencia",
+      "breakpoints": true
     }
   ]
 }

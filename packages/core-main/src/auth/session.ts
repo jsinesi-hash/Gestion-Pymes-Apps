@@ -10,6 +10,8 @@ export type SessionData = {
   rolId: string;
   rolNombre: string;
   permisos: string[];
+  /** Días que le quedan a la contraseña antes de vencer (0..30, ADR-136). */
+  passwordDiasRestantes: number;
   preferencias: {
     tema: 'claro' | 'oscuro';
     acento: 'amber' | 'blue' | 'green' | 'violet' | 'brick';

@@ -638,6 +638,8 @@ describe('venta handlers', () => {
         nombre_usuario: 'operador_test',
         nombre_completo: 'Operador Test',
         hash_password: hashPassword('pass1234'),
+        email: 'operador_test@prueba.local',
+        password_changed_at: new Date(),
         rol_id: opRol.id,
         activo: true,
         ultimo_acceso: null,

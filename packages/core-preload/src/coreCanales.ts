@@ -16,6 +16,11 @@ export function coreCanales(invoke: Invoke) {
     },
     auth: {
       login:  (creds: unknown) => invoke('auth:login', creds),
+      // ADR-136: pasos previos a la sesión (clave vencida / falta el mail); devuelven la sesión.
+      cambiarPasswordVencida: (p: { nombreUsuario: string; passwordActual: string; passwordNueva: string }) =>
+        invoke('auth:cambiarPasswordVencida', p),
+      completarEmail: (p: { nombreUsuario: string; password: string; email: string }) =>
+        invoke('auth:completarEmail', p),
       logout: () => invoke('auth:logout'),
       whoami: () => invoke('auth:whoami'),
       verifyPassword: (p: unknown) => invoke('auth:verifyPassword', p),

@@ -5,7 +5,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { useInicioPersonalizableHabilitado } from '../../hooks/useInicioPersonalizable';
 import { usePreferencias } from '../../hooks/usePreferencias';
 import { traducirError } from '../../lib/errores';
-import { motivosPasswordDebil, mensajePasswordDebil } from '@ferreteria/shared';
+import { motivosPasswordDebil, mensajePasswordDebil, PASSWORD_VIGENCIA_DIAS } from '@ferreteria/shared';
 
 function PasswordInput({ id, value, onChange, required, minLength, placeholder, defaultShowValue, maxLength, pattern, inputMode }: Readonly<{
   id?: string; value: string; onChange: (v: string) => void;
@@ -52,7 +52,7 @@ function PasswordInput({ id, value, onChange, required, minLength, placeholder, 
 }
 
 export function ConfigMiCuenta() {
-  const { session, can } = useAuth();
+  const { session, can, actualizarSesion } = useAuth();
   const inicioPersonalizable = useInicioPersonalizableHabilitado();
   const { guardarInicio } = usePreferencias();
   const { navegacion } = useAppProfile();
@@ -111,6 +111,7 @@ export function ConfigMiCuenta() {
         target_user_id: profile.id, current_password: currentPassword, new_password: newPassword,
       });
       setPwdMsg({ ok: true, text: 'Contraseña actualizada.' });
+      actualizarSesion?.({ passwordDiasRestantes: PASSWORD_VIGENCIA_DIAS });
       setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
     } catch (err: any) {
       const msg = String(err?.message ?? '').includes('PASSWORD_INCORRECTA')
@@ -154,6 +155,13 @@ export function ConfigMiCuenta() {
 
       <div className="card">
         <div className="card-title">Cambiar contraseña</div>
+        {typeof session?.passwordDiasRestantes === 'number' && (
+          <p className="text-sm text-muted" data-testid="password-vigencia">
+            {session.passwordDiasRestantes <= 0
+              ? 'Tu contraseña vence hoy.'
+              : `Tu contraseña vence en ${session.passwordDiasRestantes} ${session.passwordDiasRestantes === 1 ? 'día' : 'días'}.`}
+          </p>
+        )}
         <form onSubmit={handleSavePassword}>
           <div className="modal-body">
             <div className="field">
