@@ -39,6 +39,7 @@ export type {
   BackupListItem,
   RestoreCompatibilidad,
   RestoreValidationResult,
+  RestoreFirma,
   RestoreLogEntry,
   PoliticaRetencion,
   ResumenDepuracion,

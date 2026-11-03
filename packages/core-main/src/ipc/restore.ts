@@ -29,6 +29,8 @@ export async function restoreValidarHandler(
 export interface RestoreEjecutarPayload {
   ruta: string;
   password?: string;
+  /** El Supervisor aceptó restaurar un backup cuya firma no se puede verificar (ADR-135). */
+  confirmarSinFirma?: boolean;
 }
 
 export interface RestoreOpts {
@@ -55,6 +57,7 @@ export async function restoreEjecutarHandler(
       usuarioId: session.userId,
       migrationsFolder: opts.migrationsFolder,
       ...(payload.password ? { password: payload.password } : {}),
+      ...(payload.confirmarSinFirma === true ? { confirmarSinFirma: true } : {}),
     });
   } catch (e) {
     if (e instanceof RestoreSwapError) {

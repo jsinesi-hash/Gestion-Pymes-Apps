@@ -8,7 +8,9 @@ import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import type * as schema from '@core/db';
-import type { BackupManifest, RestoreCompatibilidad, RestoreValidationResult } from '@ferreteria/shared';
+import type { BackupManifest, RestoreCompatibilidad, RestoreFirma, RestoreValidationResult } from '@ferreteria/shared';
+import { verificarFirma, type FirmaFbk } from './firma';
+import { claveFirmaActual } from './firma-config';
 import { crearBackup, descifrarAES } from './engine';
 import { intercambiarBaseDeDatos } from './swap-bd';
 
@@ -100,11 +102,30 @@ export async function validarBackup(db: Db, opts: ValidarOpts): Promise<RestoreV
   }
 
   let manifest: BackupManifest;
+  const manifestJson = await manifestFile.async('string');
   try {
-    manifest = JSON.parse(await manifestFile.async('string'));
+    manifest = JSON.parse(manifestJson);
   } catch {
     return { ok: false, error: 'El manifest está corrupto' };
   }
+
+  // ADR-135: firma HMAC. Un mac que no coincide con la clave de ESTA instalación es un archivo
+  // modificado y se rechaza; firmado por otra instalación o sin firma se informa y el restore
+  // exige una confirmación explícita.
+  const firmaFile = zip.file('firma.json');
+  let firmaLeida: FirmaFbk | null = null;
+  if (firmaFile) {
+    try { firmaLeida = JSON.parse(await firmaFile.async('string')); } catch { firmaLeida = null; }
+  }
+  const resultadoFirma = verificarFirma(claveFirmaActual(), manifestJson, firmaLeida);
+  if (resultadoFirma === 'invalida') {
+    return {
+      ok: false,
+      error: 'La firma del backup no coincide: el archivo fue modificado después de crearse. No se puede restaurar.',
+      manifest,
+    };
+  }
+  const firma: RestoreFirma = resultadoFirma;
 
   const bufferResult = await loadDbBufferFromZip(zip, manifest, password);
   if ('error' in bufferResult) return { ok: false, error: bufferResult.error };
@@ -134,6 +155,7 @@ export async function validarBackup(db: Db, opts: ValidarOpts): Promise<RestoreV
     ok: true,
     manifest,
     compatibilidad,
+    firma,
     row_counts_actuales: leerRowCountsActuales(db),
   };
 }
@@ -153,6 +175,8 @@ export interface EjecutarRestoreOpts {
   usuarioId: string;
   migrationsFolder: string;
   preRestoreDestino?: string;
+  /** Confirmación explícita del Supervisor para restaurar un backup sin firma verificable. */
+  confirmarSinFirma?: boolean;
 }
 
 export async function ejecutarRestoreAtomico(opts: EjecutarRestoreOpts): Promise<RestoreAtomicoResult> {
@@ -160,6 +184,8 @@ export async function ejecutarRestoreAtomico(opts: EjecutarRestoreOpts): Promise
 
   const validacion = await validarBackup(db, { ruta: fbkPath, ...(password ? { password } : {}) });
   if (!validacion.ok) throw new Error(validacion.error ?? 'Validación fallida');
+  // ADR-135: sin firma verificable no se restaura sin que el Supervisor lo confirme.
+  if (validacion.firma !== 'valida' && !opts.confirmarSinFirma) throw new Error('FIRMA_NO_VERIFICABLE');
 
   const manifest = validacion.manifest!;
   const rowCountsAntes = leerRowCountsActuales(db);

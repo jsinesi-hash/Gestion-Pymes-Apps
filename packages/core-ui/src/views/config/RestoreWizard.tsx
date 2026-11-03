@@ -25,12 +25,16 @@ export function RestoreWizard({ onClose, onSuccess }: Readonly<Props>) {
   const [password, setPassword]   = useState('');
   const [validacion, setValidacion] = useState<RestoreValidationResult | null>(null);
   const [confirmar, setConfirmar] = useState('');
+  // ADR-135: backup sin firma verificable → el Supervisor tiene que aceptarlo expresamente.
+  const [aceptaSinFirma, setAceptaSinFirma] = useState(false);
   const [error, setError]         = useState<string | null>(null);
   const [resultado, setResultado] = useState<{ row_counts_antes: Record<string, number>; row_counts_despues: Record<string, number> } | null>(null);
+  const requiereAceptarSinFirma = validacion?.firma === 'no_verificable' || validacion?.firma === 'sin_firma';
 
   async function handleValidar() {
     if (!rutaFbk.trim()) { setError('Ingresá la ruta del archivo .fbk'); return; }
     setError(null);
+    setAceptaSinFirma(false);
     setPaso('validando');
     try {
       const result: RestoreValidationResult = await bridge().restore.validar({
@@ -58,6 +62,7 @@ export function RestoreWizard({ onClose, onSuccess }: Readonly<Props>) {
       const res = await bridge().restore.ejecutar({
         ruta: rutaFbk.trim(),
         ...(password ? { password } : {}),
+        ...(requiereAceptarSinFirma ? { confirmarSinFirma: true } : {}),
       });
       setResultado(res);
       setPaso('resultado');
@@ -150,6 +155,36 @@ export function RestoreWizard({ onClose, onSuccess }: Readonly<Props>) {
                 : '⚠ Backup de versión anterior — se aplicarán migraciones automáticamente.'}
             </div>
 
+            {validacion.firma === 'valida' && (
+              <div role="status" style={{
+                padding: '10px 14px', borderRadius: 8, fontSize: 13,
+                background: 'rgba(46,125,82,.1)', color: 'var(--ok)', border: '1px solid rgba(46,125,82,.25)',
+              }}>
+                ✓ Firma verificada — este backup lo creó esta instalación y no fue modificado.
+              </div>
+            )}
+            {requiereAceptarSinFirma && (
+              <div role="alert" style={{
+                padding: '10px 14px', borderRadius: 8, fontSize: 13,
+                background: 'rgba(180,105,14,.1)', color: 'var(--warn)', border: '1px solid rgba(180,105,14,.25)',
+              }}>
+                <strong>⚠ No se puede verificar la firma de este backup.</strong>{' '}
+                {validacion.firma === 'sin_firma'
+                  ? 'Es anterior a la firma de backups, o su firma no se pudo leer.'
+                  : 'Lo creó otra instalación (por ejemplo, otra PC) o esta no tiene clave de firma.'}{' '}
+                No hay forma de comprobar que el archivo no fue modificado. Restauralo solo si confiás en su origen.
+                <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginTop: 8, color: 'var(--ink)' }}>
+                  <input
+                    type="checkbox"
+                    checked={aceptaSinFirma}
+                    onChange={e => setAceptaSinFirma(e.target.checked)}
+                    style={{ marginTop: 3 }}
+                  />
+                  <span>Confío en el origen de este archivo y quiero restaurarlo igual.</span>
+                </label>
+              </div>
+            )}
+
             <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--line)' }}>
@@ -188,7 +223,7 @@ export function RestoreWizard({ onClose, onSuccess }: Readonly<Props>) {
           </div>
           <div className="modal-footer">
             <button className="btn-secondary" onClick={onClose}>Cancelar</button>
-            <button className="btn-primary" onClick={() => setPaso('confirmar')}>Continuar →</button>
+            <button className="btn-primary" onClick={() => setPaso('confirmar')} disabled={requiereAceptarSinFirma && !aceptaSinFirma}>Continuar →</button>
           </div>
         </>
       )}

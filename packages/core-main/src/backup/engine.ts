@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import JSZip from 'jszip';
+import { firmarManifest } from './firma';
+import { claveFirmaActual } from './firma-config';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import type * as schema from '@core/db';
 import type { BackupManifest, BackupListItem, PoliticaRetencion, ResumenDepuracion } from '@ferreteria/shared';
@@ -135,8 +137,13 @@ export async function crearBackup(opts: CrearBackupOpts): Promise<string> {
 
     // 4. Crear ZIP outer
     const zip = new JSZip();
-    zip.file('manifest.json', JSON.stringify(manifest, null, 2));
+    const manifestJson = JSON.stringify(manifest, null, 2);
+    zip.file('manifest.json', manifestJson);
     zip.file('checksums.sha256', checksums);
+    // ADR-135: la firma cubre el manifest (que ya trae el SHA-256 de la base). Sin clave
+    // (safeStorage no disponible) el backup sale sin firmar: no se cancela por eso.
+    const claveFirma = claveFirmaActual();
+    if (claveFirma) zip.file('firma.json', JSON.stringify(firmarManifest(claveFirma, manifestJson)));
 
     if (incluirCerts) {
       const certsDir = opts.certsDir ?? '';
