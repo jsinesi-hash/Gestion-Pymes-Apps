@@ -215,3 +215,62 @@ describe('RestoreWizard — paso confirmar y ejecución', () => {
     expect(screen.getByRole('button', { name: 'Continuar →' })).toBeInTheDocument();
   });
 });
+
+// ADR-135: el .fbk lleva una firma HMAC de la instalación que lo creó. Un backup sin firma
+// verificable (de otra PC, o anterior a la firma) se restaura solo si el Supervisor lo acepta.
+describe('RestoreWizard — firma del backup', () => {
+  beforeEach(() => { mockEjecutar.mockResolvedValue(RESULTADO_EJECUTAR); });
+
+  it('firma válida: muestra la verificación y no pide aceptar nada', async () => {
+    mockValidar.mockResolvedValue({ ...VALIDACION_OK, firma: 'valida' });
+    await avanzarAComparar();
+    expect(screen.getByText(/firma verificada/i)).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continuar →' })).not.toBeDisabled();
+  });
+
+  it('sin firma: avisa y "Continuar" queda deshabilitado hasta marcar la confirmación', async () => {
+    mockValidar.mockResolvedValue({ ...VALIDACION_OK, firma: 'sin_firma' });
+    await avanzarAComparar();
+    expect(screen.getByRole('alert')).toHaveTextContent(/no se puede verificar la firma/i);
+    expect(screen.getByRole('button', { name: 'Continuar →' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('checkbox'));
+    expect(screen.getByRole('button', { name: 'Continuar →' })).not.toBeDisabled();
+  });
+
+  it('firmado por otra instalación: el aviso lo explica', async () => {
+    mockValidar.mockResolvedValue({ ...VALIDACION_OK, firma: 'no_verificable' });
+    await avanzarAComparar();
+    expect(screen.getByRole('alert')).toHaveTextContent(/otra instalación/i);
+  });
+
+  it('al restaurar un backup sin firma envía confirmarSinFirma', async () => {
+    mockValidar.mockResolvedValue({ ...VALIDACION_OK, firma: 'sin_firma' });
+    await avanzarAComparar();
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: 'Continuar →' }));
+    fireEvent.change(screen.getByLabelText(/para confirmar, escribí/i), { target: { value: 'RESTAURAR' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Restaurar ahora' }));
+    await waitFor(() => expect(mockOnSuccess).toHaveBeenCalled());
+    expect(mockEjecutar).toHaveBeenCalledWith(expect.objectContaining({ confirmarSinFirma: true }));
+  });
+
+  it('con firma válida NO envía confirmarSinFirma', async () => {
+    mockValidar.mockResolvedValue({ ...VALIDACION_OK, firma: 'valida' });
+    await avanzarAComparar();
+    fireEvent.click(screen.getByRole('button', { name: 'Continuar →' }));
+    fireEvent.change(screen.getByLabelText(/para confirmar, escribí/i), { target: { value: 'RESTAURAR' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Restaurar ahora' }));
+    await waitFor(() => expect(mockOnSuccess).toHaveBeenCalled());
+    expect(mockEjecutar.mock.calls[0][0]).not.toHaveProperty('confirmarSinFirma');
+  });
+
+  it('un backup con firma que no coincide (manipulado) se rechaza en la validación y se muestra el error', async () => {
+    mockValidar.mockResolvedValue({ ok: false, error: 'La firma del backup no coincide: el archivo fue modificado después de crearse. No se puede restaurar.' });
+    renderWizard();
+    fireEvent.change(screen.getByLabelText('Ruta del archivo .fbk'), { target: { value: 'C:\\bk\\file.fbk' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Validar backup' }));
+    await screen.findByText(/la firma del backup no coincide/i);
+    expect(screen.queryByRole('button', { name: 'Continuar →' })).not.toBeInTheDocument();
+  });
+});

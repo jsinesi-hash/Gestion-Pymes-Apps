@@ -10,7 +10,7 @@ if (started) app.quit();
 
 import { db } from './db/client';
 import { runStartup } from './startup';
-import { registerCoreHandlers, aplicarSeguridadVentana, crearImpresorHtml, iniciarTerminal, registrarErroresNoCapturados } from '@core/main';
+import { registerCoreHandlers, activarFirmaBackup, aplicarSeguridadVentana, crearImpresorHtml, iniciarTerminal, registrarErroresNoCapturados } from '@core/main';
 import { navegacionElaborados } from '../common/navegacion';
 import { registerArticuloHandlers } from './ipc/articulo';
 import { registerMovimientoArticuloHandlers } from './ipc/movimiento-articulo';
@@ -93,6 +93,10 @@ async function createWindow(): Promise<void> {
 
 // IPC handlers — expuestos al renderer vía preload bridge
 ipcMain.handle('app:version', () => app.getVersion());
+
+// ADR-135: firma HMAC de los .fbk con la clave de esta instalación (perezosa: safeStorage solo
+// responde con la app lista, y el primer backup ocurre dentro de createWindow).
+activarFirmaBackup();
 
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => {

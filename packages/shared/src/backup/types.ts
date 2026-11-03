@@ -28,11 +28,20 @@ export interface BackupListItem {
 
 export type RestoreCompatibilidad = 'direct' | 'migrate' | 'incompatible';
 
+/**
+ * Resultado de verificar la firma HMAC del `.fbk` (ADR-135). `valida`: lo firmó esta instalación.
+ * `no_verificable`: lo firmó otra instalación (p. ej. backup traído de otra PC) o esta no tiene
+ * clave. `sin_firma`: backup anterior a la firma. Una firma que NO coincide con la clave de esta
+ * instalación no llega acá: la validación falla (archivo modificado).
+ */
+export type RestoreFirma = 'valida' | 'no_verificable' | 'sin_firma';
+
 export interface RestoreValidationResult {
   ok: boolean;
   error?: string;
   manifest?: BackupManifest;
   compatibilidad?: RestoreCompatibilidad;
+  firma?: RestoreFirma;
   row_counts_actuales?: Record<string, number>;
 }
 

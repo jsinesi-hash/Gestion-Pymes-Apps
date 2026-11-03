@@ -27,6 +27,8 @@ export * from './ipc/dialog';
 export * from './registrar';
 export * from './backup/engine';
 export * from './backup/restore-engine';
+export * from './backup/clave-firma';
+export { configurarFirmaBackup } from './backup/firma-config';
 export * from './export/csv-writer';
 export * from './export/xlsx-writer';
 export * from './seed/geo';
