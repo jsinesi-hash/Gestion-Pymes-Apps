@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { eq } from 'drizzle-orm';
-import * as schema from '../../db/schema';
-import { setupDb, loginAsAdmin, clearSession } from './helpers';
-import { verificarSupervisor } from '@core/main';
+import * as schema from '@core/db';
+import { setupCoreDb, loginAsAdmin, clearSession } from '../testing/helpers';
+import { verificarSupervisor } from '../index';
 
 describe('verificarSupervisor', () => {
-  let db: ReturnType<typeof setupDb>;
+  let db: ReturnType<typeof setupCoreDb>;
 
   beforeEach(() => {
-    db = setupDb();
+    db = setupCoreDb();
     clearSession();
   });
 

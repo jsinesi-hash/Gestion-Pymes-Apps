@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { setupDb, clearSession } from './helpers';
-import { loginHandler, whoamiHandler } from '@core/main';
-import * as schema from '../../db/schema';
+import { setupCoreDb, clearSession } from '../testing/helpers';
+import { loginHandler, whoamiHandler } from '../index';
+import * as schema from '@core/db';
 import { generateId } from '@ferreteria/shared';
 
 describe('login — inicio/favoritos en el payload de sesión (ADR-080)', () => {
-  let db: ReturnType<typeof setupDb>;
-  beforeEach(() => { db = setupDb(); clearSession(); });
+  let db: ReturnType<typeof setupCoreDb>;
+  beforeEach(() => { db = setupCoreDb(); clearSession(); });
 
   it('sin preferencias guardadas, pantalla_inicio=null y favoritos=[]', () => {
     const s = loginHandler(db, { nombreUsuario: 'admin', password: 'admin1234' });

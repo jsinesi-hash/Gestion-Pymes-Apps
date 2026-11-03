@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { setupDb, loginAsAdmin, clearSession } from './helpers';
-import { clienteUpsertHandler, clienteGetHandler } from '@core/main';
+import { setupCoreDb, loginAsAdmin, clearSession } from '../testing/helpers';
+import { clienteUpsertHandler, clienteGetHandler } from '../index';
 
-type Db = ReturnType<typeof setupDb>;
+type Db = ReturnType<typeof setupCoreDb>;
 let db: Db;
 
 beforeEach(() => {
-  db = setupDb();
+  db = setupCoreDb();
   clearSession();
   loginAsAdmin(db);
 });
