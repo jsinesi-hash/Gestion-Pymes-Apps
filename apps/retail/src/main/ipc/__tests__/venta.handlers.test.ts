@@ -374,6 +374,7 @@ describe('venta handlers', () => {
         ...base,
         lineas,
         subtotal: total,
+        importe_iva: Math.round(total * 21 / 121 * 100) / 100,
         total,
         pagos: [{ medio_pago: 'efectivo', monto_centavos: Math.round(total * 100) }],
       };
@@ -460,6 +461,45 @@ describe('venta handlers', () => {
         { ...base.lineas[0]!, presentacion_id: generateId(), factor_a_stock_aplicado: 1 },
       ]);
       expect(() => ventaConfirmarHandler(db, inexistente)).toThrow('PRESENTACION_INVALIDA');
+    });
+  });
+
+  // Revisión 2026-10-20 (P1): el main recibía subtotal/IVA/total/ajuste del renderer sin recalcular.
+  describe('ventaConfirmarHandler — totales recalculados en el main', () => {
+    function intentar(adulterar: (p: VentaConfirmarPayload) => VentaConfirmarPayload) {
+      const { prod } = crearProductoConStock(10, 1500);
+      const caja = abrirCaja();
+      const payload = adulterar(makePayload(caja.id, prod.id, 2, 1500));
+      return { prod, caja, payload };
+    }
+
+    it.each([
+      ['total menor al real (cobrar de menos)', (p: VentaConfirmarPayload) => ({ ...p, total: 1, pagos: [{ medio_pago: 'efectivo' as const, monto_centavos: 100 }] })],
+      ['subtotal general distinto de la suma de líneas', (p: VentaConfirmarPayload) => ({ ...p, subtotal: p.subtotal - 10 })],
+      ['subtotal de línea distinto de precio × cantidad', (p: VentaConfirmarPayload) => ({ ...p, lineas: [{ ...p.lineas[0]!, subtotal: 1 }] })],
+      ['ajuste de redondeo falso', (p: VentaConfirmarPayload) => ({ ...p, ajuste_redondeo: 0.4 })],
+      ['IVA inflado', (p: VentaConfirmarPayload) => ({ ...p, importe_iva: p.importe_iva + 50 })],
+    ])('rechaza con TOTALES_INCONSISTENTES: %s', (_nombre, adulterar) => {
+      const { prod, payload } = intentar(adulterar);
+      expect(() => ventaConfirmarHandler(db, payload)).toThrow('TOTALES_INCONSISTENTES');
+      const ex = db.select().from(schema.existencias)
+        .where(eq(schema.existencias.producto_id, prod.id)).get()!;
+      expect(ex.stock_fisico).toBe(10);
+      expect(db.select().from(schema.venta).all()).toHaveLength(0);
+    });
+
+    it('rechaza un descuento global fuera de rango', () => {
+      const { payload } = intentar((p) => ({ ...p, descuento_global: 150 }));
+      expect(() => ventaConfirmarHandler(db, payload)).toThrow('DESCUENTO_INVALIDO');
+    });
+
+    it('acepta un descuento global coherente con el total', () => {
+      const { payload } = intentar((p) => {
+        // 2 × 1500 = 3000; 10% → 2700 (ya es peso entero)
+        const total = 2700;
+        return { ...p, descuento_global: 10, total, pagos: [{ medio_pago: 'efectivo' as const, monto_centavos: total * 100 }] };
+      });
+      expect(() => ventaConfirmarHandler(db, payload)).not.toThrow();
     });
   });
 

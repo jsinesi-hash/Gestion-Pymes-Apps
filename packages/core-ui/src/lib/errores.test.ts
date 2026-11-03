@@ -51,3 +51,10 @@ describe('códigos de restauración (P0 2026-10-20)', () => {
     expect(traducirError(new Error('RESTORE_RUTA_BD: la conexión actual no corresponde a un archivo')).mensaje).toMatch(/base de datos/);
   });
 });
+
+describe('códigos de totales de venta (P1 2026-10-20)', () => {
+  it('traduce TOTALES_INCONSISTENTES y PRECIO_INVALIDO', () => {
+    expect(traducirError(new Error('TOTALES_INCONSISTENTES')).mensaje).toMatch(/no coinciden/);
+    expect(traducirError(new Error('PRECIO_INVALIDO')).mensaje).toMatch(/precio inválido/);
+  });
+});

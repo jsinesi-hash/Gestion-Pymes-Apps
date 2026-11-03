@@ -63,6 +63,8 @@ const CODIGOS: Record<string, Formateador> = {
   RESTORE_SWAP_FALLIDO: msg('No se pudo aplicar la restauración. Tus datos originales no se modificaron; la aplicación se reiniciará en unos segundos.'),
   RESTORE_ROLLBACK_FALLIDO: msg('La restauración falló y no se pudo volver atrás automáticamente. NO reinicies la aplicación: avisá a soporte. La base original quedó guardada junto a la carpeta de datos con la extensión .pre-restore.bak.'),
   RESTORE_RUTA_BD: msg('No se pudo determinar el archivo de la base de datos. Avisá a soporte.'),
+  TOTALES_INCONSISTENTES: msg('Los importes de la venta no coinciden con sus líneas. Revisá el carrito y volvé a intentar.'),
+  PRECIO_INVALIDO: msg('Hay una línea con un precio inválido. Revisá el carrito.'),
   LAST_SUPERVISOR: msg('No se puede desactivar el último supervisor activo.'),
   AUTO_DESACTIVACION: msg('No podés desactivar tu propio usuario.'),
   CANTIDAD_INVALIDA: msg('Ingresá una cantidad válida.'),

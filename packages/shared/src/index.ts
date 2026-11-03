@@ -47,3 +47,5 @@ export * from './navegacion.js';
 export { ETIQUETA_PERMISO, etiquetaPermiso } from './permisos.js';
 export type { ItemComprobante, CondicionFiscalComprobante, ReceptorComprobante, IvaAlicuota, PagoComprobante, ComprobantePayload } from './comprobante.js';
 export { ivaPorAlicuota } from './comprobante.js';
+export { verificarTotalesVenta } from './totales-venta.js';
+export type { LineaTotalesVenta, TotalesVentaInput } from './totales-venta.js';
