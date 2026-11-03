@@ -1,21 +1,28 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { eq } from 'drizzle-orm';
-import * as schema from '../../db/schema';
-import { setupDb, loginAsAdmin, clearSession } from './helpers';
-import { invalidateCachedParametro } from '@core/main';
-import { parametrosGetHandler, parametrosSetHandler, parametrosListFlagsHandler, limpiarReferenciasInternas } from '@core/main';
+import * as schema from '@core/db';
+import { setupCoreDb, loginAsAdmin, clearSession } from '../testing/helpers';
+import { invalidateCachedParametro } from '../index';
+import { parametrosGetHandler, parametrosSetHandler, parametrosListFlagsHandler, limpiarReferenciasInternas } from '../index';
 
 describe('parametros handlers', () => {
-  let db: ReturnType<typeof setupDb>;
+  let db: ReturnType<typeof setupCoreDb>;
 
   beforeEach(() => {
-    db = setupDb();
+    db = setupCoreDb();
     clearSession();
     invalidateCachedParametro();
+    // Los defaults los siembran las migraciones de cada app; el esquema del núcleo no trae filas.
+    // `remitos_habilitado` lleva una referencia a ADR en la descripción para ejercitar la limpieza.
+    db.insert(schema.parametros_sistema).values([
+      { clave: 'umbral_diferencia_caja', valor: '50000', tipo: 'number', descripcion: 'Umbral de diferencia de caja' },
+      { clave: 'hub_precios_habilitado', valor: 'true', tipo: 'bool', descripcion: 'Hub de precios' },
+      { clave: 'remitos_habilitado', valor: 'false', tipo: 'bool', descripcion: 'Feature flag del modulo Remitos (ADR-044). Default false.' },
+    ]).run();
   });
 
   describe('parametrosGetHandler', () => {
-    it('devuelve valor del parámetro sembrado por la migración', () => {
+    it('devuelve el valor del parámetro sembrado', () => {
       expect(parametrosGetHandler(db, { clave: 'umbral_diferencia_caja' })).toBe('50000');
     });
 

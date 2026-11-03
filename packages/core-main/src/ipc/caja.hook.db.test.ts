@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { setupDb, loginAsAdmin, clearSession } from './helpers';
-import { cajaAbrirHandler, cajaCerrarHandler, cajaGetActivaHandler, type OnCajaCerrada } from '@core/main';
+import { setupCoreDb, loginAsAdmin, clearSession } from '../testing/helpers';
+import { cajaAbrirHandler, cajaCerrarHandler, cajaGetActivaHandler, type OnCajaCerrada } from '../index';
 
 describe('cajaCerrarHandler — hook onCajaCerrada', () => {
   beforeEach(() => clearSession());
 
   it('llama al hook dentro de la transacción y ejecuta su post-commit después', () => {
-    const db = setupDb(); loginAsAdmin(db);
+    const db = setupCoreDb(); loginAsAdmin(db);
     const caja = cajaAbrirHandler(db, { monto_inicial: 1000 });
     const orden: string[] = [];
     const hook: OnCajaCerrada = vi.fn(({ tx, cajaRow, diferencia }) => {
@@ -23,13 +23,13 @@ describe('cajaCerrarHandler — hook onCajaCerrada', () => {
   });
 
   it('sin hook cierra igual (Elaborados E1)', () => {
-    const db = setupDb(); loginAsAdmin(db);
+    const db = setupCoreDb(); loginAsAdmin(db);
     const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
     expect(cajaCerrarHandler(db, { caja_id: caja.id, monto_contado: 0 }).estado).toBe('cerrada');
   });
 
   it('si el hook lanza, la caja NO queda cerrada (misma transacción)', () => {
-    const db = setupDb(); loginAsAdmin(db);
+    const db = setupCoreDb(); loginAsAdmin(db);
     const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
     expect(() => cajaCerrarHandler(db, { caja_id: caja.id, monto_contado: 0 },
       { onCajaCerrada: () => { throw new Error('BOOM'); } })).toThrow('BOOM');

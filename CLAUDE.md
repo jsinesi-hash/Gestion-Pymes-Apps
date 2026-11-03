@@ -126,6 +126,8 @@ recibe los totales ya calculados y no conoce `venta_detalle` ni el stock de ning
 
 `pnpm test` en cada app (`apps/retail`, `apps/elaborados`) ejecuta ambos en secuencia: `vitest run && node scripts/test-node.cjs`.
 
+`@core/main` tiene el mismo esquema de dos runners para sus tests con base de datos (ADR-134): los `*.db.test.ts` corren con `packages/core-main/scripts/test-node.cjs` (Electron) sobre un esquema generado desde las tablas Drizzle del núcleo (`src/testing/`: `setupCoreDb`, `loginAsAdmin`…), y el resto con `vitest run` en Node. Un test del núcleo que necesite filas sembradas por migraciones las declara él mismo.
+
 Al alternar entre `pnpm dev` y `pnpm test`, recompilar el módulo nativo con `pnpm rebuild:electron` o `pnpm rebuild:node` según corresponda.
 
 ### Tests del main process

@@ -3,7 +3,9 @@
 > Fuente de verdad sobre qué está hecho, qué está en curso y qué viene después.
 > Actualizar al completar cada fase o tomar una decisión de diseño significativa.
 
-**Última actualización:** 2026-11-03 (**Un solo lector de CSV — ADR-133** — rama `refactor/csv-parser-unico` (apilada sobre #49): `leerCsv`/`detectarDelimitador` en `@ferreteria/shared` reemplazan a los cuatro parsers (importar datos, costos, sinónimos, seed de geografía). Correcciones de paso: BOM de Excel aceptado, `""` y saltos de línea dentro de comillas leídos bien en todos, y las filas de solo delimitadores ya no llegan como filas vacías.)
+**Última actualización:** 2026-11-03 (**Tests con BD del núcleo en `@core/main` — ADR-134** — rama `refactor/tests-db-de-core-al-core` (apilada sobre #50): `@core/main` gana runner de Electron (`scripts/test-node.cjs`, tests `*.db.test.ts`) y un esquema de pruebas generado desde Drizzle (`drizzle-kit/api`, sin migraciones de app); se mueven 9 archivos / 97 tests (auth, cuenta corriente, caja, cliente, parámetros) de Retail al núcleo. Los que dependen de código o tablas de la app (`cliente.handlers`, `caja.handlers`, backup/restore, permisos de Retail…) se quedan.)
+
+**Anterior:** 2026-11-03 (**Un solo lector de CSV — ADR-133** — rama `refactor/csv-parser-unico` (apilada sobre #49): `leerCsv`/`detectarDelimitador` en `@ferreteria/shared` reemplazan a los cuatro parsers (importar datos, costos, sinónimos, seed de geografía). Correcciones de paso: BOM de Excel aceptado, `""` y saltos de línea dentro de comillas leídos bien en todos, y las filas de solo delimitadores ya no llegan como filas vacías.)
 
 **Anterior:** 2026-11-03 (**`venta:listByCaja` y `menu:rebuild` al núcleo — ADR-132** — rama `refactor/canales-listbycaja-menu-rebuild` (apilada sobre #48): ambos canales pasan a `registerCoreHandlers`/`coreCanales`; `venta:listByCaja` ahora exige sesión, `menu:rebuild` usa la costura `reconstruirMenu` (Retail la inyecta, Elaborados queda en no-op) y core-ui pierde dos casts. Se sacaron los duplicados de registro y de preload en ambas apps.)
 

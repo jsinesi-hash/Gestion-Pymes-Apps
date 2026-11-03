@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
-import * as schema from '../../db/schema';
+import * as schema from '@core/db';
 import {
   loginHandler, verifyPasswordHandler, usuarioCreateHandler, usuarioChangePasswordHandler,
   verificarSupervisor, limiteIntentos, clearSession,
-} from '@core/main';
-import { setupDb, loginAsAdmin, loginAsOperador } from './helpers';
+} from '../index';
+import { setupCoreDb, loginAsAdmin, loginAsOperador } from '../testing/helpers';
 
 // Revisión 2026-10-20 (P1): sin límite de intentos ni política de contraseña. Decisión: 3 fallos
 // seguidos → 15 minutos; contraseña nueva con mínimo 8, mayúscula, número y carácter especial.
@@ -16,10 +16,10 @@ function fallar(veces: number, creds = MAL) {
   for (let i = 0; i < veces; i++) expect(() => loginHandler(db, creds)).toThrow('Credenciales inválidas');
 }
 
-let db: ReturnType<typeof setupDb>;
+let db: ReturnType<typeof setupCoreDb>;
 
 beforeEach(() => {
-  db = setupDb();
+  db = setupCoreDb();
   clearSession();
   limiteIntentos.reiniciar();
 });

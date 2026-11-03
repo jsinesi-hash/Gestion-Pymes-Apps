@@ -1,17 +1,17 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { generateId } from '@ferreteria/shared';
-import { setupDb, loginAsAdmin, clearSession } from './helpers';
-import { clienteUpsertHandler } from '@core/main';
-import { cajaAbrirHandler } from '@core/main';
+import { setupCoreDb, loginAsAdmin, clearSession } from '../testing/helpers';
+import { clienteUpsertHandler } from '../index';
+import { cajaAbrirHandler } from '../index';
 import {
   ctacteSetLimiteHandler,
   ctacteRegistrarSaldoInicialHandler,
   ctacteRegistrarCobroHandler,
-} from '@core/main';
-import * as schema from '../../db/schema';
+} from '../index';
+import * as schema from '@core/db';
 
-type Db = ReturnType<typeof setupDb>;
+type Db = ReturnType<typeof setupCoreDb>;
 let db: Db;
 let clienteId: string;
 let cuentaId: string;
@@ -44,7 +44,7 @@ function insertarCCC(db: Db, cId: string, saldo = 0, limite = 0) {
 }
 
 beforeEach(() => {
-  db = setupDb();
+  db = setupCoreDb();
   loginAsAdmin(db);
   clienteId = crearClienteSinCCC(db);
   cuentaId = insertarCCC(db, clienteId, 50000); // saldo $500

@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { generateId } from '@ferreteria/shared';
-import { setupDb, loginAsAdmin, clearSession } from './helpers';
-import { clienteUpsertHandler } from '@core/main';
-import { cajaAbrirHandler } from '@core/main';
-import * as schema from '../../db/schema';
+import { setupCoreDb, loginAsAdmin, clearSession } from '../testing/helpers';
+import { clienteUpsertHandler } from '../index';
+import { cajaAbrirHandler } from '../index';
+import * as schema from '@core/db';
 
-type Db = ReturnType<typeof setupDb>;
+type Db = ReturnType<typeof setupCoreDb>;
 
 let db: Db;
 let clienteId: string;
@@ -59,7 +59,7 @@ function insertarMovCC(db: Db, cuentaId: string, tipo: 'cargo' | 'pago', monto: 
 }
 
 beforeEach(() => {
-  db = setupDb();
+  db = setupCoreDb();
   clearSession();
   loginAsAdmin(db);
   clienteId = crearClienteSinCCC(db);
@@ -70,7 +70,7 @@ beforeEach(() => {
 
 describe('ctacteListHandler', () => {
   it('retorna cuentas activas con info del cliente', async () => {
-    const { ctacteListHandler } = await import('@core/main');
+    const { ctacteListHandler } = await import('../index');
     const result = ctacteListHandler(db);
     expect(result).toHaveLength(1);
     expect(result[0].nombre_completo).toBe('Juan Perez');
@@ -78,7 +78,7 @@ describe('ctacteListHandler', () => {
   });
 
   it('excedidos van primero', async () => {
-    const { ctacteListHandler } = await import('@core/main');
+    const { ctacteListHandler } = await import('../index');
     const c2 = crearClienteSinCCC(db, '87654321');
     insertarCCC(db, c2, 20000, 10000); // saldo 200 > limite 100 → excedido
     const result = ctacteListHandler(db);
@@ -90,7 +90,7 @@ describe('ctacteListHandler', () => {
 
 describe('ctacteGetByClienteHandler', () => {
   it('retorna CCC y movimientos ordenados DESC', async () => {
-    const { ctacteGetByClienteHandler } = await import('@core/main');
+    const { ctacteGetByClienteHandler } = await import('../index');
     insertarMovCC(db, cuentaId, 'cargo', 1000);
     insertarMovCC(db, cuentaId, 'pago', 500);
     const result = ctacteGetByClienteHandler(db, clienteId);
@@ -100,7 +100,7 @@ describe('ctacteGetByClienteHandler', () => {
   });
 
   it('lanza NOT_FOUND para clienteId sin CCC', async () => {
-    const { ctacteGetByClienteHandler } = await import('@core/main');
+    const { ctacteGetByClienteHandler } = await import('../index');
     const otroCId = crearClienteSinCCC(db, '99999999');
     expect(() => ctacteGetByClienteHandler(db, otroCId)).toThrow('NOT_FOUND');
   });
@@ -110,7 +110,7 @@ describe('ctacteGetByClienteHandler', () => {
 
 describe('ctacteSetLimiteHandler', () => {
   it('actualiza limite_credito_centavos', async () => {
-    const { ctacteSetLimiteHandler } = await import('@core/main');
+    const { ctacteSetLimiteHandler } = await import('../index');
     ctacteSetLimiteHandler(db, { cuentaId, limite_centavos: 200000 });
     const cuenta = db.select().from(schema.cuenta_corriente_cliente)
       .where(eq(schema.cuenta_corriente_cliente.id, cuentaId)).get()!;
@@ -118,7 +118,7 @@ describe('ctacteSetLimiteHandler', () => {
   });
 
   it('lanza NOT_FOUND para cuentaId inválido', async () => {
-    const { ctacteSetLimiteHandler } = await import('@core/main');
+    const { ctacteSetLimiteHandler } = await import('../index');
     expect(() => ctacteSetLimiteHandler(db, { cuentaId: 'no-existe', limite_centavos: 0 }))
       .toThrow('NOT_FOUND');
   });
@@ -135,7 +135,7 @@ describe('ctacteRegistrarSaldoInicialHandler', () => {
   });
 
   it("tipo='cargo': saldo sube, movimiento tipo cargo motivo saldo_inicial", async () => {
-    const { ctacteRegistrarSaldoInicialHandler } = await import('@core/main');
+    const { ctacteRegistrarSaldoInicialHandler } = await import('../index');
     ctacteRegistrarSaldoInicialHandler(db, { cuentaId: cuentaVaciaId, monto_centavos: 30000, tipo: 'cargo' });
     const cuenta = db.select().from(schema.cuenta_corriente_cliente)
       .where(eq(schema.cuenta_corriente_cliente.id, cuentaVaciaId)).get()!;
@@ -149,7 +149,7 @@ describe('ctacteRegistrarSaldoInicialHandler', () => {
   });
 
   it("tipo='pago': saldo baja (negativo), movimiento tipo pago motivo saldo_inicial", async () => {
-    const { ctacteRegistrarSaldoInicialHandler } = await import('@core/main');
+    const { ctacteRegistrarSaldoInicialHandler } = await import('../index');
     ctacteRegistrarSaldoInicialHandler(db, { cuentaId: cuentaVaciaId, monto_centavos: 15000, tipo: 'pago' });
     const cuenta = db.select().from(schema.cuenta_corriente_cliente)
       .where(eq(schema.cuenta_corriente_cliente.id, cuentaVaciaId)).get()!;
@@ -161,7 +161,7 @@ describe('ctacteRegistrarSaldoInicialHandler', () => {
   });
 
   it('lanza CCC_YA_TIENE_MOVIMIENTOS si hay movimientos previos', async () => {
-    const { ctacteRegistrarSaldoInicialHandler } = await import('@core/main');
+    const { ctacteRegistrarSaldoInicialHandler } = await import('../index');
     insertarMovCC(db, cuentaVaciaId, 'cargo', 100);
     expect(() => ctacteRegistrarSaldoInicialHandler(db, { cuentaId: cuentaVaciaId, monto_centavos: 1000, tipo: 'cargo' }))
       .toThrow('CCC_YA_TIENE_MOVIMIENTOS');
@@ -172,7 +172,7 @@ describe('ctacteRegistrarSaldoInicialHandler', () => {
 
 describe('ctacteRegistrarCobroHandler', () => {
   it('transferencia: solo crea movimiento CC sin tocar caja', async () => {
-    const { ctacteRegistrarCobroHandler } = await import('@core/main');
+    const { ctacteRegistrarCobroHandler } = await import('../index');
     ctacteRegistrarCobroHandler(db, { cuentaId, monto_centavos: 10000, forma_pago: 'transferencia' });
     const cuenta = db.select().from(schema.cuenta_corriente_cliente)
       .where(eq(schema.cuenta_corriente_cliente.id, cuentaId)).get()!;
@@ -187,7 +187,7 @@ describe('ctacteRegistrarCobroHandler', () => {
   });
 
   it('efectivo + caja abierta: crea mov CC y mov caja en transacción', async () => {
-    const { ctacteRegistrarCobroHandler } = await import('@core/main');
+    const { ctacteRegistrarCobroHandler } = await import('../index');
     const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
     ctacteRegistrarCobroHandler(db, { cuentaId, monto_centavos: 10000, forma_pago: 'efectivo' });
     const movsCaja = db.select().from(schema.movimiento_caja)
@@ -200,13 +200,13 @@ describe('ctacteRegistrarCobroHandler', () => {
   });
 
   it('efectivo sin caja abierta: lanza CAJA_NO_ABIERTA', async () => {
-    const { ctacteRegistrarCobroHandler } = await import('@core/main');
+    const { ctacteRegistrarCobroHandler } = await import('../index');
     expect(() => ctacteRegistrarCobroHandler(db, { cuentaId, monto_centavos: 5000, forma_pago: 'efectivo' }))
       .toThrow('CAJA_NO_ABIERTA');
   });
 
   it('cobro parcial: saldo_resultante = saldo_anterior - monto', async () => {
-    const { ctacteRegistrarCobroHandler } = await import('@core/main');
+    const { ctacteRegistrarCobroHandler } = await import('../index');
     ctacteRegistrarCobroHandler(db, { cuentaId, monto_centavos: 20000, forma_pago: 'transferencia' });
     const cuenta = db.select().from(schema.cuenta_corriente_cliente)
       .where(eq(schema.cuenta_corriente_cliente.id, cuentaId)).get()!;
@@ -214,7 +214,7 @@ describe('ctacteRegistrarCobroHandler', () => {
   });
 
   it('cobro total: saldo_resultante = 0', async () => {
-    const { ctacteRegistrarCobroHandler } = await import('@core/main');
+    const { ctacteRegistrarCobroHandler } = await import('../index');
     ctacteRegistrarCobroHandler(db, { cuentaId, monto_centavos: 50000, forma_pago: 'transferencia' });
     const cuenta = db.select().from(schema.cuenta_corriente_cliente)
       .where(eq(schema.cuenta_corriente_cliente.id, cuentaId)).get()!;
@@ -222,7 +222,7 @@ describe('ctacteRegistrarCobroHandler', () => {
   });
 
   it('cobro mayor al saldo: saldo_resultante negativo, sin error', async () => {
-    const { ctacteRegistrarCobroHandler } = await import('@core/main');
+    const { ctacteRegistrarCobroHandler } = await import('../index');
     ctacteRegistrarCobroHandler(db, { cuentaId, monto_centavos: 80000, forma_pago: 'transferencia' });
     const cuenta = db.select().from(schema.cuenta_corriente_cliente)
       .where(eq(schema.cuenta_corriente_cliente.id, cuentaId)).get()!;
@@ -230,7 +230,7 @@ describe('ctacteRegistrarCobroHandler', () => {
   });
 
   it('lanza NOT_FOUND para cuentaId inválido', async () => {
-    const { ctacteRegistrarCobroHandler } = await import('@core/main');
+    const { ctacteRegistrarCobroHandler } = await import('../index');
     expect(() => ctacteRegistrarCobroHandler(db, { cuentaId: 'no-existe', monto_centavos: 100, forma_pago: 'transferencia' }))
       .toThrow('NOT_FOUND');
   });
