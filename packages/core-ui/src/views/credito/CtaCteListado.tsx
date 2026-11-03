@@ -7,6 +7,7 @@ import { exportCtaCte } from '@ferreteria/shared';
 import { SearchBox } from '../../components/SearchBox';
 import { usePersistentListState } from '../../hooks/usePersistentListState';
 import { resaltarCoincidencia } from '../../lib/resaltar';
+import { propsFilaActivable } from '../../components/filaActivable';
 
 type CtaCteRow = {
   id: string;
@@ -183,8 +184,7 @@ export function CtaCteListado() {
             {filtrados.map(r => {
               const badge = badgeEstado(r.saldo_centavos, r.limite_credito_centavos);
               return (
-                <tr key={r.id} style={{ cursor: 'pointer' }}
-                  onClick={() => navigate(`/credito/${r.cliente_id}`)}>
+                <tr key={r.id} {...propsFilaActivable(() => navigate(`/credito/${r.cliente_id}`))}>
                   <td>{resaltarCoincidencia(r.nombre_completo, busqueda)}</td>
                   <td>{r.tipo_documento}</td>
                   <td className="num">{r.numero_documento}</td>

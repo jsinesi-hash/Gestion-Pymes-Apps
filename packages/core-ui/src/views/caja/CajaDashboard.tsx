@@ -7,6 +7,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { ExportarButton } from '../../components/export/ExportarButton';
 import { exportCaja } from '@ferreteria/shared';
 
+import { propsFilaActivable } from '../../components/filaActivable';
 type Props = {
   caja: CajaActiva;
   onRefetch: () => void;
@@ -271,7 +272,7 @@ export function CajaDashboard({ caja, onRefetch, renderVentaDetalle }: Readonly<
               </thead>
               <tbody>
                 {movManuales.map(m => (
-                  <tr key={m.id} style={{ cursor: 'pointer' }} onClick={() => setDetalleMov(m)}>
+                  <tr key={m.id} {...propsFilaActivable(() => setDetalleMov(m))}>
                     <td className="text-muted text-sm">{fmtHora(m.fecha)}</td>
                     <td>
                       <span className={`badge ${m.tipo === 'ingreso' ? 'pos' : 'neg'}`}>

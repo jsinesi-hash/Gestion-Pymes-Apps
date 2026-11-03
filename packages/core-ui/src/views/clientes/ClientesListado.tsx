@@ -8,6 +8,7 @@ import { usePersistentListState } from '../../hooks/usePersistentListState';
 import { resaltarCoincidencia } from '../../lib/resaltar';
 import { VistosRecientesPanel } from '../../components/VistosRecientesPanel';
 
+import { propsFilaActivable } from '../../components/filaActivable';
 type ClienteRow = {
   id: string;
   tipo_documento: string;
@@ -94,7 +95,7 @@ export function ClientesListado() {
               <tr><td colSpan={7} style={{ textAlign: 'center', padding: '1.5rem', opacity: 0.5 }}>Sin clientes</td></tr>
             )}
             {filtrados.map(c => (
-              <tr key={c.id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/clientes/${c.id}`)}>
+              <tr key={c.id} {...propsFilaActivable(() => navigate(`/clientes/${c.id}`))}>
                 <td>{resaltarCoincidencia(nombreCompletoCliente(c), busqueda)}</td>
                 <td>{c.tipo_documento}</td>
                 <td className="num">{c.numero_documento}</td>

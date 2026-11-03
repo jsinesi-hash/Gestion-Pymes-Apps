@@ -1,7 +1,7 @@
 import { bridge } from '../../bridge';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../auth/AuthContext';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { Modal } from '../../components/Modal';
 import { traducirError } from '../../lib/errores';
 import { motivosPasswordDebil, mensajePasswordDebil } from '@ferreteria/shared';
 
@@ -205,8 +205,6 @@ function UsuarioModal({ roles, user, onClose, onSuccess, onDesactivar }: Readonl
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEscapeToClose(onClose, !saving);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!isEdit && password !== confirmPassword) {
@@ -233,60 +231,54 @@ function UsuarioModal({ roles, user, onClose, onSuccess, onDesactivar }: Readonl
   }
 
   return (
-    <div className="modal-overlay" role="button" tabIndex={0} aria-label="Cerrar" onClick={onClose} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClose(); }}>
-      <div className="modal" role="dialog" aria-modal="true" tabIndex={-1} onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()} style={{ width: 400 }}>
-        <div className="modal-header">
-          <span className="modal-title">{isEdit ? 'Editar usuario' : 'Nuevo usuario'}</span>
-          <button className="ia" onClick={onClose}>×</button>
-        </div>
-        <form onSubmit={handleSubmit}>
-          <div className="modal-body">
+    <Modal titulo={isEdit ? 'Editar usuario' : 'Nuevo usuario'} ancho={400} onClose={onClose} bloqueado={saving} cerrarAlClickFuera>
+      <form onSubmit={handleSubmit}>
+        <div className="modal-body">
+          <div className="field">
+            <label htmlFor="um-nombre">Nombre completo *</label>
+            <input id="um-nombre" className="input" value={nombre} onChange={e => setNombre(e.target.value)} required />
+          </div>
+          {!isEdit && (
             <div className="field">
-              <label htmlFor="um-nombre">Nombre completo *</label>
-              <input id="um-nombre" className="input" value={nombre} onChange={e => setNombre(e.target.value)} required />
+              <label htmlFor="um-username">Nombre de usuario *</label>
+              <input id="um-username" className="input" value={nombreUsuario} onChange={e => setNombreUsuario(e.target.value)} required />
             </div>
-            {!isEdit && (
+          )}
+          <div className="field">
+            <label htmlFor="um-email">Email</label>
+            <input id="um-email" className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Opcional" />
+          </div>
+          {!isEdit && (
+            <>
               <div className="field">
-                <label htmlFor="um-username">Nombre de usuario *</label>
-                <input id="um-username" className="input" value={nombreUsuario} onChange={e => setNombreUsuario(e.target.value)} required />
+                <label htmlFor="um-pwd">Contraseña *</label>
+                <PasswordInput id="um-pwd" value={password} onChange={setPassword} required minLength={8} />
               </div>
-            )}
-            <div className="field">
-              <label htmlFor="um-email">Email</label>
-              <input id="um-email" className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Opcional" />
-            </div>
-            {!isEdit && (
-              <>
-                <div className="field">
-                  <label htmlFor="um-pwd">Contraseña *</label>
-                  <PasswordInput id="um-pwd" value={password} onChange={setPassword} required minLength={8} />
-                </div>
-                <div className="field">
-                  <label htmlFor="um-pwd-confirm">Confirmar contraseña *</label>
-                  <PasswordInput id="um-pwd-confirm" value={confirmPassword} onChange={setConfirmPassword} required minLength={8} />
-                </div>
-              </>
-            )}
-            <div className="field">
-              <label htmlFor="um-rol">Rol *</label>
-              <select id="um-rol" className="input" value={rolId} onChange={e => setRolId(e.target.value)} required>
-                {roles.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
-              </select>
-            </div>
-            {error && <div className="alert-danger" role="alert">{error}</div>}
+              <div className="field">
+                <label htmlFor="um-pwd-confirm">Confirmar contraseña *</label>
+                <PasswordInput id="um-pwd-confirm" value={confirmPassword} onChange={setConfirmPassword} required minLength={8} />
+              </div>
+            </>
+          )}
+          <div className="field">
+            <label htmlFor="um-rol">Rol *</label>
+            <select id="um-rol" className="input" value={rolId} onChange={e => setRolId(e.target.value)} required>
+              {roles.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+            </select>
           </div>
-          <div className="modal-footer">
-            {isEdit && user?.activo && onDesactivar && (
-              <button type="button" className="btn-danger" onClick={onDesactivar} disabled={saving} style={{ marginRight: 'auto' }}>
-                Desactivar
-              </button>
-            )}
-            <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-            <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Guardando...' : 'Guardar'}</button>
-          </div>
-        </form>
-      </div>
-    </div>
+          {error && <div className="alert-danger" role="alert">{error}</div>}
+        </div>
+        <div className="modal-footer">
+          {isEdit && user?.activo && onDesactivar && (
+            <button type="button" className="btn-danger" onClick={onDesactivar} disabled={saving} style={{ marginRight: 'auto' }}>
+              Desactivar
+            </button>
+          )}
+          <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+          <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Guardando...' : 'Guardar'}</button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 
@@ -295,8 +287,6 @@ function ChangePasswordModal({ user, onClose, onSuccess }: Readonly<{ user: Usua
   const [confirm, setConfirm] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEscapeToClose(onClose, !saving);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -314,32 +304,26 @@ function ChangePasswordModal({ user, onClose, onSuccess }: Readonly<{ user: Usua
   }
 
   return (
-    <div className="modal-overlay" role="button" tabIndex={0} aria-label="Cerrar" onClick={onClose} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClose(); }}>
-      <div className="modal" role="dialog" aria-modal="true" tabIndex={-1} onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()} style={{ width: 360 }}>
-        <div className="modal-header">
-          <span className="modal-title">Cambiar contraseña — {user.nombre_completo}</span>
-          <button className="ia" onClick={onClose}>×</button>
+    <Modal titulo={`Cambiar contraseña — ${user.nombre_completo}`} ancho={360} onClose={onClose} bloqueado={saving} cerrarAlClickFuera>
+      <form onSubmit={handleSubmit}>
+        <div className="modal-body">
+          <div className="field">
+            <label htmlFor="cpm-pwd-nueva">Nueva contraseña *</label>
+            <PasswordInput id="cpm-pwd-nueva" value={newPassword} onChange={setNewPassword} required minLength={8} autoFocus />
+          </div>
+          <div className="field">
+            <label htmlFor="cpm-pwd-confirm">Confirmar *</label>
+            <PasswordInput id="cpm-pwd-confirm" value={confirm} onChange={setConfirm} required />
+          </div>
+          {error && <div className="alert-danger" role="alert">{error}</div>}
         </div>
-        <form onSubmit={handleSubmit}>
-          <div className="modal-body">
-            <div className="field">
-              <label htmlFor="cpm-pwd-nueva">Nueva contraseña *</label>
-              <PasswordInput id="cpm-pwd-nueva" value={newPassword} onChange={setNewPassword} required minLength={8} autoFocus />
-            </div>
-            <div className="field">
-              <label htmlFor="cpm-pwd-confirm">Confirmar *</label>
-              <PasswordInput id="cpm-pwd-confirm" value={confirm} onChange={setConfirm} required />
-            </div>
-            {error && <div className="alert-danger" role="alert">{error}</div>}
-          </div>
-          <div className="modal-footer">
-            <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-            <button type="submit" className="btn-primary" disabled={saving || !newPassword || !confirm}>
-              {saving ? 'Guardando...' : 'Cambiar'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="modal-footer">
+          <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+          <button type="submit" className="btn-primary" disabled={saving || !newPassword || !confirm}>
+            {saving ? 'Guardando...' : 'Cambiar'}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }

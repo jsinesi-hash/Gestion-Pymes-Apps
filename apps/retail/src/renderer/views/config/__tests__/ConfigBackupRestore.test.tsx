@@ -218,17 +218,17 @@ describe('ConfigBackupRestore — RestoreWizard', () => {
     renderView();
     await waitFor(() => expect(mockGetParam).toHaveBeenCalledTimes(7));
     fireEvent.click(screen.getByRole('button', { name: 'Restaurar desde archivo…' }));
-    expect(screen.getByRole('dialog', { name: 'Wizard de restauración' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Restaurar desde backup' })).toBeInTheDocument();
   });
 
   it('cierra el RestoreWizard al presionar Escape dentro del wizard', async () => {
     renderView();
     await waitFor(() => expect(mockGetParam).toHaveBeenCalledTimes(7));
     fireEvent.click(screen.getByRole('button', { name: 'Restaurar desde archivo…' }));
-    expect(screen.getByRole('dialog', { name: 'Wizard de restauración' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Restaurar desde backup' })).toBeInTheDocument();
     fireEvent.keyDown(document, { key: 'Escape' });
     await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: 'Wizard de restauración' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('dialog', { name: 'Restaurar desde backup' })).not.toBeInTheDocument()
     );
   });
 });

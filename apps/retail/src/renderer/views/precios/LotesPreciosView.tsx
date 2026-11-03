@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { bridge } from '@core/ui';
+import { bridge, propsFilaActivable } from '@core/ui';
 // ADR-049 §4/§8 — listado de lotes de precios.
 
 type BatchRow = {
@@ -93,7 +93,7 @@ export function LotesPreciosView() {
             </thead>
             <tbody>
               {rows.map(b => (
-                <tr key={b.id} style={{ cursor: 'pointer' }} onClick={() => navigate(b.id)}>
+                <tr key={b.id} {...propsFilaActivable(() => navigate(b.id))}>
                   <td><code className="text-xs">#{b.id.slice(0, 8)}</code></td>
                   <td>{b.lista_nombre}</td>
                   <td className="text-sm">{ORIGEN_LABEL[b.origen] ?? b.origen}</td>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { bridge } from '@core/ui';
+import { bridge, propsFilaActivable } from '@core/ui';
 type ItemSugerido = {
   producto_id: string;
   nombre_corto: string;
@@ -251,8 +251,7 @@ export function OcSugeridaView() {
               <tbody>
                 {filteredSinProv.map(item => (
                   <React.Fragment key={item.producto_id}>
-                    <tr style={{ cursor: 'pointer' }}
-                      onClick={() => handleAbrirAsignacion(item.producto_id)}>
+                    <tr {...propsFilaActivable(() => handleAbrirAsignacion(item.producto_id))}>
                       <td>{item.nombre_corto}</td>
                       <td>{item.unidad_compra ?? '—'}</td>
                       <td className="r"><span className="num">{item.stock_minimo}</span></td>

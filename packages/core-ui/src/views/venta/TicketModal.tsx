@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import type { ComprobantePayload } from '@ferreteria/shared';
-import { useEscapeToClose } from '../../hooks/useEscapeToClose';
+import { Modal } from '../../components/Modal';
 import { buildTicketHtml, etiquetaMedio, formatPesos } from './ticketHtml';
 
 type Props = {
@@ -17,10 +17,6 @@ export function TicketModal({ comprobante, onNuevaVenta, onImprimir, anulacion }
   const [anulada, setAnulada] = useState(!!comprobante.anulado);
   const [printing, setPrinting] = useState(false);
 
-  // Escape avanza a una nueva venta (el ticket no descarta nada). Con la anulación
-  // abierta, ese modal queda arriba en la pila y toma el Escape primero.
-  useEscapeToClose(onNuevaVenta);
-
   async function handleImprimir() {
     setPrinting(true);
     try {
@@ -33,8 +29,10 @@ export function TicketModal({ comprobante, onNuevaVenta, onImprimir, anulacion }
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal" style={{ width: 420, maxHeight: '90vh', overflow: 'auto' }}>
+    <>
+      {/* Escape avanza a una nueva venta (el ticket no descarta nada). Con la anulación abierta,
+          ese modal queda arriba en la pila y toma el Escape primero. */}
+      <Modal ariaLabel="Ticket interno" ancho={420} style={{ maxHeight: '90vh', overflow: 'auto' }} onClose={onNuevaVenta}>
         <div className="modal-header">
           <div>
             <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '.1em', color: 'var(--ink-3)', fontWeight: 700 }}>Ticket interno</div>
@@ -92,12 +90,12 @@ export function TicketModal({ comprobante, onNuevaVenta, onImprimir, anulacion }
             )}
           </div>
         </div>
-      </div>
+      </Modal>
 
       {showAnulacion && anulacion?.({
         onSuccess: () => { setAnulada(true); setShowAnulacion(false); },
         onCancel: () => setShowAnulacion(false),
       })}
-    </div>
+    </>
   );
 }
