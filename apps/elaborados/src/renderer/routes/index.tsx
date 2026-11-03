@@ -16,6 +16,7 @@ import {
   ConfigUsuarios,
   RolesPermisosView,
   ConfigBackupRestore,
+  ErrorDeRuta,
 } from '@core/ui';
 import { ElaboradosShell } from '../shell/ElaboradosShell';
 import { ArticulosView } from '../views/stock/ArticulosView';
@@ -45,6 +46,9 @@ export const routes: RouteObject[] = [
   { path: '/login', element: <Login /> },
   {
     path: '/',
+    // Revisión 2026-10-20 (P1): sin esto un error del shell muestra la pantalla por defecto
+    // de react-router; los errores de una pantalla los contiene el ErrorBoundary de AppShell.
+    errorElement: <ErrorDeRuta />,
     element: (
       <ProtectedRoute>
         <ElaboradosShell />

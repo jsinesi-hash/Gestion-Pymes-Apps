@@ -1,6 +1,6 @@
 import type { RouteObject } from 'react-router-dom';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { Login, ProtectedRoute, InicioRedirect, bridge } from '@core/ui';
+import { Login, ProtectedRoute, InicioRedirect, ErrorDeRuta, bridge } from '@core/ui';
 import {
   CajaView,
   CajaCierreView,
@@ -70,6 +70,9 @@ export const routes: RouteObject[] = [
   { path: '/login', element: <Login /> },
   {
     path: '/',
+    // Revisión 2026-10-20 (P1): sin esto un error del shell muestra la pantalla por defecto
+    // de react-router; los errores de una pantalla los contiene el ErrorBoundary de AppShell.
+    errorElement: <ErrorDeRuta />,
     element: (
       <ProtectedRoute>
         {/* ADR-056 Lote 1: el cart vive en este provider, montado por encima de AppShell

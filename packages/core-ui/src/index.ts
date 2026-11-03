@@ -72,3 +72,4 @@ export { buildTicketHtml, formatPesos, etiquetaMedio } from './views/venta/ticke
 export { AnulacionModal } from './views/venta/AnulacionModal';
 export { ConfirmarVentaModal } from './views/venta/ConfirmarVentaModal';
 export type { MedioPago, VentaPagoPayload } from './views/venta/tipos';
+export * from './components/ErrorBoundary';

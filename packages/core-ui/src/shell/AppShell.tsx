@@ -1,5 +1,6 @@
 import { useState, useEffect, type ReactNode } from 'react';
 import { NavLink, Link, Outlet, useLocation } from 'react-router-dom';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { buildBreadcrumb, type Seccion } from './breadcrumb';
 import type { Comando } from './comandos';
 import type { ResumenDepuracion } from '@ferreteria/shared';
@@ -326,7 +327,12 @@ export function AppShell(props: Readonly<AppShellProps>) {
             </button>
           </div>
         </header>
-        <main className="main-content"><Outlet /></main>
+        {/* Revisión 2026-10-20 (P1): una excepción de render en la pantalla se contiene acá (el
+            menú y los providers por encima, como el carrito del POS, siguen en pie) y el aviso se
+            descarta al navegar a otra ruta. */}
+        <main className="main-content">
+          <ErrorBoundary resetKey={location.pathname}><Outlet /></ErrorBoundary>
+        </main>
       </div>
 
       {drawerOpen && <AppearanceDrawer onClose={() => setDrawerOpen(false)} />}
