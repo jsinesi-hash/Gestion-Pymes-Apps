@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
+import { verificarTotalesVenta } from '@ferreteria/shared';
 import { usePosSession } from '../usePosSession';
 
 const mockCaja = { id: 'c-1', estado: 'abierta', monto_inicial: 0, usuario_id: 'u-1', fecha_apertura: new Date() };
@@ -268,5 +269,55 @@ describe('usePosSession', () => {
     });
 
     expect(result.current.error).toBe('VENTA_NO_ENCONTRADA');
+  });
+});
+
+// El main ahora verifica los totales al pausar (verificarTotalesVenta, igual que al confirmar). Este
+// test fija el contrato del lado del POS: el payload que `pausarVenta` manda lo acepta ese verificador,
+// con descuento de línea, descuento global, IVA y redondeo en juego. Si alguien cambia la fórmula de
+// uno de los dos lados, esto falla acá y no en la caja.
+describe('usePosSession — pausarVenta manda totales que el main acepta', () => {
+  async function pausarYCapturar(armar: (s: ReturnType<typeof usePosSession>) => Promise<void> | void) {
+    const pausar = vi.fn().mockResolvedValue({ venta_id: 'v-espera' });
+    (window as any).ferreteria = makeFerreteria({
+      venta: {
+        confirmar: vi.fn(),
+        espera: { listar: vi.fn().mockResolvedValue([]), retomar: vi.fn(), descartar: vi.fn(), pausar },
+      },
+    });
+    const { result } = renderHook(() => usePosSession());
+    await waitFor(() => expect(result.current.cajaActiva).not.toBeUndefined());
+    await act(async () => { await result.current.addLinea('p-1'); });
+    await act(async () => { await armar(result.current); });
+    await act(async () => { await result.current.pausarVenta('mostrador'); });
+    expect(pausar).toHaveBeenCalledTimes(1);
+    return pausar.mock.calls[0][0] as Parameters<typeof verificarTotalesVenta>[0];
+  }
+
+  it('un carrito simple', async () => {
+    const payload = await pausarYCapturar(() => {});
+    expect(() => verificarTotalesVenta(payload)).not.toThrow();
+  });
+
+  it('con descuento de línea', async () => {
+    const payload = await pausarYCapturar((s) => { s.updateDescuentoLinea('p-1', 15); });
+    expect(payload.lineas[0]!.descuento_linea).toBe(15);
+    expect(() => verificarTotalesVenta(payload)).not.toThrow();
+  });
+
+  it('con descuento global que obliga a redondear', async () => {
+    const payload = await pausarYCapturar((s) => { s.setDescuentoGlobal(7); });
+    expect(payload.descuento_global).toBe(7);
+    expect(() => verificarTotalesVenta(payload)).not.toThrow();
+  });
+
+  it('con descuento de línea y global juntos y una cantidad con más de una unidad', async () => {
+    const payload = await pausarYCapturar(async (s) => {
+      s.updateCantidad('p-1', 3);
+      s.updateDescuentoLinea('p-1', 12.5);
+      s.setDescuentoGlobal(3);
+    });
+    expect(payload.lineas[0]!.cantidad).toBe(3);
+    expect(() => verificarTotalesVenta(payload)).not.toThrow();
   });
 });
