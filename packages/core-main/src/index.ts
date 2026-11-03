@@ -36,5 +36,6 @@ export * from './ipc/print';
 export * from './tareas';
 export * from './auth/intentos';
 export * from './auth/recuperacion';
+export * from './auth/intentos-persistente';
 export * from './terminal';
 export * from './userdata-aislado';

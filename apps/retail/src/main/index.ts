@@ -10,7 +10,7 @@ if (started) app.quit();
 
 import { db } from './db/client';
 import { runStartup } from './startup';
-import { registerCoreHandlers, activarFirmaBackup } from '@core/main';
+import { registerCoreHandlers, activarFirmaBackup, activarLockoutPersistente } from '@core/main';
 import { navegacionRetail } from '../common/navegacion';
 import { crearEnviadorSmtpReal } from './seguridad/enviador-correo';
 import { registerMarcaHandlers } from './ipc/marca';
@@ -197,6 +197,9 @@ ipcMain.handle('app:version', () => app.getVersion());
 // ADR-135: firma HMAC de los .fbk con la clave de esta instalación (perezosa: safeStorage solo
 // responde con la app lista, y el primer backup ocurre dentro de createWindow).
 activarFirmaBackup();
+
+// ADR-138: el límite de intentos de login se guarda en userData y sobrevive a reiniciar la app.
+activarLockoutPersistente();
 
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => {
