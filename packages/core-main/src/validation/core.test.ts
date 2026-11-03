@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ValidationError, str, optStr, id, optId, int, centavos, num, bool, oneOf, arr } from '@core/main';
+import { ValidationError, str, optStr, id, optId, int, centavos, num, bool, oneOf, arr } from './core';
 
 describe('validation/core (ADR-082)', () => {
   it('str: requerido, trim y máximo', () => {

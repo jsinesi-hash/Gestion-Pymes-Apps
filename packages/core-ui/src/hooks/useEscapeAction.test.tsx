@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/react';
-import { useEscapeAction, useEscapeSalir } from '@core/ui';
+import { useEscapeAction, useEscapeSalir } from './useEscapeAction';
 
 type Opts = Parameters<typeof useEscapeAction>[1];
 
