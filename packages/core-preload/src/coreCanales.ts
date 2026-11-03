@@ -1,6 +1,12 @@
 import type { ExportRequest } from '@ferreteria/shared';
 export type Invoke = (canal: string, ...args: unknown[]) => Promise<any>;
 
+/**
+ * Tipo del catálogo universal que expone `createBridge` (lo que ve el renderer en `bridge()`).
+ * Se DERIVA de `coreCanales`: no hay una segunda definición que mantener. Revisión 2026-10-20 (P1).
+ */
+export type CoreBridgeApi = ReturnType<typeof coreCanales>;
+
 export function coreCanales(invoke: Invoke) {
   return {
     getVersion: () => invoke('app:version'),

@@ -1,5 +1,6 @@
-const api = () => (window as any).ferreteria.importacionCosto;
-const dialogApi = () => (window as any).ferreteria.dialog;
+
+import { bridge } from '@core/ui';const api = () => bridge().importacionCosto;
+const dialogApi = () => bridge().dialog;
 
 export function useImportacionCosto() {
   return {

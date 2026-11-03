@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { costoNeto } from '@ferreteria/shared';
 import { useMotorPreciosV2Habilitado } from '../../../hooks/useMotorPrecios';
 import { useFilaNavegable } from '../../../hooks/useFilaNavegable';
-import { useCallIpc } from '@core/ui';
+import { useCallIpc, bridge } from '@core/ui';
 import { ProveedorAgregarProductosPanel } from './ProveedorAgregarProductosPanel';
 
 // ADR-085 (SEC-2): campos del form de edición inline que pueden recibir un error de
@@ -116,7 +116,7 @@ export function ProveedorProductosTab({ proveedorId }: Readonly<{ proveedorId: s
   const callIpc = useCallIpc();
 
   const refresh = useCallback(() => {
-    (globalThis as any).ferreteria.compras.proveedor.productos.listar(proveedorId)
+    bridge().compras.proveedor.productos.listar(proveedorId)
       .then((data: VinculoProducto[]) => { setVinculos(data); setLoadError(null); })
       .catch(() => setLoadError('No se pudo cargar la lista de productos.'))
       .finally(() => setLoading(false));
@@ -159,7 +159,7 @@ export function ProveedorProductosTab({ proveedorId }: Readonly<{ proveedorId: s
   async function handleDesasociar(id: string, nombre: string) {
     if (!window.confirm(`¿Quitar el producto "${nombre}" de este proveedor?`)) return;
     try {
-      await (globalThis as any).ferreteria.compras.proveedor.productos.desasociar(id);
+      await bridge().compras.proveedor.productos.desasociar(id);
       setActionError(null);
       refresh();
     } catch {
@@ -173,7 +173,7 @@ export function ProveedorProductosTab({ proveedorId }: Readonly<{ proveedorId: s
     // ADR-085 (SEC-2): callIpc traduce y muestra el error por toast; si el backend
     // rechaza un campo de validación, lo enrutamos al control focoable correspondiente.
     const r = await callIpc(
-      () => (globalThis as any).ferreteria.compras.proveedor.productos.actualizar(editState.id, {
+      () => bridge().compras.proveedor.productos.actualizar(editState.id, {
         costo_centavos:   arsToCentavos(editState.costo),
         codigo_proveedor: editState.codigo.trim() || null,
       }),
@@ -193,7 +193,7 @@ export function ProveedorProductosTab({ proveedorId }: Readonly<{ proveedorId: s
 
   async function handleTogglePreferido(id: string, setTo: boolean) {
     try {
-      await (globalThis as any).ferreteria.compras.proveedor.productos.actualizar(id, { preferido: setTo });
+      await bridge().compras.proveedor.productos.actualizar(id, { preferido: setTo });
       setActionError(null);
       refresh();
     } catch {

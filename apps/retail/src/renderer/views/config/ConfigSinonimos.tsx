@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useCallIpc } from '@core/ui';
+import { useCallIpc, bridge } from '@core/ui';
 import { ExportarButton } from '@core/ui';
 import { exportSinonimos } from '@ferreteria/shared';
 
@@ -52,18 +52,18 @@ export function ConfigSinonimos() {
 
   const cargar = useCallback(async (q = '') => {
     try {
-      const lista = await (globalThis as any).ferreteria.sinonimo.list({ busqueda: q });
+      const lista = await bridge().sinonimo.list({ busqueda: q });
       setGrupos(lista);
     } catch (e: any) { setError(e?.message ?? 'No se pudo listar.'); }
   }, []);
 
   const cargarFlag = useCallback(async () => {
-    const v = await (globalThis as any).ferreteria.parametros.get({ clave: 'sinonimos_habilitado' });
+    const v = await bridge().parametros.get({ clave: 'sinonimos_habilitado' });
     setFlag(v === 'true' ? 'true' : 'false');
   }, []);
 
   const cargarFlagSimil = useCallback(async () => {
-    const v = await (globalThis as any).ferreteria.parametros.get({ clave: 'busqueda_similares_habilitado' });
+    const v = await bridge().parametros.get({ clave: 'busqueda_similares_habilitado' });
     setFlagSimil(v === 'true' ? 'true' : 'false');
   }, []);
 
@@ -73,7 +73,7 @@ export function ConfigSinonimos() {
     const nuevo = flag === 'true' ? 'false' : 'true';
     setError(null); setOk(null);
     try {
-      await (globalThis as any).ferreteria.parametros.set({ clave: 'sinonimos_habilitado', valor: nuevo });
+      await bridge().parametros.set({ clave: 'sinonimos_habilitado', valor: nuevo });
       setFlag(nuevo);
       setOk(nuevo === 'true' ? 'Búsqueda por sinónimos activada.' : 'Búsqueda por sinónimos desactivada.');
     } catch (e: any) { setError(e?.message ?? 'No se pudo cambiar el estado.'); }
@@ -83,7 +83,7 @@ export function ConfigSinonimos() {
     const nuevo = flagSimil === 'true' ? 'false' : 'true';
     setError(null); setOk(null);
     try {
-      await (globalThis as any).ferreteria.parametros.set({ clave: 'busqueda_similares_habilitado', valor: nuevo });
+      await bridge().parametros.set({ clave: 'busqueda_similares_habilitado', valor: nuevo });
       setFlagSimil(nuevo);
       setOk(nuevo === 'true' ? 'Búsqueda por similitud activada.' : 'Búsqueda por similitud desactivada.');
     } catch (e: any) { setError(e?.message ?? 'No se pudo cambiar el estado.'); }
@@ -104,11 +104,11 @@ export function ConfigSinonimos() {
     // modal y recargamos si salió bien.
     const r = form.grupo_id
       ? await callIpc(
-          () => (globalThis as any).ferreteria.sinonimo.update({ grupo_id: form.grupo_id, ...payload }),
+          () => bridge().sinonimo.update({ grupo_id: form.grupo_id, ...payload }),
           { success: 'Grupo de sinónimos guardado' },
         )
       : await callIpc(
-          () => (globalThis as any).ferreteria.sinonimo.create(payload),
+          () => bridge().sinonimo.create(payload),
           { success: 'Grupo de sinónimos guardado' },
         );
     if (!r.ok) {
@@ -130,7 +130,7 @@ export function ConfigSinonimos() {
     if (!confirm(`¿Eliminar el grupo "${g.canonico}" (${g.total_terminos} términos)?`)) return;
     setError(null); setOk(null);
     const r = await callIpc(
-      () => (globalThis as any).ferreteria.sinonimo.delete({ grupo_id: g.grupo_id }),
+      () => bridge().sinonimo.delete({ grupo_id: g.grupo_id }),
       { success: 'Grupo eliminado' },
     );
     if (!r.ok) { setError(r.traducido.mensaje); return; }
@@ -144,7 +144,7 @@ export function ConfigSinonimos() {
     setError(null); setOk(null);
     const csv = await file.text();
     try {
-      const preview = await (globalThis as any).ferreteria.sinonimo.importarValidar({ csv });
+      const preview = await bridge().sinonimo.importarValidar({ csv });
       setImportar({ csv, nombre: file.name, preview, reemplazar: false });
     } catch (err: any) { setError(err?.message ?? 'No se pudo leer el archivo.'); }
   }
@@ -153,7 +153,7 @@ export function ConfigSinonimos() {
     if (!importar) return;
     setError(null); setOk(null);
     try {
-      const res = await (globalThis as any).ferreteria.sinonimo.importar({ csv: importar.csv, reemplazar: importar.reemplazar });
+      const res = await bridge().sinonimo.importar({ csv: importar.csv, reemplazar: importar.reemplazar });
       if (res.errores?.length) { setError(res.errores.join(' · ')); return; }
       setOk(`Importados ${res.gruposImportados} grupos${res.advertencias?.length ? ` (${res.advertencias.length} advertencias)` : ''}.`);
       setImportar(null);

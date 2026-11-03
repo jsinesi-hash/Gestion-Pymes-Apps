@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useCallIpc } from '@core/ui';
+import { useCallIpc, bridge } from '@core/ui';
 
 // PROD-3 (ADR-079): alta rápida de producto desde puntos de captura (POS, OC) que no
 // tienen el producto todavía. Sólo nombre + precio; el resto (categoría, unidad, IVA)
@@ -47,7 +47,7 @@ export function AltaExpressModal({ nombreInicial = '', onCreado, onClose }: Read
     setSaving(true);
     const precioNum = Number.parseFloat(precio.replace(',', '.'));
     const res = await callIpc(
-      () => (globalThis as any).ferreteria.catalogo.producto.quickCreate({
+      () => bridge().catalogo.producto.quickCreate({
         nombre_corto: nombre.trim(),
         precio_venta_lista: precioNum,
         ...(ean.trim() ? { gtin_barcode: ean.trim() } : {}),

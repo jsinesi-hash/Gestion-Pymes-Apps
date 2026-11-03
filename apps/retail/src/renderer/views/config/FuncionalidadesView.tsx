@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useCallIpc } from '@core/ui';
+import { useCallIpc, bridge } from '@core/ui';
 
 type FeatureFlagInfo = { clave: string; valor: string; descripcion: string | null };
 
@@ -12,7 +12,7 @@ export function FuncionalidadesView() {
   const [flags, setFlags] = useState<FeatureFlagInfo[] | null>(null);
 
   const cargar = useCallback(async () => {
-    const lista = await (globalThis as any).ferreteria.parametros.listFlags();
+    const lista = await bridge().parametros.listFlags();
     setFlags(lista);
   }, []);
 
@@ -21,7 +21,7 @@ export function FuncionalidadesView() {
   async function toggle(flag: FeatureFlagInfo) {
     const nuevo = flag.valor === 'true' ? 'false' : 'true';
     const res = await callIpc(
-      () => (globalThis as any).ferreteria.parametros.set({ clave: flag.clave, valor: nuevo }),
+      () => bridge().parametros.set({ clave: flag.clave, valor: nuevo }),
       { success: 'Funcionalidad actualizada.' },
     );
     if (!res.ok) return;

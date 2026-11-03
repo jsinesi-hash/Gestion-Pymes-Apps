@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useExistencias } from '../../hooks/useExistencias';
-import { useEscapeToClose } from '@core/ui';
+import { useEscapeToClose, bridge } from '@core/ui';
 import { rutearCampoError } from '@core/ui';
 import { useToast } from '@core/ui';
 
@@ -42,7 +42,7 @@ export function StockMermaModal({ productoId, onSuccess, onClose }: Readonly<Sto
     setCampoError(null);
     setSubmitting(true);
     try {
-      await (globalThis as any).ferreteria.catalogo.stock.merma({
+      await bridge().catalogo.stock.merma({
         producto_id: productoId,
         cantidad: cantidadNum,
         observaciones: observaciones.trim(),

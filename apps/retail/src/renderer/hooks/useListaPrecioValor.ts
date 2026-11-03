@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
-const f = () => (globalThis as any).ferreteria;
+import { bridge } from '@core/ui';
+const f = () => bridge();
 
 export function useListaPrecioValor(productoId: string) {
   const [vigentes, setVigentes] = useState<any[]>([]);

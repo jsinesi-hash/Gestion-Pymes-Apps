@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth, AnulacionModal } from '@core/ui';
+import { useAuth, AnulacionModal, bridge } from '@core/ui';
 import { GenerarRemitoModal } from '../remitos/GenerarRemitoModal';
 import { useRemitosHabilitado } from '../../hooks/useRemitos';
 import { useEscapeToClose } from '@core/ui';
@@ -77,7 +77,7 @@ export function VentaDetalleModal({ ventaId, onClose, onAnulada }: Readonly<Prop
   useEscapeToClose(onClose, !showRemito && !showAnulacion);
 
   useEffect(() => {
-    (globalThis as any).ferreteria.venta.get({ id: ventaId })
+    bridge().venta.get({ id: ventaId })
       .then((result: VentaData | null) => {
         if (!result) { setError('Venta no encontrada'); return; }
         setData(result);
@@ -92,7 +92,7 @@ export function VentaDetalleModal({ ventaId, onClose, onAnulada }: Readonly<Prop
     setPrinting(true);
     try {
       const html = buildTicketHtml(data.venta, data.detalles);
-      await (globalThis as any).ferreteria.catalogo.print.html(html);
+      await bridge().catalogo.print.html(html);
     } catch {
       // print cancelled or failed — no action needed
     } finally {

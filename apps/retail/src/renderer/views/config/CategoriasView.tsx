@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@core/ui';
+import { useAuth, bridge } from '@core/ui';
 import { useEscapeToClose } from '@core/ui';
 import { rutearCampoError } from '@core/ui';
 import { useToast } from '@core/ui';
@@ -24,7 +24,7 @@ export function CategoriasView() {
   const [filtroEstado, setFiltroEstado] = useState<'activas' | 'inactivas' | 'todas'>('todas');
 
   async function cargar() {
-    const data = await (globalThis as any).ferreteria.catalogo.categoria.listAll();
+    const data = await bridge().catalogo.categoria.listAll();
     setCategorias(data);
   }
 
@@ -32,7 +32,7 @@ export function CategoriasView() {
 
   async function handleDesactivar(id: string) {
     try {
-      await (globalThis as any).ferreteria.catalogo.categoria.desactivar({ id });
+      await bridge().catalogo.categoria.desactivar({ id });
       setErrores(prev => { const next = { ...prev }; delete next[id]; return next; });
       await cargar();
       toast.success('Categoría dada de baja');
@@ -48,7 +48,7 @@ export function CategoriasView() {
   }
 
   async function handleReactivar(id: string) {
-    await (globalThis as any).ferreteria.catalogo.categoria.reactivar({ id });
+    await bridge().catalogo.categoria.reactivar({ id });
     await cargar();
     toast.success('Categoría reactivada');
   }
@@ -185,13 +185,13 @@ function CategoriaModal({ categorias, initial, onClose, onSaved }: {
     setCampoError(null);
     try {
       if (initial) {
-        await (globalThis as any).ferreteria.catalogo.categoria.update({
+        await bridge().catalogo.categoria.update({
           id: initial.id, nombre: nombre.trim(),
           descripcion: descripcion.trim() || null,
           categoria_padre_id: padreId || null,
         });
       } else {
-        await (globalThis as any).ferreteria.catalogo.categoria.create({
+        await bridge().catalogo.categoria.create({
           nombre: nombre.trim(),
           descripcion: descripcion.trim() || null,
           categoria_padre_id: padreId || null,

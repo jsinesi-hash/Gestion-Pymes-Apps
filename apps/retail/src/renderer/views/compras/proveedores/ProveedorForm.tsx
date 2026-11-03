@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { DireccionGeo, type DireccionGeoValue } from '@core/ui';
+import { DireccionGeo, type DireccionGeoValue, bridge } from '@core/ui';
 import { formatDocumento, validarDocumento, validarTelefono, validarCodigoPostal } from '@core/ui';
 import { useMotorPreciosV2Habilitado } from '../../../hooks/useMotorPrecios';
 import { useCallIpc } from '@core/ui';
@@ -68,7 +68,7 @@ export function ProveedorForm() {
 
   useEffect(() => {
     if (!id) return;
-    (globalThis as any).ferreteria.compras.proveedor.get(id).then((p: any) => {
+    bridge().compras.proveedor.get(id).then((p: any) => {
       if (!p) return;
       setForm({
         tipo_documento:     p.tipo_documento    ?? 'CUIT',
@@ -172,7 +172,7 @@ export function ProveedorForm() {
     };
     // ERR-1: callIpc traduce y muestra el error por toast; sólo navegamos si salió bien.
     const r = await callIpc<{ id: string }>(
-      () => (globalThis as any).ferreteria.compras.proveedor.upsert(payload),
+      () => bridge().compras.proveedor.upsert(payload),
       { success: modoEdicion ? 'Proveedor actualizado' : 'Proveedor creado' },
     );
     setSaving(false);

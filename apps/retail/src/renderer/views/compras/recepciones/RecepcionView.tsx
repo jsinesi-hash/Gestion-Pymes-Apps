@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useCallIpc } from '@core/ui';
+import { useCallIpc, bridge } from '@core/ui';
 
 // ADR-085 (SEC-2): campos del header que pueden enfocarse cuando el backend rechaza por
 // ellos. `orden_compra_id` no tiene input propio (viene de la ruta) y los errores de
@@ -62,7 +62,7 @@ export function RecepcionView() {
 
   useEffect(() => {
     if (!ocId) return;
-    (globalThis as any).ferreteria.compras.oc.get(ocId).then((data: OC | null) => {
+    bridge().compras.oc.get(ocId).then((data: OC | null) => {
       setOc(data);
       if (data) {
         setItems(data.items
@@ -123,7 +123,7 @@ export function RecepcionView() {
     };
     // ERR-1: callIpc traduce y muestra el error por toast; sólo navegamos si salió bien.
     const r = await callIpc(
-      () => (globalThis as any).ferreteria.compras.recepcion.crear(payload),
+      () => bridge().compras.recepcion.crear(payload),
       { success: 'Recepción registrada' },
     );
     setSaving(false);

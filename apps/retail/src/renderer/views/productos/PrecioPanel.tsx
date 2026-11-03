@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useListasPrecios } from '../../hooks/useListasPrecios';
 import { useListaPrecioValor } from '../../hooks/useListaPrecioValor';
-import { useAuth } from '@core/ui';
+import { useAuth, bridge } from '@core/ui';
 
 type Props = {
   productoId: string;
@@ -31,7 +31,7 @@ export function PrecioPanel({ productoId, precioVentaLista }: Readonly<Props>) {
     if (Number.isNaN(precioPesos) || precioPesos <= 0) return;
     setEditingListaId(null);
     try {
-      await (globalThis as any).ferreteria.precios.valor.setManual({
+      await bridge().precios.valor.setManual({
         listaId, productoId, precioCentavos: Math.round(precioPesos * 100),
       });
       await refetch();

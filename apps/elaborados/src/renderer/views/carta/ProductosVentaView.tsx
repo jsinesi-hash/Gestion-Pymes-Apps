@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth, useEscapeToClose, useToast, traducirError } from '@core/ui';
+import { useAuth, useEscapeToClose, useToast, traducirError, bridge } from '@core/ui';
 import { useProductosVenta } from '../../hooks/useProductosVenta';
 import { useCategoriasVenta } from '../../hooks/useCategoriasVenta';
 import { useArticulos } from '../../hooks/useArticulos';
@@ -25,7 +25,7 @@ export function ProductosVentaView() {
         {puedeGestionar && productos.length === 0 && (
           <button className="btn-secondary" onClick={async () => {
             try {
-              await (globalThis as any).elaborados.demoCatalog.seedHeladeria();
+              await bridge().demoCatalog.seedHeladeria();
               window.location.reload();
             } catch (e) {
               toast.error(traducirError(e).mensaje);
@@ -87,7 +87,7 @@ function ProductoVentaModal({ categorias, articulos, grupos, onClose, onCrear }:
     if (!nombre.trim() || !categoriaId || !precioCentavos) return;
     setSaving(true); setError(null);
     try {
-      const impuestoId = await (globalThis as any).elaborados.impuesto.list().then((r: any[]) => r.find((i) => i.predeterminado)?.id ?? r[0]?.id);
+      const impuestoId = await bridge().impuesto.list().then((r: any[]) => r.find((i) => i.predeterminado)?.id ?? r[0]?.id);
       await onCrear({
         nombre: nombre.trim(),
         categoria_venta_id: categoriaId,

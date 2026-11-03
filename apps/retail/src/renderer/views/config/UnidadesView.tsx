@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@core/ui';
+import { useAuth, bridge } from '@core/ui';
 import { useEscapeToClose } from '@core/ui';
 import { rutearCampoError } from '@core/ui';
 import { useToast } from '@core/ui';
@@ -20,7 +20,7 @@ export function UnidadesView() {
   const [filtroEstado, setFiltroEstado] = useState<'activas' | 'inactivas' | 'todas'>('todas');
 
   async function cargar() {
-    const data = await (globalThis as any).ferreteria.unidad.listAll();
+    const data = await bridge().unidad.listAll();
     setUnidades(data);
   }
 
@@ -28,7 +28,7 @@ export function UnidadesView() {
 
   async function handleDesactivar(id: string) {
     try {
-      await (globalThis as any).ferreteria.unidad.desactivar({ id });
+      await bridge().unidad.desactivar({ id });
       setErrores(prev => { const next = { ...prev }; delete next[id]; return next; });
       await cargar();
       toast.success('Unidad dada de baja');
@@ -44,7 +44,7 @@ export function UnidadesView() {
   }
 
   async function handleReactivar(id: string) {
-    await (globalThis as any).ferreteria.unidad.reactivar({ id });
+    await bridge().unidad.reactivar({ id });
     await cargar();
     toast.success('Unidad reactivada');
   }
@@ -195,13 +195,13 @@ function UnidadModal({ initial, onClose, onSaved }: {
     setCampoError(null);
     try {
       if (initial) {
-        await (globalThis as any).ferreteria.unidad.update({
+        await bridge().unidad.update({
           id: initial.id,
           nombre: nombre.trim(),
           abreviatura: abreviatura.trim(),
         });
       } else {
-        await (globalThis as any).ferreteria.unidad.create({
+        await bridge().unidad.create({
           nombre: nombre.trim(),
           abreviatura: abreviatura.trim(),
         });

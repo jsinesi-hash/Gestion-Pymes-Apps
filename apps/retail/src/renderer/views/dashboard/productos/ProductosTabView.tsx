@@ -6,6 +6,7 @@ import { StockPanel } from '../stock/StockPanel';
 import { AbcResumen } from './AbcResumen';
 import { MargenCategoriaChart } from './MargenCategoriaChart';
 
+import { bridge } from '@core/ui';
 type PS<T> = { loading: boolean; data: T | null; error: boolean };
 const init = <T,>(): PS<T> => ({ loading: true, data: null, error: false });
 
@@ -18,7 +19,7 @@ export function ProductosTabView({ period }: Props) {
 
   const stockLoaded = useRef(false);
   useEffect(() => {
-    const f = (window as any).ferreteria.dashboard;
+    const f = bridge().dashboard;
     const { desde, hasta } = period;
     setAbc(init()); setMargenCat(init());
 

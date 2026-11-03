@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import { bridge } from '@core/ui';
 export type TransportistaOption = { id: string; razon_social: string };
 
 export function useTransportistas() {
@@ -8,7 +9,7 @@ export function useTransportistas() {
 
   useEffect(() => {
     let vigente = true;
-    (globalThis as any).ferreteria.transportista.list({})
+    bridge().transportista.list({})
       .then((data: TransportistaOption[]) => { if (vigente) setTransportistas(data); })
       .finally(() => { if (vigente) setCargando(false); });
     return () => { vigente = false; };

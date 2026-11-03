@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@core/ui';
+import { useAuth, bridge } from '@core/ui';
 import { useEscapeToClose } from '@core/ui';
 import { rutearCampoError } from '@core/ui';
 import { useToast } from '@core/ui';
@@ -14,7 +14,7 @@ type UbicacionRow = {
 type ModalState = { mode: 'create' } | { mode: 'edit'; ubicacion: UbicacionRow } | null;
 type DeleteState = { ubicacion: UbicacionRow } | null;
 
-const ubi = () => (globalThis as any).ferreteria.catalogo.ubicacion;
+const ubi = () => bridge().catalogo.ubicacion;
 
 export function UbicacionesView() {
   const { can } = useAuth();

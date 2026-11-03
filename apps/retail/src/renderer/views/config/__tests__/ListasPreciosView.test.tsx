@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthContext } from '@core/ui';
-import { ListasPreciosView } from '../ListasPreciosView';
+import { ListasPreciosView, DetalleAjustesTab } from '../ListasPreciosView';
 
 const mockList   = vi.fn();
 const mockCreate = vi.fn();
@@ -47,6 +47,25 @@ beforeEach(() => {
       lista: { list: mockList, create: mockCreate, update: mockUpdate, deactivate: vi.fn() },
     },
   };
+});
+
+// Revisión 2026-10-20 (P1): con el flag del motor v2 apagado (default) la pestaña "Detalle" es
+// alcanzable y llamaba a `precios.detalle`, un namespace que ADR-081 retiró del preload: lanzaba
+// un TypeError dentro del efecto. El tipado de `bridge()` lo destapó.
+describe('DetalleAjustesTab (namespace precios.detalle retirado, ADR-081)', () => {
+  it('no se rompe sin precios.detalle: muestra la tabla vacía', async () => {
+    (window as any).ferreteria = { precios: {} };
+    render(<DetalleAjustesTab listaId="l1" listaAjuste={5} />);
+    await waitFor(() => expect(screen.getByText('Ajuste general')).toBeInTheDocument());
+  });
+
+  it('si el main lo vuelve a exponer, lista los ajustes', async () => {
+    const listByLista = vi.fn().mockResolvedValue([{ producto_id: 'p9', ajuste_porcentual: -3 }]);
+    (window as any).ferreteria = { precios: { detalle: { listByLista } } };
+    render(<DetalleAjustesTab listaId="l1" listaAjuste={5} />);
+    await waitFor(() => expect(screen.getByText('p9')).toBeInTheDocument());
+    expect(listByLista).toHaveBeenCalledWith('l1');
+  });
 });
 
 describe('ListasPreciosView', () => {

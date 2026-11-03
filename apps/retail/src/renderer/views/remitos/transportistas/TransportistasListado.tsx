@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useFilaNavegable } from '../../../hooks/useFilaNavegable';
-import { SearchBox, usePersistentListState } from '@core/ui';
+import { SearchBox, usePersistentListState, bridge } from '@core/ui';
 import { resaltarCoincidencia } from '@core/ui';
 import { ExportarButton } from '@core/ui';
 import { exportTransportistas } from '@ferreteria/shared';
@@ -22,7 +22,7 @@ export function TransportistasListado() {
 
   useEffect(() => {
     setLoading(true);
-    (globalThis as any).ferreteria.transportista.list({ incluirInactivos: true })
+    bridge().transportista.list({ incluirInactivos: true })
       .then((data: Transportista[]) => setTransportistas(data))
       .finally(() => setLoading(false));
   }, []);

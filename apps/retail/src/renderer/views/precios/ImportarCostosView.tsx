@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, type CSSProperties } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useImportacionCosto } from '../../hooks/useImportacionCosto';
-import { formatCurrency } from '@core/ui';
+import { formatCurrency, bridge } from '@core/ui';
 import { useImportacionCostoWizard } from '../../context/ImportacionCostoWizardContext';
 import { descargarReporteImportacion, type ColumnaReporte } from '../../lib/reporteImportacion';
 
@@ -294,7 +294,7 @@ export function ImportarCostosView() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    (window as any).ferreteria.compras.proveedor.list().then((list: Proveedor[]) =>
+    bridge().compras.proveedor.list().then((list: Proveedor[]) =>
       setProveedores(list.filter((p: any) => p.activo !== false))
     );
   }, []);

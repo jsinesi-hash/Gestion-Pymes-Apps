@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useEscapeAction } from '@core/ui';
+import { useEscapeAction, bridge } from '@core/ui';
 import { ProveedorProductosTab } from './ProveedorProductosTab';
 
 type Proveedor = {
@@ -42,7 +42,7 @@ export function ProveedorDetalle() {
 
   useEffect(() => {
     if (!id) return;
-    (globalThis as any).ferreteria.compras.proveedor.get(id)
+    bridge().compras.proveedor.get(id)
       .then((data: Proveedor | null) => setProveedor(data))
       .finally(() => setLoading(false));
   }, [id]);
@@ -53,7 +53,7 @@ export function ProveedorDetalle() {
     setConfirmando(true);
     setError(null);
     try {
-      await (globalThis as any).ferreteria.compras.proveedor.deactivate(id);
+      await bridge().compras.proveedor.deactivate(id);
       setProveedor(p => p ? { ...p, activo: false } : p);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al dar de baja el proveedor.');

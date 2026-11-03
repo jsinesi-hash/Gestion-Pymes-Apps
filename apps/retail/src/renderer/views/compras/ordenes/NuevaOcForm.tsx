@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCallIpc } from '@core/ui';
+import { useCallIpc, bridge } from '@core/ui';
 
 // ADR-085 (SEC-2): campos con input propio en este form; `tipo` va fijo en 'manual' y no
 // tiene control editable, así que un rechazo por ese campo cae en la región general.
@@ -18,7 +18,7 @@ export function NuevaOcForm() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    (globalThis as any).ferreteria.compras.proveedor.list()
+    bridge().compras.proveedor.list()
       .then((data: Proveedor[]) => setProveedores(data));
   }, []);
 
@@ -33,7 +33,7 @@ export function NuevaOcForm() {
     }
     setSaving(true);
     const r = await callIpc<{ id: string }>(
-      () => (globalThis as any).ferreteria.compras.oc.crear({
+      () => bridge().compras.oc.crear({
         proveedor_id:  form.proveedor_id,
         tipo:          'manual',
         observaciones: form.observaciones.trim() || undefined,

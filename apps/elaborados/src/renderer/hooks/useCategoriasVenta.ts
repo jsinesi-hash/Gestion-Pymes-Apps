@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-
+import { bridge } from '@core/ui';
 export type CategoriaVentaRow = { id: string; nombre: string; orden: number; activo: boolean };
 
 export function useCategoriasVenta() {
@@ -7,12 +7,12 @@ export function useCategoriasVenta() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    setCategorias(await (globalThis as any).elaborados.categoriaVenta.list());
+    setCategorias(await bridge().categoriaVenta.list());
   }, []);
   useEffect(() => { load().finally(() => setLoading(false)); }, [load]);
 
   async function crear(payload: { nombre: string; orden: number }) {
-    await (globalThis as any).elaborados.categoriaVenta.create(payload);
+    await bridge().categoriaVenta.create(payload);
     await load();
   }
 

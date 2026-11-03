@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { bridge } from '../bridge';
+import { bridge, type AppBridge } from '../bridge';
 
 export type SessionData = {
   id: string;
@@ -56,7 +56,9 @@ function applyPreferences(prefs: SessionData['preferencias']): void {
 
 function rebuildMenu(): void {
   // El menú nativo se reconstruye por rol; no romper si el bridge no está (tests).
-  const p = bridge().menu?.rebuild?.();
+  // `menu` es un namespace de Retail (no del catálogo universal): se declara opcional acá.
+  const b: AppBridge & { menu?: { rebuild?: () => Promise<unknown> } } = bridge();
+  const p = b.menu?.rebuild?.();
   if (p && typeof p.catch === 'function') p.catch(() => {});
 }
 

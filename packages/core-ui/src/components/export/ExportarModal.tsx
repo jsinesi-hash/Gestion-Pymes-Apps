@@ -36,7 +36,9 @@ export function ExportarModal({ definicion, filtrosActivos, onClose }: Readonly<
         perfilId,
         formato,
         alcance,
-        filtros: alcance === 'filtrado' ? filtrosActivos : undefined,
+        // Sin clave `filtros` (en vez de `filtros: undefined`) cuando no aplica: `ExportRequest` no
+        // admite `undefined` explícito (exactOptionalPropertyTypes). Por IPC es equivalente.
+        ...(alcance === 'filtrado' && filtrosActivos ? { filtros: filtrosActivos } : {}),
       });
       onClose();
     } catch (err: any) {

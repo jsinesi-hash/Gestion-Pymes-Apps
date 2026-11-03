@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useEscapeToClose } from '@core/ui';
+import { useEscapeToClose, bridge } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 
 type Presentacion = {
@@ -20,7 +20,7 @@ type ModalState =
   | { mode: 'edit'; presentacion: Presentacion }
   | null;
 
-const f = () => (globalThis as any).ferreteria;
+const f = () => bridge();
 
 // ADR-085 (SEC-2): campos del form de alta/edición que pueden recibir un error de
 // validación del backend y tienen un control focoable propio.

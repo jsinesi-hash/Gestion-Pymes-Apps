@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEscapeAction } from '@core/ui';
+import { useEscapeAction, bridge } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 import { AltaExpressModal } from '../../productos/AltaExpressModal';
 
@@ -71,14 +71,14 @@ export function OrdenCompraDetalle() {
 
   const refresh = useCallback(() => {
     if (!id) return;
-    (globalThis as any).ferreteria.compras.oc.get(id)
+    bridge().compras.oc.get(id)
       .then((data: OC | null) => setOc(data))
       .finally(() => setLoading(false));
   }, [id]);
 
   useEffect(() => {
     refresh();
-    (globalThis as any).ferreteria.catalogo.producto.list({})
+    bridge().catalogo.producto.list({})
       .then((data: { items: Producto[] }) => setProductos(data.items));
   }, [refresh]);
 
@@ -89,7 +89,7 @@ export function OrdenCompraDetalle() {
     setError(null);
     setSaving(true);
     const r = await callIpc(
-      () => (globalThis as any).ferreteria.compras.oc.emitir(id),
+      () => bridge().compras.oc.emitir(id),
       { success: 'Orden emitida' },
     );
     setSaving(false);
@@ -102,7 +102,7 @@ export function OrdenCompraDetalle() {
     setError(null);
     setSaving(true);
     const r = await callIpc(
-      () => (globalThis as any).ferreteria.compras.oc.anular(id),
+      () => bridge().compras.oc.anular(id),
       { success: 'Orden anulada' },
     );
     setSaving(false);
@@ -117,7 +117,7 @@ export function OrdenCompraDetalle() {
     setFieldErrors({});
     setSaving(true);
     const r = await callIpc(
-      () => (globalThis as any).ferreteria.compras.oc.agregarItem({
+      () => bridge().compras.oc.agregarItem({
         orden_compra_id:         id,
         producto_id:             addForm.producto_id,
         descripcion:             addForm.descripcion || prod?.nombre_corto || '',
@@ -150,7 +150,7 @@ export function OrdenCompraDetalle() {
     setFieldErrors({});
     setSaving(true);
     const r = await callIpc(
-      () => (globalThis as any).ferreteria.compras.oc.actualizarItem({
+      () => bridge().compras.oc.actualizarItem({
         item_id:                 editItem.id,
         cantidad_pedida:         Number.parseFloat(editItem.cantidad) || undefined,
         costo_unitario_centavos: arsToCentavos(editItem.costo),
@@ -176,7 +176,7 @@ export function OrdenCompraDetalle() {
 
   async function handleRemoveItem(itemId: string) {
     if (!window.confirm('¿Eliminar este ítem?')) return;
-    await (globalThis as any).ferreteria.compras.oc.eliminarItem(itemId);
+    await bridge().compras.oc.eliminarItem(itemId);
     refresh();
   }
 

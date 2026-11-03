@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Period } from '../hooks/usePeriod';
 import type { DashboardClientesRango, DashboardClientesEstado } from '../../../../main/ipc/dashboard-clientes';
 
+import { bridge } from '@core/ui';
 type PS<T> = { loading: boolean; data: T | null; error: boolean };
 const init = <T,>(): PS<T> => ({ loading: true, data: null, error: false });
 
@@ -31,7 +32,7 @@ export function ClientesTabView({ period }: Props) {
   useEffect(() => {
     if (!estadoLoaded.current) {
       estadoLoaded.current = true;
-      (window as any).ferreteria.dashboard.clientesEstado()
+      bridge().dashboard.clientesEstado()
         .then((data: DashboardClientesEstado) => setEstado({ loading: false, data, error: false }))
         .catch(() => setEstado({ loading: false, data: null, error: true }));
     }
@@ -39,7 +40,7 @@ export function ClientesTabView({ period }: Props) {
 
   useEffect(() => {
     setRango(init());
-    (window as any).ferreteria.dashboard
+    bridge().dashboard
       .clientesRango({ desde: period.desde, hasta: period.hasta })
       .then((data: DashboardClientesRango) => setRango({ loading: false, data, error: false }))
       .catch(() => setRango({ loading: false, data: null, error: true }));

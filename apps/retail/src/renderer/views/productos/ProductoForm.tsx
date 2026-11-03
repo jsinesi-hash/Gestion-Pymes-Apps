@@ -6,7 +6,7 @@ import { useMarcas } from '../../hooks/useMarcas';
 import { useImpuestos } from '../../hooks/useImpuestos';
 import { useUbicaciones } from '../../hooks/useUbicaciones';
 import { useUnidades } from '../../hooks/useUnidades';
-import { useEscapeToClose } from '@core/ui';
+import { useEscapeToClose, bridge } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 
 type FormState = {
@@ -142,7 +142,7 @@ export function ProductoForm() {
       ubicacion_id: form.ubicacion_id || undefined,
       ...(stock_inicial ? { stock_inicial } : {}),
     };
-    const ferr = (globalThis as any).ferreteria.catalogo.producto;
+    const ferr = bridge().catalogo.producto;
     // ERR-1: callIpc traduce y muestra el error por toast; sólo navegamos si salió bien.
     const r = await callIpc<{ id: string }>(
       () => (modoEdicion ? ferr.update({ id, ...payload }) : ferr.create(payload)),

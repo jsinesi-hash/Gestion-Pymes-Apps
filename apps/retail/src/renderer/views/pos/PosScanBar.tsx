@@ -4,6 +4,7 @@ import { useProductosSimilares } from '../../hooks/useProductosSimilares';
 import { useBusquedaSimilaresHabilitado } from '../../hooks/useBusquedaSimilaresHabilitado';
 import { AltaExpressModal } from '../productos/AltaExpressModal';
 
+import { bridge } from '@core/ui';
 type Props = {
   onAdd: (productoId: string, presentacionId?: string | null, factorAStock?: number) => Promise<void>;
   disabled?: boolean;
@@ -46,7 +47,7 @@ export function PosScanBar({ onAdd, disabled, clienteId, inputRef: inputRefExter
     if (!query.trim()) { setResults([]); setBuscoSinResultado(false); return; }
     setSearching(true);
     try {
-      const f = (globalThis as any).ferreteria;
+      const f = bridge();
       // Try presentation GTIN first
       const ppHit = await (f.presentacion?.buscarPorGtin?.({ gtin: query.trim() }) ?? Promise.resolve(null)).catch(() => null);
       if (ppHit) {

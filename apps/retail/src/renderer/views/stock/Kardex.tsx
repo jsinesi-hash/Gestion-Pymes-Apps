@@ -7,6 +7,7 @@ import { StockEntradaModal } from './StockEntradaModal';
 import { StockAjusteModal } from './StockAjusteModal';
 import { StockMermaModal } from './StockMermaModal';
 
+import { bridge } from '@core/ui';
 type ModalType = 'entrada' | 'ajuste' | 'merma' | null;
 
 const PAGE_SIZE = 20;
@@ -61,7 +62,7 @@ export function Kardex() {
 
   useEffect(() => {
     if (!productoId) return;
-    (globalThis as any).ferreteria.catalogo.producto.get({ id: productoId })
+    bridge().catalogo.producto.get({ id: productoId })
       .then((p: any) => { if (p) setNombreProducto(p.nombre_largo ?? p.nombre_corto); })
       .catch(() => {});
   }, [productoId]);

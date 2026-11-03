@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@core/ui';
+import { useAuth, bridge } from '@core/ui';
 import { useEscapeToClose } from '@core/ui';
 import { rutearCampoError } from '@core/ui';
 import { useToast } from '@core/ui';
@@ -20,7 +20,7 @@ export function MarcasView() {
   const [filtroEstado, setFiltroEstado] = useState<'activas' | 'inactivas' | 'todas'>('todas');
 
   async function cargar() {
-    const data = await (globalThis as any).ferreteria.catalogo.marca.listAll();
+    const data = await bridge().catalogo.marca.listAll();
     setMarcas(data);
   }
 
@@ -28,7 +28,7 @@ export function MarcasView() {
 
   async function handleDesactivar(id: string) {
     try {
-      await (globalThis as any).ferreteria.catalogo.marca.desactivar({ id });
+      await bridge().catalogo.marca.desactivar({ id });
       setErrores(prev => { const next = { ...prev }; delete next[id]; return next; });
       await cargar();
       toast.success('Marca dada de baja');
@@ -44,7 +44,7 @@ export function MarcasView() {
   }
 
   async function handleReactivar(id: string) {
-    await (globalThis as any).ferreteria.catalogo.marca.reactivar({ id });
+    await bridge().catalogo.marca.reactivar({ id });
     await cargar();
     toast.success('Marca reactivada');
   }
@@ -165,11 +165,11 @@ function MarcaModal({ initial, onClose, onSaved }: {
     setSaving(true); setError(null); setCampoError(null);
     try {
       if (initial) {
-        await (globalThis as any).ferreteria.catalogo.marca.update({
+        await bridge().catalogo.marca.update({
           id: initial.id, nombre: nombre.trim(), descripcion: descripcion.trim() || null,
         });
       } else {
-        await (globalThis as any).ferreteria.catalogo.marca.create({
+        await bridge().catalogo.marca.create({
           nombre: nombre.trim(), descripcion: descripcion.trim() || null,
         });
       }

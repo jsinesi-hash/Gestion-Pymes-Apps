@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth, ConfirmarVentaModal, TicketModal, AnulacionModal } from '@core/ui';
+import { useAuth, ConfirmarVentaModal, TicketModal, AnulacionModal, bridge } from '@core/ui';
 import { usePosSessionContext } from '../../context/PosSessionContext';
 import type { VentaPagoPayload } from '../../hooks/usePosSession';
 import { PosItemsTable } from './PosItemsTable';
@@ -237,7 +237,7 @@ export function PosView() {
         <TicketModal
           comprobante={ticketDesdeVentaRetail(ventaResult, clienteInfo?.nombre_completo ?? 'Consumidor Final', pagosConfirmados)}
           onNuevaVenta={() => { reset(); setVentaResult(null); }}
-          onImprimir={(html) => (globalThis as any).ferreteria.catalogo.print.html(html)}
+          onImprimir={(html) => bridge().catalogo.print.html(html)}
           {...(can('venta.anular')
             ? { anulacion: ({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void }) => <AnulacionModal ventaId={ventaResult.venta.id} onSuccess={onSuccess} onCancel={onCancel} /> }
             : {})}

@@ -325,6 +325,9 @@ importers:
 
   packages/core-ui:
     dependencies:
+      '@core/preload':
+        specifier: workspace:*
+        version: link:../core-preload
       '@ferreteria/shared':
         specifier: workspace:*
         version: link:../shared

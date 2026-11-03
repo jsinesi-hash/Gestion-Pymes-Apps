@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@core/ui';
+import { useAuth, bridge } from '@core/ui';
 import type { MenuAccion } from '../../main/menu/appMenuTemplate';
 
 // Mapa acción → ruta. Las acciones que no navegan (cerrar-sesion) se manejan aparte.
@@ -28,7 +28,7 @@ export function useMenuAcciones(): void {
   const { logout } = useAuth();
 
   useEffect(() => {
-    const api = (globalThis as any).ferreteria?.menu;
+    const api = bridge()?.menu;
     if (!api?.onAccion) return;
 
     const unsub = api.onAccion((payload: { action: string }) => {

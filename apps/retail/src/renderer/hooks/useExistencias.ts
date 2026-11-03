@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { bridge } from '@core/ui';
 export type Existencias = {
   id: string;
   productoId: string;
@@ -16,7 +17,7 @@ export function useExistencias(productoId: string) {
   const refetch = useCallback(async () => {
     setLoading(true);
     try {
-      const data: any = await (globalThis as any).ferreteria.catalogo.existencias.get({ producto_id: productoId });
+      const data: any = await bridge().catalogo.existencias.get({ producto_id: productoId });
       if (!data) { setExistencias(null); return; }
       setExistencias({
         id: data.id,

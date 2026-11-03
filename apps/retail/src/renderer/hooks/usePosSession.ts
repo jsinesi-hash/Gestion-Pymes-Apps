@@ -3,6 +3,7 @@ import { resolverPrecio, redondearPeso, nombreCompletoCliente } from '@ferreteri
 
 export const CONSUMIDOR_FINAL_ID = 'cf000000-0000-0000-0000-000000000001';
 
+import { bridge } from '@core/ui';
 import type { MedioPago, VentaPagoPayload } from '@core/ui';
 export type { MedioPago, VentaPagoPayload };
 
@@ -55,7 +56,7 @@ type ClienteInfo = {
   telefono?: string | null;
 };
 
-const f = () => (globalThis as any).ferreteria;
+const f = () => bridge();
 
 export function usePosSession() {
   const [cajaActiva, setCajaActiva] = useState<any>(undefined);
@@ -398,7 +399,9 @@ export function usePosSession() {
 
     setLoading(true);
     try {
-      return await f().venta.confirmar({
+      // Payload tipado (revisión 2026-10-20, P1). Las claves opcionales se omiten en vez de pasar
+      // `undefined` explícito (exactOptionalPropertyTypes); por IPC es equivalente.
+      return await bridge().venta.confirmar({
         caja_id: cajaActiva.id,
         cliente_id: clienteId,
         lineas: lineasPayload,
@@ -409,9 +412,9 @@ export function usePosSession() {
         ajuste_redondeo: ajusteRedondeoCentavos / 100,
         pagos,
         vuelto_centavos,
-        venta_en_espera_id: ventaEnEsperaId ?? undefined,
-        presupuesto_id: presupuestoId ?? undefined,
-        supervisor_credenciales: supervisorCredenciales,
+        ...(ventaEnEsperaId ? { venta_en_espera_id: ventaEnEsperaId } : {}),
+        ...(presupuestoId ? { presupuesto_id: presupuestoId } : {}),
+        ...(supervisorCredenciales ? { supervisor_credenciales: supervisorCredenciales } : {}),
       });
     } finally {
       setLoading(false);

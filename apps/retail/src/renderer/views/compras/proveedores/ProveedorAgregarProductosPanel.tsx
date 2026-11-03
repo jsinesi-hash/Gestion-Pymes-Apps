@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { bridge } from '@core/ui';
 type Prod = { id: string; sku: string; nombre_corto: string; categoria_id: string; marca_id?: string | null };
 type Cat = { id: string; nombre: string };
 type Marca = { id: string; nombre: string };
 type Sel = { costo: string; codigo: string };
 
-const f = () => (globalThis as any).ferreteria;
+const f = () => bridge();
 
 /**
  * ADR-084 — alta masiva de productos en un proveedor, como PANTALLA (no modal). Reemplaza in

@@ -12,6 +12,7 @@ import { HeatmapVentas } from './HeatmapVentas';
 import { DiaMesChart } from './DiaMesChart';
 import { RankingVendedor } from './RankingVendedor';
 
+import { bridge } from '@core/ui';
 type PS<T> = { loading: boolean; data: T | null; error: boolean };
 const init = <T,>(): PS<T> => ({ loading: true, data: null, error: false });
 
@@ -36,13 +37,13 @@ export function VentasTabView({ period }: Props) {
   useEffect(() => {
     if (catLoaded.current) return;
     catLoaded.current = true;
-    (window as any).ferreteria.catalogo.categoria.list()
+    bridge().catalogo.categoria.list()
       .then((rows: Categoria[]) => setCategorias(rows))
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    const f = (window as any).ferreteria.dashboard;
+    const f = bridge().dashboard;
     const { desde, hasta, desde_anterior, hasta_anterior } = period;
     setKpis(init()); setEvol(init()); setHeatmap(init()); setDiaMes(init()); setVendedor(init());
 

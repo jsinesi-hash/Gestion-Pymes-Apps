@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { nombreCompletoCliente } from '@ferreteria/shared';
 import { CONSUMIDOR_FINAL_ID } from '../../hooks/usePosSession';
 
+import { bridge } from '@core/ui';
 type ClienteInfo = {
   nombre_completo: string;
   habilita_ccc: boolean;
@@ -108,7 +109,7 @@ export function PosClienteSelector({ clienteInfo, onSeleccionar }: Readonly<Prop
         return;
       }
       try {
-        const todos: ClienteRow[] = await (globalThis as any).ferreteria.cliente.list();
+        const todos: ClienteRow[] = await bridge().cliente.list();
         if (!mountedRef.current || myReq !== reqIdRef.current) return;
         const lower = value.toLowerCase();
         const filtered = todos.filter(c =>

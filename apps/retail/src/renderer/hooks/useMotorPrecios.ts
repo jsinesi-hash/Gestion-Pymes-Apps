@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import { bridge } from '@core/ui';
 /**
  * Feature flag motor_precios_v2_habilitado (ADR-049). Default false: si el parámetro
  * no existe o la lectura falla, el Motor de Precios v2 queda apagado y las pantallas
@@ -10,7 +11,7 @@ export function useMotorPreciosV2Habilitado(): boolean {
 
   useEffect(() => {
     let vigente = true;
-    const p = (globalThis as any).ferreteria?.parametros?.get?.({ clave: 'motor_precios_v2_habilitado' });
+    const p = bridge()?.parametros?.get?.({ clave: 'motor_precios_v2_habilitado' });
     Promise.resolve(p)
       .then((v: string | null) => { if (vigente) setHabilitado(v === 'true'); })
       .catch(() => { if (vigente) setHabilitado(false); });
