@@ -1,7 +1,7 @@
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import {
-  confirmarVenta, anularVenta, ventaListByCajaHandler, requirePermission,
+  confirmarVenta, anularVenta, requirePermission,
   str, optStr, optId, num, centavos, oneOf, arr, id as vId,
   type VentaPagoPayload, type AplicarLineasCtx,
   requireSession,
@@ -370,5 +370,4 @@ export function registerVentaHandlers(ipcMain: IpcMain, db: Db): void {
   ipcMain.handle('venta:anular',    async (_e, p) => ventaAnularHandler(db, p));    // permiso + supervisor en el core
   ipcMain.handle('venta:catalogo', async (_e, p) => ventaCatalogoHandler(db, p));
   ipcMain.handle('venta:get',       async (_e, p) => ventaGetHandler(db, p));
-  ipcMain.handle('venta:listByCaja', async (_e, p) => ventaListByCajaHandler(db, p));
 }

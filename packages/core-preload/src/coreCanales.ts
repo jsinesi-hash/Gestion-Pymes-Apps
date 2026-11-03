@@ -87,6 +87,12 @@ export function coreCanales(invoke: Invoke) {
       seleccionarArchivo: (): Promise<string | null> => invoke('dialog:seleccionarArchivo'),
       getDefaultBackupPath: (): Promise<string> => invoke('dialog:getDefaultBackupPath'),
     },
+    // Revisión 2026-10-20 (P2): `venta.listByCaja` lo usa la vista de caja del core; el resto de
+    // `venta` lo aporta cada app (se fusiona por método en createBridge).
+    venta: {
+      listByCaja: (p: { caja_id: string }): Promise<any[]> => invoke('venta:listByCaja', p),
+    },
+    menu: { rebuild: (): Promise<void> => invoke('menu:rebuild') },
     print: { html: (h: string) => invoke('print:html', h) },
     exportar: { ejecutar: (req: ExportRequest): Promise<void> => invoke('exportar:ejecutar', req) },
   };

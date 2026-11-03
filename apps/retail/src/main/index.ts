@@ -74,7 +74,11 @@ async function createWindow(): Promise<void> {
     webPreferences: { nodeIntegration: false, contextIsolation: true },
   }));
 
+  // El menú nativo necesita la ventana, que se crea más abajo: el canal universal `menu:rebuild`
+  // (core) llama a esta referencia, que se completa al instalar el menú.
+  let reconstruirMenu: () => void = () => {};
   registerCoreHandlers(ipcMain, db, {
+    reconstruirMenu: () => reconstruirMenu(),
     migrationsFolder: path.join(__dirname, 'migrations'),
     navegacion: navegacionRetail,
     exportadores: EXPORTADORES_RETAIL,
@@ -162,10 +166,10 @@ async function createWindow(): Promise<void> {
     win.show();
   });
 
-  // Menú nativo propio (Base + Operación). Se reconstruye por rol vía 'menu:rebuild'
+  // Menú nativo propio (Base + Operación). Se reconstruye por rol vía 'menu:rebuild' (core)
   // que el renderer invoca tras login/logout/rehidratación (ver AuthContext).
   const isDev = !app.isPackaged;
-  const rebuildMenu = (): void => {
+  reconstruirMenu = (): void => {
     const sesion = getSession();
     installAppMenu(win, {
       permisos: sesion?.permisos ?? new Set<string>(),
@@ -173,8 +177,7 @@ async function createWindow(): Promise<void> {
       isDev,
     });
   };
-  rebuildMenu();
-  ipcMain.handle('menu:rebuild', () => { rebuildMenu(); });
+  reconstruirMenu();
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     win.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);

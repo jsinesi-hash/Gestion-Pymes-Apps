@@ -14,6 +14,8 @@ import { registerCajaHandlers, type CajaHooks } from './ipc/caja';
 import { registerBackupHandlers } from './ipc/backup';
 import { registerRestoreHandlers } from './ipc/restore';
 import { registerDialogHandlers } from './ipc/dialog';
+import { registerMenuHandlers } from './ipc/menu';
+import { registerVentaListByCajaHandler } from './venta/listar-por-caja';
 import { registerPrintHtmlHandler, type ImpresorHtml } from './ipc/print';
 import { registerExportarHandlers, crearExportarEjecutar, EXPORTADORES_CORE, type Exportador } from './ipc/exportar';
 
@@ -24,6 +26,8 @@ export type CoreHandlersOpts = {
   caja?: CajaHooks;
   proveedor?: ProveedorHooks;
   imprimirHtml?: ImpresorHtml;
+  /** Reconstruye el menú nativo según la sesión; la app lo inyecta (el core no conoce su menú). */
+  reconstruirMenu?: () => void;
 };
 
 /** Registra TODOS los canales IPC universales. Lo llama el main/index.ts de cada app. */
@@ -40,6 +44,8 @@ export function registerCoreHandlers(ipcMain: IpcMain, db: BetterSQLite3Database
   registerBackupHandlers(ipcMain, db);
   registerRestoreHandlers(ipcMain, db, { migrationsFolder: opts.migrationsFolder });
   registerDialogHandlers(ipcMain);
+  registerVentaListByCajaHandler(ipcMain, db as never);
+  registerMenuHandlers(ipcMain, opts.reconstruirMenu);
   registerExportarHandlers(ipcMain, db, crearExportarEjecutar([...EXPORTADORES_CORE, ...(opts.exportadores ?? [])]));
   if (opts.imprimirHtml) registerPrintHtmlHandler(ipcMain, opts.imprimirHtml);
 }

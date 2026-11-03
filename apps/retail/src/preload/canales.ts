@@ -139,7 +139,6 @@ export function canalesRetail(invoke: Invoke, ipcRenderer: BridgeDeps['ipcRender
       confirmar:  (p: VentaConfirmarPayload) =>
         invoke('venta:confirmar', p) as Promise<ReturnType<typeof ventaConfirmarHandler>>,
       anular:     (p: VentaAnularPayload) => invoke('venta:anular', p),
-      listByCaja: (p: unknown) => invoke('venta:listByCaja', p),
       get:        (p: unknown) => invoke('venta:get', p),
       espera: {
         pausar:    (p: unknown) => invoke('venta.espera:pausar', p),
@@ -354,8 +353,7 @@ export function canalesRetail(invoke: Invoke, ipcRenderer: BridgeDeps['ipcRender
         ipcRenderer.on('menu:accion', handler);
         return () => ipcRenderer.removeListener('menu:accion', handler);
       },
-      // Pide al main reconstruir el menú según la sesión actual.
-      rebuild: () => invoke('menu:rebuild'),
+      // `rebuild` es universal: viene de coreCanales (menu:rebuild).
     },
   };
 }

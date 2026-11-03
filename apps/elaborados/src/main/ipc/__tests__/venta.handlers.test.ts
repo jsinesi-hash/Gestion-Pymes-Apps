@@ -463,11 +463,11 @@ describe('venta handlers (Elaborados)', () => {
   });
 
   describe('registerVentaHandlers', () => {
-    it('registra los 6 canales venta:*', () => {
+    it('registra los 5 canales venta:* (listByCaja es del núcleo)', () => {
       const handle = vi.fn();
       registerVentaHandlers({ handle } as never, db);
       expect(handle.mock.calls.map((c) => c[0]).sort()).toEqual(
-        ['venta:anular', 'venta:catalogo', 'venta:confirmar', 'venta:cotizar', 'venta:get', 'venta:listByCaja'],
+        ['venta:anular', 'venta:catalogo', 'venta:confirmar', 'venta:cotizar', 'venta:get'],
       );
     });
   });

@@ -1,4 +1,4 @@
-import { bridge, type AppBridge } from '../../bridge';
+import { bridge } from '../../bridge';
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { CajaActiva } from '../../hooks/useCajaActiva';
@@ -57,8 +57,7 @@ export function CajaDashboard({ caja, onRefetch, renderVentaDetalle }: Readonly<
   const duracionM = duracionMin % 60;
 
   async function cargarDatos() {
-    // `venta` lo aporta cada app (no está en el catálogo universal): se declara lo que se usa.
-    const f: AppBridge & { venta: { listByCaja(p: unknown): Promise<any[]> } } = bridge() as never;
+    const f = bridge();
     const [v, m] = await Promise.all([
       f.venta.listByCaja({ caja_id: caja.id }).catch(() => []),
       f.caja.listMovimientos({ caja_id: caja.id }).catch(() => []),

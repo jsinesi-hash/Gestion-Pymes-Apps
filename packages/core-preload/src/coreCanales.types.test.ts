@@ -31,6 +31,16 @@ describe('coreCanales — impuesto (movido al núcleo, P2 2026-10-20)', () => {
   });
 });
 
+describe('coreCanales — venta.listByCaja y menu.rebuild (movidos al núcleo, P2 2026-10-20)', () => {
+  it('invocan venta:listByCaja y menu:rebuild', async () => {
+    const invocados: unknown[][] = [];
+    const api = coreCanales(async (...a) => { invocados.push(a); return []; });
+    await api.venta.listByCaja({ caja_id: 'c1' });
+    await api.menu.rebuild();
+    expect(invocados).toEqual([['venta:listByCaja', { caja_id: 'c1' }], ['menu:rebuild']]);
+  });
+});
+
 describe('CoreBridgeApi', () => {
   it('es el tipo de lo que devuelve coreCanales', () => {
     const invocados: string[] = [];
