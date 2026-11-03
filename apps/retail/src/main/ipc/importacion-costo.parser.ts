@@ -7,6 +7,8 @@
 // proveedor manda otro formato, se adapta el archivo antes de subirlo, no al revés.
 // Encabezado siempre en la primera fila; delimitador de CSV auto-detectado (`;` o `,`).
 
+import { leerCsv } from '@ferreteria/shared';
+
 export type FilaParseada = {
   fila_num: number;
   datos_crudos: Record<string, string>;
@@ -34,48 +36,17 @@ export const HEADERS_FIJOS = {
   nombreAlt: 'NOMBRE',
 } as const;
 
-function detectarDelimitador(headerLine: string): string {
-  const puntoYComa = headerLine.split(';').length - 1;
-  const coma = headerLine.split(',').length - 1;
-  return puntoYComa >= coma ? ';' : ',';
-}
-
 // Parsea el contenido de un CSV en texto plano (encabezado siempre en la primera fila,
 // delimitador auto-detectado). Retorna headers como Map<nombre_upper → índice> y filas
 // de datos como arrays de strings.
 export function parseCsvContent(
   content: string,
 ): { headers: Map<string, number>; rows: string[][] } {
-  const lines = content.split(/\r?\n/).filter(l => l.trim() !== '');
-  if (lines.length === 0) return { headers: new Map(), rows: [] };
+  const [headerCells, ...rows] = leerCsv(content, { delimitador: 'auto', recortar: true });
+  if (!headerCells) return { headers: new Map(), rows: [] };
 
-  const delimiter = detectarDelimitador(lines[0]);
-
-  const parseLine = (line: string): string[] => {
-    const fields: string[] = [];
-    let field = '';
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') {
-        inQuotes = !inQuotes;
-      } else if (!inQuotes && line.startsWith(delimiter, i)) {
-        fields.push(field.trim());
-        field = '';
-        i += delimiter.length - 1;
-      } else {
-        field += ch;
-      }
-    }
-    fields.push(field.trim());
-    return fields;
-  };
-
-  const headerCells = parseLine(lines[0]);
   const headers = new Map<string, number>();
   headerCells.forEach((h, i) => { if (h) headers.set(h.toUpperCase(), i); });
-
-  const rows = lines.slice(1).map(parseLine);
   return { headers, rows };
 }
 

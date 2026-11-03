@@ -12,6 +12,13 @@ import { setupDb, loginAsAdmin, clearSession } from './helpers';
 import { runCatalogSeed } from '../../catalog/seed';
 
 describe('csvToRows', () => {
+  // Lector único (@ferreteria/shared `leerCsv`): antes no manejaba BOM ni saltos de línea en comillas.
+  it('quita el BOM que agrega Excel (el encabezado de la primera columna debe coincidir)', () => {
+    expect(csvToRows('\uFEFFnombre;precio\nTornillo;100')[0]).toEqual(['nombre', 'precio']);
+  });
+  it('un salto de línea dentro de comillas no parte la fila', () => {
+    expect(csvToRows('n;d\nTornillo;"línea1\nlínea2"')).toEqual([['n', 'd'], ['Tornillo', 'línea1\nlínea2']]);
+  });
   it('parsea CSV simple', () => {
     expect(csvToRows('nombre,precio\nTornillo,100')).toEqual([
       ['nombre', 'precio'], ['Tornillo', '100'],
