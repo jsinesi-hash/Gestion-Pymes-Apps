@@ -103,6 +103,12 @@ export function coreCanales(invoke: Invoke) {
       listByCaja: (p: { caja_id: string }): Promise<any[]> => invoke('venta:listByCaja', p),
     },
     menu: { rebuild: (): Promise<void> => invoke('menu:rebuild') },
+    // ADR-140: registro de errores del sistema (jobs y errores no capturados), solo Supervisor.
+    sistema: {
+      erroresListar: (): Promise<Array<{ id: string; fecha: number; origen: string; mensaje: string; detalle: string | null }>> =>
+        invoke('sistema:erroresListar'),
+      erroresLimpiar: (): Promise<{ ok: true }> => invoke('sistema:erroresLimpiar'),
+    },
     print: { html: (h: string) => invoke('print:html', h) },
     exportar: { ejecutar: (req: ExportRequest): Promise<void> => invoke('exportar:ejecutar', req) },
   };

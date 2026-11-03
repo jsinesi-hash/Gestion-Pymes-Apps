@@ -1,4 +1,5 @@
 import type { EventEmitter } from 'node:events';
+import { registroErrores } from './registro-errores';
 
 // Revisión 2026-10-20 (P0): tareas en segundo plano del main (scheduler de precios, vencimiento de
 // presupuestos, worker de avisos) y errores no capturados. Un error en un tick no debe tumbar el
@@ -15,7 +16,12 @@ type Resultado<T> = T extends PromiseLike<infer U> ? Promise<U | undefined> : T 
  * devuelve una promesa que nunca rechaza (evita `unhandledRejection` y el `.catch(() => {})` mudo).
  */
 export function ejecutarSeguro<T>(nombre: string, fn: () => T, log: LogFn = logPorDefecto): Resultado<T> {
-  const registrar = (e: unknown) => { log(`[tarea:${nombre}] falló:`, e); return undefined; };
+  // ADR-140: además del log, el error queda en el registro del sistema que ve el Supervisor.
+  const registrar = (e: unknown) => {
+    registroErrores.registrar(`tarea:${nombre}`, e);
+    log(`[tarea:${nombre}] falló:`, e);
+    return undefined;
+  };
   try {
     const r = fn();
     if (r && typeof (r as { then?: unknown }).then === 'function') {
@@ -57,6 +63,12 @@ export function registrarErroresNoCapturados(
   const marcado = proc as unknown as Record<symbol, boolean>;
   if (marcado[MARCA_REGISTRADO]) return;
   marcado[MARCA_REGISTRADO] = true;
-  proc.on('uncaughtException', (e: unknown) => log('[main] uncaughtException:', e));
-  proc.on('unhandledRejection', (e: unknown) => log('[main] unhandledRejection:', e));
+  proc.on('uncaughtException', (e: unknown) => {
+    registroErrores.registrar('main:uncaughtException', e);
+    log('[main] uncaughtException:', e);
+  });
+  proc.on('unhandledRejection', (e: unknown) => {
+    registroErrores.registrar('main:unhandledRejection', e);
+    log('[main] unhandledRejection:', e);
+  });
 }

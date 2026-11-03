@@ -40,3 +40,23 @@ describe('arranque: límite de intentos persistente', () => {
     expect(llamada).toBeLessThan(arranque);
   });
 });
+
+// ADR-140: si `activarRegistroErrores()` deja de llamarse, los errores de los jobs vuelven a ir solo
+// al log y no se guardan entre reinicios, y nada falla. El arranque de Electron no se puede ejecutar
+// en un test, así que se fija en el código fuente.
+describe('arranque: registro de errores del sistema', () => {
+  const src = fs.readFileSync(path.join(__dirname, 'index.ts'), 'utf8');
+  const lineas = src.split(String.fromCharCode(10)).map((l) => l.trim());
+
+  it('importa activarRegistroErrores de @core/main', () => {
+    const imp = lineas.find((l) => l.startsWith('import {') && l.includes("from '@core/main'") && l.includes('activarRegistroErrores'));
+    expect(imp).toBeDefined();
+  });
+
+  it('la llama antes de abrir la app (app.whenReady)', () => {
+    const llamada = lineas.indexOf('activarRegistroErrores();');
+    const arranque = lineas.findIndex((l) => l.startsWith('app.whenReady()'));
+    expect(llamada).toBeGreaterThan(-1);
+    expect(llamada).toBeLessThan(arranque);
+  });
+});

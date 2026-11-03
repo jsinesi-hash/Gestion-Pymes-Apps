@@ -37,5 +37,8 @@ export * from './tareas';
 export * from './auth/intentos';
 export * from './auth/recuperacion';
 export * from './auth/intentos-persistente';
+export * from './registro-errores';
+export * from './registro-errores-archivo';
+export * from './ipc/sistema';
 export * from './terminal';
 export * from './userdata-aislado';

@@ -1,6 +1,6 @@
-import fs from 'node:fs';
 import path from 'node:path';
 import { app } from 'electron';
+import { escribirJsonAtomico, leerJsonTolerante } from '../archivo-json';
 import { limiteIntentos, type AlmacenIntentos, type EstadoIntentos } from './intentos';
 import { limiteSolicitudesRecuperacion } from './recuperacion';
 
@@ -16,25 +16,15 @@ import { limiteSolicitudesRecuperacion } from './recuperacion';
 export function crearAlmacenArchivo(ruta: string): AlmacenIntentos {
   return {
     cargar() {
-      if (!fs.existsSync(ruta)) return {};
-      try {
-        const crudo: unknown = JSON.parse(fs.readFileSync(ruta, 'utf8'));
-        if (typeof crudo !== 'object' || crudo === null || Array.isArray(crudo)) {
-          console.warn(`[lockout] ${path.basename(ruta)} no es un objeto: se ignora`);
-          return {};
-        }
-        return crudo as Record<string, EstadoIntentos>;
-      } catch {
-        console.warn(`[lockout] ${path.basename(ruta)} está dañado: se ignora`);
+      const crudo = leerJsonTolerante(ruta);
+      if (crudo === undefined) return {};
+      if (typeof crudo !== 'object' || crudo === null || Array.isArray(crudo)) {
+        console.warn(`[lockout] ${path.basename(ruta)} no es un objeto: se ignora`);
         return {};
       }
+      return crudo as Record<string, EstadoIntentos>;
     },
-    guardar(estados) {
-      fs.mkdirSync(path.dirname(ruta), { recursive: true });
-      const temporal = `${ruta}.tmp`;
-      fs.writeFileSync(temporal, JSON.stringify(estados), { mode: 0o600 });
-      fs.renameSync(temporal, ruta);
-    },
+    guardar: (estados) => escribirJsonAtomico(ruta, estados),
   };
 }
 

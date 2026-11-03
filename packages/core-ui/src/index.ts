@@ -66,6 +66,7 @@ export { ConfigUsuarios } from './views/config/ConfigUsuarios';
 export { ConfigMiCuenta } from './views/config/ConfigMiCuenta';
 export { RolesPermisosView } from './views/config/RolesPermisosView';
 export { ConfigBackupRestore } from './views/config/ConfigBackupRestore';
+export { ErroresSistemaCard } from './views/config/ErroresSistemaCard';
 export { RestoreWizard } from './views/config/RestoreWizard';
 // Venta universal (E3c1)
 export { TicketModal } from './views/venta/TicketModal';
