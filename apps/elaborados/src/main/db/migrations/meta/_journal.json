@@ -85,6 +85,13 @@
       "when": 1792173442973,
       "tag": "0011_adr136_password_vigencia",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1792259842973,
+      "tag": "0012_adr137_recuperacion_password",
+      "breakpoints": true
     }
   ]
 }

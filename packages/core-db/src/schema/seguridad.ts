@@ -73,3 +73,16 @@ export const usuario_preferencias = sqliteTable('usuario_preferencias', {
   sync_state: text('sync_state', { enum: ['pending', 'synced', 'conflict'] }).notNull().default('pending'),
   updated_at: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });
+
+// ADR-137: códigos de recuperación de contraseña por mail. Un solo uso, vencen a los 15 minutos y
+// solo se guarda su hash. Estado operativo local de la terminal: sin campos de sincronización ni de
+// auditoría (mismo criterio que `aviso`).
+export const recuperacion_password = sqliteTable('recuperacion_password', {
+  id:          text('id').primaryKey(),
+  usuario_id:  text('usuario_id').notNull().references(() => usuario.id),
+  codigo_hash: text('codigo_hash').notNull(),
+  expira_en:   integer('expira_en', { mode: 'timestamp' }).notNull(),
+  intentos:    integer('intentos').notNull().default(0),
+  usado:       integer('usado', { mode: 'boolean' }).notNull().default(false),
+  creado_en:   integer('creado_en', { mode: 'timestamp' }).notNull(),
+});

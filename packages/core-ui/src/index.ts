@@ -22,6 +22,7 @@ export * from './lib/errores';
 // Auth + sesión (B3)
 export * from './auth/AuthContext';
 export { default as Login } from './auth/Login';
+export { default as RecuperarPassword } from './auth/RecuperarPassword';
 export { default as ProtectedRoute } from './auth/ProtectedRoute';
 // Shell (B3)
 export * from './shell/PantallaBloqueo';

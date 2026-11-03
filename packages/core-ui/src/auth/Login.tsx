@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motivosPasswordDebil, mensajePasswordDebil, emailValido } from '@ferreteria/shared';
 import { useAuth } from './AuthContext';
 import { PasswordInput } from '../components/PasswordInput';
 import { useAppProfile } from '../AppProfile';
 import { traducirError } from '../lib/errores';
+import { bridge } from '../bridge';
+import RecuperarPassword from './RecuperarPassword';
 
 // ADR-136: cuando la contraseña venció o falta el mail, el login verifica las credenciales pero no
 // abre sesión; este componente muestra el paso que corresponde y reenvía las credenciales.
@@ -24,6 +26,19 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
+  // ADR-137: el enlace «Olvidé mi contraseña» solo aparece si la app tiene un correo saliente configurado.
+  const [puedeRecuperar, setPuedeRecuperar] = useState(false);
+  const [recuperando, setRecuperando] = useState(false);
+
+  useEffect(() => {
+    let vivo = true;
+    try {
+      Promise.resolve(bridge().auth?.recuperacionDisponible?.())
+        .then((v) => { if (vivo) setPuedeRecuperar(v === true); })
+        .catch(() => {});
+    } catch { /* bridge no disponible (tests): sin enlace */ }
+    return () => { vivo = false; };
+  }, []);
 
   async function handleCredenciales(e: React.FormEvent) {
     e.preventDefault();
@@ -113,6 +128,12 @@ export default function Login() {
               <PasswordInput id="password" placeholder="Contraseña" autoComplete="current-password"
                 value={password} onChange={e => setPassword(e.target.value)} />
             </div>
+            {puedeRecuperar && (
+              <button type="button" onClick={() => setRecuperando(true)}
+                style={{ background: 'none', border: 'none', padding: 0, color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline', fontSize: 13, alignSelf: 'flex-start' }}>
+                Olvidé mi contraseña
+              </button>
+            )}
           </>
         )}
 
@@ -158,6 +179,9 @@ export default function Login() {
           </button>
         )}
       </form>
+      {recuperando && (
+        <RecuperarPassword nombreUsuarioInicial={nombreUsuario} onClose={() => setRecuperando(false)} />
+      )}
     </div>
   );
 }

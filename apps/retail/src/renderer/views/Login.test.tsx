@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { vi, beforeEach } from 'vitest';
+import { vi, beforeEach, afterEach } from 'vitest';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { AuthContext, AppProfileProvider, Login } from '@core/ui';
 import { navegacionRetail } from '../../common/navegacion';
@@ -263,5 +263,57 @@ describe('Login — contraseña vencida y mail obligatorio (ADR-136)', () => {
     fireEvent.change(screen.getByPlaceholderText('Contraseña'), { target: { value: 'mal' } });
     fireEvent.click(screen.getByText('Ingresar'));
     expect(await screen.findByRole('alert')).toHaveTextContent('Credenciales inválidas');
+  });
+});
+
+// ADR-137: «Olvidé mi contraseña» solo aparece si la app tiene un correo saliente configurado.
+describe('Login — enlace de recuperación de contraseña (ADR-137)', () => {
+  const mockDisponible = vi.fn();
+
+  beforeEach(() => {
+    mockLogin.mockReset();
+    mockDisponible.mockReset();
+    (window as any).ferreteria = {
+      auth: { recuperacionDisponible: mockDisponible, recuperarSolicitar: vi.fn(), recuperarConfirmar: vi.fn() },
+    };
+  });
+  afterEach(() => { delete (window as any).ferreteria; });
+
+  it('sin correo saliente configurado no ofrece el enlace', async () => {
+    mockDisponible.mockResolvedValue(false);
+    renderLogin();
+    await waitFor(() => expect(mockDisponible).toHaveBeenCalled());
+    expect(screen.queryByText('Olvidé mi contraseña')).not.toBeInTheDocument();
+  });
+
+  it('con correo saliente configurado ofrece el enlace', async () => {
+    mockDisponible.mockResolvedValue(true);
+    renderLogin();
+    expect(await screen.findByText('Olvidé mi contraseña')).toBeInTheDocument();
+  });
+
+  it('si la consulta falla no rompe el login ni muestra el enlace', async () => {
+    mockDisponible.mockRejectedValue(new Error('boom'));
+    renderLogin();
+    await waitFor(() => expect(mockDisponible).toHaveBeenCalled());
+    expect(screen.getByText('Ingresar')).toBeInTheDocument();
+    expect(screen.queryByText('Olvidé mi contraseña')).not.toBeInTheDocument();
+  });
+
+  it('el enlace abre la recuperación con el usuario que ya se tipeó', async () => {
+    mockDisponible.mockResolvedValue(true);
+    renderLogin();
+    fireEvent.change(screen.getByPlaceholderText('Usuario'), { target: { value: 'ana' } });
+    fireEvent.click(await screen.findByText('Olvidé mi contraseña'));
+    expect(await screen.findByRole('dialog', { name: 'Recuperar contraseña' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Usuario', { selector: '#rp-usuario' })).toHaveValue('ana');
+  });
+
+  it('cerrar la recuperación vuelve al login', async () => {
+    mockDisponible.mockResolvedValue(true);
+    renderLogin();
+    fireEvent.click(await screen.findByText('Olvidé mi contraseña'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancelar' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Recuperar contraseña' })).not.toBeInTheDocument());
   });
 });

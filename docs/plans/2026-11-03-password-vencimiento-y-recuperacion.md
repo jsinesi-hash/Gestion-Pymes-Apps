@@ -1,6 +1,6 @@
 # Plan — Vencimiento de contraseña a los 30 días, mail obligatorio y recuperación por mail
 
-**Fecha:** 2026-11-03 · **Estado:** aprobado por el usuario. PR 1 implementado (ADR-136); PR 2 pendiente
+**Fecha:** 2026-11-03 · **Estado:** aprobado por el usuario. PR 1 implementado (ADR-136) y PR 2 implementado (ADR-137)
 
 ## Pedido
 
