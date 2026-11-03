@@ -10,7 +10,7 @@ if (started) app.quit();
 
 import { db } from './db/client';
 import { runStartup } from './startup';
-import { registerCoreHandlers, activarFirmaBackup, activarLockoutPersistente, aplicarSeguridadVentana, crearImpresorHtml, iniciarTerminal, registrarErroresNoCapturados } from '@core/main';
+import { registerCoreHandlers, activarFirmaBackup, activarLockoutPersistente, activarRegistroErrores, aplicarSeguridadVentana, crearImpresorHtml, iniciarTerminal, registrarErroresNoCapturados } from '@core/main';
 import { navegacionElaborados } from '../common/navegacion';
 import { registerArticuloHandlers } from './ipc/articulo';
 import { registerMovimientoArticuloHandlers } from './ipc/movimiento-articulo';
@@ -100,6 +100,9 @@ activarFirmaBackup();
 
 // ADR-138: el límite de intentos de login se guarda en userData y sobrevive a reiniciar la app.
 activarLockoutPersistente();
+
+// ADR-140: los errores de los jobs y los no capturados se guardan en userData y los ve el Supervisor.
+activarRegistroErrores();
 
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => {

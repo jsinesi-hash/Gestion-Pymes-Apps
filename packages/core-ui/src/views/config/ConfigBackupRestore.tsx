@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { BackupListItem, ResumenDepuracion } from '@ferreteria/shared';
 import { RestoreWizard } from './RestoreWizard';
 import { DepuracionBackupsModal } from '../../shell/DepuracionBackupsModal';
+import { ErroresSistemaCard } from './ErroresSistemaCard';
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -323,6 +324,8 @@ export function ConfigBackupRestore() {
           </table>
         )}
       </section>
+
+      <ErroresSistemaCard />
 
       {showWizard && (
         <RestoreWizard

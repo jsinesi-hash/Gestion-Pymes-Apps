@@ -16,6 +16,7 @@ import { registerBackupHandlers } from './ipc/backup';
 import { registerRestoreHandlers } from './ipc/restore';
 import { registerDialogHandlers } from './ipc/dialog';
 import { registerMenuHandlers } from './ipc/menu';
+import { registerSistemaHandlers } from './ipc/sistema';
 import { registerVentaListByCajaHandler } from './venta/listar-por-caja';
 import { registerPrintHtmlHandler, type ImpresorHtml } from './ipc/print';
 import { registerExportarHandlers, crearExportarEjecutar, EXPORTADORES_CORE, type Exportador } from './ipc/exportar';
@@ -49,6 +50,7 @@ export function registerCoreHandlers(ipcMain: IpcMain, db: BetterSQLite3Database
   registerDialogHandlers(ipcMain);
   registerVentaListByCajaHandler(ipcMain, db as never);
   registerMenuHandlers(ipcMain, opts.reconstruirMenu);
+  registerSistemaHandlers(ipcMain);
   registerExportarHandlers(ipcMain, db, crearExportarEjecutar([...EXPORTADORES_CORE, ...(opts.exportadores ?? [])]));
   if (opts.imprimirHtml) registerPrintHtmlHandler(ipcMain, opts.imprimirHtml);
 }

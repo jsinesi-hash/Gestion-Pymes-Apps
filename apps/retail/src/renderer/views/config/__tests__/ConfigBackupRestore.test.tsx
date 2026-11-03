@@ -232,3 +232,26 @@ describe('ConfigBackupRestore — RestoreWizard', () => {
     );
   });
 });
+
+// ADR-140: la pantalla de Backup y restauración incluye la tarjeta de errores del sistema.
+describe('ConfigBackupRestore — errores del sistema (ADR-140)', () => {
+  it('incluye la tarjeta y muestra los errores registrados', async () => {
+    (window as any).ferreteria.sistema = {
+      erroresListar: vi.fn().mockResolvedValue([
+        { id: 'e1', fecha: Date.now(), origen: 'tarea:cambios-programados', mensaje: 'SQLITE_BUSY', detalle: null },
+      ]),
+      erroresLimpiar: vi.fn(),
+    };
+    renderView();
+    expect(await screen.findByText('Errores del sistema')).toBeInTheDocument();
+    expect(await screen.findByText('SQLITE_BUSY')).toBeInTheDocument();
+    expect(screen.getByText('Cambios de precio programados')).toBeInTheDocument();
+  });
+
+  it('sin errores registrados lo dice, sin alterar el resto de la pantalla', async () => {
+    (window as any).ferreteria.sistema = { erroresListar: vi.fn().mockResolvedValue([]), erroresLimpiar: vi.fn() };
+    renderView();
+    expect(await screen.findByText(/sin errores registrados/i)).toBeInTheDocument();
+    expect(screen.getByText('Backups')).toBeInTheDocument();
+  });
+});
