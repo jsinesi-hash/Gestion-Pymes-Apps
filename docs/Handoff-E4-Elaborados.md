@@ -1,5 +1,9 @@
 # Traspaso — Elaborados E4 (para retomar en otra sesión)
 
+> **HISTÓRICO (2026-11-03).** E4 se completó con los ADR-102…106 (cierre en ADR-112) y la «Deuda previa» de abajo se
+> auditó en el ADR-144: las cinco entradas ya estaban resueltas en el código. Se conserva por el contexto de
+> decisiones y las convenciones; no es una lista de pendientes.
+
 **Fecha:** 2026-10-14 · **Punto de partida:** `main` con E1–E3 completos (ADR-091…101). Último merge: PR #13
 (E3d-2). No hay ramas de trabajo abiertas.
 
@@ -34,7 +38,7 @@ mergeable y con su ADR (**el próximo número libre es 102**). Preguntas para el
 qué reportes necesita realmente la heladería, si las compras llevan IVA/comprobante estructurado, y cómo se
 gestionan los proveedores desde Elaborados.
 
-## Deuda previa (conviene resolver primero o dentro de E4)
+## Deuda previa — RESUELTA (ver ADR-144)
 - **Editar sabores tras la primera venta probablemente rompe:** `grupoModificadorOpcionSetHandler` (E2) borra y
   reinserta las opciones con FK activas (`venta_linea_modificador` las referencia). Arreglar con upsert por id /
   baja lógica **antes de uso real**.

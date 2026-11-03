@@ -3,7 +3,9 @@
 > Fuente de verdad sobre qué está hecho, qué está en curso y qué viene después.
 > Actualizar al completar cada fase o tomar una decisión de diseño significativa.
 
-**Última actualización:** 2026-11-03 (**Recuperación de contraseña y SMTP en Elaborados — ADR-143** — rama `feat/recuperacion-elaborados` (apilada sobre #59): migración 0013 que siembra las claves `smtp_*` (sin ellas guardar la configuración no persistía nada y no daba error), pantalla Email / SMTP en el grupo Sistema (permiso `config.fiscal`, ruta y breadcrumb) y, con el SMTP configurado, el login ofrece «Olvidé mi contraseña». Se endureció además el test de navegación de Elaborados: «tiene ruta» pasaba para cualquier ítem porque la raíz `/` siempre coincide. PR 2 de 2 del plan `docs/plans/2026-11-03-smtp-al-nucleo-y-recuperacion-elaborados.md`. Sin verificar en la app real.)
+**Última actualización:** 2026-11-03 (**Auditoría de la deuda previa de E4 — ADR-144** — rama `fix/deuda-previa-e4`: las cinco entradas del traspaso de E4 (sabores con baja lógica, errores de dominio, ticket con pagos reales, consultas en lote e índices, `ClienteSelector` controlado) y el precio por lista en el POS de Elaborados ya estaban resueltos en el código; solo se corrigió la documentación (Estado.md y el traspaso, ahora histórico). Sin cambios de código.)
+
+**Anterior:** 2026-11-03 (**Recuperación de contraseña y SMTP en Elaborados — ADR-143** — rama `feat/recuperacion-elaborados` (apilada sobre #59): migración 0013 que siembra las claves `smtp_*` (sin ellas guardar la configuración no persistía nada y no daba error), pantalla Email / SMTP en el grupo Sistema (permiso `config.fiscal`, ruta y breadcrumb) y, con el SMTP configurado, el login ofrece «Olvidé mi contraseña». Se endureció además el test de navegación de Elaborados: «tiene ruta» pasaba para cualquier ítem porque la raíz `/` siempre coincide. PR 2 de 2 del plan `docs/plans/2026-11-03-smtp-al-nucleo-y-recuperacion-elaborados.md`. Sin verificar en la app real.)
 
 **Anterior:** 2026-11-03 (**El SMTP pasa al núcleo — ADR-142** — rama `refactor/smtp-al-nucleo` (sobre `main`): configuración, clave en `safeStorage`, enviador, handlers `smtp:*` y la pantalla `ConfigSmtp` se mueven de Retail a `@core/main`/`@core/preload`/`@core/ui` con `git mv`; `registerCoreHandlers` usa por defecto el enviador SMTP real y `nodemailer` pasa a las dependencias del núcleo (lockfile a mano). Sin cambio visible en Retail ni migración de datos (mismo `smtp-secret.bin`). PR 1 de 2 del plan `docs/plans/2026-11-03-smtp-al-nucleo-y-recuperacion-elaborados.md`; la recuperación en Elaborados es el PR 2. Sin verificar en la app real.)
 
@@ -62,7 +64,7 @@ menu-nativo se **renumeraron a `0037`-`0041`** para convivir con `0036_sustituto
 
 ## Release actual: 1.1.x (Retail) + base multi-rubro
 
-Retail (`ferreteria-client`) en **1.1.1**: R1 y R3 integrados en 1.0.x; **1.1.0** (Remitos, Presupuestos, Agenda/avisos, Motor de Precios v2 y mejoras UX) integrado en `main`; el fiscal ARCA (R2, ADR-013) sigue pendiente. En paralelo, la base multi-rubro (ADR-091…101): **Elaborados (heladería) E1–E3 completos**; **E4** (compras de insumos, listas de precio, reportes, export) pendiente — ver `docs/Handoff-E4-Elaborados.md`.
+Retail (`ferreteria-client`) en **1.1.1**: R1 y R3 integrados en 1.0.x; **1.1.0** (Remitos, Presupuestos, Agenda/avisos, Motor de Precios v2 y mejoras UX) integrado en `main`; el fiscal ARCA (R2, ADR-013) sigue pendiente. En paralelo, la base multi-rubro (ADR-091…101): **Elaborados (heladería) E1–E3 completos**; **E4** (compras de insumos, listas de precio, reportes, export, proveedores) completo — ADR-102…106, cierre en ADR-112; el traspaso `docs/Handoff-E4-Elaborados.md` quedó como histórico.
 
 ---
 
@@ -83,9 +85,9 @@ disparar apps por familia (Retail, Elaborados, Servicios). Ferretería = primer 
 promoción al core de lo diferido en Fase 2. **E1 (esqueleto + plataforma)** y **E2 (inventario
 elaborado: stock/producción/catálogo de venta + `impuesto`→core)** completos, rama `elaborados-e1`
 **mergeada a `main`** (PR #2, auto-cerrado por GitHub al detectar que `main` ya contenía sus
-commits). Releases de Elaborados: **E1** ✅ · **E2** ✅ · E3a core de venta ✅ (ADR-095) · E3b backend de venta ✅ (ADR-096) · E3c-1 core de cobro/ticket/impresión ✅ (ADR-097, PR #10) · E3c-2 POS UI ✅ (ADR-098, PR #11) · E3d pedidos en espera + anulación UI ✅ (ADR-101, PR #13) · E4
-compras/listas/reportes (+ `lista_precio`→core) ⏳. Ver ADR-093…101 y **`docs/Handoff-E4-Elaborados.md`** (traspaso de E4). Specs y planes en `docs/superpowers/` (gitignoreado: solo en la máquina de quien los escribió).
-**E3 completo** (ventas, POS, pedidos y anulación, verificados navegando por el usuario). **Pendiente:** E4.
+commits). Releases de Elaborados: **E1** ✅ · **E2** ✅ · E3a core de venta ✅ (ADR-095) · E3b backend de venta ✅ (ADR-096) · E3c-1 core de cobro/ticket/impresión ✅ (ADR-097, PR #10) · E3c-2 POS UI ✅ (ADR-098, PR #11) · E3d pedidos en espera + anulación UI ✅ (ADR-101, PR #13) · **E4** ✅
+compras/listas/reportes/proveedores (+ `lista_precio`→core, ADR-102…106). Ver ADR-093…106 y `docs/Handoff-E4-Elaborados.md` (traspaso de E4, histórico). Specs y planes en `docs/superpowers/` (gitignoreado: solo en la máquina de quien los escribió).
+**E3 y E4 completos** (ventas, POS, pedidos y anulación; compras, listas de precio, reportes y proveedores). **Pendiente:** nada de E4 (ver ADR-144: su «deuda previa» ya estaba resuelta).
 
 **Alcance de core (Fase 2):** `@core/db` (esquema universal + migrator), `@core/ui` (design
 system + primitivos), `@core/main` (auth/RBAC/validación/seguridad web). **Diferido por
@@ -172,7 +174,7 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 
 ## Próximas fases (backlog confirmado)
 
-- **Elaborados E4 — gestión** (compras de insumos, listas de precio con `lista_precio`→core, reportes y export, CRUD de proveedor): sesión nueva; alcance, deuda previa y gotchas de entorno en `docs/Handoff-E4-Elaborados.md`. Antes o dentro de E4: arreglar `grupoModificadorOpcionSetHandler` (editar sabores tras la primera venta rompe).
+- ~~Elaborados E4 — gestión~~: **hecho** (ADR-102…106, 112). La «deuda previa» del traspaso se auditó en ADR-144: las cinco entradas ya estaban resueltas.
 - **Corte multi-rubro, Fases 3 y 4** (ADR-091): capa de perfiles de rubro data-driven; guía "cómo nace una app de familia" + reframe de docs + numeración de ADR. Una tercera familia (Servicios) no tiene diseño todavía.
 - **1.2.0 — R2 fiscal**: facturación AFIP/ARCA (ADR-013 pendiente), CAE, comprobantes A/B/C. La interfaz B1 (`ComprobantePayload`, ADR-097) ya existe con el ticket interno como consumidor.
 - **R3** restante: CCteProv diferida (ADR-019), comprobantes de compra (tabla existe, sin UI)
@@ -327,8 +329,8 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 - Elaborados (ADR-098/101):
 - Pedido para llevar con campos estructurados de delivery (teléfono, dirección, hora): diferido (hoy alias + observaciones).
 - Reserva de stock para pedidos en espera: diferida (un pedido no toca stock hasta confirmarse).
-- Edición de opciones de sabores tras la primera venta: `grupoModificadorOpcionSetHandler` (E2) borra y reinserta con FK activas; hay que pasarlo a upsert/baja lógica antes de uso real.
-- Precio por lista de precios en el POS de Elaborados: E4.
+- ~~Edición de opciones de sabores tras la primera venta~~: resuelto en ADR-102 (upsert por artículo + baja lógica).
+- ~~Precio por lista de precios en el POS de Elaborados~~: resuelto en ADR-104 (`venta:cotizar`/`confirmar` por la lista del cliente).
 
 ---
 
