@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useAuth, bridge } from '@core/ui';
+import { useAuth } from '../../auth/AuthContext';
+import { bridge } from '../../bridge';
 
 type Cfg = { host: string; port: number; secure: boolean; from: string; user: string; tiene_password: boolean };
 

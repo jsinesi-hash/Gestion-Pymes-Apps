@@ -109,6 +109,15 @@ export function coreCanales(invoke: Invoke) {
         invoke('sistema:erroresListar'),
       erroresLimpiar: (): Promise<{ ok: true }> => invoke('sistema:erroresLimpiar'),
     },
+    // ADR-142: configuración del correo saliente (SMTP), solo Supervisor. La clave nunca vuelve al renderer.
+    smtp: {
+      getConfig: (): Promise<{ host: string; port: number; secure: boolean; from: string; user: string; tiene_password: boolean }> =>
+        invoke('smtp:getConfig'),
+      setConfig: (p: { host: string; port: number; secure: boolean; from: string; user: string }): Promise<void> =>
+        invoke('smtp:setConfig', p),
+      setPassword: (p: { password: string }): Promise<void> => invoke('smtp:setPassword', p),
+      probar: (): Promise<{ ok: boolean; error?: string }> => invoke('smtp:probar'),
+    },
     print: { html: (h: string) => invoke('print:html', h) },
     exportar: { ejecutar: (req: ExportRequest): Promise<void> => invoke('exportar:ejecutar', req) },
   };

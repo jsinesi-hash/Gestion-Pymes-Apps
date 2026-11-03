@@ -1,26 +1,29 @@
 import nodemailer from 'nodemailer';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import type { EnviadorCorreo } from '@core/main';
-import type * as schema from '../db/schema';
-import { leerSmtpConfig, type SmtpConfig } from '../agenda/canales/smtp-config';
+import type { EnviadorCorreo } from '../auth/recuperacion';
+import type * as schema from '@core/db';
+import { leerSmtpConfig, type SmtpConfig } from './smtp-config';
 import { leerPasswordSmtp } from './smtp-secret';
 
-// ADR-137: correo saliente de Retail para la recuperación de contraseña. Reutiliza la configuración
-// SMTP de la agenda (servidor, puerto, remitente y usuario en parametros_sistema; la clave en
-// safeStorage, ADR-048) y la lee en cada llamada: un cambio en Configuración → Email se nota sin
-// reiniciar la app.
+// ADR-137 / ADR-142: correo saliente de la recuperación de contraseña, ahora en el núcleo para que lo
+// usen todas las apps. Usa la configuración SMTP (servidor, puerto, remitente y usuario en
+// parametros_sistema; la clave en safeStorage, ADR-048) y la lee en cada llamada: un cambio en
+// Configuración → Email se nota sin reiniciar la app.
 export interface EnviadorSmtpDeps {
   getConfig: () => SmtpConfig;
   getPassword: () => string | null;
   createTransport: typeof nodemailer.createTransport;
 }
 
-const configurado = (c: SmtpConfig, pass: string | null): boolean => Boolean(c.host && c.from && c.user && pass);
+const configCompleta = (c: SmtpConfig): boolean => Boolean(c.host && c.from && c.user);
+const configurado = (c: SmtpConfig, pass: string | null): boolean => configCompleta(c) && Boolean(pass);
 
 export function crearEnviadorSmtp(deps: EnviadorSmtpDeps): EnviadorCorreo {
   return {
     disponible() {
-      return configurado(deps.getConfig(), deps.getPassword());
+      // La clave (safeStorage) solo se lee si la configuración está completa: sin servidor no hay nada que descifrar.
+      if (!configCompleta(deps.getConfig())) return false;
+      return Boolean(deps.getPassword());
     },
     async enviar({ para, asunto, texto }) {
       const cfg = deps.getConfig();

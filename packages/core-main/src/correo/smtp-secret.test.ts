@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { guardarPasswordSmtp, leerPasswordSmtp, borrarPasswordSmtp, tienePasswordSmtp } from '../smtp-secret';
+import { guardarPasswordSmtp, leerPasswordSmtp, borrarPasswordSmtp, tienePasswordSmtp } from './smtp-secret';
 
 function fakeSafeStorage() {
   return {
