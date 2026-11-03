@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { ImportPreviewResult, ImportRowResult } from '../../../../main/ipc/importar';
+import { Modal } from '@core/ui';
 
 type Props = {
   preview: ImportPreviewResult;
@@ -117,21 +118,19 @@ export function PreviewStep({ preview, onConfirm, onBack, onEditarFila, loading 
       </div>
 
       {modalAbierto && (
-        <div className="modal-overlay" role="dialog">
-          <div className="modal">
-            <div className="modal-header">
-              <span className="modal-title">Confirmar importación</span>
-            </div>
-            <div className="modal-body">
-              <p>Se van a crear/procesar <strong>{stats.ok + stats.update} registros</strong>. Las {stats.error} filas con error quedan afuera.</p>
-              <p>Esta acción no se puede deshacer.</p>
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn-secondary" onClick={() => setModalAbierto(false)}>Cancelar</button>
-              <button type="button" className="btn-primary" onClick={() => { setModalAbierto(false); onConfirm(); }}>Confirmar</button>
-            </div>
+        <Modal ariaLabel="Confirmar importación">
+          <div className="modal-header">
+            <span className="modal-title">Confirmar importación</span>
           </div>
-        </div>
+          <div className="modal-body">
+            <p>Se van a crear/procesar <strong>{stats.ok + stats.update} registros</strong>. Las {stats.error} filas con error quedan afuera.</p>
+            <p>Esta acción no se puede deshacer.</p>
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn-secondary" onClick={() => setModalAbierto(false)}>Cancelar</button>
+            <button type="button" className="btn-primary" onClick={() => { setModalAbierto(false); onConfirm(); }}>Confirmar</button>
+          </div>
+        </Modal>
       )}
     </div>
   );

@@ -6,12 +6,8 @@ import path from 'node:path';
 // impide que crezca el uso de overlays armados a mano (sin trampa de foco ni aria-modal consistente)
 // y que reaparezcan filas `<tr onClick>` que solo se activan con el mouse.
 //
-// TOPE_OVERLAYS_A_MANO solo puede BAJAR: cada lote de migración a `<Modal>` lo reduce a la cantidad
-// que quede (hoy 25 en 19 archivos de las apps; el repo tenía 73). Al llegar a 0 se elimina la
-// excepción y el test pasa a exigir 0. Lote A (config y stock de Retail): 63 → 52.
-// Lote B (productos, precios y presupuestos de Retail): 52 → 38.
-// Lote C (agenda y remitos de Retail): 38 → 25.
-const TOPE_OVERLAYS_A_MANO = 25;
+// Migración completa (ADR-125…129, lotes A–D: 73 → 0): ya no se admite ningún overlay armado a mano.
+// Un modal nuevo se escribe con `<Modal>`.
 
 const raiz = path.resolve(__dirname, '../../..'); // raíz del monorepo
 // CommandPalette tiene su propio overlay (patrón de paleta de comandos) y Modal.tsx es el componente.
@@ -74,9 +70,9 @@ describe('detectores', () => {
 });
 
 describe('trinquete de accesibilidad de modales y filas', () => {
-  it(`los overlays armados a mano no superan el tope (${TOPE_OVERLAYS_A_MANO}); migrar a <Modal> lo baja`, () => {
+  it(`no hay overlays armados a mano: todo modal usa <Modal>`, () => {
     const total = produccion.reduce((n, f) => n + contarOverlaysAMano(fs.readFileSync(f.abs, 'utf8')), 0);
-    expect(total).toBeLessThanOrEqual(TOPE_OVERLAYS_A_MANO);
+    expect(total).toBe(0);
   });
 
   it('el núcleo (@core/ui) no tiene ningún overlay armado a mano', () => {

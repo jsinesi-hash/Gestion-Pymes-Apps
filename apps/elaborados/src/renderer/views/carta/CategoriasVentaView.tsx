@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth, useEscapeToClose, useToast, traducirError } from '@core/ui';
+import { useAuth, useToast, traducirError, Modal } from '@core/ui';
 import { useCategoriasVenta } from '../../hooks/useCategoriasVenta';
 
 export function CategoriasVentaView() {
@@ -39,7 +39,6 @@ function CategoriaModal({ onClose, onCrear, siguienteOrden }: {
   const [nombre, setNombre] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  useEscapeToClose(onClose, !saving);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -55,21 +54,19 @@ function CategoriaModal({ onClose, onCrear, siguienteOrden }: {
   }
 
   return (
-    <div role="dialog" className="modal-overlay">
-      <form className="modal" onSubmit={handleSubmit}>
-        <div className="modal-header"><span className="modal-title">Nueva categoría</span></div>
-        <div className="modal-body">
-          <div className="field">
-            <label htmlFor="cat-nombre">Nombre *</label>
-            <input id="cat-nombre" className="input" type="text" required autoFocus value={nombre} onChange={(e) => setNombre(e.target.value)} />
-          </div>
-          {error && <div className="alert-danger" role="alert">{error}</div>}
+    <Modal ariaLabel="Nueva categoría" onClose={onClose} bloqueado={saving} as="form" onSubmit={handleSubmit}>
+      <div className="modal-header"><span className="modal-title">Nueva categoría</span></div>
+      <div className="modal-body">
+        <div className="field">
+          <label htmlFor="cat-nombre">Nombre *</label>
+          <input id="cat-nombre" className="input" type="text" required autoFocus value={nombre} onChange={(e) => setNombre(e.target.value)} />
         </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button type="submit" className="btn-primary" disabled={!nombre.trim() || saving}>{saving ? 'Guardando…' : 'Guardar'}</button>
-        </div>
-      </form>
-    </div>
+        {error && <div className="alert-danger" role="alert">{error}</div>}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+        <button type="submit" className="btn-primary" disabled={!nombre.trim() || saving}>{saving ? 'Guardando…' : 'Guardar'}</button>
+      </div>
+    </Modal>
   );
 }

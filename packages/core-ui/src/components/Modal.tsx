@@ -29,6 +29,8 @@ export type ModalProps = {
   ariaLabelledBy?: string;
   ancho?: number | string;
   style?: CSSProperties;
+  /** Estilo del overlay (p. ej. `justifyContent: 'flex-end'` para un panel lateral). */
+  estiloOverlay?: CSSProperties;
   /**
    * Cierra con Escape, con la × del encabezado y —si `cerrarAlClickFuera`— con click en el overlay.
    * Sin `onClose` el modal es obligatorio (p. ej. autorización de Supervisor).
@@ -46,7 +48,7 @@ export type ModalProps = {
 };
 
 export function Modal({
-  children, titulo, ariaLabel, ariaLabelledBy, ancho, style, onClose, bloqueado = false,
+  children, titulo, ariaLabel, ariaLabelledBy, ancho, style, estiloOverlay, onClose, bloqueado = false,
   cerrarAlClickFuera = false, ocultarCerrar = false, as = 'div', onSubmit,
 }: Readonly<ModalProps>) {
   const tituloId = useId();
@@ -125,7 +127,7 @@ export function Modal({
 
   return (
     // El overlay no es un control: el cierre por teclado es Escape y por mouse, un click fuera.
-    <div className="modal-overlay" onMouseDown={alPresionarOverlay} onClick={alClickOverlay}>
+    <div className="modal-overlay" style={estiloOverlay} onMouseDown={alPresionarOverlay} onClick={alClickOverlay}>
       {createElement(as, propsDialogo, cuerpo)}
     </div>
   );

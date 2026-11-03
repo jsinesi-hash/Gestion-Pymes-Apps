@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatPesos, useEscapeToClose } from '@core/ui';
+import { formatPesos, Modal } from '@core/ui';
 import type { ModificadorElegido, ProductoPos } from './tipos';
 
 type Props = {
@@ -9,7 +9,6 @@ type Props = {
 };
 
 export function SelectorSaboresModal({ producto, onConfirmar, onCancelar }: Props) {
-  useEscapeToClose(onCancelar);
   const [elegidas, setElegidas] = useState<Record<string, string[]>>({});
 
   const toggle = (grupoId: string, max: number, opcionId: string) => {
@@ -37,47 +36,45 @@ export function SelectorSaboresModal({ producto, onConfirmar, onCancelar }: Prop
   };
 
   return (
-    <div role="dialog" aria-label={producto.nombre} className="modal-overlay">
-      <div className="modal" style={{ width: 560 }}>
-        <div className="modal-header"><span className="modal-title">{producto.nombre}</span></div>
-        <div className="modal-body">
-          {producto.grupos.map((g) => {
-            const ids = elegidas[g.grupo_modificador_id] ?? [];
-            const rango = g.min === g.max ? `Elegí ${g.max}` : `Elegí ${g.min} a ${g.max}`;
-            return (
-              <div key={g.grupo_modificador_id}>
-                <div style={{ fontWeight: 700, marginBottom: 8 }}>
-                  {g.nombre} <span style={{ fontWeight: 400, opacity: 0.7 }}>({rango})</span>
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {g.opciones.map((o) => {
-                    const activo = ids.includes(o.id);
-                    const bloqueado = !activo && g.max > 1 && ids.length >= g.max;
-                    return (
-                      <button
-                        key={o.id}
-                        type="button"
-                        aria-pressed={activo}
-                        disabled={bloqueado}
-                        className={activo ? 'btn-primary' : 'btn-secondary'}
-                        onClick={() => toggle(g.grupo_modificador_id, g.max, o.id)}
-                      >
-                        {o.nombre}{o.recargo_centavos > 0 ? ` + ${formatPesos(o.recargo_centavos)}` : ''}
-                      </button>
-                    );
-                  })}
-                </div>
+    <Modal ariaLabel={producto.nombre} ancho={560} onClose={onCancelar}>
+      <div className="modal-header"><span className="modal-title">{producto.nombre}</span></div>
+      <div className="modal-body">
+        {producto.grupos.map((g) => {
+          const ids = elegidas[g.grupo_modificador_id] ?? [];
+          const rango = g.min === g.max ? `Elegí ${g.max}` : `Elegí ${g.min} a ${g.max}`;
+          return (
+            <div key={g.grupo_modificador_id}>
+              <div style={{ fontWeight: 700, marginBottom: 8 }}>
+                {g.nombre} <span style={{ fontWeight: 400, opacity: 0.7 }}>({rango})</span>
               </div>
-            );
-          })}
-        </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onCancelar}>Cancelar</button>
-          <button type="button" className="btn-primary" disabled={!completo} onClick={confirmar}>
-            Agregar · <span className="num">{formatPesos(producto.precio_centavos + recargos)}</span>
-          </button>
-        </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {g.opciones.map((o) => {
+                  const activo = ids.includes(o.id);
+                  const bloqueado = !activo && g.max > 1 && ids.length >= g.max;
+                  return (
+                    <button
+                      key={o.id}
+                      type="button"
+                      aria-pressed={activo}
+                      disabled={bloqueado}
+                      className={activo ? 'btn-primary' : 'btn-secondary'}
+                      onClick={() => toggle(g.grupo_modificador_id, g.max, o.id)}
+                    >
+                      {o.nombre}{o.recargo_centavos > 0 ? ` + ${formatPesos(o.recargo_centavos)}` : ''}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
-    </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onCancelar}>Cancelar</button>
+        <button type="button" className="btn-primary" disabled={!completo} onClick={confirmar}>
+          Agregar · <span className="num">{formatPesos(producto.precio_centavos + recargos)}</span>
+        </button>
+      </div>
+    </Modal>
   );
 }

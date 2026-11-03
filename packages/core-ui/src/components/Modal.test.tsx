@@ -34,6 +34,11 @@ describe('Modal — semántica', () => {
     expect(overlay).not.toHaveAttribute('tabindex');
   });
 
+  it('aplica estiloOverlay al overlay (panel lateral)', () => {
+    const { container } = render(<Modal ariaLabel="Panel" estiloOverlay={{ justifyContent: 'flex-end' }}><p>x</p></Modal>);
+    expect((container.querySelector('.modal-overlay') as HTMLElement).style.justifyContent).toBe('flex-end');
+  });
+
   it('aplica ancho y estilo al contenedor y puede ser un formulario', () => {
     const alEnviar = vi.fn((e: React.FormEvent) => e.preventDefault());
     render(<Modal titulo="F" ancho={640} style={{ maxHeight: '90vh' }} as="form" onSubmit={alEnviar}><button type="submit">ok</button></Modal>);

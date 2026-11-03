@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useAuth, AnulacionModal, bridge } from '@core/ui';
+import { useAuth, AnulacionModal, bridge, Modal } from '@core/ui';
 import { GenerarRemitoModal } from '../remitos/GenerarRemitoModal';
 import { useRemitosHabilitado } from '../../hooks/useRemitos';
-import { useEscapeToClose } from '@core/ui';
 
 type VentaData = {
   venta: any;
@@ -71,10 +70,6 @@ export function VentaDetalleModal({ ventaId, onClose, onAnulada }: Readonly<Prop
   const [anulada, setAnulada] = useState(false);
   const [printing, setPrinting] = useState(false);
 
-  // Escape no debe cerrar este modal mientras un hijo (remito/anulación) está abierto encima:
-  // ambos usan el mismo hook con listeners de window, así que sin este guard un solo Escape
-  // cerraría los dos modales a la vez.
-  useEscapeToClose(onClose, !showRemito && !showAnulacion);
 
   useEffect(() => {
     bridge().venta.get({ id: ventaId })
@@ -102,25 +97,21 @@ export function VentaDetalleModal({ ventaId, onClose, onAnulada }: Readonly<Prop
 
   if (loading) {
     return (
-      <div className="modal-overlay">
-        <div className="modal" style={{ width: 640 }}>
-          <div className="modal-body" style={{ textAlign: 'center', padding: '2rem' }}>Cargando…</div>
-        </div>
-      </div>
+      <Modal ariaLabel="Cargando venta" ancho={640} onClose={onClose} bloqueado={showRemito || showAnulacion}>
+        <div className="modal-body" style={{ textAlign: 'center', padding: '2rem' }}>Cargando…</div>
+      </Modal>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="modal-overlay">
-        <div className="modal" style={{ width: 640 }}>
-          <div className="modal-header"><span className="modal-title">Detalle de venta</span></div>
-          <div className="modal-body"><div className="alert-danger">{error ?? 'Error desconocido'}</div></div>
-          <div className="modal-footer">
-            <button type="button" className="btn-secondary" onClick={onClose}>Cerrar</button>
-          </div>
+      <Modal ariaLabel="Detalle de venta" ancho={640} onClose={onClose} bloqueado={showRemito || showAnulacion}>
+        <div className="modal-header"><span className="modal-title">Detalle de venta</span></div>
+        <div className="modal-body"><div className="alert-danger">{error ?? 'Error desconocido'}</div></div>
+        <div className="modal-footer">
+          <button type="button" className="btn-secondary" onClick={onClose}>Cerrar</button>
         </div>
-      </div>
+      </Modal>
     );
   }
 
@@ -131,8 +122,10 @@ export function VentaDetalleModal({ ventaId, onClose, onAnulada }: Readonly<Prop
   const formaPagoLabel = venta.forma_pago.charAt(0).toUpperCase() + venta.forma_pago.slice(1);
 
   return (
-    <div className="modal-overlay">
-      <div className="modal" style={{ width: 640, maxHeight: '90vh', overflow: 'auto' }}>
+    <>
+      {/* `bloqueado` mientras un hijo (remito/anulación) está abierto encima: un solo Escape
+          cierra solo el modal de arriba. */}
+      <Modal ariaLabel="Detalle de venta" ancho={640} onClose={onClose} bloqueado={showRemito || showAnulacion} style={{ maxHeight: '90vh', overflow: 'auto' }}>
         <div className="modal-header">
           <div>
             <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '.1em', color: 'var(--ink-3)', fontWeight: 700 }}>
@@ -236,7 +229,7 @@ export function VentaDetalleModal({ ventaId, onClose, onAnulada }: Readonly<Prop
             </button>
           )}
         </div>
-      </div>
+      </Modal>
 
       {showRemito && (
         <GenerarRemitoModal
@@ -253,6 +246,6 @@ export function VentaDetalleModal({ ventaId, onClose, onAnulada }: Readonly<Prop
           onCancel={() => setShowAnulacion(false)}
         />
       )}
-    </div>
+    </>
   );
 }

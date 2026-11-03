@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useAuth, useEscapeToClose, useToast, traducirError } from '@core/ui';
+import { useAuth, useToast, traducirError, Modal } from '@core/ui';
 import {
   useListasPrecio, type ListaPrecioRow, type ListaCrearPayload, type ListaActualizarPayload, type PrecioListaRow,
 } from '../../hooks/useListasPrecio';
@@ -80,8 +80,6 @@ function ListaModal({ lista, onClose, onCrear, onActualizar }: {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEscapeToClose(onClose, !saving);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const pct = Number(ajuste);
@@ -98,34 +96,32 @@ function ListaModal({ lista, onClose, onCrear, onActualizar }: {
   }
 
   return (
-    <div role="dialog" className="modal-overlay">
-      <form className="modal" onSubmit={handleSubmit}>
-        <div className="modal-header"><span className="modal-title">{lista ? 'Editar lista' : 'Nueva lista de precio'}</span></div>
-        <div className="modal-body">
-          <div className="field">
-            <label htmlFor="lista-nombre">Nombre *</label>
-            <input id="lista-nombre" className="input" type="text" required maxLength={60} value={nombre}
-              onChange={(e) => setNombre(e.target.value)} autoFocus />
-          </div>
-          <div className="field">
-            <label htmlFor="lista-ajuste">Ajuste sobre el precio base (%)</label>
-            <input id="lista-ajuste" className="input" type="number" step="any" min="-100" max="1000" value={ajuste}
-              onChange={(e) => setAjuste(e.target.value)} />
-            <small style={{ opacity: 0.7 }}>Se aplica a los productos que no tengan un precio propio en la lista. Ej.: -10 = 10% de descuento.</small>
-          </div>
-          {lista && (
-            <div className="field">
-              <label><input type="checkbox" checked={activo} onChange={(e) => setActivo(e.target.checked)} /> Lista activa</label>
-            </div>
-          )}
-          {error && <div className="alert-danger" role="alert">{error}</div>}
+    <Modal ariaLabel={lista ? 'Editar lista' : 'Nueva lista de precio'} onClose={onClose} bloqueado={saving} as="form" onSubmit={handleSubmit}>
+      <div className="modal-header"><span className="modal-title">{lista ? 'Editar lista' : 'Nueva lista de precio'}</span></div>
+      <div className="modal-body">
+        <div className="field">
+          <label htmlFor="lista-nombre">Nombre *</label>
+          <input id="lista-nombre" className="input" type="text" required maxLength={60} value={nombre}
+            onChange={(e) => setNombre(e.target.value)} autoFocus />
         </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button type="submit" className="btn-primary" disabled={!nombre.trim() || saving}>{saving ? 'Guardando…' : 'Guardar'}</button>
+        <div className="field">
+          <label htmlFor="lista-ajuste">Ajuste sobre el precio base (%)</label>
+          <input id="lista-ajuste" className="input" type="number" step="any" min="-100" max="1000" value={ajuste}
+            onChange={(e) => setAjuste(e.target.value)} />
+          <small style={{ opacity: 0.7 }}>Se aplica a los productos que no tengan un precio propio en la lista. Ej.: -10 = 10% de descuento.</small>
         </div>
-      </form>
-    </div>
+        {lista && (
+          <div className="field">
+            <label><input type="checkbox" checked={activo} onChange={(e) => setActivo(e.target.checked)} /> Lista activa</label>
+          </div>
+        )}
+        {error && <div className="alert-danger" role="alert">{error}</div>}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+        <button type="submit" className="btn-primary" disabled={!nombre.trim() || saving}>{saving ? 'Guardando…' : 'Guardar'}</button>
+      </div>
+    </Modal>
   );
 }
 
@@ -140,8 +136,6 @@ function PreciosModal({ lista, productos, onClose, preciosDe, fijarPrecio }: {
   const [edicion, setEdicion] = useState<Record<string, string>>({});
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEscapeToClose(onClose, true);
 
   useEffect(() => {
     let vigente = true;
@@ -168,52 +162,50 @@ function PreciosModal({ lista, productos, onClose, preciosDe, fijarPrecio }: {
   }
 
   return (
-    <div role="dialog" className="modal-overlay">
-      <div className="modal" style={{ maxWidth: '48rem', width: '100%' }}>
-        <div className="modal-header"><span className="modal-title">Precios — {lista.nombre}</span></div>
-        <div className="modal-body">
-          <p style={{ fontSize: '0.85rem', opacity: 0.75 }}>
-            Los productos sin precio propio usan el precio base {ajusteTexto(lista.ajuste_porcentual).toLowerCase()}.
-          </p>
-          {error && <div className="alert-danger" role="alert">{error}</div>}
-          {cargando ? <div style={{ opacity: 0.5 }}>Cargando...</div> : (
-            <table>
-              <thead><tr><th>Producto</th><th className="c">Base</th><th className="c">Precio en la lista ($)</th><th /></tr></thead>
-              <tbody>
-                {productos.map((p) => {
-                  const propio = absolutos.get(p.id);
-                  const valor = edicion[p.id] ?? (propio !== undefined ? (propio / 100).toFixed(2) : '');
-                  const efectivo = Math.max(0, Math.round(p.precio_centavos * (1 + lista.ajuste_porcentual / 100)));
-                  const nuevo = valor.trim() === '' ? NaN : Math.round(Number(valor) * 100);
-                  const valido = Number.isFinite(nuevo) && nuevo >= 0 && nuevo !== propio;
-                  return (
-                    <tr key={p.id}>
-                      <td>{p.nombre}</td>
-                      <td className="c">{pesos(p.precio_centavos)}</td>
-                      <td className="c">
-                        <input aria-label={`Precio de ${p.nombre}`} className="input" type="number" step="0.01" min="0"
-                          placeholder={(efectivo / 100).toFixed(2)} value={valor}
-                          onChange={(e) => setEdicion((m) => ({ ...m, [p.id]: e.target.value }))} />
-                      </td>
-                      <td>
-                        <button type="button" className="btn-primary btn-sm" disabled={!valido}
-                          aria-label={`Guardar precio de ${p.nombre}`} onClick={() => guardar(p, nuevo)}>Guardar</button>{' '}
-                        {propio !== undefined && (
-                          <button type="button" className="btn-secondary btn-sm"
-                            aria-label={`Quitar precio de ${p.nombre}`} onClick={() => guardar(p, null)}>Quitar</button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose}>Cerrar</button>
-        </div>
+    <Modal ariaLabel={`Precios de ${lista.nombre}`} onClose={onClose} style={{ maxWidth: '48rem', width: '100%' }}>
+      <div className="modal-header"><span className="modal-title">Precios — {lista.nombre}</span></div>
+      <div className="modal-body">
+        <p style={{ fontSize: '0.85rem', opacity: 0.75 }}>
+          Los productos sin precio propio usan el precio base {ajusteTexto(lista.ajuste_porcentual).toLowerCase()}.
+        </p>
+        {error && <div className="alert-danger" role="alert">{error}</div>}
+        {cargando ? <div style={{ opacity: 0.5 }}>Cargando...</div> : (
+          <table>
+            <thead><tr><th>Producto</th><th className="c">Base</th><th className="c">Precio en la lista ($)</th><th /></tr></thead>
+            <tbody>
+              {productos.map((p) => {
+                const propio = absolutos.get(p.id);
+                const valor = edicion[p.id] ?? (propio !== undefined ? (propio / 100).toFixed(2) : '');
+                const efectivo = Math.max(0, Math.round(p.precio_centavos * (1 + lista.ajuste_porcentual / 100)));
+                const nuevo = valor.trim() === '' ? NaN : Math.round(Number(valor) * 100);
+                const valido = Number.isFinite(nuevo) && nuevo >= 0 && nuevo !== propio;
+                return (
+                  <tr key={p.id}>
+                    <td>{p.nombre}</td>
+                    <td className="c">{pesos(p.precio_centavos)}</td>
+                    <td className="c">
+                      <input aria-label={`Precio de ${p.nombre}`} className="input" type="number" step="0.01" min="0"
+                        placeholder={(efectivo / 100).toFixed(2)} value={valor}
+                        onChange={(e) => setEdicion((m) => ({ ...m, [p.id]: e.target.value }))} />
+                    </td>
+                    <td>
+                      <button type="button" className="btn-primary btn-sm" disabled={!valido}
+                        aria-label={`Guardar precio de ${p.nombre}`} onClick={() => guardar(p, nuevo)}>Guardar</button>{' '}
+                      {propio !== undefined && (
+                        <button type="button" className="btn-secondary btn-sm"
+                          aria-label={`Quitar precio de ${p.nombre}`} onClick={() => guardar(p, null)}>Quitar</button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
-    </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose}>Cerrar</button>
+      </div>
+    </Modal>
   );
 }

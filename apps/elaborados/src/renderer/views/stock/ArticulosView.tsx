@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth, useEscapeToClose, rutearCampoError, useToast, traducirError } from '@core/ui';
+import { useAuth, rutearCampoError, useToast, traducirError, Modal } from '@core/ui';
 import { useArticulos, type ArticuloRow } from '../../hooks/useArticulos';
 
 const TIPO_LABEL: Record<ArticuloRow['tipo'], string> = {
@@ -129,8 +129,6 @@ function ArticuloModal({ initial, onClose, onSave }: {
   const [error, setError] = useState<string | null>(null);
   const [campoError, setCampoError] = useState<{ campo: string; mensaje: string } | null>(null);
 
-  useEscapeToClose(onClose, !saving);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!nombre.trim()) return;
@@ -153,59 +151,57 @@ function ArticuloModal({ initial, onClose, onSave }: {
   }
 
   return (
-    <div role="dialog" className="modal-overlay">
-      <form className="modal" onSubmit={handleSubmit}>
-        <div className="modal-header">
-          <span className="modal-title">{initial ? 'Editar artículo' : 'Nuevo artículo'}</span>
+    <Modal ariaLabel={initial ? 'Editar artículo' : 'Nuevo artículo'} onClose={onClose} bloqueado={saving} as="form" onSubmit={handleSubmit}>
+      <div className="modal-header">
+        <span className="modal-title">{initial ? 'Editar artículo' : 'Nuevo artículo'}</span>
+      </div>
+      <div className="modal-body">
+        <div className="field">
+          <label htmlFor="articulo-nombre">Nombre *</label>
+          <input id="articulo-nombre" className={`input${campoError?.campo === 'nombre' ? ' error' : ''}`}
+            type="text" required value={nombre} onChange={(e) => setNombre(e.target.value)} autoFocus />
+          {campoError?.campo === 'nombre' && <span className="field-error">{campoError.mensaje}</span>}
         </div>
-        <div className="modal-body">
-          <div className="field">
-            <label htmlFor="articulo-nombre">Nombre *</label>
-            <input id="articulo-nombre" className={`input${campoError?.campo === 'nombre' ? ' error' : ''}`}
-              type="text" required value={nombre} onChange={(e) => setNombre(e.target.value)} autoFocus />
-            {campoError?.campo === 'nombre' && <span className="field-error">{campoError.mensaje}</span>}
-          </div>
-          {!initial && (
-            <>
-              <div className="field">
-                <label htmlFor="articulo-tipo">Tipo *</label>
-                <select id="articulo-tipo" className="input" value={tipo} onChange={(e) => setTipo(e.target.value as ArticuloRow['tipo'])}>
-                  <option value="insumo">Insumo</option>
-                  <option value="elaborado">Elaborado</option>
-                  <option value="reventa">Reventa</option>
-                </select>
-              </div>
-              <div className="field">
-                <label htmlFor="articulo-unidad">Unidad *</label>
-                <select id="articulo-unidad" className="input" value={unidad} onChange={(e) => setUnidad(e.target.value as ArticuloRow['unidad'])}>
-                  <option value="kg">kg</option>
-                  <option value="l">l</option>
-                  <option value="u">u</option>
-                </select>
-              </div>
-            </>
-          )}
-          <div className="field">
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <input type="checkbox" checked={bloqueaSinStock} onChange={(e) => setBloqueaSinStock(e.target.checked)} />
-              Bloquea la venta/ajuste sin stock
-            </label>
-          </div>
-          <div className="field">
-            <label htmlFor="articulo-stock-min">Stock mínimo</label>
-            <input id="articulo-stock-min" className="input" type="number" step="any"
-              value={stockMinimo} onChange={(e) => setStockMinimo(e.target.value)} />
-          </div>
-          {error && <div className="alert-danger" role="alert">{error}</div>}
+        {!initial && (
+          <>
+            <div className="field">
+              <label htmlFor="articulo-tipo">Tipo *</label>
+              <select id="articulo-tipo" className="input" value={tipo} onChange={(e) => setTipo(e.target.value as ArticuloRow['tipo'])}>
+                <option value="insumo">Insumo</option>
+                <option value="elaborado">Elaborado</option>
+                <option value="reventa">Reventa</option>
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="articulo-unidad">Unidad *</label>
+              <select id="articulo-unidad" className="input" value={unidad} onChange={(e) => setUnidad(e.target.value as ArticuloRow['unidad'])}>
+                <option value="kg">kg</option>
+                <option value="l">l</option>
+                <option value="u">u</option>
+              </select>
+            </div>
+          </>
+        )}
+        <div className="field">
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <input type="checkbox" checked={bloqueaSinStock} onChange={(e) => setBloqueaSinStock(e.target.checked)} />
+            Bloquea la venta/ajuste sin stock
+          </label>
         </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button type="submit" className="btn-primary" disabled={!nombre.trim() || saving}>
-            {saving ? 'Guardando…' : 'Guardar'}
-          </button>
+        <div className="field">
+          <label htmlFor="articulo-stock-min">Stock mínimo</label>
+          <input id="articulo-stock-min" className="input" type="number" step="any"
+            value={stockMinimo} onChange={(e) => setStockMinimo(e.target.value)} />
         </div>
-      </form>
-    </div>
+        {error && <div className="alert-danger" role="alert">{error}</div>}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+        <button type="submit" className="btn-primary" disabled={!nombre.trim() || saving}>
+          {saving ? 'Guardando…' : 'Guardar'}
+        </button>
+      </div>
+    </Modal>
   );
 }
 
@@ -223,8 +219,6 @@ function RecetaModal({ articulo, articulos, onClose, obtenerReceta, guardarRecet
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const insumos = articulos.filter((a) => a.tipo === 'insumo');
-
-  useEscapeToClose(onClose, !saving);
 
   useEffect(() => {
     obtenerReceta(articulo.id).then((r) => {
@@ -257,35 +251,33 @@ function RecetaModal({ articulo, articulos, onClose, obtenerReceta, guardarRecet
   if (loading) return null;
 
   return (
-    <div role="dialog" className="modal-overlay">
-      <form className="modal" onSubmit={handleSubmit}>
-        <div className="modal-header"><span className="modal-title">Receta — {articulo.nombre}</span></div>
-        <div className="modal-body">
-          <div className="field">
-            <label htmlFor="receta-rinde">Rinde (en {articulo.unidad}) *</label>
-            <input id="receta-rinde" className="input" type="number" step="any" required value={rinde} onChange={(e) => setRinde(e.target.value)} />
+    <Modal ariaLabel={`Receta de ${articulo.nombre}`} onClose={onClose} bloqueado={saving} as="form" onSubmit={handleSubmit}>
+      <div className="modal-header"><span className="modal-title">Receta — {articulo.nombre}</span></div>
+      <div className="modal-body">
+        <div className="field">
+          <label htmlFor="receta-rinde">Rinde (en {articulo.unidad}) *</label>
+          <input id="receta-rinde" className="input" type="number" step="any" required value={rinde} onChange={(e) => setRinde(e.target.value)} />
+        </div>
+        {items.map((item, i) => (
+          <div key={i} className="flex-row gap-2">
+            <select className="input" value={item.articulo_id}
+              onChange={(e) => setItems(items.map((it, idx) => idx === i ? { ...it, articulo_id: e.target.value } : it))}>
+              {insumos.map((ins) => <option key={ins.id} value={ins.id}>{ins.nombre}</option>)}
+            </select>
+            <input className="input" type="number" step="any" placeholder="Cantidad" value={item.cantidad}
+              onChange={(e) => setItems(items.map((it, idx) => idx === i ? { ...it, cantidad: e.target.value } : it))} />
           </div>
-          {items.map((item, i) => (
-            <div key={i} className="flex-row gap-2">
-              <select className="input" value={item.articulo_id}
-                onChange={(e) => setItems(items.map((it, idx) => idx === i ? { ...it, articulo_id: e.target.value } : it))}>
-                {insumos.map((ins) => <option key={ins.id} value={ins.id}>{ins.nombre}</option>)}
-              </select>
-              <input className="input" type="number" step="any" placeholder="Cantidad" value={item.cantidad}
-                onChange={(e) => setItems(items.map((it, idx) => idx === i ? { ...it, cantidad: e.target.value } : it))} />
-            </div>
-          ))}
-          <button type="button" className="btn-secondary btn-sm"
-            onClick={() => setItems([...items, { articulo_id: insumos[0]?.id ?? '', cantidad: '' }])}>
-            + Agregar insumo
-          </button>
-          {error && <div className="alert-danger" role="alert">{error}</div>}
-        </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar receta'}</button>
-        </div>
-      </form>
-    </div>
+        ))}
+        <button type="button" className="btn-secondary btn-sm"
+          onClick={() => setItems([...items, { articulo_id: insumos[0]?.id ?? '', cantidad: '' }])}>
+          + Agregar insumo
+        </button>
+        {error && <div className="alert-danger" role="alert">{error}</div>}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+        <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Guardando…' : 'Guardar receta'}</button>
+      </div>
+    </Modal>
   );
 }

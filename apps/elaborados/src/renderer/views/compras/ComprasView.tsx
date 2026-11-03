@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth, useEscapeToClose, useToast, SupervisorAuthModal, traducirError } from '@core/ui';
+import { useAuth, useToast, SupervisorAuthModal, traducirError, Modal } from '@core/ui';
 import {
   useCompras, type CompraRow, type ProveedorRow, type CompraCrearPayload, type AnularCompraPayload,
 } from '../../hooks/useCompras';
@@ -93,8 +93,6 @@ function NuevaCompraModal({ articulos, proveedores, onClose, onCrear, onCrearPro
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEscapeToClose(onClose, !saving);
-
   const setFila = (i: number, patch: Partial<Fila>) =>
     setFilas((fs) => fs.map((f, j) => (j === i ? { ...f, ...patch } : f)));
 
@@ -142,77 +140,75 @@ function NuevaCompraModal({ articulos, proveedores, onClose, onCrear, onCrearPro
   }
 
   return (
-    <div role="dialog" className="modal-overlay">
-      <form className="modal" onSubmit={handleSubmit}>
-        <div className="modal-header"><span className="modal-title">Nueva compra</span></div>
-        <div className="modal-body">
-          <div className="field">
-            <label htmlFor="compra-proveedor">Proveedor</label>
-            {nuevoProveedor === null ? (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <select id="compra-proveedor" className="input" value={proveedorId} onChange={(e) => setProveedorId(e.target.value)}>
-                  <option value="">(Sin proveedor)</option>
-                  {proveedores.map((p) => <option key={p.id} value={p.id}>{p.razon_social}</option>)}
-                </select>
-                <button type="button" className="btn-secondary btn-sm" onClick={() => setNuevoProveedor('')}>Nuevo proveedor</button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input id="compra-proveedor-nuevo" aria-label="Razón social del proveedor" className="input" type="text"
-                  placeholder="Razón social" value={nuevoProveedor} onChange={(e) => setNuevoProveedor(e.target.value)} autoFocus />
-                <button type="button" className="btn-primary btn-sm" disabled={!nuevoProveedor.trim()} onClick={handleGuardarProveedor}>Guardar proveedor</button>
-                <button type="button" className="btn-secondary btn-sm" onClick={() => setNuevoProveedor(null)}>Cancelar</button>
-              </div>
-            )}
-          </div>
-          <div className="field">
-            <label htmlFor="compra-comprobante">Comprobante del proveedor</label>
-            <input id="compra-comprobante" className="input" type="text" maxLength={60}
-              value={comprobante} onChange={(e) => setComprobante(e.target.value)} />
-          </div>
-
-          {filas.map((f, i) => (
-            <div key={i} className="field" style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
-              <div style={{ flex: 2 }}>
-                <label htmlFor={`compra-art-${i}`}>Artículo *</label>
-                <select id={`compra-art-${i}`} className="input" value={f.articulo_id} onChange={(e) => setFila(i, { articulo_id: e.target.value })}>
-                  {articulos.map((a) => <option key={a.id} value={a.id}>{a.nombre} ({a.unidad})</option>)}
-                </select>
-              </div>
-              <div style={{ flex: 1 }}>
-                <label htmlFor={`compra-cant-${i}`}>Cantidad *</label>
-                <input id={`compra-cant-${i}`} className="input" type="number" step="any" min="0.001"
-                  value={f.cantidad} onChange={(e) => setFila(i, { cantidad: e.target.value })} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label htmlFor={`compra-costo-${i}`}>Costo unitario ($) *</label>
-                <input id={`compra-costo-${i}`} className="input" type="number" step="0.01" min="0"
-                  value={f.costo} onChange={(e) => setFila(i, { costo: e.target.value })} />
-              </div>
-              <button type="button" className="btn-secondary btn-sm" aria-label={`Quitar ítem ${i + 1}`}
-                disabled={filas.length === 1} onClick={() => setFilas((fs) => fs.filter((_, j) => j !== i))}>×</button>
+    <Modal ariaLabel="Nueva compra" onClose={onClose} bloqueado={saving} as="form" onSubmit={handleSubmit}>
+      <div className="modal-header"><span className="modal-title">Nueva compra</span></div>
+      <div className="modal-body">
+        <div className="field">
+          <label htmlFor="compra-proveedor">Proveedor</label>
+          {nuevoProveedor === null ? (
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <select id="compra-proveedor" className="input" value={proveedorId} onChange={(e) => setProveedorId(e.target.value)}>
+                <option value="">(Sin proveedor)</option>
+                {proveedores.map((p) => <option key={p.id} value={p.id}>{p.razon_social}</option>)}
+              </select>
+              <button type="button" className="btn-secondary btn-sm" onClick={() => setNuevoProveedor('')}>Nuevo proveedor</button>
             </div>
-          ))}
-          <button type="button" className="btn-secondary btn-sm" disabled={articulos.length === 0}
-            onClick={() => setFilas((fs) => [...fs, { articulo_id: articulos[0]?.id ?? '', cantidad: '', costo: '' }])}>
-            + Agregar ítem
-          </button>
+          ) : (
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <input id="compra-proveedor-nuevo" aria-label="Razón social del proveedor" className="input" type="text"
+                placeholder="Razón social" value={nuevoProveedor} onChange={(e) => setNuevoProveedor(e.target.value)} autoFocus />
+              <button type="button" className="btn-primary btn-sm" disabled={!nuevoProveedor.trim()} onClick={handleGuardarProveedor}>Guardar proveedor</button>
+              <button type="button" className="btn-secondary btn-sm" onClick={() => setNuevoProveedor(null)}>Cancelar</button>
+            </div>
+          )}
+        </div>
+        <div className="field">
+          <label htmlFor="compra-comprobante">Comprobante del proveedor</label>
+          <input id="compra-comprobante" className="input" type="text" maxLength={60}
+            value={comprobante} onChange={(e) => setComprobante(e.target.value)} />
+        </div>
 
-          <div className="field">
-            <label htmlFor="compra-obs">Observaciones</label>
-            <input id="compra-obs" className="input" type="text" value={observaciones} onChange={(e) => setObservaciones(e.target.value)} />
+        {filas.map((f, i) => (
+          <div key={i} className="field" style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+            <div style={{ flex: 2 }}>
+              <label htmlFor={`compra-art-${i}`}>Artículo *</label>
+              <select id={`compra-art-${i}`} className="input" value={f.articulo_id} onChange={(e) => setFila(i, { articulo_id: e.target.value })}>
+                {articulos.map((a) => <option key={a.id} value={a.id}>{a.nombre} ({a.unidad})</option>)}
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label htmlFor={`compra-cant-${i}`}>Cantidad *</label>
+              <input id={`compra-cant-${i}`} className="input" type="number" step="any" min="0.001"
+                value={f.cantidad} onChange={(e) => setFila(i, { cantidad: e.target.value })} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label htmlFor={`compra-costo-${i}`}>Costo unitario ($) *</label>
+              <input id={`compra-costo-${i}`} className="input" type="number" step="0.01" min="0"
+                value={f.costo} onChange={(e) => setFila(i, { costo: e.target.value })} />
+            </div>
+            <button type="button" className="btn-secondary btn-sm" aria-label={`Quitar ítem ${i + 1}`}
+              disabled={filas.length === 1} onClick={() => setFilas((fs) => fs.filter((_, j) => j !== i))}>×</button>
           </div>
-          <p style={{ fontWeight: 600 }}>Total: {pesos(total)}</p>
-          {error && <div className="alert-danger" role="alert">{error}</div>}
+        ))}
+        <button type="button" className="btn-secondary btn-sm" disabled={articulos.length === 0}
+          onClick={() => setFilas((fs) => [...fs, { articulo_id: articulos[0]?.id ?? '', cantidad: '', costo: '' }])}>
+          + Agregar ítem
+        </button>
+
+        <div className="field">
+          <label htmlFor="compra-obs">Observaciones</label>
+          <input id="compra-obs" className="input" type="text" value={observaciones} onChange={(e) => setObservaciones(e.target.value)} />
         </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button type="submit" className="btn-primary" disabled={!valido || saving}>
-            {saving ? 'Registrando…' : 'Registrar compra'}
-          </button>
-        </div>
-      </form>
-    </div>
+        <p style={{ fontWeight: 600 }}>Total: {pesos(total)}</p>
+        {error && <div className="alert-danger" role="alert">{error}</div>}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
+        <button type="submit" className="btn-primary" disabled={!valido || saving}>
+          {saving ? 'Registrando…' : 'Registrar compra'}
+        </button>
+      </div>
+    </Modal>
   );
 }
 
@@ -225,8 +221,6 @@ function AnularCompraModal({ compra, onClose, onAnular }: {
   const [motivo, setMotivo] = useState('');
   const [step, setStep] = useState<'motivo' | 'auth'>('motivo');
   const [error, setError] = useState<string | null>(null);
-
-  useEscapeToClose(onClose, step === 'motivo');
 
   function handleContinuar(e: React.FormEvent) {
     e.preventDefault();
@@ -246,25 +240,23 @@ function AnularCompraModal({ compra, onClose, onAnular }: {
   }
 
   return (
-    <div role="dialog" className="modal-overlay">
-      <form className="modal" onSubmit={handleContinuar}>
-        <div className="modal-header"><span className="modal-title">Anular compra {compra.numero}</span></div>
-        <div className="modal-body">
-          <div className="field">
-            <label htmlFor="anular-compra-motivo">Motivo *</label>
-            <input id="anular-compra-motivo" className="input" type="text" required value={motivo}
-              onChange={(e) => { setMotivo(e.target.value); setError(null); }} autoFocus />
-          </div>
-          <p style={{ fontSize: '0.85rem', opacity: 0.75 }}>
-            Revierte el stock ingresado. Requiere autorización de un Supervisor.
-          </p>
-          {error && <div className="alert-danger" role="alert">{error}</div>}
+    <Modal ariaLabel={`Anular compra ${compra.numero}`} onClose={onClose} bloqueado={step !== 'motivo'} as="form" onSubmit={handleContinuar}>
+      <div className="modal-header"><span className="modal-title">Anular compra {compra.numero}</span></div>
+      <div className="modal-body">
+        <div className="field">
+          <label htmlFor="anular-compra-motivo">Motivo *</label>
+          <input id="anular-compra-motivo" className="input" type="text" required value={motivo}
+            onChange={(e) => { setMotivo(e.target.value); setError(null); }} autoFocus />
         </div>
-        <div className="modal-footer">
-          <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
-          <button type="submit" className="btn-primary">Continuar</button>
-        </div>
-      </form>
-    </div>
+        <p style={{ fontSize: '0.85rem', opacity: 0.75 }}>
+          Revierte el stock ingresado. Requiere autorización de un Supervisor.
+        </p>
+        {error && <div className="alert-danger" role="alert">{error}</div>}
+      </div>
+      <div className="modal-footer">
+        <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
+        <button type="submit" className="btn-primary">Continuar</button>
+      </div>
+    </Modal>
   );
 }
