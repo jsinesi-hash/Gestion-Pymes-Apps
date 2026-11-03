@@ -1,6 +1,6 @@
 # Plan — SMTP al núcleo y recuperación de contraseña en Elaborados
 
-**Fecha:** 2026-11-03 · **Estado:** aprobado por el usuario. PR 1 implementado (ADR-142); PR 2 (Elaborados) pendiente
+**Fecha:** 2026-11-03 · **Estado:** aprobado por el usuario. PR 1 implementado (ADR-142) y PR 2 (Elaborados) implementado (ADR-143)
 
 ## Pedido y contexto
 
