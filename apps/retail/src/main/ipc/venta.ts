@@ -402,6 +402,5 @@ export function ventaDetalladoQueryAll(db: Db, filtros: VentaExportFiltros = {})
 export function registerVentaHandlers(ipcMain: IpcMain, db: Db): void {
   ipcMain.handle('venta:confirmar',  async (_e, p) => ventaConfirmarHandler(db, p));
   ipcMain.handle('venta:anular',     async (_e, p) => ventaAnularHandler(db, p));
-  ipcMain.handle('venta:listByCaja', async (_e, p) => ventaListByCajaHandler(db, p));
   ipcMain.handle('venta:get',        async (_e, p) => ventaGetHandler(db, p));
 }

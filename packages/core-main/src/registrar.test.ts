@@ -1,15 +1,20 @@
 import { describe, it, expect } from 'vitest';
 import type { IpcMain } from 'electron';
-import { registerCoreHandlers } from './registrar';
+import { registerCoreHandlers, type CoreHandlersOpts } from './registrar';
+import { clearSession } from './auth/session';
 
 // Revisión 2026-10-20 (P2): el handler de `impuesto` era idéntico en Retail y Elaborados (tabla en
 // @core/db) y pasó al núcleo. `ipcMain.handle` lanza si un canal se registra dos veces, así que
 // además de comprobar que el canal está, se comprueba que ninguno se repite.
+function registrar(extra: Partial<CoreHandlersOpts> = {}) {
+  const handlers = new Map<string, (...a: any[]) => unknown>();
+  const ipcMain = { handle: (canal: string, h: (...a: any[]) => unknown) => { handlers.set(canal, h); }, on: () => {} } as unknown as IpcMain;
+  registerCoreHandlers(ipcMain, {} as never, { migrationsFolder: 'migraciones', navegacion: {} as never, ...extra });
+  return handlers;
+}
+
 function canalesRegistrados(): string[] {
-  const canales: string[] = [];
-  const ipcMain = { handle: (canal: string) => { canales.push(canal); }, on: () => {} } as unknown as IpcMain;
-  registerCoreHandlers(ipcMain, {} as never, { migrationsFolder: 'migraciones', navegacion: {} as never });
-  return canales;
+  return [...registrar().keys()];
 }
 
 describe('registerCoreHandlers', () => {
@@ -28,5 +33,26 @@ describe('registerCoreHandlers', () => {
     const c = canalesRegistrados();
     const repetidos = c.filter((canal, i) => c.indexOf(canal) !== i);
     expect(repetidos).toEqual([]);
+  });
+
+  // Revisión 2026-10-20 (P2): `venta:listByCaja` (lo registraban Retail y Elaborados por separado y
+  // respondía sin sesión) y `menu:rebuild` (solo Retail; el renderer lo llamaba con `?.`).
+  it('registra venta:listByCaja y menu:rebuild como canales universales', () => {
+    const c = canalesRegistrados();
+    expect(c).toContain('venta:listByCaja');
+    expect(c).toContain('menu:rebuild');
+  });
+
+  it('venta:listByCaja sin sesión rechaza con UNAUTHENTICATED', async () => {
+    clearSession();
+    const h = registrar().get('venta:listByCaja')!;
+    await expect(Promise.resolve().then(() => h({}, { caja_id: 'x' }))).rejects.toThrow('UNAUTHENTICATED');
+  });
+
+  it('menu:rebuild invoca reconstruirMenu y, sin él, no hace nada', async () => {
+    let llamadas = 0;
+    await registrar({ reconstruirMenu: () => { llamadas++; } }).get('menu:rebuild')!({});
+    expect(llamadas).toBe(1);
+    await expect(Promise.resolve(registrar().get('menu:rebuild')!({}))).resolves.toBeUndefined();
   });
 });
