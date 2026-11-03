@@ -97,6 +97,7 @@ export const NAV_ELABORADOS: NavGroup[] = [
       { label: 'Roles y permisos', to: '/config/roles-permisos', icon: SVG_CLIENTES, permiso: 'usuario.administrar' },
       { label: 'Backup/Restore', to: '/config/backup-restore', icon: SVG_BACKUP, permiso: 'backup.crear' },
       { label: 'Datos demo', to: '/config/datos-demo', icon: SVG_SISTEMA, permiso: 'usuario.administrar' },
+      { label: 'Email / SMTP', to: '/config/smtp', icon: SVG_SISTEMA, permiso: 'config.fiscal' },
     ],
   },
 ];

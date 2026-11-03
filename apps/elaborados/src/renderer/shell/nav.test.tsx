@@ -23,8 +23,11 @@ describe('NAV de Elaborados', () => {
     // (tsconfig.base.json) — desajuste de las propias definiciones de la librería, no del
     // contenido de `routes`. Mismo patrón sería necesario en cualquier uso de `matchRoutes`
     // en este monorepo.
+    // Se mira la ruta HOJA (la última de la cadena): la raíz `/` siempre cumple `path !== '*'`, así que
+    // con `.some(...)` cualquier ítem pasaba aunque solo existiera la ruta comodín (ADR-143).
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(matchRoutes(routes as any, to)?.some((m) => m.route.path !== '*')).toBe(true);
+    const cadena = matchRoutes(routes as any, to);
+    expect(cadena && cadena[cadena.length - 1]!.route.path !== '*').toBe(true);
   });
 
   it.each(items.map((i) => [i.label, i.to!]))('%s (%s) tiene breadcrumb', (_l, to) => {
