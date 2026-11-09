@@ -2,7 +2,7 @@ import { eq, desc } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
-import { getOriginId, requirePermission, verificarSupervisor, str, num, optStr, arr, id as vId, requireSession } from '@core/main';
+import { getOriginId, requirePermission, verificarAutorizacion, str, num, optStr, arr, id as vId, requireSession } from '@core/main';
 import * as schema from '../db/schema';
 import { escalarReceta } from '../domain/receta';
 import { costoDeLote, costoPromedioEntrada } from '../domain/costo';
@@ -140,7 +140,7 @@ export function produccionAnularHandler(db: Db, payload: unknown) {
   const v_motivo = str(p['motivo'], 'motivo', { max: 300 });
   const supervisor_credenciales = p['supervisor_credenciales'] as { nombre_usuario: string; password: string } | undefined;
   if (!supervisor_credenciales) throw new Error('ANULACION_REQUIERE_AUTORIZACION');
-  verificarSupervisor(db, supervisor_credenciales);
+  verificarAutorizacion(db, supervisor_credenciales, 'produccion.anular');
 
   const prod = db.select().from(schema.produccion).where(eq(schema.produccion.id, v_id)).get();
   if (!prod) throw new Error('NOT_FOUND');

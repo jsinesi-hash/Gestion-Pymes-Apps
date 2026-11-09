@@ -257,7 +257,7 @@ export function registerUbicacionHandlers(ipcMain: IpcMain, db: Db): void {
   ipcMain.handle('ubicacion:create',   async (_e, p) => ubicacionCreateHandler(db, p));
   ipcMain.handle('ubicacion:update',   async (_e, p) => ubicacionUpdateHandler(db, p));
   ipcMain.handle('ubicacion:delete',   async (_e, p) => ubicacionDeleteHandler(db, p));
-  const guardSup = requirePermission('usuario.administrar');
+  const guardSup = requirePermission('catalogo.gestionar');
   ipcMain.handle('ubicacion:dedup:preview', guardSup(async () => ubicacionDedupPreviewHandler(db)));
   ipcMain.handle('ubicacion:dedup:aplicar', guardSup(async () => ubicacionDedupAplicarHandler(db)));
 }

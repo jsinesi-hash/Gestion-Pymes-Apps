@@ -130,7 +130,8 @@ Hoy el riesgo es acotado (las DevTools solo aparecen en desarrollo), pero tiene 
      de escritura no declara permiso (o no está en una lista blanca explícita).
    - Etiquetas para los permisos de Elaborados y test de cobertura sobre el conjunto completo
      (core + cada app).
-2. **RBAC Fase 1 — permisos con significado propio** (migración aditiva vía seed): separar
+2. **RBAC Fase 1 — permisos con significado propio** (migración aditiva vía seed) — **hecho en
+   ADR-146**; de paso se corrigió que el último Supervisor se podía pasar a Operador: separar
    `precio.gestionar` de `config.fiscal`, `catalogo.gestionar` (categorías/marcas/unidades/
    sinónimos) de `usuario.administrar`, `agenda.*`, `cliente.desactivar`; autorizaciones del POS
    por permiso (`verificarAutorizacion(db, creds, 'venta.anular')`) en vez de por nombre de rol;

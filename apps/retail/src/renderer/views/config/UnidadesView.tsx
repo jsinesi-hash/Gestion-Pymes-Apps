@@ -83,7 +83,7 @@ export function UnidadesView() {
         </select>
         <div className="ml-auto" />
         <ExportarButton definicion={exportUnidades} />
-        {can('usuario.administrar') && (
+        {can('catalogo.gestionar') && (
           <button className="btn-primary" onClick={() => setModal({ mode: 'create' })}>
             + Nueva unidad
           </button>
@@ -119,7 +119,7 @@ export function UnidadesView() {
                 </td>
                 <td>
                   <div className="flex-row gap-2">
-                    {can('usuario.administrar') && (
+                    {can('catalogo.gestionar') && (
                       <>
                         <button
                           className="btn-secondary btn-sm"

@@ -3,7 +3,7 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
 import {
-  getOriginId, requirePermission, verificarSupervisor,
+  getOriginId, requirePermission, verificarAutorizacion,
   str, num, int, optStr, optId, arr, id as vId,
   requireSession,
 } from '@core/main';
@@ -130,7 +130,7 @@ export function compraAnularHandler(db: Db, payload: unknown) {
   const v_motivo = str(p['motivo'], 'motivo', { max: 300 });
   const cred = p['supervisor_credenciales'] as { nombre_usuario: string; password: string } | undefined;
   if (!cred) throw new Error('ANULACION_REQUIERE_AUTORIZACION');
-  verificarSupervisor(db, cred);
+  verificarAutorizacion(db, cred, 'compra.anular');
 
   const compra = db.select().from(schema.compra).where(eq(schema.compra.id, v_id)).get();
   if (!compra) throw new Error('NOT_FOUND');

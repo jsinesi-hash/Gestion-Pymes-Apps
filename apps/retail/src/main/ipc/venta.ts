@@ -3,7 +3,7 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId, inicioDelDia, finDelDia, nombreCompletoCliente, verificarTotalesVenta } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { verificarSupervisor, optId, arr, num, centavos, oneOf, id as vId, confirmarVenta, anularVenta, ventaListByCajaHandler, type AplicarLineasCtx, type RevertirLineasCtx, type VentaPagoPayload, requireSession } from '@core/main';
+import { verificarAutorizacion, optId, arr, num, centavos, oneOf, id as vId, confirmarVenta, anularVenta, ventaListByCajaHandler, type AplicarLineasCtx, type RevertirLineasCtx, type VentaPagoPayload, requireSession } from '@core/main';
 export type { VentaPagoPayload } from '@core/main';
 export { ventaListByCajaHandler };
 import { marcarPresupuestoConvertido } from './presupuesto';
@@ -144,7 +144,7 @@ function validarLineasPrevio(db: Db, payload: VentaConfirmarPayload): void {
 
   if (precioDesactualizado) {
     if (!payload.supervisor_credenciales) throw new Error('PRECIO_DESACTUALIZADO');
-    verificarSupervisor(db, payload.supervisor_credenciales);
+    verificarAutorizacion(db, payload.supervisor_credenciales, 'precio.override');
   }
 }
 

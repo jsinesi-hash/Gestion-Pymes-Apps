@@ -5,7 +5,7 @@ import { generateId } from '@ferreteria/shared';
 import * as schema from '@core/db';
 import { getSession } from '../auth/session';
 import { getOriginId } from '../context';
-import { verificarSupervisor } from '../auth/verificarSupervisor';
+import { verificarAutorizacion } from '../auth/verificarAutorizacion';
 import { num, optStr, oneOf, id as vId } from '../validation/core';
 import { triggerAutoBackup } from './backup';
 import { parametrosGetHandler } from './parametros';
@@ -196,7 +196,7 @@ export function cajaCerrarHandler(
   let supervisorId: string | null = null;
   if (Math.abs(diferencia) > umbral) {
     if (!supervisor_credenciales) throw new Error('DIFERENCIA_REQUIERE_AUTORIZACION');
-    supervisorId = verificarSupervisor(db, supervisor_credenciales);
+    supervisorId = verificarAutorizacion(db, supervisor_credenciales, 'caja.autorizar_diferencia');
   }
 
   const now = new Date();

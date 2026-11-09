@@ -454,7 +454,7 @@ export function registerListaPrecioValorHandlers(ipcMain: IpcMain, db: Db): void
   // Revisión 2026-10-20 (P0): fijar o recalcular precios es `config.fiscal` (solo Supervisor,
   // CLAUDE.md §8). Se gatea en el canal y no en el handler porque el scheduler de cambios
   // programados llama a `recalcularMasivoHandler` sin sesión (callerUserId).
-  const guard = requirePermission('config.fiscal');
+  const guard = requirePermission('precio.gestionar');
 
   ipcMain.handle('listaPrecioValor:getPrecioEnLista', async (_e, p) =>
     getPrecioEnListaHandler(db, p));

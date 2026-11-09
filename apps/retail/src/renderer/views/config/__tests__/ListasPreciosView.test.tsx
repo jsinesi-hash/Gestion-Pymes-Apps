@@ -20,7 +20,7 @@ const LISTA_B = {
 function buildAuth(isSupervisor: boolean) {
   return {
     session: { id: 'u1', nombreCompleto: 'Admin', rolId: 'r1', rolNombre: '', permisos: [], preferencias: { tema: 'claro' as const, acento: 'amber' as const, ui_font: 'Hanken Grotesk' as const, densidad: 'comfortable' as const, skin: 'actual' as const, pantalla_inicio: null, favoritos: [] } },
-    can: (codigo: string) => isSupervisor && codigo === 'config.fiscal',
+    can: (codigo: string) => isSupervisor && codigo === 'precio.gestionar',
     login: async () => {},
     logout: async () => {},
     actualizarPreferencias: () => {},

@@ -89,7 +89,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Eventos',  to: '/agenda',         icon: SVG_AGENDA, end: true },
       { label: 'Avisos',   to: '/agenda/avisos',  icon: SVG_ETIQUETAS },
-      { label: 'Rutinas',  to: '/agenda/rutinas', icon: SVG_REABASTECIMIENTO },
+      { label: 'Rutinas',  to: '/agenda/rutinas', icon: SVG_REABASTECIMIENTO, permiso: 'agenda.gestionar' },
     ]},
   // ADR-080 (NAV-3): "Configuración" aligerado a solo catálogos operativos. Los ítems de
   // precios y las importaciones salieron de acá — van al hub de Precios (o al grupo Precios
@@ -101,12 +101,12 @@ export const NAV_GROUPS: NavGroup[] = [
       // ADR-083: "Importar datos" se movió desde Sistema al tope de Configuración (pedido de PO).
       { label: 'Importar datos', to: '/importar', icon: SVG_IMPORTAR, permiso: 'import.masiva' },
       { label: 'Etiquetas',      to: '/etiquetas',              icon: SVG_ETIQUETAS },
-      { label: 'Categorías',     to: '/config/categorias',      icon: SVG_CONFIG,      permiso: 'usuario.administrar' },
-      { label: 'Marcas',         to: '/config/marcas',          icon: SVG_CONFIG,      permiso: 'usuario.administrar' },
-      { label: 'Unidades',       to: '/config/unidades',        icon: SVG_CONFIG,      permiso: 'usuario.administrar' },
+      { label: 'Categorías',     to: '/config/categorias',      icon: SVG_CONFIG,      permiso: 'catalogo.gestionar' },
+      { label: 'Marcas',         to: '/config/marcas',          icon: SVG_CONFIG,      permiso: 'catalogo.gestionar' },
+      { label: 'Unidades',       to: '/config/unidades',        icon: SVG_CONFIG,      permiso: 'catalogo.gestionar' },
       { label: 'Ubicaciones',    to: '/config/ubicaciones',     icon: SVG_CONFIG },
       // ADR-069: "Sinónimos" se mudó desde el grupo Sistema a Configuración, debajo de Ubicaciones.
-      { label: 'Sinónimos',      to: '/config/sinonimos',       icon: SVG_CONFIG,      permiso: 'usuario.administrar' },
+      { label: 'Sinónimos',      to: '/config/sinonimos',       icon: SVG_CONFIG,      permiso: 'catalogo.gestionar' },
       { label: 'Transportistas', to: '/remitos/transportistas', icon: SVG_PROVEEDORES, permiso: 'transportista.gestionar' },
     ]},
   { key: 'sistema', label: 'Sistema', icon: SVG_SISTEMA,
@@ -129,10 +129,10 @@ export const NAV_GROUPS: NavGroup[] = [
 // catálogo prov." → "Importar Catálogo del Proveedor"; el submenú de revisión →
 // "Revisión de Costos y Catálogo".
 const PRECIOS_GROUP: NavGroup = {
-  key: 'precios', label: 'Precios / Costos', icon: SVG_CREDITO, permiso: 'config.fiscal',
+  key: 'precios', label: 'Precios / Costos', icon: SVG_CREDITO, permiso: 'precio.gestionar',
   items: [
-    { label: 'Listas de precios',    to: '/config/listas-de-precios',      icon: SVG_CREDITO,  permiso: 'config.fiscal' },
-    { label: 'Lotes de precios',     to: '/precios/lotes',                 icon: SVG_ORDENES,  permiso: 'config.fiscal' },
+    { label: 'Listas de precios',    to: '/config/listas-de-precios',      icon: SVG_CREDITO,  permiso: 'precio.gestionar' },
+    { label: 'Lotes de precios',     to: '/precios/lotes',                 icon: SVG_ORDENES,  permiso: 'precio.gestionar' },
     { label: 'Importar costos',      to: '/precios/importar-costos',       icon: SVG_IMPORTAR, permiso: 'import.masiva' },
     { label: 'Importar Catálogo del Proveedor', to: '/precios/importar-catalogo-proveedor', icon: SVG_IMPORTAR, permiso: 'import.masiva' },
     { label: 'Revisión de Costos y Catálogo', to: '/precios/revision-historial', icon: SVG_IMPORTAR, permiso: 'import.masiva' },
@@ -143,7 +143,7 @@ const PRECIOS_GROUP: NavGroup = {
 // (hub_precios) o al grupo Precios/Costos (motor v2); con ambos apagados, este arreglo se
 // inyecta como fallback dentro del grupo Sistema. Mismos label/to/permiso que en el hub.
 const PRECIOS_FALLBACK_ITEMS: NavItem[] = [
-  { label: 'Listas de precios',    to: '/config/listas-de-precios',      icon: SVG_CREDITO,  permiso: 'config.fiscal' },
+  { label: 'Listas de precios',    to: '/config/listas-de-precios',      icon: SVG_CREDITO,  permiso: 'precio.gestionar' },
   { label: 'Importar costos',      to: '/precios/importar-costos',       icon: SVG_IMPORTAR, permiso: 'import.masiva' },
   { label: 'Importar Catálogo del Proveedor', to: '/precios/importar-catalogo-proveedor', icon: SVG_IMPORTAR, permiso: 'import.masiva' },
   { label: 'Revisión de Costos y Catálogo', to: '/precios/revision-historial', icon: SVG_IMPORTAR, permiso: 'import.masiva' },
@@ -153,8 +153,8 @@ const PRECIOS_FALLBACK_ITEMS: NavItem[] = [
 // → /precios/hub reemplaza a los ítems de precios dispersos. Gana sobre el reagrupamiento
 // del motor v2.
 const PRECIOS_HUB_ITEM: NavGroup = {
-  key: 'precios-hub', label: 'Precios y Costos', icon: SVG_CREDITO, permiso: 'config.fiscal', standalone: true,
-  items: [{ label: 'Precios y Costos', to: '/precios/hub', icon: SVG_CREDITO, permiso: 'config.fiscal' }],
+  key: 'precios-hub', label: 'Precios y Costos', icon: SVG_CREDITO, permiso: 'precio.gestionar', standalone: true,
+  items: [{ label: 'Precios y Costos', to: '/precios/hub', icon: SVG_CREDITO, permiso: 'precio.gestionar' }],
 };
 
 /**

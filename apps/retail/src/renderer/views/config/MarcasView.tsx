@@ -82,7 +82,7 @@ export function MarcasView() {
         </select>
         <div className="ml-auto" />
         <ExportarButton definicion={exportMarcas} />
-        {can('usuario.administrar') && (
+        {can('catalogo.gestionar') && (
           <button className="btn-primary" onClick={() => setModal({ mode: 'create' })}>
             + Nueva marca
           </button>
@@ -109,7 +109,7 @@ export function MarcasView() {
                 </td>
                 <td>
                   <div className="flex-row gap-2">
-                    {can('usuario.administrar') && (
+                    {can('catalogo.gestionar') && (
                       <>
                         <button className="btn-secondary btn-sm"
                           onClick={() => setModal({ mode: 'edit', marca: m })}>Editar</button>

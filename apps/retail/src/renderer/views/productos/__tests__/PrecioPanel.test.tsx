@@ -13,7 +13,7 @@ const LISTA_B = { id: 'l2', nombre: 'Mayorista',  ajuste_porcentual: -10, predet
 function buildAuth(isSupervisor: boolean) {
   return {
     session: { id: 'u1', nombreCompleto: 'X', rolId: 'r1', rolNombre: '', permisos: [], preferencias: { tema: 'claro' as const, acento: 'amber' as const, ui_font: 'Hanken Grotesk' as const, densidad: 'comfortable' as const, skin: 'actual' as const, pantalla_inicio: null, favoritos: [] } },
-    can: (codigo: string) => isSupervisor && codigo === 'config.fiscal',
+    can: (codigo: string) => isSupervisor && codigo === 'precio.gestionar',
     login: async () => {},
     logout: async () => {},
     actualizarPreferencias: () => {},

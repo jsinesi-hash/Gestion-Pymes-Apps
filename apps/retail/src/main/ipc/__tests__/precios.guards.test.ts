@@ -7,7 +7,7 @@ import { registerCambioProgramadoHandlers } from '../cambio-programado';
 
 // Revisión 2026-10-20 (P0): las escrituras de precios y de cambios programados solo
 // estaban protegidas por sesión. La matriz RBAC (CLAUDE.md §8) las reserva al Supervisor
-// (`config.fiscal`). Se prueba contra el registro real de canales, no contra el handler
+// (`precio.gestionar` desde ADR-146; antes `config.fiscal`). Se prueba contra el registro real de canales, no contra el handler
 // suelto, porque el scheduler llama a los handlers sin sesión (callerUserId).
 
 type Handler = (event: unknown, ...args: unknown[]) => Promise<unknown>;
@@ -45,9 +45,9 @@ describe('guards de precios y cambios programados', () => {
     await expect(invoke(canal, payload)).rejects.toThrow('UNAUTHENTICATED');
   });
 
-  it.each(CANALES_ESCRITURA)('%s como Operador → FORBIDDEN (config.fiscal)', async (canal, payload) => {
+  it.each(CANALES_ESCRITURA)('%s como Operador → FORBIDDEN (precio.gestionar)', async (canal, payload) => {
     loginAsOperador(db);
-    await expect(invoke(canal, payload)).rejects.toThrow('FORBIDDEN:config.fiscal');
+    await expect(invoke(canal, payload)).rejects.toThrow('FORBIDDEN:precio.gestionar');
   });
 
   it.each(CANALES_ESCRITURA)('%s como Supervisor pasa el guard', async (canal, payload) => {

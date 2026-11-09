@@ -29,7 +29,9 @@ const BUSCADORES_RETAIL = [buscadorProductos, buscadorClientes, buscadorProveedo
  * hay depuración ni propuesta).
  */
 function RetailShellOverlays({ hayModalCore }: Readonly<{ hayModalCore: boolean }>) {
-  const { session } = useAuth();
+  const { session, can } = useAuth();
+  // ADR-146: la propuesta de actualización la ve quien tiene config.fiscal (no se mira el nombre del rol).
+  const puedeActualizar = can('config.fiscal');
   useMenuAcciones();
   const [propuestaVersion, setPropuestaVersion] = useState<string | null>(null);
   const [novedades, setNovedades] = useState<{ titulo: string; notas: string[] } | null>(null);
@@ -39,10 +41,10 @@ function RetailShellOverlays({ hayModalCore }: Readonly<{ hayModalCore: boolean 
   // entre navegaciones de rutas hijas).
   const actualizacionPospuestaRef = useRef(false);
 
-  // Propuesta de actualización: solo Supervisor, una vez por sesión.
+  // Propuesta de actualización: solo quien administra el sistema, una vez por sesión.
   useEffect(() => {
     if (actualizacionPospuestaRef.current) return;
-    if (session?.rolNombre !== 'SUPERVISOR') return;
+    if (!puedeActualizar) return;
     let vivo = true;
     (async () => {
       try {
@@ -51,7 +53,7 @@ function RetailShellOverlays({ hayModalCore }: Readonly<{ hayModalCore: boolean 
       } catch { /* sin updater o backend no disponible: silencioso */ }
     })();
     return () => { vivo = false; };
-  }, [session?.rolNombre]);
+  }, [puedeActualizar]);
 
   // Novedades post-actualización: cualquier rol, una vez por versión.
   useEffect(() => {

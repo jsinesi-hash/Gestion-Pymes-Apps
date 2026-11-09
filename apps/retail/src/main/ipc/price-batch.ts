@@ -18,7 +18,7 @@ function requirePerm(codigo: string) {
 }
 
 export function crearBatchHandler(db: Db, rawParams: unknown) {
-  const session = requirePerm('config.fiscal');
+  const session = requirePerm('precio.gestionar');
   // ADR-082 (SEC-2): valida forma/tipo antes de la lógica del motor.
   const p = (rawParams ?? {}) as Record<string, unknown>;
   vId(p['lista_precio_id'], 'lista_precio_id');
@@ -28,7 +28,7 @@ export function crearBatchHandler(db: Db, rawParams: unknown) {
 }
 
 export function obtenerBatchHandler(db: Db, id: string) {
-  requirePerm('config.fiscal');
+  requirePerm('precio.gestionar');
   const batchRow = db.select().from(schema.price_batch).where(eq(schema.price_batch.id, id)).get();
   if (!batchRow) return null;
   const lista = db.select({ nombre: schema.lista_precio.nombre })
@@ -62,7 +62,7 @@ type BatchEstado = typeof schema.price_batch.$inferSelect.estado;
 const ESTADOS_ACTIVOS: BatchEstado[] = ['borrador', 'validado', 'pendiente_aprobacion', 'aprobado', 'validacion_fallida'];
 
 export function listarBatchesHandler(db: Db, filtros?: { estado?: string; soloActivos?: boolean }) {
-  requirePerm('config.fiscal');
+  requirePerm('precio.gestionar');
   const q = db.select({
     id: schema.price_batch.id,
     lista_precio_id: schema.price_batch.lista_precio_id,
@@ -92,19 +92,19 @@ export function listarBatchesHandler(db: Db, filtros?: { estado?: string; soloAc
 }
 
 export function excluirFilaHandler(db: Db, filaId: string) {
-  requirePerm('config.fiscal');
+  requirePerm('precio.gestionar');
   excluirFila(db, filaId);
   return { ok: true };
 }
 
 export function excluirErroresHandler(db: Db, batchId: string) {
-  requirePerm('config.fiscal');
+  requirePerm('precio.gestionar');
   excluirErrores(db, batchId);
   return { ok: true };
 }
 
 export function revalidarBatchHandler(db: Db, id: string) {
-  requirePerm('config.fiscal');
+  requirePerm('precio.gestionar');
   return revalidarBatch(db, id);
 }
 
