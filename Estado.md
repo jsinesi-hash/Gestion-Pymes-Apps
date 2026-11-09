@@ -3,7 +3,9 @@
 > Fuente de verdad sobre qué está hecho, qué está en curso y qué viene después.
 > Actualizar al completar cada fase o tomar una decisión de diseño significativa.
 
-**Última actualización:** 2026-11-03 (**Auditoría de la deuda previa de E4 — ADR-144** — rama `fix/deuda-previa-e4`: las cinco entradas del traspaso de E4 (sabores con baja lógica, errores de dominio, ticket con pagos reales, consultas en lote e índices, `ClienteSelector` controlado) y el precio por lista en el POS de Elaborados ya estaban resueltos en el código; solo se corrigió la documentación (Estado.md y el traspaso, ahora histórico). Sin cambios de código.)
+**Última actualización:** 2026-11-09 (**RBAC Fase 0: cada canal IPC declara qué exige y el main lo hace cumplir — ADR-145** — rama `feat/rbac-fase0-permisos-en-main`: tabla de políticas por canal (`publico`/`sesion`/`permiso:x`) aplicada al registrar con `ipcConPoliticas` (un canal sin política no arranca); registro de handlers extraído a `ipc/registrar.ts` en Retail y Elaborados; guard único con error `FORBIDDEN:<codigo>` (antes un objeto que llegaba al renderer como `[object Object]`); etiquetas de los permisos de Elaborados; test baranda por app que invoca todos los canales reales. Cerró ~45 canales que respondían sin sesión y 62 de Retail que no pedían el permiso correspondiente. Sin migraciones ni permisos nuevos. Sin verificar en la app real. Origen: `docs/Revisiones/2026-11-09-revision-general.md`.)
+
+**Anterior:** 2026-11-03 (**Auditoría de la deuda previa de E4 — ADR-144** — rama `fix/deuda-previa-e4`: las cinco entradas del traspaso de E4 (sabores con baja lógica, errores de dominio, ticket con pagos reales, consultas en lote e índices, `ClienteSelector` controlado) y el precio por lista en el POS de Elaborados ya estaban resueltos en el código; solo se corrigió la documentación (Estado.md y el traspaso, ahora histórico). Sin cambios de código.)
 
 **Anterior:** 2026-11-03 (**Recuperación de contraseña y SMTP en Elaborados — ADR-143** — rama `feat/recuperacion-elaborados` (apilada sobre #59): migración 0013 que siembra las claves `smtp_*` (sin ellas guardar la configuración no persistía nada y no daba error), pantalla Email / SMTP en el grupo Sistema (permiso `config.fiscal`, ruta y breadcrumb) y, con el SMTP configurado, el login ofrece «Olvidé mi contraseña». Se endureció además el test de navegación de Elaborados: «tiene ruta» pasaba para cualquier ítem porque la raíz `/` siempre coincide. PR 2 de 2 del plan `docs/plans/2026-11-03-smtp-al-nucleo-y-recuperacion-elaborados.md`. Sin verificar en la app real.)
 
@@ -274,6 +276,8 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 | 099 | Elaborados: carga inicial de datos (seed base, seed:dev y atajo en el POS) | Aceptado — mergeado (PR #11) |
 | 100 | Elaborados E3d-1: venta en espera y anulación al core | Aceptado — mergeado (PR #12) |
 | 101 | Elaborados E3d-2: pedidos en espera/para llevar y anulación en pantalla | Aceptado — mergeado (PR #13) |
+| 102–144 | Elaborados E4/E5, revisiones P0–P2, modales, seguridad de login y backups (ver `docs/ADR-Log-ferreteria.md`) | Aceptados — mergeados |
+| 145 | RBAC Fase 0: política por canal IPC aplicada en el main + baranda por app | Aceptado — implementado (sin verificar en la app real) |
 
 > Detalle completo en `docs/ADR-Log-ferreteria.md`. **Nota:** esta tabla saltea 052–063 (el
 > ADR-Log está más adelantado que este Estado; pendiente de reconciliar).
@@ -293,7 +297,7 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 - **Permisos nuevos:** `runSeed` corre en **cada** arranque (`startup.ts` §3). Agregar un
   permiso a `PERMISOS` en `auth/seed.ts` alcanza para que llegue también a instalaciones
   ya inicializadas. Antes vivía dentro del guard de primer arranque y no llegaba nunca.
-- **Permisos:** guard doble (renderer + IPC handler). Permiso `import.masiva` solo Supervisor.
+- **Permisos (ADR-145):** cada canal IPC declara su política en `apps/<app>/src/main/ipc/politicas-canales.ts` (sobre `POLITICAS_CANALES_CORE`); `registrar.ts` la aplica con `ipcConPoliticas` y un canal sin política no arranca. Un canal nuevo = handler + entrada en la tabla; el test `permisos-canales.test.ts` de cada app verifica el resto. La UI además oculta lo que el rol no puede (guard doble).
 - **Seeds:** corren con Electron `ELECTRON_RUN_AS_NODE=1` + `tsx` (mismo NMV): Retail `apps/retail/scripts/seed-*.cjs`; Elaborados `pnpm seed:base:elaborados` / `pnpm seed:dev:elaborados` (ADR-099, idempotentes, sin `--force`). Usan el `dist` de `@core/*` y `@ferreteria/shared`: `pnpm -r build` si se tocó `packages/*/src`.
 - **Venta (ADR-095…101):** `confirmarVenta`/`anularVenta` y el encabezado de la venta en espera viven en `@core/main` con hooks por app; `venta.descuento_global` es un **porcentaje**; en Elaborados el renderer **no calcula precios** (todo viene de `venta:cotizar`); una venta `en_espera` no toca stock ni caja y todo punto de lectura debe filtrar el estado explícitamente.
 - **Cierre documental de cada paso (obligatorio):** actualizar en el mismo PR `Estado.md` (cabecera + Bitácora + tabla "ADRs de arquitectura" + lista de releases) **y** `docs/ADR-Log-ferreteria.md` (entrada del ADR con estado, fecha y enlace). Un paso no está cerrado hasta que ambos están al día.
@@ -335,6 +339,8 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 ---
 
 ## Bitácora de decisiones
+
+- `2026-11-09` — **ADR-145 — RBAC Fase 0** (rama `feat/rbac-fase0-permisos-en-main`). La revisión general mostró que muchos permisos de la matriz no se verificaban en el main. Ahora cada canal IPC tiene una política en una tabla (núcleo + app) que se aplica al registrar; un canal sin política no arranca. → siguiente: Fase 1 (permisos propios para precios, catálogo y agenda; autorizaciones del POS por permiso y no por nombre de rol) y luego el editor de permisos (PERF-3 opción B).
 
 - `2026-10-14` — **ADR-106 — Elaborados E4-PR5: CRUD de proveedor al core** (rama `e4-pr5-proveedores`). Handler y
   canales `proveedor:*` al core con hook `onProveedorActualizado`; Retail como oráculo; pantalla de proveedores en

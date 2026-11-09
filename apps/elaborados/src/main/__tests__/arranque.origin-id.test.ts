@@ -16,7 +16,7 @@ describe('arranque de Elaborados inicializa la terminal (origin_id)', () => {
     const iniciar = fuente.indexOf('iniciarTerminal(');
     expect(iniciar).toBeGreaterThan(-1);
     expect(iniciar).toBeLessThan(fuente.indexOf('await runStartup('));
-    expect(iniciar).toBeLessThan(fuente.indexOf('registerCoreHandlers('));
+    expect(iniciar).toBeLessThan(fuente.indexOf('registrarHandlersElaborados('));
   });
 
   it('ya no usa el config.ts local ni deja el resultado descartado', () => {

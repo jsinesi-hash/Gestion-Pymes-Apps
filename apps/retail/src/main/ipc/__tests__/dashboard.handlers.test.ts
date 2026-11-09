@@ -304,16 +304,16 @@ describe('Guard: FORBIDDEN sin dashboard.ver', () => {
 
   it('dashboard:ventas sin permiso → FORBIDDEN', async () => {
     const handler = requirePermission('dashboard.ver')(async () => 'ok');
-    await expect(handler(null as any)).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    await expect(handler(null as any)).rejects.toThrow('FORBIDDEN');
   });
 
   it('dashboard:stock sin permiso → FORBIDDEN', async () => {
     const handler = requirePermission('dashboard.ver')(async () => 'ok');
-    await expect(handler(null as any)).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    await expect(handler(null as any)).rejects.toThrow('FORBIDDEN');
   });
 
   it('dashboard:caja sin permiso → FORBIDDEN', async () => {
     const handler = requirePermission('dashboard.ver')(async () => 'ok');
-    await expect(handler(null as any)).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    await expect(handler(null as any)).rejects.toThrow('FORBIDDEN');
   });
 });

@@ -13,12 +13,22 @@ export function requireSession() {
   return session;
 }
 
+/**
+ * Devuelve la sesión si tiene el permiso; si no, lanza `FORBIDDEN:<codigo>` (ADR-145). Siempre
+ * lanza `Error`: un objeto plano cruza el IPC de Electron como "[object Object]" y el renderer
+ * no puede traducirlo.
+ */
+export function requirePermiso(codigo: string) {
+  const session = requireSession();
+  if (!session.permisos.has(codigo)) throw new Error(`FORBIDDEN:${codigo}`);
+  return session;
+}
+
+/** Envuelve un handler IPC para que exija `codigo` antes de ejecutarse. */
 export function requirePermission(codigo: string) {
   return (handler: IpcHandler): IpcHandler =>
     async (event, ...args) => {
-      const session = getSession();
-      if (!session) throw { code: 'UNAUTHENTICATED' };
-      if (!session.permisos.has(codigo)) throw { code: 'FORBIDDEN', permiso: codigo };
+      requirePermiso(codigo);
       return handler(event, ...args);
     };
 }
