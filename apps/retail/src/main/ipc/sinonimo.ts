@@ -15,7 +15,7 @@ type Db = BetterSQLite3Database<typeof schema>;
 function requireAdmin() {
   const session = getSession();
   if (!session) throw new Error('UNAUTHENTICATED');
-  if (!session.permisos.has('usuario.administrar')) throw new Error('FORBIDDEN');
+  if (!session.permisos.has('catalogo.gestionar')) throw new Error('FORBIDDEN');
   return session;
 }
 

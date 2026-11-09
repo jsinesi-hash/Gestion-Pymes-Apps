@@ -124,7 +124,7 @@ export function VigentesTab({ listaId, listaNombre, onSuccess }: { listaId: stri
           />
         </div>
         <div className="ml-auto" />
-        {can('config.fiscal') && (
+        {can('precio.gestionar') && (
           <button type="button" className="btn-primary" onClick={() => setShowRecalcular(true)}>Recalcular masivo</button>
         )}
       </div>
@@ -232,7 +232,7 @@ export function DetalleAjustesTab({ listaId, listaAjuste }: { listaId: string; l
 export function ListasPreciosView() {
   const { listas, loading, refetch } = useListasPrecios();
   const { can } = useAuth();
-  const isSupervisor = can('config.fiscal');
+  const isSupervisor = can('precio.gestionar');
   const motorV2 = useMotorPreciosV2Habilitado();
   const colCount = motorV2 ? 6 : 5;
 

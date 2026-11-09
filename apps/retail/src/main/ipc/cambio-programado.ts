@@ -123,7 +123,7 @@ export function listarCambioProgramadoHandler(
 
 export function registerCambioProgramadoHandlers(ipcMain: IpcMain, db: Db): void {
   // Revisión 2026-10-20 (P0): programar o cancelar un ajuste de precios es `config.fiscal`.
-  const guard = requirePermission('config.fiscal');
+  const guard = requirePermission('precio.gestionar');
 
   ipcMain.handle('cambioProgramado:crear',    guard(async (_e, p)  => crearCambioProgramadoHandler(db, p)));
   ipcMain.handle('cambioProgramado:cancelar', guard(async (_e, id) => cancelarCambioProgramadoHandler(db, id)));

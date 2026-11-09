@@ -3,8 +3,7 @@ import { POLITICAS_CANALES_CORE, type PoliticasCanales } from '@core/main';
 // ADR-145 — Qué exige cada canal IPC de Retail. `registrarHandlersRetail` registra todo a través
 // de `ipcConPoliticas`: un canal que no figure acá no arranca. Criterio de la Fase 0: las
 // lecturas que usa el mostrador piden sesión; cada escritura, el permiso que ya exigía la UI.
-// Varios códigos se usan como "es Supervisor" (`usuario.administrar`, `config.fiscal`); separarlos
-// en permisos propios es la Fase 1.
+// Desde ADR-146 (Fase 1) precios, catálogo, agenda y baja de clientes tienen permisos propios.
 const S = 'sesion' as const;
 const P = <C extends string>(codigo: C) => `permiso:${codigo}` as const;
 
@@ -17,33 +16,34 @@ export const POLITICAS_CANALES_RETAIL: PoliticasCanales = {
   'actualizacion:notasPostUpdate': S,
   'actualizacion:marcarVersionVista': S,
 
-  // Agenda (ADR-047): todavía sin permisos propios (decisión abierta, Fase 1).
-  'rutina:list': S, 'rutina:crear': S, 'rutina:editar': S, 'rutina:pausar': S,
-  'rutina:reanudar': S, 'rutina:eliminar': S,
+  // Agenda (ADR-047): las rutinas piden agenda.gestionar (ADR-146, ambos roles); eventos y avisos,
+  // sesión (cada usuario ve y completa los suyos).
+  'rutina:list': S, 'rutina:crear': P('agenda.gestionar'), 'rutina:editar': P('agenda.gestionar'), 'rutina:pausar': P('agenda.gestionar'),
+  'rutina:reanudar': P('agenda.gestionar'), 'rutina:eliminar': P('agenda.gestionar'),
   'agenda:crearEvento': S, 'agenda:listar': S, 'agenda:completar': S,
   'agenda:posponer': S, 'agenda:descartar': S,
   'aviso:listar': S, 'aviso:reintentar': S, 'aviso:descartar': S, 'aviso:badge': S,
 
-  // Catálogo: las pantallas de Categorías, Marcas y Unidades están detrás de usuario.administrar.
+  // Catálogo: categorías, marcas, unidades, sinónimos y dedup de ubicaciones piden catalogo.gestionar (ADR-146).
   'categoria:list': S, 'categoria:list-all': S,
-  'categoria:create': P('usuario.administrar'), 'categoria:update': P('usuario.administrar'),
-  'categoria:desactivar': P('usuario.administrar'), 'categoria:reactivar': P('usuario.administrar'),
+  'categoria:create': P('catalogo.gestionar'), 'categoria:update': P('catalogo.gestionar'),
+  'categoria:desactivar': P('catalogo.gestionar'), 'categoria:reactivar': P('catalogo.gestionar'),
   'marca:list': S, 'marca:list-all': S,
   // El alta de producto crea marcas al vuelo (ProductoForm).
   'marca:create': P('producto.crear'),
-  'marca:update': P('usuario.administrar'), 'marca:desactivar': P('usuario.administrar'),
-  'marca:reactivar': P('usuario.administrar'),
+  'marca:update': P('catalogo.gestionar'), 'marca:desactivar': P('catalogo.gestionar'),
+  'marca:reactivar': P('catalogo.gestionar'),
   'unidad:list': S, 'unidad:list-all': S,
-  'unidad:create': P('usuario.administrar'), 'unidad:update': P('usuario.administrar'),
-  'unidad:desactivar': P('usuario.administrar'), 'unidad:reactivar': P('usuario.administrar'),
-  'sinonimo:list': P('usuario.administrar'), 'sinonimo:get': P('usuario.administrar'),
-  'sinonimo:create': P('usuario.administrar'), 'sinonimo:update': P('usuario.administrar'),
-  'sinonimo:delete': P('usuario.administrar'), 'sinonimo:importarValidar': P('usuario.administrar'),
-  'sinonimo:importar': P('usuario.administrar'),
+  'unidad:create': P('catalogo.gestionar'), 'unidad:update': P('catalogo.gestionar'),
+  'unidad:desactivar': P('catalogo.gestionar'), 'unidad:reactivar': P('catalogo.gestionar'),
+  'sinonimo:list': P('catalogo.gestionar'), 'sinonimo:get': P('catalogo.gestionar'),
+  'sinonimo:create': P('catalogo.gestionar'), 'sinonimo:update': P('catalogo.gestionar'),
+  'sinonimo:delete': P('catalogo.gestionar'), 'sinonimo:importarValidar': P('catalogo.gestionar'),
+  'sinonimo:importar': P('catalogo.gestionar'),
   'ubicacion:list': S, 'ubicacion:list-all': S, 'ubicacion:get': S,
   'ubicacion:create': P('producto.editar'), 'ubicacion:update': P('producto.editar'),
   'ubicacion:delete': P('producto.editar'),
-  'ubicacion:dedup:preview': P('usuario.administrar'), 'ubicacion:dedup:aplicar': P('usuario.administrar'),
+  'ubicacion:dedup:preview': P('catalogo.gestionar'), 'ubicacion:dedup:aplicar': P('catalogo.gestionar'),
   'demoCatalog:estado': P('usuario.administrar'), 'demoCatalog:cargar': P('usuario.administrar'),
   'demoCatalog:vaciar': P('usuario.administrar'),
 
@@ -70,21 +70,21 @@ export const POLITICAS_CANALES_RETAIL: PoliticasCanales = {
   'stock:entrada': P('stock.entrada'),
   'stock:ajuste': P('stock.ajustar'), 'stock:merma': P('stock.ajustar'),
 
-  // Precios: el POS lee precios; escribir es config.fiscal y publicar lotes, precio.aprobar.
+  // Precios: el POS lee precios; escribir es precio.gestionar y publicar lotes, precio.aprobar (ADR-146).
   'listaPrecio:list': S, 'listaPrecio:get': S,
-  'listaPrecio:create': P('config.fiscal'), 'listaPrecio:update': P('config.fiscal'),
-  'listaPrecio:deactivate': P('config.fiscal'),
+  'listaPrecio:create': P('precio.gestionar'), 'listaPrecio:update': P('precio.gestionar'),
+  'listaPrecio:deactivate': P('precio.gestionar'),
   'listaPrecioValor:getPrecioEnLista': S, 'listaPrecioValor:listarVigentesParaProducto': S,
   'listaPrecioValor:listarVigentesPorLista': S,
-  'listaPrecioValor:contarAfectados': P('config.fiscal'),
-  'listaPrecioValor:setManual': P('config.fiscal'), 'listaPrecioValor:recalcularMasivo': P('config.fiscal'),
+  'listaPrecioValor:contarAfectados': P('precio.gestionar'),
+  'listaPrecioValor:setManual': P('precio.gestionar'), 'listaPrecioValor:recalcularMasivo': P('precio.gestionar'),
   'reglaPrecio:listByLista': S,
-  'reglaPrecio:upsert': P('config.fiscal'), 'reglaPrecio:remove': P('config.fiscal'),
+  'reglaPrecio:upsert': P('precio.gestionar'), 'reglaPrecio:remove': P('precio.gestionar'),
   'cambioProgramado:listar': S,
-  'cambioProgramado:crear': P('config.fiscal'), 'cambioProgramado:cancelar': P('config.fiscal'),
-  'priceBatch:crear': P('config.fiscal'), 'priceBatch:obtener': P('config.fiscal'),
-  'priceBatch:listar': P('config.fiscal'), 'priceBatch:excluirFila': P('config.fiscal'),
-  'priceBatch:excluirErrores': P('config.fiscal'), 'priceBatch:revalidar': P('config.fiscal'),
+  'cambioProgramado:crear': P('precio.gestionar'), 'cambioProgramado:cancelar': P('precio.gestionar'),
+  'priceBatch:crear': P('precio.gestionar'), 'priceBatch:obtener': P('precio.gestionar'),
+  'priceBatch:listar': P('precio.gestionar'), 'priceBatch:excluirFila': P('precio.gestionar'),
+  'priceBatch:excluirErrores': P('precio.gestionar'), 'priceBatch:revalidar': P('precio.gestionar'),
   'priceBatch:aprobar': P('precio.aprobar'), 'priceBatch:publicar': P('precio.aprobar'),
   'priceBatch:revertir': P('precio.aprobar'),
 

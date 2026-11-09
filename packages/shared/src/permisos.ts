@@ -40,6 +40,15 @@ export const ETIQUETA_PERMISO: Record<string, string> = {
   'producto_venta.gestionar': 'Gestionar la carta',
   'compra.registrar': 'Registrar compras de insumos',
   'lista_precio.gestionar': 'Gestionar listas de precio',
+  // ADR-146: permisos con significado propio.
+  'precio.gestionar': 'Gestionar precios (listas, reglas y lotes)',
+  'catalogo.gestionar': 'Gestionar categorías, marcas, unidades y sinónimos',
+  'agenda.gestionar': 'Gestionar rutinas de la agenda',
+  'cliente.baja': 'Dar de baja clientes',
+  'caja.autorizar_diferencia': 'Autorizar cierre de caja con diferencia',
+  'ctacte.autorizar_exceso': 'Autorizar ventas sobre el límite de crédito',
+  'compra.anular': 'Anular compras',
+  'produccion.anular': 'Anular producciones',
 };
 
 /** Etiqueta legible de un código de permiso; si no está mapeado, cae al código tal cual. */

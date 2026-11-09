@@ -117,7 +117,7 @@ export function ClienteDetalle({ cargarListasPrecio }: Readonly<Props>) {
           <button className="btn-secondary" onClick={() => navigate(`/clientes/${id}/editar`)}>
             Editar
           </button>
-          {can('usuario.administrar') && (
+          {can('cliente.baja') && (
             cliente.activo
               ? <button className="btn-secondary" onClick={handleDesactivar}>Dar de baja</button>
               : <button className="btn-secondary" onClick={handleReactivar}>Reactivar</button>

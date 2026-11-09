@@ -41,6 +41,16 @@ export const PERMISOS: readonly PermisoDef[] = [
   { codigo: 'presupuesto.anular',  modulo: 'presupuestos' },
   // ADR-049: aprobar/publicar/revertir lotes de precios. Solo Supervisor (no va a OPERADOR_PERMISOS).
   { codigo: 'precio.aprobar',      modulo: 'precios' },
+  // ADR-146: permisos con significado propio (antes se usaban config.fiscal y usuario.administrar
+  // como "es Supervisor"). precio.gestionar y catalogo.gestionar solo Supervisor; agenda.gestionar
+  // a ambos roles (la Agenda no tenía permiso y el Operador ya la usaba).
+  { codigo: 'precio.gestionar',    modulo: 'precios' },
+  { codigo: 'catalogo.gestionar',  modulo: 'catalogo' },
+  { codigo: 'agenda.gestionar',    modulo: 'agenda' },
+  // Universales del núcleo (PERMISOS_CORE), listados acá para que esta tabla sea el catálogo completo.
+  { codigo: 'cliente.baja',              modulo: 'cuentas' },
+  { codigo: 'caja.autorizar_diferencia', modulo: 'caja' },
+  { codigo: 'ctacte.autorizar_exceso',   modulo: 'cuentas' },
 ] as const;
 
 export const OPERADOR_PERMISOS: Set<string> = new Set([
@@ -50,6 +60,7 @@ export const OPERADOR_PERMISOS: Set<string> = new Set([
   'remito.crear', 'remito.conformar', 'remito.anular',
   'transportista.gestionar',
   'presupuesto.crear', 'presupuesto.emitir', 'presupuesto.anular',
+  'agenda.gestionar',
 ]);
 
 export function runSeed(db: Db): void {

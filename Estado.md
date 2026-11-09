@@ -3,7 +3,9 @@
 > Fuente de verdad sobre qué está hecho, qué está en curso y qué viene después.
 > Actualizar al completar cada fase o tomar una decisión de diseño significativa.
 
-**Última actualización:** 2026-11-09 (**RBAC Fase 0: cada canal IPC declara qué exige y el main lo hace cumplir — ADR-145** — rama `feat/rbac-fase0-permisos-en-main`: tabla de políticas por canal (`publico`/`sesion`/`permiso:x`) aplicada al registrar con `ipcConPoliticas` (un canal sin política no arranca); registro de handlers extraído a `ipc/registrar.ts` en Retail y Elaborados; guard único con error `FORBIDDEN:<codigo>` (antes un objeto que llegaba al renderer como `[object Object]`); etiquetas de los permisos de Elaborados; test baranda por app que invoca todos los canales reales. Cerró ~45 canales que respondían sin sesión y 62 de Retail que no pedían el permiso correspondiente. Sin migraciones ni permisos nuevos. Sin verificar en la app real. Origen: `docs/Revisiones/2026-11-09-revision-general.md`.)
+**Última actualización:** 2026-11-09 (**RBAC Fase 1: permisos con significado propio y autorizaciones por permiso — ADR-146** — rama `feat/rbac-fase1-permisos-propios` (apilada sobre #62): permisos nuevos `precio.gestionar`, `catalogo.gestionar`, `agenda.gestionar` (ambos roles), `cliente.baja`, `caja.autorizar_diferencia`, `ctacte.autorizar_exceso` y, en Elaborados, `compra.anular`/`produccion.anular`; las autorizaciones del POS piden el permiso de la acción (`verificarAutorizacion`) en vez del rol SUPERVISOR; la regla del último administrador mira `usuario.administrar` y ahora también protege el cambio de rol (antes se podía dejar el sistema sin administrador). Nadie gana ni pierde acceso. Sin migraciones. Sin verificar en la app real.)
+
+**Anterior:** 2026-11-09 (**RBAC Fase 0: cada canal IPC declara qué exige y el main lo hace cumplir — ADR-145** — rama `feat/rbac-fase0-permisos-en-main`: tabla de políticas por canal (`publico`/`sesion`/`permiso:x`) aplicada al registrar con `ipcConPoliticas` (un canal sin política no arranca); registro de handlers extraído a `ipc/registrar.ts` en Retail y Elaborados; guard único con error `FORBIDDEN:<codigo>` (antes un objeto que llegaba al renderer como `[object Object]`); etiquetas de los permisos de Elaborados; test baranda por app que invoca todos los canales reales. Cerró ~45 canales que respondían sin sesión y 62 de Retail que no pedían el permiso correspondiente. Sin migraciones ni permisos nuevos. Sin verificar en la app real. Origen: `docs/Revisiones/2026-11-09-revision-general.md`.)
 
 **Anterior:** 2026-11-03 (**Auditoría de la deuda previa de E4 — ADR-144** — rama `fix/deuda-previa-e4`: las cinco entradas del traspaso de E4 (sabores con baja lógica, errores de dominio, ticket con pagos reales, consultas en lote e índices, `ClienteSelector` controlado) y el precio por lista en el POS de Elaborados ya estaban resueltos en el código; solo se corrigió la documentación (Estado.md y el traspaso, ahora histórico). Sin cambios de código.)
 
@@ -278,6 +280,7 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 | 101 | Elaborados E3d-2: pedidos en espera/para llevar y anulación en pantalla | Aceptado — mergeado (PR #13) |
 | 102–144 | Elaborados E4/E5, revisiones P0–P2, modales, seguridad de login y backups (ver `docs/ADR-Log-ferreteria.md`) | Aceptados — mergeados |
 | 145 | RBAC Fase 0: política por canal IPC aplicada en el main + baranda por app | Aceptado — implementado (sin verificar en la app real) |
+| 146 | RBAC Fase 1: permisos con significado propio, autorizaciones por permiso y último administrador por permiso | Aceptado — implementado (sin verificar en la app real) |
 
 > Detalle completo en `docs/ADR-Log-ferreteria.md`. **Nota:** esta tabla saltea 052–063 (el
 > ADR-Log está más adelantado que este Estado; pendiente de reconciliar).
@@ -339,6 +342,8 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 ---
 
 ## Bitácora de decisiones
+
+- `2026-11-09` — **ADR-146 — RBAC Fase 1** (rama `feat/rbac-fase1-permisos-propios`). El usuario aprobó la lista de permisos nuevos (todos solo Supervisor) y `agenda.gestionar` para ambos roles. Decidió además que el editor de la Fase 2 alcance con Operador y Supervisor (sin roles nuevos por ahora), diseñado por rol para poder sumar «crear rol» más adelante; no se harán permisos por usuario individual. → siguiente: Fase 2, editor de permisos (PERF-3 opción B).
 
 - `2026-11-09` — **ADR-145 — RBAC Fase 0** (rama `feat/rbac-fase0-permisos-en-main`). La revisión general mostró que muchos permisos de la matriz no se verificaban en el main. Ahora cada canal IPC tiene una política en una tabla (núcleo + app) que se aplica al registrar; un canal sin política no arranca. → siguiente: Fase 1 (permisos propios para precios, catálogo y agenda; autorizaciones del POS por permiso y no por nombre de rol) y luego el editor de permisos (PERF-3 opción B).
 

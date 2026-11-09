@@ -17,7 +17,7 @@ function auth(perms: string[]) {
   };
 }
 
-function renderDetalle(perms: string[] = ['config.fiscal', 'precio.aprobar']) {
+function renderDetalle(perms: string[] = ['precio.gestionar', 'precio.aprobar']) {
   return render(
     <AuthContext.Provider value={auth(perms)}>
       <MemoryRouter initialEntries={['/precios/lotes/b1']}>
@@ -87,23 +87,23 @@ describe('LoteDetalleView', () => {
 
   it('sin permiso precio.aprobar, Aprobar queda deshabilitado', async () => {
     mockObtener.mockResolvedValue({ batch: batch(), detalle: [FILA] });
-    renderDetalle(['config.fiscal']);
+    renderDetalle(['precio.gestionar']);
     const btn = await screen.findByRole('button', { name: /aprobar/i });
     expect(btn).toBeDisabled();
   });
 
-  it('lote validacion_fallida con config.fiscal: muestra "Re-validar" y llama al handler', async () => {
+  it('lote validacion_fallida con precio.gestionar: muestra "Re-validar" y llama al handler', async () => {
     mockObtener.mockResolvedValue({
       batch: batch({ estado: 'validacion_fallida', errores: 1, productos_ok: 0 }),
       detalle: [{ ...FILA, estado_validacion: 'error', motivo_validacion: 'Sin proveedor preferido / sin costo' }],
     });
-    renderDetalle(['config.fiscal']);
+    renderDetalle(['precio.gestionar']);
     const btn = await screen.findByRole('button', { name: /re-validar/i });
     fireEvent.click(btn);
     await waitFor(() => expect(mockRevalidar).toHaveBeenCalledWith('b1'));
   });
 
-  it('sin config.fiscal no muestra "Re-validar"', async () => {
+  it('sin precio.gestionar no muestra "Re-validar"', async () => {
     mockObtener.mockResolvedValue({ batch: batch(), detalle: [FILA] });
     renderDetalle(['precio.aprobar']);
     await screen.findByText('Amoladora');

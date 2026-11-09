@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, ne } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import {
@@ -23,6 +23,33 @@ type LoginPayload = {
 
 const CREDENCIALES_INVALIDAS = new Error('Credenciales inválidas');
 const LAST_SUPERVISOR_ERROR = new Error('LAST_SUPERVISOR');
+
+const PERMISO_ADMINISTRAR = 'usuario.administrar';
+
+/** ¿El rol (activo) tiene `usuario.administrar`? (ADR-146: la regla mira el permiso, no el nombre). */
+function rolAdministraUsuarios(db: Db, rolId: string): boolean {
+  return !!db
+    .select({ id: schema.rol_permiso.id })
+    .from(schema.rol_permiso)
+    .innerJoin(schema.rol, eq(schema.rol.id, schema.rol_permiso.rol_id))
+    .innerJoin(schema.permiso, eq(schema.permiso.id, schema.rol_permiso.permiso_id))
+    .where(and(
+      eq(schema.rol_permiso.rol_id, rolId),
+      eq(schema.rol.activo, true),
+      eq(schema.permiso.codigo, PERMISO_ADMINISTRAR),
+    ))
+    .get();
+}
+
+/** ¿Queda otro usuario activo, distinto de `excluirId`, que administre usuarios? */
+function hayOtroAdministrador(db: Db, excluirId: string): boolean {
+  const otros = db
+    .select({ id: schema.usuario.id, rol_id: schema.usuario.rol_id })
+    .from(schema.usuario)
+    .where(and(eq(schema.usuario.activo, true), ne(schema.usuario.id, excluirId)))
+    .all();
+  return otros.some(u => rolAdministraUsuarios(db, u.rol_id));
+}
 
 const DEFAULT_PREFS: SessionData['preferencias'] = {
   tema: 'claro',
@@ -247,25 +274,8 @@ export function desactivarUsuarioHandler(
 
   if (!user) throw new Error('NOT_FOUND');
 
-  const supervisorRol = db
-    .select()
-    .from(schema.rol)
-    .where(eq(schema.rol.nombre, 'SUPERVISOR'))
-    .get();
-
-  if (supervisorRol && user.rol_id === supervisorRol.id) {
-    const activeSupervisors = db
-      .select({ id: schema.usuario.id })
-      .from(schema.usuario)
-      .where(
-        and(
-          eq(schema.usuario.rol_id, supervisorRol.id),
-          eq(schema.usuario.activo, true)
-        )
-      )
-      .all();
-
-    if (activeSupervisors.length === 1) throw LAST_SUPERVISOR_ERROR;
+  if (user.activo && rolAdministraUsuarios(db, user.rol_id) && !hayOtroAdministrador(db, user.id)) {
+    throw LAST_SUPERVISOR_ERROR;
   }
 
   if (user.id === session.userId) throw new Error('AUTO_DESACTIVACION');
@@ -347,7 +357,15 @@ export function usuarioUpdateHandler(db: Db, payload: {
     if (!emailValido(email)) throw new Error('EMAIL_INVALIDO');
     updates.email = email;
   }
-  if (payload.rol_id !== undefined && canAdmin) updates.rol_id = payload.rol_id;
+  if (payload.rol_id !== undefined && canAdmin) {
+    // ADR-146: cambiar el rol del último administrador a uno sin usuario.administrar dejaría el
+    // sistema sin nadie que pueda gestionar usuarios.
+    if (payload.rol_id !== user.rol_id && user.activo && rolAdministraUsuarios(db, user.rol_id)
+        && !rolAdministraUsuarios(db, payload.rol_id) && !hayOtroAdministrador(db, user.id)) {
+      throw LAST_SUPERVISOR_ERROR;
+    }
+    updates.rol_id = payload.rol_id;
+  }
   db.update(schema.usuario).set(updates).where(eq(schema.usuario.id, payload.id)).run();
 }
 
