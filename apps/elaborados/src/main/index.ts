@@ -10,23 +10,8 @@ if (started) app.quit();
 
 import { db } from './db/client';
 import { runStartup } from './startup';
-import { registerCoreHandlers, activarFirmaBackup, activarLockoutPersistente, activarRegistroErrores, aplicarSeguridadVentana, crearImpresorHtml, iniciarTerminal, registrarErroresNoCapturados } from '@core/main';
-import { navegacionElaborados } from '../common/navegacion';
-import { registerArticuloHandlers } from './ipc/articulo';
-import { registerMovimientoArticuloHandlers } from './ipc/movimiento-articulo';
-import { registerRecetaProduccionHandlers } from './ipc/receta-produccion';
-import { registerProduccionHandlers } from './ipc/produccion';
-import { registerCompraHandlers } from './ipc/compra';
-import { registerProveedorHandlers } from './ipc/proveedor';
-import { registerListaPrecioHandlers } from './ipc/lista-precio';
-import { registerReporteHandlers } from './ipc/reporte';
-import { EXPORTADORES_REPORTES } from './reportes/exportadores';
-import { registerCategoriaVentaHandlers } from './ipc/categoria-venta';
-import { registerGrupoModificadorHandlers } from './ipc/grupo-modificador';
-import { registerProductoVentaHandlers } from './ipc/producto-venta';
-import { registerDemoCatalogHandlers } from './ipc/demo-catalog';
-import { registerVentaHandlers } from './ipc/venta';
-import { registerVentaEsperaHandlers } from './ipc/venta-espera';
+import { activarFirmaBackup, activarLockoutPersistente, activarRegistroErrores, aplicarSeguridadVentana, crearImpresorHtml, iniciarTerminal, registrarErroresNoCapturados } from '@core/main';
+import { registrarHandlersElaborados } from './ipc/registrar';
 
 async function createWindow(): Promise<void> {
   // Revisión 2026-10-20 (P0): errores no capturados al log (no cortan el proceso en plena venta).
@@ -35,26 +20,10 @@ async function createWindow(): Promise<void> {
   // antes se descartaba y todas las terminales grababan origin_id='C1'.
   iniciarTerminal(app.getPath('userData'));
   await runStartup(db);
-  registerCoreHandlers(ipcMain, db, {
+  registrarHandlersElaborados(ipcMain, db, {
     migrationsFolder: path.join(__dirname, 'migrations'),
-    navegacion: navegacionElaborados,
-    exportadores: EXPORTADORES_REPORTES,
     imprimirHtml: crearImpresorHtml(() => new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false, contextIsolation: true } })),
   });
-  registerArticuloHandlers(ipcMain, db);
-  registerMovimientoArticuloHandlers(ipcMain, db);
-  registerRecetaProduccionHandlers(ipcMain, db);
-  registerProduccionHandlers(ipcMain, db);
-  registerCompraHandlers(ipcMain, db);
-  registerProveedorHandlers(ipcMain, db);
-  registerListaPrecioHandlers(ipcMain, db);
-  registerReporteHandlers(ipcMain, db);
-  registerCategoriaVentaHandlers(ipcMain, db);
-  registerGrupoModificadorHandlers(ipcMain, db);
-  registerProductoVentaHandlers(ipcMain, db);
-  registerDemoCatalogHandlers(ipcMain, db);
-  registerVentaHandlers(ipcMain, db);
-  registerVentaEsperaHandlers(ipcMain, db);
 
   const win = new BrowserWindow({
     width: 1280,

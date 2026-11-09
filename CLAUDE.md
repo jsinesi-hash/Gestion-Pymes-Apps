@@ -101,8 +101,11 @@ Handlers(ipcMain, db)`, llamada al lado de `registerCoreHandlers`.
 Patrón para un dominio nuevo **de una app** (no universal):
 1. Crear `apps/<app>/src/main/ipc/<dominio>.ts` con las funciones handler + `register<Dominio>Handlers`.
 2. Agregar el namespace en `apps/<app>/src/preload/index.ts`, dentro del `app` que recibe `createBridge`.
-3. Llamar a `register<Dominio>Handlers(ipcMain, db)` en `apps/<app>/src/main/index.ts`, junto a
-   `registerCoreHandlers(...)`.
+3. Llamar a `register<Dominio>Handlers(ipc, db)` en `apps/<app>/src/main/ipc/registrar.ts`
+   (`registrarHandlers<App>`, que llama `index.ts`), junto a `registerCoreHandlers(...)`, **y**
+   declarar la política de cada canal nuevo (`publico` / `sesion` / `permiso:<codigo>`) en
+   `apps/<app>/src/main/ipc/politicas-canales.ts` (ADR-145). Un canal sin política hace fallar el
+   arranque; `__tests__/permisos-canales.test.ts` verifica que el guard corte antes que el handler.
 4. Crear hooks React en `apps/<app>/src/renderer/hooks/use<Dominio>.ts` que llamen a
    `bridge().<dominio>.*`.
 5. Si el dominio tiene pantalla propia: declarar la ruta en `apps/<app>/src/renderer/routes/index.tsx`
@@ -635,22 +638,29 @@ Leyenda: ✔ permitido · ✱ con autorización del Supervisor · — no permiti
 | Backup: crear y restaurar | — | ✔ |
 | Exportar (básico / supervisor) | ✔ básico | ✔ ambos |
 
-> La **Agenda** (ADR-047/048) todavía no tiene fila: sus 13 canales IPC
-> (`rutina:*`/`agenda:*`/`aviso:*`) exigen sesión pero **ningún permiso**. ADR-047 no los
-> definió; es la única familia de IPC de escritura sin código de permiso. Decisión
-> pendiente, no incumplimiento.
+> La **Agenda** (ADR-047/048) todavía no tiene fila: sus 15 canales IPC
+> (`rutina:*`/`agenda:*`/`aviso:*`) exigen sesión pero **ningún permiso** (política `sesion` en
+> la tabla de ADR-145). ADR-047 no los definió; es la única familia de IPC de escritura sin
+> código de permiso. Decisión pendiente (RBAC Fase 1), no incumplimiento.
+>
+> **Dónde se hace cumplir (ADR-145):** cada canal IPC tiene una política en
+> `POLITICAS_CANALES_CORE` (`@core/main`) o en `apps/<app>/src/main/ipc/politicas-canales.ts`, y
+> `ipcConPoliticas` la aplica al registrar. Varios códigos todavía funcionan como «es
+> Supervisor» (`usuario.administrar` gatea categorías/marcas/unidades/sinónimos; `config.fiscal`,
+> listas y reglas de precio): separarlos es la Fase 1.
 
 ### Permisos reales
 
 **Fuente de verdad: `PERMISOS` y `OPERADOR_PERMISOS` en `apps/retail/src/main/auth/seed.ts`.**
-Son **28 permisos**, **17 de ellos al Operador**. El Supervisor los tiene todos.
+Son **29 permisos**, **17 de ellos al Operador**. El Supervisor los tiene todos.
+(Elaborados: los 13 del core + 7 propios en `apps/elaborados/src/main/auth/seed.ts`.)
 
 > **Desde ADR-092 (Elaborados E1), el seed de permisos está partido core + app.**
-> `runSeed(db, opts: { permisos, operador })` (`@core/main`) siembra primero `PERMISOS_CORE` (12
-> permisos universales — ventas, caja, cta-cte, dashboard, admin, export) y `OPERADOR_PERMISOS_CORE`,
+> `runSeed(db, opts: { permisos, operador })` (`@core/main`) siembra primero `PERMISOS_CORE` (13
+> permisos universales — ventas, caja, cta-cte, dashboard, admin, export, proveedores) y `OPERADOR_PERMISOS_CORE`,
 > y les suma `[...opts.permisos]`/`[...opts.operador]` deduplicando por `codigo`. Retail delega:
 > `runSeed(db) { runSeedCore(db, { permisos: PERMISOS, operador: [...OPERADOR_PERMISOS] }) }`, y la
-> tabla de abajo (los 28 de Retail) **ya incluye** los 12 del core — no son una lista aparte. Cada
+> tabla de abajo (los 29 de Retail) **ya incluye** los 13 del core — no son una lista aparte. Cada
 > app nueva pasa su propia lista de permisos de dominio; si no tiene ninguno todavía, `{ permisos: [],
 > operador: [] }` alcanza (caso de Elaborados en E1). **Al agregar un permiso universal** (lo
 > necesitan o lo necesitarán todas las apps) va a `PERMISOS_CORE`/`OPERADOR_PERMISOS_CORE`
@@ -681,6 +691,7 @@ Son **28 permisos**, **17 de ellos al Operador**. El Supervisor los tiene todos.
 | `presupuestos` | `presupuesto.crear` | ✔ |
 | `presupuestos` | `presupuesto.emitir` | ✔ |
 | `presupuestos` | `presupuesto.anular` | ✔ |
+| `precios` | `precio.aprobar` | — |
 | `reportes` | `dashboard.ver` | — |
 | `admin` | `import.masiva` | — |
 | `admin` | `usuario.administrar` | — |

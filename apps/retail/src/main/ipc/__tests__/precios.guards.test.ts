@@ -42,20 +42,19 @@ describe('guards de precios y cambios programados', () => {
   });
 
   it.each(CANALES_ESCRITURA)('%s sin sesión → UNAUTHENTICATED', async (canal, payload) => {
-    await expect(invoke(canal, payload)).rejects.toMatchObject({ code: 'UNAUTHENTICATED' });
+    await expect(invoke(canal, payload)).rejects.toThrow('UNAUTHENTICATED');
   });
 
   it.each(CANALES_ESCRITURA)('%s como Operador → FORBIDDEN (config.fiscal)', async (canal, payload) => {
     loginAsOperador(db);
-    await expect(invoke(canal, payload)).rejects.toMatchObject({ code: 'FORBIDDEN', permiso: 'config.fiscal' });
+    await expect(invoke(canal, payload)).rejects.toThrow('FORBIDDEN:config.fiscal');
   });
 
   it.each(CANALES_ESCRITURA)('%s como Supervisor pasa el guard', async (canal, payload) => {
     loginAsAdmin(db);
     // Con payload vacío puede fallar por validación, pero nunca por permisos.
     const resultado = await invoke(canal, payload).then(() => null, (e) => e);
-    expect(resultado?.code).not.toBe('FORBIDDEN');
-    expect(resultado?.code).not.toBe('UNAUTHENTICATED');
+    expect(String(resultado?.message ?? '')).not.toMatch(/^(FORBIDDEN|UNAUTHENTICATED)/);
   });
 
   it('las lecturas siguen abiertas al Operador', async () => {
