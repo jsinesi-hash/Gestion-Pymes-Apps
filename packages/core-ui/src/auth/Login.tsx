@@ -140,7 +140,8 @@ export default function Login() {
         {paso === 'cambiar' && (
           <>
             <div className="alert-warn" role="status">
-              Tu contraseña venció. Elegí una nueva para continuar.
+              Elegí una contraseña nueva para continuar: la anterior venció o la restableció un
+              administrador. A partir de ahora vas a ingresar con la nueva.
             </div>
             <div className="field">
               <label htmlFor="password-nueva">Nueva contraseña</label>

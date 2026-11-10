@@ -307,7 +307,13 @@ function ChangePasswordModal({ user, onClose, onSuccess }: Readonly<{ user: Usua
     <Modal titulo={`Cambiar contraseña — ${user.nombre_completo}`} ancho={360} onClose={onClose} bloqueado={saving} cerrarAlClickFuera>
       <form onSubmit={handleSubmit}>
         <div className="modal-body">
-          <p className="text-sm text-muted">La persona va a tener que cambiar esta contraseña al ingresar.</p>
+          <p className="text-sm text-muted" style={{ marginTop: 0 }}>
+            Ingresa con el usuario <strong className="num">{user.nombre_usuario}</strong>.
+          </p>
+          <p className="text-sm text-muted">
+            Esta contraseña es provisoria: al ingresar con ella se le va a pedir que elija una nueva, y
+            desde entonces vale solo la que elija.
+          </p>
           <div className="field">
             <label htmlFor="cpm-pwd-nueva">Nueva contraseña *</label>
             <PasswordInput id="cpm-pwd-nueva" value={newPassword} onChange={setNewPassword} required minLength={8} autoFocus />

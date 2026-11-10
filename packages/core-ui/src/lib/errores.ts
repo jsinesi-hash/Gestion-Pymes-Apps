@@ -148,7 +148,7 @@ const CODIGOS: Record<string, Formateador> = {
   USUARIO_DUPLICADO: msg('Ya existe un usuario con ese nombre.'),
   PASSWORD_REQUERIDA: msg('Ingresá tu contraseña actual.'),
   PASSWORD_INCORRECTA: msg('La contraseña es incorrecta.'),
-  PASSWORD_VENCIDA: msg('Tu contraseña venció. Elegí una nueva para continuar.'),
+  PASSWORD_VENCIDA: msg('Tenés que elegir una contraseña nueva para continuar.'),
   PASSWORD_NO_VENCIDA: msg('Tu contraseña todavía está vigente.'),
   PASSWORD_IGUAL_A_LA_ACTUAL: msg('La nueva contraseña tiene que ser distinta de la actual.'),
   EMAIL_REQUERIDO: msg('Ingresá un correo electrónico.'),

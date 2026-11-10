@@ -400,6 +400,9 @@ export function usuarioChangePasswordHandler(db: Db, payload: {
     version: user.version + 1, updated_at: now,
     usuario_modificacion_id: session.userId, fecha_actualizacion: now,
   }).where(eq(schema.usuario.id, payload.target_user_id)).run();
+  // Un administrador que restablece la clave de otro también le levanta el bloqueo por intentos:
+  // si no, la clave nueva no sirve hasta que pasen los 15 minutos. El cambio propio no lo levanta.
+  if (!isSelf) limiteIntentos.registrarExito(user.nombre_usuario);
 }
 
 export function usuarioReactivarHandler(db: Db, payload: { userId: string }) {
