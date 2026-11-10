@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { eq, and, ne } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
@@ -444,6 +445,99 @@ export function permisoMatrizHandler(db: Db) {
   return { roles, permisos, porRol };
 }
 
+/**
+ * ADR-147 — Guarda el conjunto completo de permisos de un rol (editor de «Roles y permisos»).
+ * Cada diferencia contra lo actual queda en `rol_permiso_override` para que `runSeed` no la deshaga
+ * al próximo arranque. Guardas: exige usuario.administrar; nadie puede quitarle usuario.administrar
+ * a su propio rol; tiene que quedar al menos un usuario activo que administre usuarios. Si el rol
+ * editado es el de la sesión actual, la sesión toma los permisos nuevos al instante.
+ */
+export function permisoActualizarRolHandler(db: Db, payload: { rolId: string; permisos: string[] }) {
+  const session = getSession();
+  if (!session) throw new Error('UNAUTHENTICATED');
+  if (!session.permisos.has(PERMISO_ADMINISTRAR)) throw new Error('FORBIDDEN');
+  const rolId = payload?.rolId;
+  if (typeof rolId !== 'string' || !Array.isArray(payload.permisos)) throw new Error('VALIDATION:permisos:TIPO');
+  const rolFila = db.select({ id: schema.rol.id }).from(schema.rol)
+    .where(and(eq(schema.rol.id, rolId), eq(schema.rol.activo, true))).get();
+  if (!rolFila) throw new Error('NOT_FOUND');
+
+  const catalogo = db.select({ id: schema.permiso.id, codigo: schema.permiso.codigo }).from(schema.permiso).all();
+  const idPorCodigo = new Map(catalogo.map(p => [p.codigo, p.id]));
+  const nuevos = new Set<string>();
+  for (const codigo of payload.permisos) {
+    if (typeof codigo !== 'string' || !idPorCodigo.has(codigo)) throw new Error(`PERMISO_DESCONOCIDO:${String(codigo)}`);
+    nuevos.add(codigo);
+  }
+  const actuales = new Set(codigosDelRol(db, rolId));
+  const agregados = [...nuevos].filter(c => !actuales.has(c));
+  const quitados = [...actuales].filter(c => !nuevos.has(c));
+
+  if (quitados.includes(PERMISO_ADMINISTRAR)) {
+    if (session.rolId === rolId) throw new Error('PERMISO_PROPIO_ADMIN');
+    if (!quedaAdministradorActivo(db, rolId)) throw new Error('SIN_ADMINISTRADOR');
+  }
+
+  const now = new Date();
+  const sync = { origin_id: getOriginId(), sync_state: 'pending' as const, updated_at: now };
+  db.transaction((tx) => {
+    for (const codigo of agregados) {
+      const permisoId = idPorCodigo.get(codigo)!;
+      tx.insert(schema.rol_permiso).values({ id: randomUUID(), rol_id: rolId, permiso_id: permisoId, version: 1, ...sync }).run();
+      registrarOverride(tx, rolId, permisoId, true, session.userId, now, sync);
+    }
+    for (const codigo of quitados) {
+      const permisoId = idPorCodigo.get(codigo)!;
+      tx.delete(schema.rol_permiso)
+        .where(and(eq(schema.rol_permiso.rol_id, rolId), eq(schema.rol_permiso.permiso_id, permisoId))).run();
+      registrarOverride(tx, rolId, permisoId, false, session.userId, now, sync);
+    }
+  });
+
+  if (session.rolId === rolId) {
+    const codigos = codigosDelRol(db, rolId);
+    const data = getSessionData();
+    setSession({ ...session, permisos: new Set(codigos) }, data ? { ...data, permisos: codigos } : data!);
+  }
+  return { permisos: codigosDelRol(db, rolId) };
+}
+
+function codigosDelRol(db: Db, rolId: string): string[] {
+  return db.select({ codigo: schema.permiso.codigo })
+    .from(schema.rol_permiso)
+    .innerJoin(schema.permiso, eq(schema.permiso.id, schema.rol_permiso.permiso_id))
+    .where(eq(schema.rol_permiso.rol_id, rolId))
+    .all().map(r => r.codigo);
+}
+
+/** ¿Queda algún usuario activo que administre usuarios si el rol `sinAdminRolId` pierde el permiso? */
+function quedaAdministradorActivo(db: Db, sinAdminRolId: string): boolean {
+  const activos = db.select({ rol_id: schema.usuario.rol_id }).from(schema.usuario)
+    .where(eq(schema.usuario.activo, true)).all();
+  return activos.some(u => u.rol_id !== sinAdminRolId && rolAdministraUsuarios(db, u.rol_id));
+}
+
+function registrarOverride(
+  tx: Parameters<Parameters<Db['transaction']>[0]>[0],
+  rolId: string, permisoId: string, otorgado: boolean, usuarioId: string, now: Date,
+  sync: { origin_id: string; sync_state: 'pending'; updated_at: Date },
+): void {
+  const existente = tx.select({ id: schema.rol_permiso_override.id, version: schema.rol_permiso_override.version })
+    .from(schema.rol_permiso_override)
+    .where(and(eq(schema.rol_permiso_override.rol_id, rolId), eq(schema.rol_permiso_override.permiso_id, permisoId)))
+    .get();
+  if (existente) {
+    tx.update(schema.rol_permiso_override)
+      .set({ otorgado, usuario_modificacion_id: usuarioId, fecha_actualizacion: now, version: existente.version + 1, ...sync })
+      .where(eq(schema.rol_permiso_override.id, existente.id)).run();
+  } else {
+    tx.insert(schema.rol_permiso_override).values({
+      id: randomUUID(), rol_id: rolId, permiso_id: permisoId, otorgado,
+      usuario_modificacion_id: usuarioId, fecha_actualizacion: now, version: 1, ...sync,
+    }).run();
+  }
+}
+
 export function registerAuthHandlers(ipcMain: IpcMain, db: Db, enviadorCorreo: EnviadorCorreo | null = null): void {
   ipcMain.handle('auth:login', async (_event, payload: LoginPayload) =>
     loginHandler(db, payload)
@@ -465,4 +559,5 @@ export function registerAuthHandlers(ipcMain: IpcMain, db: Db, enviadorCorreo: E
   ipcMain.handle('usuario:reactivar',       async (_e, p) => usuarioReactivarHandler(db, p));
   ipcMain.handle('rol:list',                async ()      => rolListHandler(db));
   ipcMain.handle('permiso:matriz',          async ()      => permisoMatrizHandler(db));
+  ipcMain.handle('permiso:actualizarRol',    async (_e, p) => permisoActualizarRolHandler(db, p));
 }

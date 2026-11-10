@@ -136,7 +136,8 @@ Hoy el riesgo es acotado (las DevTools solo aparecen en desarrollo), pero tiene 
    sinónimos) de `usuario.administrar`, `agenda.*`, `cliente.desactivar`; autorizaciones del POS
    por permiso (`verificarAutorizacion(db, creds, 'venta.anular')`) en vez de por nombre de rol;
    regla "último administrador" por permiso `usuario.administrar`.
-3. **RBAC Fase 2 — PERF-3 opción B** (editor con guardas, ver `docs/perf3-permisos-analisis.md`):
+3. **RBAC Fase 2 — PERF-3 opción B** (editor con guardas, ver `docs/perf3-permisos-analisis.md`) — **hecho en
+   ADR-147** (solo Operador y Supervisor, por decisión del usuario):
    tabla de overrides, `runSeed` = base + overrides, permisos intocables, refresco de la sesión al
    cambiar el rol propio. Opcional: roles personalizados.
 4. **Tanda de verificación manual** de los ADRs de seguridad de noviembre (login, vencimiento,

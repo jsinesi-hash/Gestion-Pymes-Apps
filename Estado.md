@@ -3,7 +3,9 @@
 > Fuente de verdad sobre qué está hecho, qué está en curso y qué viene después.
 > Actualizar al completar cada fase o tomar una decisión de diseño significativa.
 
-**Última actualización:** 2026-11-09 (**RBAC Fase 1: permisos con significado propio y autorizaciones por permiso — ADR-146** — rama `feat/rbac-fase1-permisos-propios` (apilada sobre #62): permisos nuevos `precio.gestionar`, `catalogo.gestionar`, `agenda.gestionar` (ambos roles), `cliente.baja`, `caja.autorizar_diferencia`, `ctacte.autorizar_exceso` y, en Elaborados, `compra.anular`/`produccion.anular`; las autorizaciones del POS piden el permiso de la acción (`verificarAutorizacion`) en vez del rol SUPERVISOR; la regla del último administrador mira `usuario.administrar` y ahora también protege el cambio de rol (antes se podía dejar el sistema sin administrador). Nadie gana ni pierde acceso. Sin migraciones. Sin verificar en la app real.)
+**Última actualización:** 2026-11-09 (**RBAC Fase 2: editor de permisos por rol — ADR-147** — rama `feat/rbac-fase2-editor-permisos` (apilada sobre #63): «Roles y permisos» pasa a ser editable para Operador y Supervisor (casillas, Guardar/Descartar); los cambios quedan en la tabla nueva `rol_permiso_override` (migraciones Retail 0052 y Elaborados 0014) y `runSeed` los respeta al reiniciar; guardas: no quitarse «Administrar usuarios» a uno mismo ni dejar el sistema sin administrador. Cierra PERF-3 opción B. Sin verificar en la app real.)
+
+**Anterior:** 2026-11-09 (**RBAC Fase 1: permisos con significado propio y autorizaciones por permiso — ADR-146** — rama `feat/rbac-fase1-permisos-propios` (apilada sobre #62): permisos nuevos `precio.gestionar`, `catalogo.gestionar`, `agenda.gestionar` (ambos roles), `cliente.baja`, `caja.autorizar_diferencia`, `ctacte.autorizar_exceso` y, en Elaborados, `compra.anular`/`produccion.anular`; las autorizaciones del POS piden el permiso de la acción (`verificarAutorizacion`) en vez del rol SUPERVISOR; la regla del último administrador mira `usuario.administrar` y ahora también protege el cambio de rol (antes se podía dejar el sistema sin administrador). Nadie gana ni pierde acceso. Sin migraciones. Sin verificar en la app real.)
 
 **Anterior:** 2026-11-09 (**RBAC Fase 0: cada canal IPC declara qué exige y el main lo hace cumplir — ADR-145** — rama `feat/rbac-fase0-permisos-en-main`: tabla de políticas por canal (`publico`/`sesion`/`permiso:x`) aplicada al registrar con `ipcConPoliticas` (un canal sin política no arranca); registro de handlers extraído a `ipc/registrar.ts` en Retail y Elaborados; guard único con error `FORBIDDEN:<codigo>` (antes un objeto que llegaba al renderer como `[object Object]`); etiquetas de los permisos de Elaborados; test baranda por app que invoca todos los canales reales. Cerró ~45 canales que respondían sin sesión y 62 de Retail que no pedían el permiso correspondiente. Sin migraciones ni permisos nuevos. Sin verificar en la app real. Origen: `docs/Revisiones/2026-11-09-revision-general.md`.)
 
@@ -281,6 +283,7 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 | 102–144 | Elaborados E4/E5, revisiones P0–P2, modales, seguridad de login y backups (ver `docs/ADR-Log-ferreteria.md`) | Aceptados — mergeados |
 | 145 | RBAC Fase 0: política por canal IPC aplicada en el main + baranda por app | Aceptado — implementado (sin verificar en la app real) |
 | 146 | RBAC Fase 1: permisos con significado propio, autorizaciones por permiso y último administrador por permiso | Aceptado — implementado (sin verificar en la app real) |
+| 147 | RBAC Fase 2: editor de permisos por rol (PERF-3 opción B) con excepciones que sobreviven al seed | Aceptado — implementado (sin verificar en la app real) |
 
 > Detalle completo en `docs/ADR-Log-ferreteria.md`. **Nota:** esta tabla saltea 052–063 (el
 > ADR-Log está más adelantado que este Estado; pendiente de reconciliar).
@@ -314,11 +317,9 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 - ~~Cobro en efectivo sin caja abierta~~ → **cerrada:** se bloquea (`CAJA_REQUERIDA`) en ambas apps.
 - Pantalla de Parámetros del sistema: ADR-061 cubrió solo los feature flags (`/config/funcionalidades`); el resto no existe todavía. Falta definir qué parámetros de `parametros_sistema` son editables desde UI (vs. solo seed/valor fijo) antes de agregarla al sidebar. Sacada del grupo Configuración en ADR-030 hasta que se especifique con su propio ADR.
 - Unidades: conversión y multi-presentación diferidas → cerrado en ADR-040/ADR-041.
-- **Revocación de permisos vs. `runSeed` en cada arranque.** `runSeed` es aditivo: si
-  algún día se agrega una UI para quitarle un permiso a un rol, el siguiente arranque se
-  lo volvería a otorgar. Hoy no hay conflicto (roles `es_sistema`, matriz RBAC fija). Al
-  construir esa UI, el seed va a necesitar distinguir "nunca se otorgó" de "se revocó a
-  propósito" — p. ej. una tabla de revocaciones explícitas.
+- ~~Revocación de permisos vs. `runSeed` en cada arranque~~ → **cerrada en ADR-147:** las
+  revocaciones y agregados hechos desde «Roles y permisos» viven en `rol_permiso_override` y
+  `runSeed` los respeta.
 - **Remitos: alcance del feature flag.** `remitos_habilitado` gatea solo la UI; el
   namespace IPC `remito:*` responde igual con el flag apagado. Definir si los flags de
   feature deben gatear también el registro de handlers en el main.
@@ -342,6 +343,10 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 ---
 
 ## Bitácora de decisiones
+
+- `2026-11-10` — **Fix: restablecer una contraseña no levantaba el bloqueo por intentos** (rama `feat/rbac-fase2-editor-permisos`). Visto al probar: el Operador quedó bloqueado (3 intentos con la clave provisoria) y el Supervisor le restableció la clave, pero siguió bloqueado 15 minutos. Ahora `usuarioChangePasswordHandler` levanta el bloqueo cuando un administrador restablece la clave de otro (el cambio propio no lo levanta). Además: el modal de restablecer dice con qué **usuario** se ingresa (se intentó entrar con el nombre completo «Cajero» en vez del usuario «Marcos») y que la clave es provisoria; el paso de cambio del login ya no dice solo «venció».
+- `2026-11-10` — **Fix: el Operador no podía recibir compras** (rama `feat/rbac-fase2-editor-permisos`, ADR-147). Al probar como Operador, «OC Sugerida» terminaba en `FORBIDDEN:proveedor.gestionar` sin traducir. Causa (previa a las fases RBAC): listar y abrir una OC pedían `proveedor.gestionar`, así que el Operador veía el listado vacío y no llegaba a «Recibir mercadería». Ahora `compras.oc:list/get` piden `compra.recibir`; crear, emitir, anular y editar siguen siendo de `proveedor.gestionar` y la UI los oculta a quien no lo tiene (listado, detalle y OC sugerida, que además traduce los errores). Baranda nueva: los canales de la recepción tienen que estar al alcance del Operador de fábrica.
+- `2026-11-09` — **ADR-147 — RBAC Fase 2** (rama `feat/rbac-fase2-editor-permisos`). Editor de permisos de Operador y Supervisor; las excepciones a la fábrica viven en `rol_permiso_override` y `runSeed` las respeta. Cierra la decisión abierta «Revocación de permisos vs. runSeed en cada arranque». → siguiente: verificar las tres fases RBAC en la app real; después, si aparece un caso real, «crear rol» y «restablecer valores de fábrica».
 
 - `2026-11-09` — **ADR-146 — RBAC Fase 1** (rama `feat/rbac-fase1-permisos-propios`). El usuario aprobó la lista de permisos nuevos (todos solo Supervisor) y `agenda.gestionar` para ambos roles. Decidió además que el editor de la Fase 2 alcance con Operador y Supervisor (sin roles nuevos por ahora), diseñado por rol para poder sumar «crear rol» más adelante; no se harán permisos por usuario individual. → siguiente: Fase 2, editor de permisos (PERF-3 opción B).
 

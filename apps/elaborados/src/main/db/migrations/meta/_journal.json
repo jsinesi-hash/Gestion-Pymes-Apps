@@ -99,6 +99,13 @@
       "when": 1792346242973,
       "tag": "0013_adr143_smtp_claves",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1792432642973,
+      "tag": "0014_adr147_rol_permiso_override",
+      "breakpoints": true
     }
   ]
 }

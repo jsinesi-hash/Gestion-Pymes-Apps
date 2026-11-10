@@ -75,7 +75,11 @@ const CODIGOS: Record<string, Formateador> = {
     const motivo = args[0] as MotivoPasswordDebil;
     return { mensaje: mensajePasswordDebil(motivo) ?? 'La contraseña no cumple los requisitos de seguridad.' };
   },
-  LAST_SUPERVISOR: msg('No se puede desactivar el último supervisor activo.'),
+  LAST_SUPERVISOR: msg('Tiene que quedar al menos un usuario activo que pueda administrar usuarios.'),
+  // ADR-147: editor de permisos por rol.
+  SIN_ADMINISTRADOR: msg('Tiene que quedar al menos un usuario activo que pueda administrar usuarios.'),
+  PERMISO_PROPIO_ADMIN: msg('No podés quitarle «Administrar usuarios» a tu propio rol.'),
+  PERMISO_DESCONOCIDO: msg('Uno de los permisos no existe. Recargá la pantalla e intentá de nuevo.'),
   AUTO_DESACTIVACION: msg('No podés desactivar tu propio usuario.'),
   CANTIDAD_INVALIDA: msg('Ingresá una cantidad válida.'),
   MOTIVO_REQUERIDO: msg('Ingresá el motivo.'),
