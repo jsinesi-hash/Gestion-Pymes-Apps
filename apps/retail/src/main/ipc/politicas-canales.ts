@@ -109,7 +109,8 @@ export const POLITICAS_CANALES_RETAIL: PoliticasCanales = {
   'importacionCosto:getHistorialDetalle': P('import.masiva'),
 
   // Compras.
-  'compras.oc:list': P('proveedor.gestionar'), 'compras.oc:get': P('proveedor.gestionar'),
+  // Ver y abrir una OC es parte de recibirla (Operador); crearla y editarla, de gestionar proveedores.
+  'compras.oc:list': P('compra.recibir'), 'compras.oc:get': P('compra.recibir'),
   'compras.oc:crear': P('proveedor.gestionar'), 'compras.oc:agregarItem': P('proveedor.gestionar'),
   'compras.oc:actualizarItem': P('proveedor.gestionar'), 'compras.oc:eliminarItem': P('proveedor.gestionar'),
   'compras.oc:emitir': P('proveedor.gestionar'), 'compras.oc:anular': P('proveedor.gestionar'),

@@ -330,8 +330,8 @@ export function ocSugerirHandler(db: Db): { grupos: OcSugeridaGrupo[]; sin_prove
 export function registerOcHandlers(ipcMain: IpcMain, db: Db): void {
   const guard = requirePermission('proveedor.gestionar');
   const guardRecibir = requirePermission('compra.recibir');
-  ipcMain.handle('compras.oc:list',           guard(async () => ocListHandler(db)));
-  ipcMain.handle('compras.oc:get',            guard(async (_e, id) => ocGetHandler(db, id)));
+  ipcMain.handle('compras.oc:list',           guardRecibir(async () => ocListHandler(db)));
+  ipcMain.handle('compras.oc:get',            guardRecibir(async (_e, id) => ocGetHandler(db, id)));
   ipcMain.handle('compras.oc:crear',          guard(async (_e, p) => ocCrearHandler(db, p)));
   ipcMain.handle('compras.oc:agregarItem',    guard(async (_e, p) => ocAgregarItemHandler(db, p)));
   ipcMain.handle('compras.oc:actualizarItem', guard(async (_e, p) => ocActualizarItemHandler(db, p)));
