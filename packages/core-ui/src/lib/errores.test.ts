@@ -31,7 +31,7 @@ describe('traducirError — DEMO_EN_USO (ADR-110)', () => {
 
 describe('códigos de desactivación de usuario (P0 2026-10-20)', () => {
   it('traduce LAST_SUPERVISOR y AUTO_DESACTIVACION, también envueltos por Electron', () => {
-    expect(traducirError(new Error('LAST_SUPERVISOR')).mensaje).toMatch(/último supervisor/);
+    expect(traducirError(new Error('LAST_SUPERVISOR')).mensaje).toMatch(/al menos un usuario activo que pueda administrar/);
     expect(traducirError(new Error("Error invoking remote method 'usuario:desactivar': Error: AUTO_DESACTIVACION")).mensaje)
       .toMatch(/propio usuario/);
   });

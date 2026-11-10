@@ -104,6 +104,32 @@ describe('usuarioChangePasswordHandler — contraseña actual', () => {
   });
 });
 
+describe('usuarioChangePasswordHandler — restablecer la clave de otro levanta su bloqueo', () => {
+  // Visto en la app (2026-11-10): el Operador quedó bloqueado tras 3 intentos y el Supervisor le
+  // restableció la contraseña, pero la cuenta siguió bloqueada hasta que pasaron los 15 minutos.
+  it('el usuario bloqueado puede entrar con la clave nueva (y se le pide cambiarla)', () => {
+    loginAsOperador(db);
+    clearSession();
+    const malOperador = { nombreUsuario: 'operador1', password: 'incorrecta' }; // NOSONAR
+    fallar(3, malOperador);
+    expect(() => loginHandler(db, { nombreUsuario: 'operador1', password: 'operador1234' })).toThrow('CUENTA_BLOQUEADA'); // NOSONAR
+
+    loginAsAdmin(db);
+    const op = db.select().from(schema.usuario).where(eq(schema.usuario.nombre_usuario, 'operador1')).get()!;
+    usuarioChangePasswordHandler(db, { target_user_id: op.id, new_password: 'Temporal#2026' }); // NOSONAR
+    clearSession();
+
+    expect(() => loginHandler(db, { nombreUsuario: 'operador1', password: 'Temporal#2026' })).toThrow('PASSWORD_VENCIDA'); // NOSONAR
+  });
+
+  it('cambiar la propia clave no levanta un bloqueo (no es una vía para saltearlo)', () => {
+    const s = loginAsAdmin(db);
+    const payload = { target_user_id: s.id, current_password: 'mal', new_password: 'Nueva#2026' }; // NOSONAR
+    for (let i = 0; i < 3; i++) expect(() => usuarioChangePasswordHandler(db, payload)).toThrow('PASSWORD_INCORRECTA');
+    expect(() => usuarioChangePasswordHandler(db, { ...payload, current_password: 'admin1234' })).toThrow('CUENTA_BLOQUEADA'); // NOSONAR
+  });
+});
+
 describe('política de contraseña en usuarioCreateHandler / usuarioChangePasswordHandler', () => {
   function rolOperador() {
     return db.select().from(schema.rol).where(eq(schema.rol.nombre, 'OPERADOR')).get()!;

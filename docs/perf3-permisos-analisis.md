@@ -5,7 +5,7 @@
 > cierra sin confirmación (CLAUDE.md §11). Mockups asociados:
 > `docs/perf3-permisos-mockup-opcion-B.html` (opción B, editable).
 
-**Fecha:** 2026-09-10 · **Estado:** análisis, sin decidir · **Relacionados:** ADR-008 (roles),
+**Fecha:** 2026-09-10 · **Estado:** resuelto — opción A en ADR-087 y opción B en ADR-147 (2026-11-09) · **Relacionados:** ADR-008 (roles),
 ADR-027 (baja del PIN), ADR-081/082 (Fase 3), CLAUDE.md §5/§8.
 
 ---

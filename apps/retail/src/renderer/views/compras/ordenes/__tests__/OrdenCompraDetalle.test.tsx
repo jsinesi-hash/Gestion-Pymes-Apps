@@ -3,6 +3,12 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { OrdenCompraDetalle } from '../OrdenCompraDetalle';
 
+let mockCan: (codigo: string) => boolean = () => true;
+vi.mock('@core/ui', async (importOriginal) => ({ ...(await importOriginal<any>()),
+  useAuth: () => ({ can: (c: string) => mockCan(c) }),
+}));
+const sinGestionarProveedores = (c: string) => c !== 'proveedor.gestionar';
+
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router-dom')>();
@@ -25,6 +31,7 @@ const OC_BASE = {
 };
 
 function setup() {
+  mockCan = () => true;
   (globalThis as any).ferreteria = {
     compras: {
       oc: {
@@ -83,5 +90,41 @@ describe('OrdenCompraDetalle — validación de payload al agregar ítem (ADR-08
 
     await waitFor(() => expect(document.activeElement).toBe(document.getElementById('add_costo_unitario_centavos')));
     expect(await screen.findByText(/no puede ser negativo/i)).toBeInTheDocument();
+  });
+});
+
+describe('OrdenCompraDetalle — permisos (Operador: recibe, no gestiona)', () => {
+  beforeEach(() => setup());
+
+  it('con permisos completos, una OC en borrador se puede emitir, anular y editar', async () => {
+    renderView();
+    expect(await screen.findByRole('button', { name: /emitir oc/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^anular$/i })).toBeInTheDocument();
+    expect(screen.getByText(/agregar ítem/i)).toBeInTheDocument();
+  });
+
+  it('sin gestionar proveedores, una OC en borrador es solo lectura', async () => {
+    mockCan = sinGestionarProveedores;
+    renderView();
+    expect(await screen.findByText('Distribuidora SA')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /emitir oc/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^anular$/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/agregar ítem/i)).not.toBeInTheDocument();
+  });
+
+  it('sin gestionar proveedores, una OC emitida se puede recibir pero no anular', async () => {
+    mockCan = sinGestionarProveedores;
+    (globalThis as any).ferreteria.compras.oc.get.mockResolvedValue({ ...OC_BASE, estado: 'emitida' });
+    renderView();
+    expect(await screen.findByRole('button', { name: /recibir mercadería/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^anular$/i })).not.toBeInTheDocument();
+  });
+
+  it('sin permiso de recepción no ofrece recibir', async () => {
+    mockCan = (c: string) => c !== 'compra.recibir';
+    (globalThis as any).ferreteria.compras.oc.get.mockResolvedValue({ ...OC_BASE, estado: 'emitida' });
+    renderView();
+    expect(await screen.findByRole('button', { name: /^anular$/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /recibir mercadería/i })).not.toBeInTheDocument();
   });
 });

@@ -20,6 +20,11 @@ function createTestDb() {
     path.resolve(__dirname, '../../db/migrations/0050_adr136_password_vigencia.sql'), 'utf8'
   );
   for (const stmt of sql0050.split('--> statement-breakpoint').map(s => s.trim()).filter(Boolean)) sqlite.exec(stmt);
+  // ADR-147 (0052): `rol_permiso_override`, que runSeed lee para respetar los cambios hechos desde la UI.
+  const sql0052 = fs.readFileSync(
+    path.resolve(__dirname, '../../db/migrations/0052_adr147_rol_permiso_override.sql'), 'utf8'
+  );
+  for (const stmt of sql0052.split('--> statement-breakpoint').map(s => s.trim()).filter(Boolean)) sqlite.exec(stmt);
   return drizzle(sqlite, { schema });
 }
 
@@ -39,20 +44,20 @@ describe('runSeed', () => {
     expect(nombres).toContain('SUPERVISOR');
   });
 
-  it('crea 29 permisos', () => {
+  it('crea 35 permisos', () => {
     runSeed(db);
     const permisos = db.select().from(schema.permiso).all();
     expect(permisos).toHaveLength(35);
   });
 
-  it('OPERADOR tiene exactamente 17 permisos', () => {
+  it('OPERADOR tiene exactamente 18 permisos', () => {
     runSeed(db);
     const operador = db.select().from(schema.rol).all().find(r => r.nombre === 'OPERADOR')!;
     const rp = db.select().from(schema.rol_permiso).all().filter(rp => rp.rol_id === operador.id);
     expect(rp).toHaveLength(18);
   });
 
-  it('SUPERVISOR tiene exactamente 29 permisos', () => {
+  it('SUPERVISOR tiene exactamente 35 permisos', () => {
     runSeed(db);
     const supervisor = db.select().from(schema.rol).all().find(r => r.nombre === 'SUPERVISOR')!;
     const rp = db.select().from(schema.rol_permiso).all().filter(rp => rp.rol_id === supervisor.id);

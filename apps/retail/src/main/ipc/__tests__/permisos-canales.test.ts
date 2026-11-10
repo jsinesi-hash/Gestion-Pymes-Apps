@@ -7,7 +7,7 @@ import { setSession, clearSession } from '@core/main';
 import { setupDb } from './helpers';
 import { registrarHandlersRetail } from '../registrar';
 import { POLITICAS_CANALES_RETAIL } from '../politicas-canales';
-import { PERMISOS } from '../../auth/seed';
+import { PERMISOS, OPERADOR_PERMISOS } from '../../auth/seed';
 
 type Handler = (event: unknown, ...args: unknown[]) => unknown;
 
@@ -70,6 +70,15 @@ describe('ADR-145 — permisos de todos los canales IPC de Retail', () => {
     const codigos = new Set(PERMISOS.map(p => p.codigo));
     const desconocidos = [...canales.keys()].map(permisoDe).filter((p): p is string => !!p && !codigos.has(p));
     expect([...new Set(desconocidos)]).toEqual([]);
+  });
+
+  it('la recepción de compras (Operador de fábrica) alcanza para ver las OC y recibirlas', () => {
+    // Bug: listar y abrir una OC pedían `proveedor.gestionar` y el Operador no llegaba a recibir.
+    const operador = new Set<string>(OPERADOR_PERMISOS);
+    const canalesRecepcion = ['compras.oc:list', 'compras.oc:get', 'compras.recepcion:crear',
+      'compras.recepcion:listByOC', 'compras.recepcion:get'];
+    const fuera = canalesRecepcion.filter(c => { const p = permisoDe(c); return p !== null && !operador.has(p); });
+    expect(fuera).toEqual([]);
   });
 
   it('sin sesión, todo canal no público rechaza', async () => {

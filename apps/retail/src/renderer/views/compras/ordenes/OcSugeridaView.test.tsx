@@ -3,6 +3,12 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { OcSugeridaView } from './OcSugeridaView';
 
+let mockCan: (codigo: string) => boolean = () => true;
+vi.mock('@core/ui', async (importOriginal) => ({ ...(await importOriginal<any>()),
+  useAuth: () => ({ can: (c: string) => mockCan(c) }),
+}));
+const sinGestionarProveedores = (c: string) => c !== 'proveedor.gestionar';
+
 const sugerencia = {
   grupos: [{
     proveedor_id: 'prov1',
@@ -36,6 +42,7 @@ function makeFerreteria(overrides: Record<string, any> = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockCan = () => true;
   (window as any).ferreteria = makeFerreteria();
 });
 
@@ -45,13 +52,15 @@ function renderView() {
 
 describe('OcSugeridaView — feedback de error (antes fallaba en silencio)', () => {
   it('muestra el error traducido cuando falla la creación de la OC', async () => {
-    (window as any).ferreteria.compras.oc.crear = vi.fn().mockRejectedValue(new Error('PROVEEDOR_INACTIVO'));
+    (window as any).ferreteria.compras.oc.crear = vi.fn().mockRejectedValue(
+      new Error("Error invoking remote method 'compras.oc:crear': Error: FORBIDDEN:proveedor.gestionar"));
     renderView();
     await waitFor(() => expect(screen.getByText('Proveedor Uno')).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole('button', { name: /crear oc y editar/i }));
 
-    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('PROVEEDOR_INACTIVO'));
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/no tenés permiso/i));
+    expect(screen.getByRole('alert')).not.toHaveTextContent(/invoking remote method/i);
     // el botón vuelve a estar disponible, no queda colgado en "Creando..."
     expect(screen.getByRole('button', { name: /crear oc y editar/i })).toBeEnabled();
   });
@@ -66,6 +75,19 @@ describe('OcSugeridaView — feedback de error (antes fallaba en silencio)', () 
     fireEvent.change(screen.getByLabelText('Proveedor'), { target: { value: 'prov2' } });
     fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
 
-    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('COSTO_INVALIDO'));
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/no se pudo completar/i));
+  });
+});
+
+describe('OcSugeridaView — sin permiso para gestionar proveedores (Operador)', () => {
+  it('muestra la sugerencia pero no ofrece crear la OC ni asignar proveedor', async () => {
+    mockCan = sinGestionarProveedores;
+    renderView();
+    await waitFor(() => expect(screen.getByText('Proveedor Uno')).toBeInTheDocument());
+    expect(screen.getByText('Tornillo')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /crear oc y editar/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/asignar proveedor/i)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('Clavo'));
+    expect(screen.queryByLabelText('Proveedor')).not.toBeInTheDocument();
   });
 });
