@@ -10,50 +10,9 @@ if (started) app.quit();
 
 import { db } from './db/client';
 import { runStartup } from './startup';
-import { registerCoreHandlers, activarFirmaBackup, activarLockoutPersistente, activarRegistroErrores } from '@core/main';
-import { navegacionRetail } from '../common/navegacion';
-import { registerMarcaHandlers } from './ipc/marca';
-import { registerCategoriaHandlers } from './ipc/categoria';
-import { registerUbicacionHandlers } from './ipc/ubicacion';
-import { registerExistenciasHandlers } from './ipc/existencias';
-import { registerMovimientoStockHandlers } from './ipc/movimiento-stock';
-import { registerProductoHandlers } from './ipc/producto';
-import { registerEquivalenciaHandlers } from './ipc/equivalencia';
-import { registerPrintHandlers } from './ipc/print';
-import { registerStockHandlers } from './ipc/stock';
-import { registerListaPrecioHandlers } from './ipc/lista-precio';
-import { registerReglaPrecioHandlers } from './ipc/regla-precio';
-import { registerPriceBatchHandlers } from './ipc/price-batch';
-import { avisoCierreCaja } from './ipc/caja-cierre-aviso';
-import { registerVentaHandlers } from './ipc/venta';
-import { registerImportarHandlers } from './ipc/importar';
-import { registerDashboardHandlers } from './ipc/dashboard';
-import { registerDashboardRangoHandlers } from './ipc/dashboard-rango';
-import { registerDashboardCajaRangoHandlers } from './ipc/dashboard-caja-rango';
-import { registerDashboardClientesHandlers }   from './ipc/dashboard-clientes';
-import { registerDashboardProveedoresHandlers } from './ipc/dashboard-proveedores';
-import { EXPORTADORES_RETAIL } from './ipc/exportar';
-import { registerReportesHandlers } from './ipc/reportes';
-import { proveedorHooksRetail } from './ipc/proveedor';
-import { registerProductoProveedorHandlers } from './ipc/producto-proveedor';
-import { registerOcHandlers } from './ipc/ordenes-compra';
-import { registerRecepcionHandlers } from './ipc/recepcion';
-import { registerDialogRetailHandlers } from './ipc/dialog';
-import { registerEtiquetasHandlers } from './ipc/etiquetas';
-import { registerVentaEsperaHandlers } from './ipc/venta-espera';
-import { registerCambioProgramadoHandlers } from './ipc/cambio-programado';
-import { registerListaPrecioValorHandlers } from './ipc/lista-precio-valor';
-import { registerImportacionCostoHandlers } from './ipc/importacion-costo';
-import { registerImportacionCatalogoHandlers } from './ipc/importacion-catalogo';
-import { registerUnidadHandlers } from './ipc/unidad';
-import { registerDemoCatalogHandlers } from './ipc/demo-catalog';
-import { registerSinonimoHandlers } from './ipc/sinonimo';
-import { registerPresentacionHandlers } from './ipc/presentacion';
-import { registerRemitoHandlers } from './ipc/remito';
-import { registerTransportistaHandlers } from './ipc/transportista';
-import { registerPresupuestoHandlers, presupuestoVencerLoteHandler } from './ipc/presupuesto';
-import { registerAgendaHandlers } from './ipc/agenda';
-import { registerActualizacionHandlers } from './ipc/actualizacion';
+import { activarFirmaBackup, activarLockoutPersistente, activarRegistroErrores } from '@core/main';
+import { presupuestoVencerLoteHandler } from './ipc/presupuesto';
+import { registrarHandlersRetail } from './ipc/registrar';
 import { ejecutarCatchUp } from './agenda/motor-rutinas';
 import { drenarReintentos } from './agenda/worker-reintentos';
 import { applyPendingCambiosProgramados } from './scheduler/precios';
@@ -76,55 +35,12 @@ async function createWindow(): Promise<void> {
   // El menú nativo necesita la ventana, que se crea más abajo: el canal universal `menu:rebuild`
   // (core) llama a esta referencia, que se completa al instalar el menú.
   let reconstruirMenu: () => void = () => {};
-  registerCoreHandlers(ipcMain, db, {
-    reconstruirMenu: () => reconstruirMenu(),
+  registrarHandlersRetail(ipcMain, db, {
     migrationsFolder: path.join(__dirname, 'migrations'),
-    navegacion: navegacionRetail,
-    exportadores: EXPORTADORES_RETAIL,
-    caja: { onCajaCerrada: avisoCierreCaja },
-    proveedor: proveedorHooksRetail,
-    imprimirHtml: (h) => printService.printRawHtml(h),
+    printService,
+    reconstruirMenu: () => reconstruirMenu(),
+    app,
   });
-  registerDialogRetailHandlers(ipcMain);
-
-  registerMarcaHandlers(ipcMain, db);
-  registerCategoriaHandlers(ipcMain, db);
-  registerUbicacionHandlers(ipcMain, db);
-  registerExistenciasHandlers(ipcMain, db);
-  registerMovimientoStockHandlers(ipcMain, db);
-  registerProductoHandlers(ipcMain, db);
-  registerEquivalenciaHandlers(ipcMain, db);
-  registerPrintHandlers(ipcMain, db, printService);
-  registerStockHandlers(ipcMain, db);
-  registerListaPrecioHandlers(ipcMain, db);
-  registerReglaPrecioHandlers(ipcMain, db);
-  registerPriceBatchHandlers(ipcMain, db);
-  registerVentaHandlers(ipcMain, db);
-  registerImportarHandlers(ipcMain, db);
-  registerDashboardHandlers(ipcMain, db);
-  registerDashboardRangoHandlers(ipcMain, db);
-  registerDashboardCajaRangoHandlers(ipcMain, db);
-  registerDashboardClientesHandlers(ipcMain, db);
-  registerDashboardProveedoresHandlers(ipcMain, db);
-  registerReportesHandlers(ipcMain, db);
-  registerProductoProveedorHandlers(ipcMain, db);
-  registerOcHandlers(ipcMain, db);
-  registerRecepcionHandlers(ipcMain, db);
-  registerEtiquetasHandlers(ipcMain, db);
-  registerVentaEsperaHandlers(ipcMain, db);
-  registerCambioProgramadoHandlers(ipcMain, db);
-  registerListaPrecioValorHandlers(ipcMain, db);
-  registerImportacionCostoHandlers(ipcMain, db);
-  registerImportacionCatalogoHandlers(ipcMain, db);
-  registerUnidadHandlers(ipcMain, db);
-  registerDemoCatalogHandlers(ipcMain, db);
-  registerSinonimoHandlers(ipcMain, db);
-  registerPresentacionHandlers(ipcMain, db);
-  registerRemitoHandlers(ipcMain, db);
-  registerTransportistaHandlers(ipcMain, db);
-  registerPresupuestoHandlers(ipcMain, db);
-  registerAgendaHandlers(ipcMain, db);
-  registerActualizacionHandlers(ipcMain, db, app);
 
   // ADR-047: catch-up de agenda al abrir (materializa rutinas vencidas mientras estuvo cerrada).
   try { ejecutarCatchUp(db, new Date()); } catch (e) { console.error('[agenda] catch-up fallo:', e); }

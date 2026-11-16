@@ -746,7 +746,7 @@ describe('Guard: import.masiva', () => {
       { id: 'u2', nombreCompleto: 'Operador', rolId: 'operador', rolNombre: '', permisos: [], passwordDiasRestantes: 30, preferencias: { tema: 'claro', acento: 'amber', ui_font: 'Hanken Grotesk', densidad: 'comfortable', skin: 'actual', pantalla_inicio: null, favoritos: [] } },
     );
     const handler = requirePermission('import.masiva')(async () => 'ok');
-    await expect(handler(null)).rejects.toMatchObject({ code: 'FORBIDDEN', permiso: 'import.masiva' });
+    await expect(handler(null)).rejects.toThrow('FORBIDDEN:import.masiva');
   });
 });
 

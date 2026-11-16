@@ -306,7 +306,7 @@ describe('proveedor handlers', () => {
       setSession(SESS_SIN_PERM, DATA_SIN_PERM);
       const handler = requirePermission('proveedor.gestionar')(async () => proveedorListHandler(db));
       await expect(handler(null as any))
-        .rejects.toMatchObject({ code: 'FORBIDDEN', permiso: 'proveedor.gestionar' });
+        .rejects.toThrow('FORBIDDEN:proveedor.gestionar');
     });
   });
 

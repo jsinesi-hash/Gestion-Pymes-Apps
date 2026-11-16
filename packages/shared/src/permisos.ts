@@ -1,9 +1,8 @@
 // Mapa de nombres amigables de permisos (ADR-085). Única fuente de verdad de las
-// etiquetas legibles para mostrar los códigos de `permiso.codigo` en UI. No es la
-// fuente de verdad de qué permisos existen —eso es `PERMISOS` en
-// `packages/client/src/main/auth/seed.ts`—; un test de cobertura en el cliente
-// (`src/main/auth/__tests__/etiqueta-permiso.test.ts`) verifica que ambas listas
-// coincidan exactamente.
+// etiquetas legibles para mostrar los códigos de `permiso.codigo` en UI, compartida por
+// todas las apps. No es la fuente de verdad de qué permisos existen —eso es `PERMISOS_CORE`
+// (`@core/main`) más la lista de cada app—; cada app tiene un test de cobertura
+// (`src/main/auth/__tests__/etiqueta-permiso.test.ts`) que exige etiqueta para todos sus códigos.
 export const ETIQUETA_PERMISO: Record<string, string> = {
   'venta.crear': 'Vender (POS)',
   'venta.anular': 'Anular ventas',
@@ -34,6 +33,13 @@ export const ETIQUETA_PERMISO: Record<string, string> = {
   'config.fiscal': 'Configuración fiscal y parámetros',
   'backup.crear': 'Crear backups',
   'backup.restaurar': 'Restaurar backups',
+  // Elaborados (ADR-093/103/104, etiquetas en ADR-145).
+  'articulo.gestionar': 'Gestionar artículos e insumos',
+  'produccion.registrar': 'Registrar producción',
+  'receta.gestionar': 'Gestionar recetas',
+  'producto_venta.gestionar': 'Gestionar la carta',
+  'compra.registrar': 'Registrar compras de insumos',
+  'lista_precio.gestionar': 'Gestionar listas de precio',
 };
 
 /** Etiqueta legible de un código de permiso; si no está mapeado, cae al código tal cual. */
