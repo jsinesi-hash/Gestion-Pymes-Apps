@@ -3,7 +3,9 @@
 > Fuente de verdad sobre qué está hecho, qué está en curso y qué viene después.
 > Actualizar al completar cada fase o tomar una decisión de diseño significativa.
 
-**Última actualización:** 2026-11-09 (**RBAC Fase 2: editor de permisos por rol — ADR-147** — rama `feat/rbac-fase2-editor-permisos` (apilada sobre #63): «Roles y permisos» pasa a ser editable para Operador y Supervisor (casillas, Guardar/Descartar); los cambios quedan en la tabla nueva `rol_permiso_override` (migraciones Retail 0052 y Elaborados 0014) y `runSeed` los respeta al reiniciar; guardas: no quitarse «Administrar usuarios» a uno mismo ni dejar el sistema sin administrador. Cierra PERF-3 opción B. Sin verificar en la app real.)
+**Última actualización:** 2026-11-16 (**Release 1.2.0 de Retail — ADR-148** — rama `release/1.2.0`: RBAC Fases 0–2 mergeado a `main` (#62→#63→#64, suite completa en verde); versión 1.2.0 en Retail y en los paquetes del core, notas de la versión en el changelog de la app (con test que exige la entrada), tag `retail-v1.2.0`; el fiscal ARCA pasa a **1.3.0**. Se suman el análisis de la fase online y su índice de referencias. → siguiente: F0 de la fase online.)
+
+**Anterior:** 2026-11-09 (**RBAC Fase 2: editor de permisos por rol — ADR-147** — rama `feat/rbac-fase2-editor-permisos` (apilada sobre #63): «Roles y permisos» pasa a ser editable para Operador y Supervisor (casillas, Guardar/Descartar); los cambios quedan en la tabla nueva `rol_permiso_override` (migraciones Retail 0052 y Elaborados 0014) y `runSeed` los respeta al reiniciar; guardas: no quitarse «Administrar usuarios» a uno mismo ni dejar el sistema sin administrador. Cierra PERF-3 opción B. Sin verificar en la app real.)
 
 **Anterior:** 2026-11-09 (**RBAC Fase 1: permisos con significado propio y autorizaciones por permiso — ADR-146** — rama `feat/rbac-fase1-permisos-propios` (apilada sobre #62): permisos nuevos `precio.gestionar`, `catalogo.gestionar`, `agenda.gestionar` (ambos roles), `cliente.baja`, `caja.autorizar_diferencia`, `ctacte.autorizar_exceso` y, en Elaborados, `compra.anular`/`produccion.anular`; las autorizaciones del POS piden el permiso de la acción (`verificarAutorizacion`) en vez del rol SUPERVISOR; la regla del último administrador mira `usuario.administrar` y ahora también protege el cambio de rol (antes se podía dejar el sistema sin administrador). Nadie gana ni pierde acceso. Sin migraciones. Sin verificar en la app real.)
 
@@ -68,9 +70,9 @@ menu-nativo se **renumeraron a `0037`-`0041`** para convivir con `0036_sustituto
 
 ---
 
-## Release actual: 1.1.x (Retail) + base multi-rubro
+## Release actual: 1.2.0 (Retail) + base multi-rubro
 
-Retail (`ferreteria-client`) en **1.1.1**: R1 y R3 integrados en 1.0.x; **1.1.0** (Remitos, Presupuestos, Agenda/avisos, Motor de Precios v2 y mejoras UX) integrado en `main`; el fiscal ARCA (R2, ADR-013) sigue pendiente. En paralelo, la base multi-rubro (ADR-091…101): **Elaborados (heladería) E1–E3 completos**; **E4** (compras de insumos, listas de precio, reportes, export, proveedores) completo — ADR-102…106, cierre en ADR-112; el traspaso `docs/Handoff-E4-Elaborados.md` quedó como histórico.
+Retail (`ferreteria-client`) en **1.2.0** (tag `retail-v1.2.0`, ADR-148: base multi-rubro, seguridad de login y backups, RBAC editable; el fiscal pasa a 1.3.0). Antes: R1 y R3 integrados en 1.0.x; **1.1.0** (Remitos, Presupuestos, Agenda/avisos, Motor de Precios v2 y mejoras UX) integrado en `main`; el fiscal ARCA (R2, ADR-013) sigue pendiente. En paralelo, la base multi-rubro (ADR-091…101): **Elaborados (heladería) E1–E3 completos**; **E4** (compras de insumos, listas de precio, reportes, export, proveedores) completo — ADR-102…106, cierre en ADR-112; el traspaso `docs/Handoff-E4-Elaborados.md` quedó como histórico.
 
 ---
 
@@ -182,7 +184,8 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 
 - ~~Elaborados E4 — gestión~~: **hecho** (ADR-102…106, 112). La «deuda previa» del traspaso se auditó en ADR-144: las cinco entradas ya estaban resueltas.
 - **Corte multi-rubro, Fases 3 y 4** (ADR-091): capa de perfiles de rubro data-driven; guía "cómo nace una app de familia" + reframe de docs + numeración de ADR. Una tercera familia (Servicios) no tiene diseño todavía.
-- **1.2.0 — R2 fiscal**: facturación AFIP/ARCA (ADR-013 pendiente), CAE, comprobantes A/B/C. La interfaz B1 (`ComprobantePayload`, ADR-097) ya existe con el ticket interno como consumidor.
+- **Fase online (R4)**: análisis en `docs/Revisiones/2026-11-16-analisis-fase-online.md` e índice en `docs/Roadmap-fase-online-referencias.md`. Próximo paso: F0 (ADRs de decisión; 5 preguntas al PO). F1 (preparación local) en 1.x; multi-terminal en 2.0.0.
+- **1.3.0 — R2 fiscal** (antes 1.2.0, ADR-148): facturación AFIP/ARCA (ADR-013 pendiente), CAE, comprobantes A/B/C. La interfaz B1 (`ComprobantePayload`, ADR-097) ya existe con el ticket interno como consumidor.
 - **R3** restante: CCteProv diferida (ADR-019), comprobantes de compra (tabla existe, sin UI)
 - **2.0.0 — R4** nube + sync: backend Node + PostgreSQL, outbox, conflictos (ADR-012)
 - **R5** reportes consolidados, preparación multi-sucursal
@@ -284,6 +287,7 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 | 145 | RBAC Fase 0: política por canal IPC aplicada en el main + baranda por app | Aceptado — implementado (sin verificar en la app real) |
 | 146 | RBAC Fase 1: permisos con significado propio, autorizaciones por permiso y último administrador por permiso | Aceptado — implementado (sin verificar en la app real) |
 | 147 | RBAC Fase 2: editor de permisos por rol (PERF-3 opción B) con excepciones que sobreviven al seed | Aceptado — implementado (sin verificar en la app real) |
+| 148 | Release 1.2.0 de Retail y corrección del mapa de versiones: el fiscal ARCA pasa a 1.3.0 | Aceptado |
 
 > Detalle completo en `docs/ADR-Log-ferreteria.md`. **Nota:** esta tabla saltea 052–063 (el
 > ADR-Log está más adelantado que este Estado; pendiente de reconciliar).
@@ -344,6 +348,7 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 
 ## Bitácora de decisiones
 
+- `2026-11-16` — **ADR-148 — Release 1.2.0 de Retail** (rama `release/1.2.0`). El usuario eligió publicar lo integrado como 1.2.0 y correr el fiscal ARCA a 1.3.0 (frente a 1.1.2 sin tocar el mapa). Antes se mergeó la pila RBAC #62→#63→#64 con la suite completa en verde y `main` idéntico a la punta probada. Changelog de la app con la entrada 1.2.0 y test que la exige. Tags por app (`retail-vX.Y.Z`). Se incorporan el análisis de la fase online y su índice. → siguiente: F0 de la fase online (ADRs de decisión y respuestas del PO).
 - `2026-11-10` — **Fix: restablecer una contraseña no levantaba el bloqueo por intentos** (rama `feat/rbac-fase2-editor-permisos`). Visto al probar: el Operador quedó bloqueado (3 intentos con la clave provisoria) y el Supervisor le restableció la clave, pero siguió bloqueado 15 minutos. Ahora `usuarioChangePasswordHandler` levanta el bloqueo cuando un administrador restablece la clave de otro (el cambio propio no lo levanta). Además: el modal de restablecer dice con qué **usuario** se ingresa (se intentó entrar con el nombre completo «Cajero» en vez del usuario «Marcos») y que la clave es provisoria; el paso de cambio del login ya no dice solo «venció».
 - `2026-11-10` — **Fix: el Operador no podía recibir compras** (rama `feat/rbac-fase2-editor-permisos`, ADR-147). Al probar como Operador, «OC Sugerida» terminaba en `FORBIDDEN:proveedor.gestionar` sin traducir. Causa (previa a las fases RBAC): listar y abrir una OC pedían `proveedor.gestionar`, así que el Operador veía el listado vacío y no llegaba a «Recibir mercadería». Ahora `compras.oc:list/get` piden `compra.recibir`; crear, emitir, anular y editar siguen siendo de `proveedor.gestionar` y la UI los oculta a quien no lo tiene (listado, detalle y OC sugerida, que además traduce los errores). Baranda nueva: los canales de la recepción tienen que estar al alcance del Operador de fábrica.
 - `2026-11-09` — **ADR-147 — RBAC Fase 2** (rama `feat/rbac-fase2-editor-permisos`). Editor de permisos de Operador y Supervisor; las excepciones a la fábrica viven en `rol_permiso_override` y `runSeed` las respeta. Cierra la decisión abierta «Revocación de permisos vs. runSeed en cada arranque». → siguiente: verificar las tres fases RBAC en la app real; después, si aparece un caso real, «crear rol» y «restablecer valores de fábrica».
@@ -873,9 +878,10 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
   → siguiente: diseño (brainstorm + spec) de Remitos.
 
 ## Estado actual
+- **Al 2026-11-16:** `main` en **1.2.0** (Retail, tag `retail-v1.2.0`, ADR-148) con RBAC Fases 0–2 integrado; sin PRs abiertos. El fiscal AFIP/ARCA pasa a **1.3.0**.
 - **Al 2026-10-14:** `main` en **1.1.1** (Retail) con la base multi-rubro (`@core/*` + `@ferreteria/shared`, ADR-091) y **Elaborados E1–E3 completos** (ADR-092…101: inventario, producción, catálogo de venta, POS, pedidos en espera, anulación y carga inicial de datos). Pendiente: **E4** (ver `docs/Handoff-E4-Elaborados.md`) y el fiscal 1.2.0. Conteos de referencia: core-ui 40 · Retail renderer 925 / main 1598 · Elaborados renderer 174 / main 160.
 - **Release estable congelado:** v1.0.0 (tag sobre `main`, rama `release/1.0.x`)
-- **Rama activa de desarrollo:** `main` (1.1.0 **alcanzado**: Remitos + Presupuestos, ADR-044); el fiscal AFIP/ARCA es **1.2.0**
+- **Rama activa de desarrollo:** `main` (1.1.0 **alcanzado**: Remitos + Presupuestos, ADR-044; 1.2.0 publicado, ADR-148); el fiscal AFIP/ARCA es **1.3.0**
 - **1.1.0 integrado en `origin/main` (2026-07-21):** **Remitos (ADR-045)** y
   **Presupuestos (ADR-046)** ya están mergeados a `main` y pusheados, ambos detrás de sus
   flags (`remitos_habilitado` / `presupuestos_habilitado`, default `false`). `main` sigue

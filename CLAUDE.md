@@ -735,11 +735,12 @@ refactor. La conversión de presupuesto a venta la gatea `venta.crear`.
 - **R1** núcleo local · **R2** fiscal · **R3** compras y crédito · **R4** nube + sync ·
   **R5** reportes consolidados y preparación multi-sucursal.
 
-**Mapa de versiones vigente (ADR-044, corrige a ADR-042):** `1.0.x` = R1+R3
-(ya integrado) · `1.1.0` = **Remitos + Presupuestos + Agenda operativa/outbox de avisos
-(ADR-047 Lote 1)** (features nuevas, sin ARCA ni nube — en cola, cada una con su propio
-ADR/diseño; Remitos primero) · `1.2.0` = fiscal
-ARCA (R2) · `2.0.0` = R4 nube · `2.x` = R5. Toda feature nueva va a `main`/feature
+**Mapa de versiones vigente (ADR-148, corrige a ADR-044/042):** `1.0.x` = R1+R3 ·
+`1.1.x` = Remitos + Presupuestos + Agenda + Motor de Precios v2 · `1.2.0` = base multi-rubro +
+seguridad + RBAC editable (**publicado**, tag `retail-v1.2.0`) · `1.3.0` = fiscal ARCA (R2) ·
+`1.x` = F1 de la fase online (preparación local) · `2.0.0` = R4 multi-terminal / nube · `2.x` = R5.
+Tags por app (`retail-vX.Y.Z`; Elaborados tiene su propia línea). Al preparar un release de Retail,
+agregar su entrada en `apps/retail/src/main/actualizacion/changelog.ts` (un test lo exige). Toda feature nueva va a `main`/feature
 branch detrás de flag en `parametros_sistema` (default `false`), migraciones
 aditivas/retrocompatibles (ver ADR-042).
 
