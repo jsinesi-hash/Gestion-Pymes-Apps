@@ -5158,3 +5158,198 @@ Tercer lote de la migración de ADR-125. **Alcance:** 13 modales en 8 archivos d
 - RBAC (ADR-145…147) se probó en parte en la app real (de ahí salieron las dos correcciones del 2026-11-10); queda pendiente una pasada completa.
 
 **Alternativas.** `1.1.2` sin tocar el mapa → descartada: escondería un salto de funcionalidades como si fueran solo correcciones.
+
+---
+
+## ADR-149 — Fase online F0: base de datos del hub y verificación automática de B3
+
+**Estado:** Aceptado (aprobado por el usuario el 2026-11-16) · **Fecha:** 2026-11-16 · **Fase:** F0 de la fase online (análisis `docs/Revisiones/2026-11-16-analisis-fase-online.md` §3.10) · **No depende de** las preguntas abiertas al PO.
+
+**Contexto.** El modo distribuido agrega un **hub** con el que se sincronizan las terminales: primero en la red del local (F2) y después en la nube, multi-tenant (F4). ADR-002/016 fijan PostgreSQL en la nube con el mismo esquema Drizzle, y la baranda B3 (spec multi-rubro §5.5) exige que todo el esquema compile a SQLite y a Postgres. Hoy B3 no se verifica: todos los esquemas (`packages/core-db/src/schema`, `apps/*/src/main/db/schema`) usan solo `drizzle-orm/sqlite-core`, y hay rasgos propios de SQLite: dinero en `REAL` (deuda legacy), booleanos como `integer`, timestamps Unix `integer`, índices únicos parciales escritos solo en migraciones SQL. Instalar Postgres en una PC de un comercio para el hub de la red local es una barrera real (servicio, actualizaciones, sin DBA).
+
+**Opciones.**
+- **A. Postgres en todos lados** (red local y nube). Un solo motor en el hub; instalación pesada en el local.
+- **B. SQLite en el hub de la red local y Postgres en la nube**, detrás de una interfaz de almacenamiento del hub. Instalación trivial en el local; el hub tiene dos motores que probar.
+- **C. SQLite en todos lados** (un archivo por negocio también en la nube). Lo más simple, pero contradice ADR-002/016 y complica los reportes consolidados de R5.
+
+**Decisión: B.**
+1. **El hub no ejecuta lógica de dominio.** Guarda filas, el registro de cambios con su número de secuencia (ADR-150) y el log de conflictos. Sus operaciones son genéricas (aplicar un cambio por `id`, leer cambios desde un número, armar un snapshot), así que mantener dos motores cuesta poco: la interfaz de almacenamiento es chica.
+2. **El hub guarda las mismas tablas que las terminales** (registradas por B2), no un blob por fila: hace falta para el snapshot de arranque y para los reportes consolidados de R5.
+3. **El esquema Postgres se genera** desde las tablas Drizzle existentes (`getTableConfig`), con un mapa de tipos explícito en `@core/db`: `text`→`text`, `integer`→`bigint`, `integer` booleano→`boolean`, `real`→`double precision` (hasta que F1 pase el dinero a centavos). No se mantiene un segundo esquema escrito a mano.
+4. **Baranda B3 como test**, igual que B2: un test de `@core/db` genera el DDL Postgres de cada app (núcleo + tablas de la app), lo aplica en **PGlite** (Postgres compilado a WASM, corre en el proceso de Node, sin Docker) junto con los índices únicos parciales, y falla si algo no compila o si una tabla registrada no tiene equivalente.
+5. **Los triggers de captura de cambios de F1 son solo locales** (SQLite de la terminal) y no forman parte del esquema del hub.
+
+**Dependencia nueva.** `@electric-sql/pglite` como **devDependency** de `@core/db`, solo para el test de B3 (CLAUDE.md §12 pide justificarla): es la única forma de verificar Postgres real sin servicio externo ni CI, que este repo no tiene. Alternativa descartada: Postgres en Docker (no hay Docker en el equipo de desarrollo ni CI).
+
+**Consecuencias.**
+- (+) B3 pasa de intención a baranda: un cambio de esquema que no compila a Postgres rompe la suite el mismo día.
+- (+) El hub de la red local se instala como un servicio más, sin base de datos aparte.
+- (−) El hub tiene dos implementaciones de almacenamiento; mitigado porque son genéricas y comparten los tests de contrato.
+- (−) El mapa de tipos es una decisión que hay que mantener; los pesos en `REAL` se arrastran hasta la migración a centavos de F1.
+
+---
+
+## ADR-150 — Fase online F0: protocolo de sincronización terminal ↔ hub
+
+**Estado:** Aceptado (aprobado por el usuario el 2026-11-16) · **Fecha:** 2026-11-16 · **Fase:** F0 (análisis §3.1, §3.6, §3.9, §3.12) · **Concreta:** ADR-003 (outbox + idempotencia) y ADR-012 (last-write-wins + log de conflictos). **Reemplaza:** los prompts P4.1/P4.2 de `docs/System-Prompts-desarrollo-ferreteria.md`, que no se ejecutan. **No depende de** las preguntas abiertas al PO.
+
+**Contexto.** ADR-003 dejó el principio (outbox, UUID en el cliente, idempotencia) y ADR-012 la política de conflictos, pero no el protocolo. Los prompts P4.1/P4.2 proponían bajar cambios "desde `updated_at`", que falla con relojes distintos entre terminales, y autenticar terminales por `origin_id`, que es texto configurable. Además, hoy hay unas 12 operaciones que **borran filas físicamente** (líneas de borradores de venta y presupuesto, `item_oc`, `producto_presentacion`, `sinonimo`, `rol_permiso`, importaciones de costos, líneas de remito y de Elaborados): un borrado físico no deja nada que sincronizar.
+
+**Decisión.**
+1. **Transporte:** HTTPS con JSON. En la red local, el hub usa un certificado propio que la terminal fija al emparejarse; en la nube, TLS público. Endpoints: emparejar, push, pull, snapshot y estado.
+2. **Emparejamiento:** un administrador genera en el hub un código de un solo uso. La terminal lo canjea y recibe su **`origin_id` asignado por el hub** (único; en modo distribuido deja de elegirse a mano en `config.json`) y una **credencial propia y revocable**. Toda llamada posterior va autenticada con esa credencial.
+3. **Clasificación de tablas en el registro B2:** cada tabla registrada declara su tipo:
+   - `maestro` (producto, cliente, precios, usuarios…): se edita; se resuelve por last-write-wins;
+   - `libro` (movimientos, ventas confirmadas y sus líneas): solo se inserta;
+   - columnas `proyectadas` (saldos): no viajan; se recalculan (ADR-151).
+4. **Push:** la terminal manda lotes de su `sync_outbox` en orden local; cada cambio lleva tabla, `id`, `version`, `updated_at`, `origin_id` y la fila completa. Es idempotente: el hub ignora un cambio `(tabla, id, version, origin_id)` ya aplicado. El hub responde con el número de secuencia asignado y la terminal marca `synced`.
+5. **Aplicación en el hub:**
+   - `maestro`: gana el `updated_at` más reciente; empate → gana el `origin_id` menor (determinista). La versión perdedora va al **log de conflictos** con las dos filas (ADR-012).
+   - `libro`: se inserta si no existe. Si existe con contenido distinto es un **error de integridad**, no un conflicto, y se registra aparte.
+   - **Unicidades** (nombre de marca, código de ubicación, GTIN, usuario, SKU): si un alta choca con un índice único del hub, el cambio se rechaza a conflicto de tipo `unicidad`; la fila queda en `conflict` en la terminal de origen y el Supervisor la resuelve (fusionar o renombrar).
+6. **Pull:** la terminal pide los cambios con secuencia mayor a su cursor, paginados, y aplica cada página en una transacción que **también avanza el cursor**. Esas escrituras no vuelven a entrar al `sync_outbox` (la sesión de aplicación desactiva la captura). `updated_at` sirve solo para desempatar, nunca como cursor.
+7. **Borrados:** en tablas registradas no hay borrado físico. F1 audita las ~12 operaciones actuales y las convierte en baja lógica (`activo = false`) o en una lápida (`deleted_at`, como ya hace `producto_proveedor`). Una baranda nueva en el test B2 lo verifica.
+8. **Versiones:** cada llamada lleva versión de protocolo y de esquema. El hub acepta la suya y la anterior. **Se actualiza primero el hub**; una terminal más nueva que el hub sigue vendiendo sin sincronizar y muestra el aviso.
+9. **Frecuencia y reloj:** push al confirmar cada transacción (agrupado unos segundos) y periódico; pull periódico (parámetro; del orden de segundos en la red local). Sin conexión, la terminal opera normal y acumula. Cada respuesta del hub incluye su hora: la terminal registra el desfasaje de su reloj y avisa si supera un umbral (lo usa ADR-151).
+10. **Arranque:** la primera terminal sube un snapshot de las tablas registradas; las siguientes bajan el snapshot y el cursor correspondiente. Restaurar una terminal en modo distribuido = volver a bajar el snapshot (análisis §3.8).
+
+**Consecuencias.**
+- (+) Reanudar tras un corte no pierde ni duplica cambios; el cursor del hub no depende de relojes.
+- (+) Una terminal no puede hacerse pasar por otra cambiando su `config.json`.
+- (−) F1 tiene trabajo previo: clasificar tablas en el registro y eliminar los borrados físicos.
+- (−) Los conflictos de unicidad necesitan una pantalla de resolución para el Supervisor (F3).
+
+---
+
+## ADR-151 — Fase online F0: los saldos son proyecciones de los libros de movimientos
+
+**Estado:** Aceptado (aprobado por el usuario el 2026-11-16) · **Fecha:** 2026-11-16 · **Fase:** F0 (análisis §3.2) · **Concreta:** ADR-006 (saldo + libro inmutable) para varias terminales. **Independiente de** la política de stock negativo (pregunta 1 al PO), que se decide aparte.
+
+**Contexto.** Stock y cuenta corriente se guardan como saldo (`existencias.stock_fisico`, `cuenta_corriente_cliente.saldo_centavos`) más un libro inmutable (`movimiento_stock`, `movimiento_cuenta_corriente`; en Elaborados, su propio libro de stock). Cada terminal actualiza el saldo leyendo su valor local. Si el saldo se sincronizara como fila, last-write-wins perdería movimientos de otras terminales. Además, el **conteo de stock** (`stock:ajuste`, motivo `ajuste_conteo`) guarda una **diferencia calculada contra el stock local** (`contado − stock_fisico`). Con dos terminales, esa diferencia está mal si otra terminal movió stock que todavía no llegó: stock 10, la caja 2 vende 2 sin sincronizar, la caja 1 cuenta 8 (ya sin esas unidades) y registra −2; al consolidar queda 6.
+
+**Decisión.**
+1. Los saldos compartidos entre terminales son **columnas proyectadas** (ADR-150 §3): no se sincronizan y cada nodo las recalcula. Son `existencias.stock_fisico`, `cuenta_corriente_cliente.saldo_centavos` y el equivalente de Elaborados. Las demás columnas de esas filas (stock mínimo y máximo, límite de crédito) son `maestro` y viajan normalmente.
+2. **Recálculo incremental** al aplicar movimientos recibidos (saldo += cantidad con signo), en la misma transacción del pull, más una función `recalcularSaldo(entidad)` que reconstruye desde el libro y un **test de integridad** (saldo = resultado de proyectar el libro).
+3. El `*_resultante` de cada movimiento queda como lo escribió su terminal: dato informativo, no se reescribe.
+4. **El conteo es un punto de corte, no una diferencia.** El movimiento de `ajuste_conteo` guarda además la cantidad contada. La proyección del stock es: último conteo + movimientos posteriores a ese conteo. Esto exige ordenar los movimientos por fecha, con la tolerancia de reloj de las terminales; si dos conteos del mismo producto se cruzan, gana el más reciente y el otro queda en el log de conflictos.
+5. **La caja no cambia:** cada turno (`caja`) lo abre, opera y cierra una sola terminal, así que sus montos no tienen escritores concurrentes y la fila viaja como `maestro`.
+6. En modo standalone la proyección da exactamente el saldo de hoy: el test de integridad lo comprueba sobre bases reales antes de activar nada.
+
+**Consecuencias.**
+- (+) Ningún movimiento se pierde por concurrencia; el saldo siempre se puede reconstruir.
+- (+) El conteo físico deja de depender de que la terminal esté al día.
+- (−) Migración en F1: agregar la cantidad contada a los conteos y backfill de los históricos (para los viejos, `stock_resultante` ya es la cantidad contada).
+- (−) El orden por fecha entre terminales depende de que sus relojes estén razonablemente sincronizados; el desfasaje de cada terminal se mide contra el hub (ADR-150 §9) para detectarlo.
+
+---
+
+## ADR-152 — Fase online F0: tareas programadas con varias terminales
+
+**Estado:** Aceptado (aprobado por el usuario el 2026-11-16) · **Fecha:** 2026-11-16 · **Fase:** F0 (análisis §3.7) · **Revisa:** ADR-047 §10 en lo que dice del despachador de avisos. **No depende de** las preguntas abiertas al PO.
+
+**Contexto.** Cada instalación de Retail corre al arrancar y con `programarTareaSegura` (`apps/retail/src/main/index.ts`):
+- catch-up de la agenda: genera `agenda_evento` desde las `rutina` vencidas (tablas sincronizadas);
+- `avisos-reintentos` cada 60 s: drena el outbox de `aviso` (tabla **local**, no sincroniza);
+- `cambios-programados` cada 1 h: aplica cambios de precio programados (escribe precios sincronizados);
+- `presupuestos-vencidos` cada 24 h: pasa presupuestos emitidos a vencidos (compare-and-swap).
+
+Elaborados no tiene tareas programadas hoy. El backup automático se dispara al cerrar caja, no por reloj. Con N terminales, las tareas que escriben tablas sincronizadas correrían N veces y generarían duplicados (eventos de agenda) o escrituras repetidas (precios, vencimientos).
+
+**Opciones.**
+- **A. Mover las tareas al hub.** Contradice ADR-149 §1: el hub no ejecuta lógica de dominio (el motor de precios vive en la app).
+- **B. Una terminal coordinadora** que las corre, elegida por un permiso con vencimiento que otorga el hub.
+- **C. Todas las terminales las corren, con resultados idempotentes.** Sirve para algunas, no para todas.
+
+**Decisión: B, con idempotencia como respaldo.**
+1. Cada tarea se registra como **`coordinada`** (escribe tablas sincronizadas) o **`local`** (escribe estado local de la terminal). Una baranda verifica que toda tarea registrada declare su tipo.
+2. Las `coordinadas` (catch-up de agenda, cambios programados, vencimiento de presupuestos) corren solo en la **terminal coordinadora**: la que tiene vigente el permiso que otorga el hub. El permiso vence a los pocos minutos y se renueva mientras la terminal está conectada; si se desconecta, lo toma otra al vencer. En modo standalone la única terminal es siempre coordinadora (comportamiento de hoy).
+3. **Respaldo idempotente:** los eventos de agenda generados por una rutina usan un `id` determinista (UUID v5 de rutina + fecha), así que una generación duplicada choca por `id` y no duplica. Los cambios programados pasan hoy por compare-and-swap de `pendiente → aplicado` (`scheduler/precios.ts`), pero eso protege **solo dentro de una base**: dos terminales con el mismo cambio en `pendiente` lo aplicarían dos veces y generarían dos filas de precio. Por eso, para esta tarea, la coordinadora es la única protección real, y F1 suma un `id` determinista (cambio programado + lista + producto) para las filas de precio que genera.
+4. Las `locales` (reintentos de avisos) siguen corriendo en cada terminal: cada aviso nace en la terminal donde ocurrió el hecho y existe una sola vez. **Revisa ADR-047 §10:** el despachador de avisos no se muda al hub mientras `aviso` sea local; se reevalúa en F4 (SaaS) junto con dónde viven los secretos de SMTP.
+
+**Consecuencias.**
+- (+) Ninguna tarea corre dos veces aunque haya varias terminales encendidas.
+- (+) El hub sigue siendo genérico (ADR-149).
+- (−) Si ninguna terminal está conectada al hub, las tareas coordinadas esperan; en modo distribuido es aceptable (corren apenas una terminal recupera el permiso).
+- (−) Un aviso `in_app` dirigido a un usuario que trabaja en otra terminal no le aparece; queda como limitación conocida hasta F4.
+
+---
+
+## ADR-153 — Fase online F0: stock y crédito con terminales sin conexión (permitir y alertar)
+
+**Estado:** Aceptado (aprobado por el usuario el 2026-11-16) · **Fecha:** 2026-11-16 · **Fase:** F0 (análisis §3.3) · **Decisión del usuario (2026-11-16):** «permitir y alertar» para stock y el mismo criterio para crédito. **Ajusta:** la regla «sin stock no hay venta (sin excepción)» del CLAUDE.md §6, solo en modo distribuido.
+
+**Contexto.** Con varias terminales que pueden estar desconectadas entre sí, ninguna conoce el stock ni el saldo de cuenta corriente globales en el instante de la venta. Dos cajas pueden vender la última unidad, o fiar al mismo cliente, a la vez. Las alternativas evaluadas eran limitar la venta sin hub por debajo de un umbral o repartir cupos de stock por caja; el usuario eligió no frenar la venta.
+
+**Decisión.**
+1. **Modo standalone: sin cambios.** «Sin stock no hay venta» y el límite de crédito se siguen controlando igual que hoy.
+2. **Modo distribuido, validación local:** cada terminal valida contra el stock y el saldo que conoce (su base local, que incluye todo lo que ya bajó del hub). Si localmente no hay stock, **no vende**: la regla se mantiene en la terminal. Lo que se acepta es que, al juntar lo de todas, el stock **puede quedar negativo** por ventas concurrentes.
+3. **Crédito igual:** cada terminal controla saldo + límite con lo que conoce, y la autorización por exceso sigue pidiendo `ctacte.autorizar_exceso` (ADR-146). Al consolidar, un cliente puede quedar sobre el límite sin autorización registrada.
+4. **Alertas una sola vez:** detectar stock negativo y clientes sobre el límite es una tarea **coordinada** (ADR-152): corre solo en la terminal coordinadora después de aplicar cambios, y genera un aviso con clave de deduplicación por producto o cliente (`aviso.dedupe_clave`). Los destinatarios se definen por permiso, no por nombre de rol (ADR-146); F1 fija cuál.
+5. **Stock negativo visible:** las pantallas muestran el stock negativo tal cual (no lo recortan a cero) y el POS no vende ese producto hasta que vuelva a ser positivo. Se corrige con una entrada o un conteo (ADR-151 §4).
+
+**Consecuencias.**
+- (+) La venta nunca se frena por falta de conexión entre terminales.
+- (+) El caso es raro en un local con el hub alcanzable (las terminales están al día en segundos) y queda siempre visible y trazable.
+- (−) La regla del CLAUDE.md §6 deja de ser absoluta en modo distribuido: se actualiza el texto al aceptar este ADR.
+- (−) Puede haber pequeñas pérdidas (vender algo que no estaba); el negocio las asume a cambio de no frenar la venta.
+
+---
+
+## ADR-154 — Fase online F0: numeración de documentos y SKU con varias terminales
+
+**Estado:** Aceptado (aprobado por el usuario el 2026-11-16) · **Fecha:** 2026-11-16 · **Fase:** F0 (análisis §3.4) · **Cierra:** la arista multinodo que dejaron abierta ADR-025 (SKU) y ADR-045 (remitos). **No toca:** la numeración fiscal, que depende de ADR-013 (abierto).
+
+**Contexto.** Revisando el código, **ya numeran por terminal**: la venta (`V-<terminal>-NNNNNN`), la orden de compra (`OC-<terminal>-NNNNNN`) y la producción de Elaborados (`PR-<terminal>-NNNNNN`). **Usan un contador único** en `parametros_sistema`: el remito de Retail (`RE-NNNNNNN`, `remito_proximo_secuencial`), el presupuesto de Retail (`PR-NNNNNNN`, `presupuesto_proximo_secuencial`) y el SKU (`P-NNNNNNN-D`, `sku_proximo_secuencial`). Con dos terminales, esos tres repiten números. (El análisis §3.4 incluía a producción entre los globales: era un error, se corrige.) Además, el prefijo `PR-` lo usan el presupuesto de Retail y la producción de Elaborados; no chocan hoy porque viven en apps distintas.
+
+**Decisión.**
+1. **Remito y presupuesto pasan a numerar por terminal**, igual que venta y OC: `RE-<terminal>-NNNNNN` y `PR-<terminal>-NNNNNN`. El correlativo es por terminal y se asigna al emitir, como hoy. Los números ya emitidos no se tocan; los nuevos usan el formato nuevo **en los dos modos** (standalone y distribuido), para que el formato no dependa del modo y pasar de uno a otro no requiera renumerar.
+2. **El SKU conserva su formato** `P-NNNNNNN-D` (lo leen etiquetas impresas y el lector de códigos; ADR-025 lo quiere opaco). En modo distribuido cada terminal recibe del hub **bloques de correlativos** (por ejemplo, de 1.000) y pide uno nuevo cuando le queda poco. Si se queda sin bloque y sin conexión, no puede dar de alta productos hasta reconectar (la venta sigue). En standalone, el bloque es todo el rango: comportamiento de hoy.
+3. El contador `sku_proximo_secuencial` queda como **valor local** de la terminal (no sincroniza); `remito_proximo_secuencial` y `presupuesto_proximo_secuencial` se reemplazan por el correlativo por terminal y se retiran.
+4. **Numeración fiscal:** fuera de este ADR. Depende de ADR-013 (punto de venta de ARCA por terminal o centralizado).
+
+**Consecuencias.**
+- (+) Ningún número interno se repite entre terminales, sin depender de la conexión para emitir documentos.
+- (+) El SKU no cambia para el usuario ni para las etiquetas ya impresas.
+- (−) Remitos y presupuestos nuevos cambian de formato visible (agregan la terminal); el listado convive con los números viejos.
+- (−) Alta de productos sin conexión limitada al bloque disponible.
+
+---
+
+## ADR-155 — Fase online F0: caja por terminal o compartida, configurable por negocio
+
+**Estado:** Aceptado (aprobado por el usuario el 2026-11-16) · **Fecha:** 2026-11-16 · **Fase:** F0 · **Decisión del usuario (2026-11-16):** que sea **configurable según la necesidad del negocio**. **Amplía:** ADR-151 §5, que asumía solo caja por terminal.
+
+**Contexto.** Hoy cada turno de caja (`caja`) lo abre, opera y cierra un usuario en una terminal; el arqueo cuenta el efectivo de ese turno. Con varias terminales hay negocios con un cajón por puesto (cada terminal su caja) y negocios con **un solo cajón** al que cobran varias terminales (por ejemplo, dos puestos de venta y una caja central).
+
+**Decisión.**
+1. Nuevo parámetro del negocio **`caja_modo`**: `por_terminal` (por defecto; comportamiento de hoy) o `compartida`. Es configuración **del negocio**, sincronizada (análisis §3.5); se cambia desde Configuración, con permiso de administración, y solo sin cajas abiertas.
+2. **`por_terminal`:** sin cambios respecto de ADR-151 §5: cada turno tiene un solo escritor y viaja como `maestro`.
+3. **`compartida`:** hay **un único turno abierto por negocio**. Todas las terminales registran sus ventas y movimientos contra ese turno, también sin conexión (el turno abierto ya lo conocen). El monto esperado del turno pasa a ser **columna proyectada** (ADR-151): se calcula desde `movimiento_caja` de todas las terminales.
+4. **Abrir y cerrar un turno compartido exige conexión con el hub**, para que no haya dos turnos abiertos ni dos cierres a la vez. Al cerrar, la pantalla avisa si alguna terminal tiene movimientos sin sincronizar.
+5. **Movimientos que llegan después del cierre** (una terminal que estaba desconectada): se aceptan, porque son hechos, quedan asociados a ese turno marcados como posteriores al cierre, y generan un aviso al Supervisor; la diferencia del arqueo no se recalcula sola.
+6. En modo standalone, `compartida` no tiene sentido y no se ofrece.
+
+**Consecuencias.**
+- (+) Cubre los dos esquemas de trabajo sin dos modelos de datos distintos: cambia solo quién escribe el turno y cómo se calcula el esperado.
+- (−) En modo compartido, abrir y cerrar caja depende de la conexión al hub (vender no).
+- (−) Los movimientos tardíos pueden dejar un cierre «abierto por detrás»; queda visible y auditado.
+
+---
+
+## ADR-156 — Fase online F0: alcance y despliegue (hub en la red local, acceso remoto, sucursales)
+
+**Estado:** Aceptado (aprobado por el usuario el 2026-11-16) · **Fecha:** 2026-11-16 · **Fase:** F0 (análisis §3.14 y §7) · **Decisiones del usuario (2026-11-16):** hub de red local en **ambas** modalidades; acceso remoto = **la app de escritorio desde otra PC fuera del local**; **sin sucursales** en esta fase.
+
+**Decisión.**
+1. **Hub en la red local, dos modalidades con el mismo software:**
+   - instalado como servicio en una PC del cliente (una de las terminales o una PC aparte), ofrecido por el instalador con «esta PC también es el servidor»;
+   - en un equipo que se entrega preconfigurado.
+   El empaquetado del servicio (Windows; y, si el equipo entregado no es Windows, Linux) se decide en F2. ADR-149 ya permite que el hub de la red local funcione sin una base de datos aparte.
+2. **Acceso remoto = una terminal más.** La app de escritorio en una PC fuera del local es una terminal emparejada (ADR-150 §2) con su propia SQLite, que se sincroniza con el **hub en la nube**. No requiere desarrollo propio en F1–F3: llega con F4. Con un hub solo en la red local no hay acceso desde afuera (no se soportan VPN ni puertos abiertos). Como cualquier terminal, su credencial se revoca desde el hub. Esto **no** es acceso desde el celular ni desde un navegador, que siguen fuera de alcance (CLAUDE.md §10).
+3. **Sin sucursales en esta fase.** El hub atiende a un negocio con un solo local; las terminales se distinguen por `origin_id`. No se modela `sucursal` en stock ni en reportes. Queda para R5; nada de F1–F4 debe impedirlo (el hub en la nube identifica al negocio, no al local).
+
+**Consecuencias.**
+- (+) Una sola implementación del hub cubre las dos formas de instalarlo en el local.
+- (+) El acceso remoto no agrega una capa nueva: es el mismo cliente de escritorio.
+- (−) El equipo entregado suma logística y soporte; su costo se evalúa en F2.
+- (−) Quien quiera acceso remoto necesita el hub en la nube (F4).

@@ -113,6 +113,18 @@ son globales, de una sola terminal.
 
 ## 6. Próximo paso
 
+**F0 en curso (2026-11-16).** Aceptados (2026-11-16) en `docs/ADR-Log-ferreteria.md`:
+- **ADR-149** — base del hub: SQLite en la red local, Postgres en la nube; B3 verificada con un test en PGlite.
+- **ADR-150** — protocolo de sync: cursor asignado por el hub, emparejamiento con credencial, tablas `maestro`/`libro`/columnas proyectadas, sin borrados físicos.
+- **ADR-151** — saldos de stock y cuenta corriente como proyección de sus libros; el conteo de stock como punto de corte.
+- **ADR-152** — tareas programadas en una terminal coordinadora; los avisos siguen locales.
+
+Con las respuestas del PO, aceptados (2026-11-16) — **F0 completa**:
+- **ADR-153** — stock y crédito sin conexión: permitir y alertar (solo en modo distribuido).
+- **ADR-154** — remito y presupuesto numeran por terminal; SKU por bloques asignados por el hub.
+- **ADR-155** — caja por terminal o compartida, configurable por negocio.
+- **ADR-156** — hub de red local en PC del cliente o equipo entregado; acceso remoto = app de escritorio vía hub en la nube; sin sucursales.
+
 Abrir **F0**: responder las 5 preguntas del PO (§2) y redactar los ADRs de decisión: política de
 stock/crédito offline, numeración por documento, saldos como proyección, ubicación y base del hub
 y schedulers. ADR-013 sigue abierto y no se cierra en este paso.
