@@ -82,7 +82,7 @@ esfuerzo del SaaS subestimado (es un producto aparte del sync).
 | **ADR-045** | Aceptado | Numeración de remitos de una sola terminal; el caso multinodo queda para R4 |
 | **ADR-047** | Aceptado | Outbox de avisos (el mismo patrón que el sync); en R4 el dispatcher pasa al backend; `aviso` no sincroniza |
 | **ADR-091** | Aceptado | Corte multi-rubro. **B2:** el motor de sync es del core y se dirige por un registro de tablas por app. **B3:** esquema agnóstico de dialecto (SQLite local / Postgres nube) — **hoy sin verificación automática**: todos los esquemas usan solo `sqlite-core` (análisis §3.10) |
-| **ADR-092** | Aceptado | Test de baranda B2 por app (`b2-sync-fields.test.ts` en Retail y Elaborados, vía `verificarCamposSync`); el motor real sigue diferido. Los triggers de F1 se generan desde ese registro (análisis §3.1) |
+| **ADR-092** | Aceptado | Test de baranda B2 por app (`b2-sync-fields.test.ts` en Retail y Elaborados; desde F1 PR1 vía el registro de sync, `verificarRegistroSync`); el motor real sigue diferido. Los triggers de F1 se generan desde ese registro (análisis §3.1) |
 
 ---
 
@@ -93,7 +93,7 @@ esfuerzo del SaaS subestimado (es un producto aparte del sync).
 - **`RFC-001-ferreteria.md`** — propuesta de arquitectura original con la nube y el sync.
 - **`Acta-Definiciones-ferreteria.md`** — multi-sucursal operativo diferido; consolidado multi-terminal en R4/R5.
 - **`System-Prompts-desarrollo-ferreteria.md`** (≈líneas 480–512) — prompts P4.1 (backend) y P4.2 (motor de sync en el cliente). **Desactualizados, no ejecutar tal cual:** bajan cambios "desde `updated_at`" (falla con relojes distintos entre terminales), autentican terminales solo por `origin_id` y no cubren saldos como proyección, numeración por terminal ni B2. Se reescriben al cerrar F0 (análisis §3.12–3.13).
-- **`superpowers/specs/2026-09-21-esqueleto-multi-rubro-design.md`** — barandas B2/B3 (§5.5) y e-commerce/acceso web futuro (B4) como frontend web + API sobre el Postgres de R4. Copiado a este repo (verificado 2026-11-16).
+- **`superpowers/specs/2026-09-21-esqueleto-multi-rubro-design.md`** — barandas B2/B3 (§5.5) y e-commerce/acceso web futuro (B4) como frontend web + API sobre el Postgres de R4. Está en la carpeta local `docs/superpowers/`, que el `.gitignore` excluye: existe en esta PC pero no se versiona.
 - **`Estado.md`** (raíz, ≈línea 187) — "2.0.0 — R4 nube + sync: backend Node + PostgreSQL, outbox, conflictos (ADR-012)".
 
 ---

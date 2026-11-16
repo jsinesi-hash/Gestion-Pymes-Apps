@@ -5219,6 +5219,8 @@ Tercer lote de la migración de ADR-125. **Alcance:** 13 modales en 8 archivos d
 - (−) F1 tiene trabajo previo: clasificar tablas en el registro y eliminar los borrados físicos.
 - (−) Los conflictos de unicidad necesitan una pantalla de resolución para el Supervisor (F3).
 
+
+**Implementación (F1 PR1, 2026-11-16).** §3 implementado: `RegistroSync` en `@core/db` (`packages/core-db/src/__boundary__/registro-sync.ts`) con `registroSyncCore()` + un registro por app (`apps/{retail,elaborados}/src/main/db/registro-sync.ts`), combinados con `combinarRegistros`. `verificarRegistroSync` reemplaza a `verificarCamposSync`: toda tabla del esquema compuesto declara su tipo; las `local` ocupan el lugar de la vieja lista de excepciones. Libros (solo inserción, verificado con grep: sin `update` y solo borrados en seeds de desarrollo y en «quitar catálogo demo»): `movimiento_stock`, `movimiento_caja`, `movimiento_cuenta_corriente`, `movimiento_articulo`, `venta_pago`, `recepcion_detalle`, `recalculo_masivo`. `venta`, `comprobante` y `produccion` son `maestro` porque cambian de estado. Hallazgo para F2: el seed (`runSeed`, catálogos base) crea filas con UUID aleatorio en cada instalación; una terminal nueva tiene que arrancar desde el snapshot del hub (§10) antes de sembrar, o habrá duplicados por unicidad (roles, permisos, impuestos, Consumidor Final).
 ---
 
 ## ADR-151 — Fase online F0: los saldos son proyecciones de los libros de movimientos
@@ -5241,6 +5243,8 @@ Tercer lote de la migración de ADR-125. **Alcance:** 13 modales en 8 archivos d
 - (−) Migración en F1: agregar la cantidad contada a los conteos y backfill de los históricos (para los viejos, `stock_resultante` ya es la cantidad contada).
 - (−) El orden por fecha entre terminales depende de que sus relojes estén razonablemente sincronizados; el desfasaje de cada terminal se mide contra el hub (ADR-150 §9) para detectarlo.
 
+
+**Corrección (F1 PR1, 2026-11-16).** Además de los saldos, el **costo promedio ponderado** también se deriva del libro y se calcula leyendo el valor local en cada entrada: `producto.precio_costo_promedio` (Retail) y `articulo.costo_promedio_centavos` (Elaborados). Quedan como columnas proyectadas y se recalculan reproduciendo las entradas del libro en orden (PR6 de F1).
 ---
 
 ## ADR-152 — Fase online F0: tareas programadas con varias terminales
