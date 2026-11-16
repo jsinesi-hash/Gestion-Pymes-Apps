@@ -55,7 +55,7 @@ export function UbicacionesView() {
         </select>
         <div className="ml-auto" />
         <ExportarButton definicion={exportUbicaciones} />
-        {can('usuario.administrar') && <DedupBoton onDone={cargar} />}
+        {can('catalogo.gestionar') && <DedupBoton onDone={cargar} />}
         <button className="btn-primary" onClick={() => setModal({ mode: 'create' })}>+ Nueva ubicación</button>
       </div>
 

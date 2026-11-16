@@ -9,7 +9,7 @@ const LISTA = { id: 'l1', nombre: 'General', tipo: 'general', ajuste_porcentual:
 function auth() {
   return {
     session: { id: 'u1', nombreCompleto: 'Admin', rolId: 'r1', rolNombre: '', permisos: [], preferencias: { tema: 'claro' as const, acento: 'amber' as const, ui_font: 'Hanken Grotesk' as const, densidad: 'comfortable' as const, skin: 'actual' as const, pantalla_inicio: null, favoritos: [] } },
-    can: (c: string) => c === 'config.fiscal',
+    can: (c: string) => c === 'precio.gestionar',
     login: async () => {}, logout: async () => {},
     actualizarPreferencias: () => {},
   };

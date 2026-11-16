@@ -90,7 +90,7 @@ export function LoteDetalleView() {
   );
 
   const puedeAprobar = can('precio.aprobar');
-  const puedeGestionar = can('config.fiscal');
+  const puedeGestionar = can('precio.gestionar');
   const hayErrores = batch.errores > 0;
 
   return (

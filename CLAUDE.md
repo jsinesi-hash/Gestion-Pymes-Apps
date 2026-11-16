@@ -638,29 +638,34 @@ Leyenda: ✔ permitido · ✱ con autorización del Supervisor · — no permiti
 | Backup: crear y restaurar | — | ✔ |
 | Exportar (básico / supervisor) | ✔ básico | ✔ ambos |
 
-> La **Agenda** (ADR-047/048) todavía no tiene fila: sus 15 canales IPC
-> (`rutina:*`/`agenda:*`/`aviso:*`) exigen sesión pero **ningún permiso** (política `sesion` en
-> la tabla de ADR-145). ADR-047 no los definió; es la única familia de IPC de escritura sin
-> código de permiso. Decisión pendiente (RBAC Fase 1), no incumplimiento.
+> **Agenda (ADR-146):** crear/editar/pausar/eliminar rutinas pide `agenda.gestionar` (ambos roles);
+> eventos y avisos piden sesión (cada usuario ve y completa los suyos).
 >
 > **Dónde se hace cumplir (ADR-145):** cada canal IPC tiene una política en
 > `POLITICAS_CANALES_CORE` (`@core/main`) o en `apps/<app>/src/main/ipc/politicas-canales.ts`, y
-> `ipcConPoliticas` la aplica al registrar. Varios códigos todavía funcionan como «es
-> Supervisor» (`usuario.administrar` gatea categorías/marcas/unidades/sinónimos; `config.fiscal`,
-> listas y reglas de precio): separarlos es la Fase 1.
+> `ipcConPoliticas` la aplica al registrar.
+>
+> **Autorizaciones en el momento (ADR-146):** `verificarAutorizacion(db, credenciales, permiso)`
+> acepta a cualquier usuario cuyo rol tenga el permiso de la acción (no el rol SUPERVISOR por
+> nombre): anular venta `venta.anular`, override de precio `precio.override`, cierre de caja con
+> diferencia `caja.autorizar_diferencia`, venta sobre el límite `ctacte.autorizar_exceso`, anular
+> compra/producción (Elaborados) `compra.anular`/`produccion.anular`. La regla del último
+> administrador cuenta usuarios activos con `usuario.administrar` y protege también el cambio de rol.
+> **Nunca comparar `rol.nombre` para decidir acceso.**
 
 ### Permisos reales
 
 **Fuente de verdad: `PERMISOS` y `OPERADOR_PERMISOS` en `apps/retail/src/main/auth/seed.ts`.**
-Son **29 permisos**, **17 de ellos al Operador**. El Supervisor los tiene todos.
-(Elaborados: los 13 del core + 7 propios en `apps/elaborados/src/main/auth/seed.ts`.)
+Son **35 permisos**, **18 de ellos al Operador**. El Supervisor los tiene todos.
+(Elaborados: los 16 del core + 9 propios en `apps/elaborados/src/main/auth/seed.ts`.)
 
 > **Desde ADR-092 (Elaborados E1), el seed de permisos está partido core + app.**
-> `runSeed(db, opts: { permisos, operador })` (`@core/main`) siembra primero `PERMISOS_CORE` (13
-> permisos universales — ventas, caja, cta-cte, dashboard, admin, export, proveedores) y `OPERADOR_PERMISOS_CORE`,
+> `runSeed(db, opts: { permisos, operador })` (`@core/main`) siembra primero `PERMISOS_CORE` (16
+> permisos universales — ventas, caja, cta-cte, dashboard, admin, export, proveedores y, desde
+> ADR-146, `cliente.baja`/`caja.autorizar_diferencia`/`ctacte.autorizar_exceso`) y `OPERADOR_PERMISOS_CORE`,
 > y les suma `[...opts.permisos]`/`[...opts.operador]` deduplicando por `codigo`. Retail delega:
 > `runSeed(db) { runSeedCore(db, { permisos: PERMISOS, operador: [...OPERADOR_PERMISOS] }) }`, y la
-> tabla de abajo (los 29 de Retail) **ya incluye** los 13 del core — no son una lista aparte. Cada
+> tabla de abajo (los 35 de Retail) **ya incluye** los 16 del core — no son una lista aparte. Cada
 > app nueva pasa su propia lista de permisos de dominio; si no tiene ninguno todavía, `{ permisos: [],
 > operador: [] }` alcanza (caso de Elaborados en E1). **Al agregar un permiso universal** (lo
 > necesitan o lo necesitarán todas las apps) va a `PERMISOS_CORE`/`OPERADOR_PERMISOS_CORE`
@@ -692,6 +697,12 @@ Son **29 permisos**, **17 de ellos al Operador**. El Supervisor los tiene todos.
 | `presupuestos` | `presupuesto.emitir` | ✔ |
 | `presupuestos` | `presupuesto.anular` | ✔ |
 | `precios` | `precio.aprobar` | — |
+| `precios` | `precio.gestionar` | — |
+| `catalogo` | `catalogo.gestionar` | — |
+| `agenda` | `agenda.gestionar` | ✔ |
+| `cuentas` | `cliente.baja` | — |
+| `caja` | `caja.autorizar_diferencia` | — |
+| `cuentas` | `ctacte.autorizar_exceso` | — |
 | `reportes` | `dashboard.ver` | — |
 | `admin` | `import.masiva` | — |
 | `admin` | `usuario.administrar` | — |

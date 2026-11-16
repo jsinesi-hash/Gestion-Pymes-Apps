@@ -12,7 +12,7 @@ export function PrecioPanel({ productoId, precioVentaLista }: Readonly<Props>) {
   const { listas, loading: loadingListas } = useListasPrecios();
   const { vigentes, loading: loadingVigentes, refetch } = useListaPrecioValor(productoId);
   const { can } = useAuth();
-  const isSupervisor = can('config.fiscal');
+  const isSupervisor = can('precio.gestionar');
 
   const [editingListaId, setEditingListaId] = useState<string | null>(null);
   const [editingValor, setEditingValor] = useState('');

@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import * as schema from '@core/db';
 import {
   loginHandler, verifyPasswordHandler, usuarioCreateHandler, usuarioChangePasswordHandler,
-  verificarSupervisor, limiteIntentos, clearSession,
+  verificarAutorizacion, limiteIntentos, clearSession,
 } from '../index';
 import { setupCoreDb, loginAsAdmin, loginAsOperador } from '../testing/helpers';
 
@@ -66,30 +66,30 @@ describe('loginHandler — límite de intentos', () => {
   });
 });
 
-describe('verifyPasswordHandler y verificarSupervisor comparten el límite', () => {
+describe('verifyPasswordHandler y verificarAutorizacion comparten el límite', () => {
   it('verifyPassword: 3 fallos bloquean al usuario de la sesión', () => {
     loginAsAdmin(db);
     for (let i = 0; i < 3; i++) expect(verifyPasswordHandler(db, { password: 'mal' })).toBe(false); // NOSONAR
     expect(() => verifyPasswordHandler(db, { password: 'admin1234' })).toThrow('CUENTA_BLOQUEADA'); // NOSONAR
   });
 
-  it('verificarSupervisor: 3 credenciales malas bloquean, también con la correcta', () => {
+  it('verificarAutorizacion: 3 credenciales malas bloquean, también con la correcta', () => {
     const mal = { nombre_usuario: 'admin', password: 'mal' }; // NOSONAR
-    for (let i = 0; i < 3; i++) expect(() => verificarSupervisor(db, mal)).toThrow('SUPERVISOR_INVALIDO');
-    expect(() => verificarSupervisor(db, { nombre_usuario: 'admin', password: 'admin1234' })) // NOSONAR
+    for (let i = 0; i < 3; i++) expect(() => verificarAutorizacion(db, mal, 'venta.anular')).toThrow('SUPERVISOR_INVALIDO');
+    expect(() => verificarAutorizacion(db, { nombre_usuario: 'admin', password: 'admin1234' }, 'venta.anular')) // NOSONAR
       .toThrow('CUENTA_BLOQUEADA');
   });
 
-  it('verificarSupervisor: un acierto devuelve el id y reinicia el contador', () => {
+  it('verificarAutorizacion: un acierto devuelve el id y reinicia el contador', () => {
     const mal = { nombre_usuario: 'admin', password: 'mal' }; // NOSONAR
-    for (let i = 0; i < 2; i++) expect(() => verificarSupervisor(db, mal)).toThrow('SUPERVISOR_INVALIDO');
-    expect(typeof verificarSupervisor(db, { nombre_usuario: 'admin', password: 'admin1234' })).toBe('string'); // NOSONAR
-    for (let i = 0; i < 2; i++) expect(() => verificarSupervisor(db, mal)).toThrow('SUPERVISOR_INVALIDO');
+    for (let i = 0; i < 2; i++) expect(() => verificarAutorizacion(db, mal, 'venta.anular')).toThrow('SUPERVISOR_INVALIDO');
+    expect(typeof verificarAutorizacion(db, { nombre_usuario: 'admin', password: 'admin1234' }, 'venta.anular')).toBe('string'); // NOSONAR
+    for (let i = 0; i < 2; i++) expect(() => verificarAutorizacion(db, mal, 'venta.anular')).toThrow('SUPERVISOR_INVALIDO');
   });
 
   it('un login bloqueado también bloquea la autorización de Supervisor del mismo usuario', () => {
     fallar(3);
-    expect(() => verificarSupervisor(db, { nombre_usuario: 'admin', password: 'admin1234' })) // NOSONAR
+    expect(() => verificarAutorizacion(db, { nombre_usuario: 'admin', password: 'admin1234' }, 'venta.anular')) // NOSONAR
       .toThrow('CUENTA_BLOQUEADA');
   });
 });

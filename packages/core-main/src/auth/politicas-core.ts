@@ -61,9 +61,9 @@ export const POLITICAS_CANALES_CORE: PoliticasCanales = {
   'cliente:list': 'permiso:ctacte.cobrar',
   'cliente:get': 'permiso:ctacte.cobrar',
   'cliente:upsert': 'permiso:ctacte.cobrar',
-  // La baja de clientes es administración (el handler exige además usuario.administrar).
-  'cliente:desactivar': 'permiso:usuario.administrar',
-  'cliente:reactivar': 'permiso:usuario.administrar',
+  // Baja y reactivación de clientes: permiso propio (ADR-146).
+  'cliente:desactivar': 'permiso:cliente.baja',
+  'cliente:reactivar': 'permiso:cliente.baja',
   'ctacte:list': 'permiso:ctacte.cobrar',
   'ctacte:getByCliente': 'permiso:ctacte.cobrar',
   'ctacte:setLimite': 'permiso:ctacte.cobrar',

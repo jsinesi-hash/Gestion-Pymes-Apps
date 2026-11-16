@@ -397,7 +397,25 @@ describe('AppShell — depuración de backups al arranque (ADR-076 Tarea 11)', (
 });
 
 describe('AppShell — actualización propuesta al login del Supervisor', () => {
-  afterEach(() => { mockRolNombre = 'SUPERVISOR'; });
+  afterEach(() => { mockRolNombre = 'SUPERVISOR'; mockCan.mockImplementation(() => true); });
+
+  it('ADR-146: un rol con otro nombre pero con config.fiscal también ve la propuesta', async () => {
+    mockRolNombre = 'ENCARGADO';
+    (globalThis as any).ferreteria = {
+      ...((globalThis as any).ferreteria ?? {}),
+      backup: { evaluarDepuracion: vi.fn().mockResolvedValue({ candidatos: [], protegidos: [], bytesALiberar: 0, porCarpeta: {} }), depurar: vi.fn() },
+      actualizacion: {
+        estado: vi.fn().mockResolvedValue({ estado: 'downloaded', version: '1.2.0', mensaje: null }),
+        notasPostUpdate: vi.fn().mockResolvedValue(null),
+        instalarYReiniciar: vi.fn(),
+        marcarVersionVista: vi.fn(),
+      },
+    };
+    renderEn('/pos');
+    await waitFor(() => {
+      expect(screen.getByRole('dialog', { name: /actualización disponible/i })).toBeInTheDocument();
+    });
+  });
 
   it('con Supervisor y estado downloaded, muestra el modal de propuesta', async () => {
     (globalThis as any).ferreteria = {
@@ -419,6 +437,8 @@ describe('AppShell — actualización propuesta al login del Supervisor', () => 
 
   it('con Operador NO muestra el modal de propuesta aunque haya update descargada', async () => {
     mockRolNombre = 'OPERADOR';
+    // ADR-146: lo decide el permiso config.fiscal, no el nombre del rol.
+    mockCan.mockImplementation(((c: string) => c !== 'config.fiscal') as never);
     (globalThis as any).ferreteria = {
       ...((globalThis as any).ferreteria ?? {}),
       backup: { evaluarDepuracion: vi.fn().mockResolvedValue({ candidatos: [], protegidos: [], bytesALiberar: 0, porCarpeta: {} }), depurar: vi.fn() },

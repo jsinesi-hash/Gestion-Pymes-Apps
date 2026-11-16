@@ -89,7 +89,7 @@ export function CategoriasView() {
         </select>
         <div className="ml-auto" />
         <ExportarButton definicion={exportCategorias} />
-        {can('usuario.administrar') && (
+        {can('catalogo.gestionar') && (
           <button className="btn-primary" onClick={() => setModal({ mode: 'create' })}>
             + Nueva categoría
           </button>
@@ -120,7 +120,7 @@ export function CategoriasView() {
                 </td>
                 <td>
                   <div className="flex-row gap-2">
-                    {can('usuario.administrar') && (
+                    {can('catalogo.gestionar') && (
                       <>
                         <button className="btn-secondary btn-sm"
                           onClick={() => setModal({ mode: 'edit', cat })}>Editar</button>

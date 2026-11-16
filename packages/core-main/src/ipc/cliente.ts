@@ -200,7 +200,7 @@ export function clienteQueryAll(db: Db) {
 
 export function clienteDesactivarHandler(db: Db, payload: { id: string }) {
   const session = getSession();
-  if (!session?.permisos.has('usuario.administrar')) throw new Error('FORBIDDEN');
+  if (!session?.permisos.has('cliente.baja')) throw new Error('FORBIDDEN');
   const cliente = db.select().from(schema.cliente).where(eq(schema.cliente.id, payload.id)).get();
   if (!cliente) throw new Error('NOT_FOUND');
   const ccc = db.select({ saldo: schema.cuenta_corriente_cliente.saldo_centavos })
@@ -221,7 +221,7 @@ export function clienteDesactivarHandler(db: Db, payload: { id: string }) {
 
 export function clienteReactivarHandler(db: Db, payload: { id: string }) {
   const session = getSession();
-  if (!session?.permisos.has('usuario.administrar')) throw new Error('FORBIDDEN');
+  if (!session?.permisos.has('cliente.baja')) throw new Error('FORBIDDEN');
   const cliente = db.select().from(schema.cliente).where(eq(schema.cliente.id, payload.id)).get();
   if (!cliente) throw new Error('NOT_FOUND');
   const now = new Date();
@@ -240,7 +240,7 @@ export function registerClienteHandlers(ipcMain: IpcMain, db: Db): void {
   ipcMain.handle('cliente:upsert',     guard(async (_e, p)   => clienteUpsertHandler(db, p as ClienteUpsertPayload)));
   ipcMain.handle('cliente:list',       guard(async (_e, p)   => clienteListHandler(db, p as { incluirInactivos?: boolean } | undefined)));
   ipcMain.handle('cliente:get',        guard(async (_e, id)  => clienteGetHandler(db, id as string)));
-  // Baja y reactivación: las gatea usuario.administrar dentro del handler (ADR-145).
+  // Baja y reactivación: las gatea cliente.baja dentro del handler (ADR-145/146).
   ipcMain.handle('cliente:desactivar', async (_e, p)   => clienteDesactivarHandler(db, p as { id: string }));
   ipcMain.handle('cliente:reactivar',  async (_e, p)   => clienteReactivarHandler(db, p as { id: string }));
 }

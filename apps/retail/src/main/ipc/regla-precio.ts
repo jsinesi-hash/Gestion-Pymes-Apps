@@ -19,7 +19,7 @@ const RANGO: Record<ReglaTipo, number> = { producto: 0, marca: 1, rubro: 2, prov
 function requireSupervisor() {
   const session = getSession();
   if (!session) throw new Error('UNAUTHENTICATED');
-  if (!session.permisos.has('config.fiscal')) throw new Error('FORBIDDEN');
+  if (!session.permisos.has('precio.gestionar')) throw new Error('FORBIDDEN');
   return session;
 }
 

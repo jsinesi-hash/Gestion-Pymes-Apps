@@ -3,7 +3,7 @@ import { generateId } from '@ferreteria/shared';
 import * as schema from '@core/db';
 import { getSession } from '../auth/session';
 import { getOriginId } from '../context';
-import { verificarSupervisor } from '../auth/verificarSupervisor';
+import { verificarAutorizacion } from '../auth/verificarAutorizacion';
 import type {
   VentaDb, VentaRow, SyncFields, AnularVentaInput, AnularVentaHooks,
 } from './types';
@@ -18,7 +18,7 @@ export function anularVenta(
   if (!session.permisos.has('venta.anular')) throw new Error('FORBIDDEN');
   if (!input.motivo?.trim()) throw new Error('MOTIVO_REQUERIDO');
 
-  verificarSupervisor(db, input.supervisor_credenciales);
+  verificarAutorizacion(db, input.supervisor_credenciales, 'venta.anular');
 
   const ventaRow = db.select().from(schema.venta)
     .where(eq(schema.venta.id, input.venta_id)).get();

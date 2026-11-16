@@ -4,7 +4,7 @@ export * from './auth/session';
 export * from './auth/guard';
 export * from './auth/politicas-canales';
 export * from './auth/politicas-core';
-export * from './auth/verificarSupervisor';
+export * from './auth/verificarAutorizacion';
 export * from './auth/permisos-core';
 export * from './auth/seed';
 export * from './context';

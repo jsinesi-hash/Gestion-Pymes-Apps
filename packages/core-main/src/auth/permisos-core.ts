@@ -15,6 +15,10 @@ export const PERMISOS_CORE: readonly PermisoDef[] = [
   { codigo: 'export.basico',       modulo: 'export' },
   { codigo: 'export.supervisor',   modulo: 'export' },
   { codigo: 'proveedor.gestionar', modulo: 'compras' },
+  // ADR-146: permisos con significado propio. Solo Supervisor (no van a OPERADOR_PERMISOS_CORE).
+  { codigo: 'cliente.baja',              modulo: 'cuentas' },
+  { codigo: 'caja.autorizar_diferencia', modulo: 'caja' },
+  { codigo: 'ctacte.autorizar_exceso',   modulo: 'cuentas' },
 ];
 
 export const OPERADOR_PERMISOS_CORE: readonly string[] = [

@@ -9,6 +9,9 @@ export const PERMISOS_ELABORADOS: readonly PermisoDef[] = [
   { codigo: 'producto_venta.gestionar', modulo: 'carta' },
   { codigo: 'compra.registrar',       modulo: 'compras' },
   { codigo: 'lista_precio.gestionar',  modulo: 'carta' },
+  // ADR-146: autorizar anulaciones (antes exigía el rol SUPERVISOR). Solo Supervisor.
+  { codigo: 'compra.anular',           modulo: 'compras' },
+  { codigo: 'produccion.anular',       modulo: 'produccion' },
 ];
 
 export const OPERADOR_PERMISOS_ELABORADOS: readonly string[] = [
