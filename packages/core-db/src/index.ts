@@ -5,4 +5,6 @@
 // el namespace lo importa con `import * as coreSchema from '@core/db'`.
 export * from './schema';
 export { createDb, runMigrations } from './factory';
-export { verificarCamposSync, CAMPOS_SYNC } from './__boundary__/sync-fields';
+export { CAMPOS_SYNC } from './__boundary__/sync-fields';
+export { combinarRegistros, registroSyncCore, verificarRegistroSync } from './__boundary__/registro-sync';
+export type { EntradaSync, RegistroSync, TipoSync } from './__boundary__/registro-sync';
