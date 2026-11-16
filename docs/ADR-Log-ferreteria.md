@@ -5124,3 +5124,37 @@ Tercer lote de la migración de ADR-125. **Alcance:** 13 modales en 8 archivos d
 **Corrección (2026-11-10, encontrada al probar como Operador).** Listar y abrir una OC pedían `proveedor.gestionar` desde el arranque del monorepo, así que el Operador no podía recibir compras (la matriz dice que sí). `compras.oc:list` y `compras.oc:get` pasan a `compra.recibir`; crear/emitir/anular/editar OC siguen en `proveedor.gestionar` y la UI los oculta sin ese permiso. `OcSugeridaView` traduce los errores con `traducirError`. Test de baranda: los canales de la recepción tienen que estar en `OPERADOR_PERMISOS`.
 
 **Corrección (2026-11-10, encontrada al probar).** Restablecer la contraseña de otro usuario (ADR-136) no levantaba el bloqueo por intentos (ADR-138): la clave nueva no servía hasta pasados 15 minutos. `usuarioChangePasswordHandler` ahora llama `limiteIntentos.registrarExito` cuando quien cambia la clave es un administrador y no el propio usuario (el cambio propio sigue sin levantar un bloqueo). Textos: el modal de restablecer muestra el nombre de usuario con el que se ingresa y aclara que la clave es provisoria; el paso de cambio del login cubre «venció» y «la restableció un administrador».
+
+---
+
+## ADR-148 — Release 1.2.0 de Retail y corrección del mapa de versiones: el fiscal ARCA pasa a 1.3.0
+
+**Estado:** Aceptado · **Fecha:** 2026-11-16 · **Rama:** `release/1.2.0` · **Decisión del usuario:** publicar este punto como **1.2.0** y correr el fiscal ARCA a **1.3.0** (opción elegida frente a 1.1.2 sin tocar el mapa). Corrige el mapa de versiones de ADR-044.
+
+**Contexto.** Retail figuraba en **1.1.1** desde el congelamiento de la ferretería (tag `v1.1.1` en el repo `Ferreteria-app`, ADR-091 Fase 0). Desde entonces entraron en `main` la base multi-rubro, Elaborados (ADR-092…112), las revisiones P0–P2 (ADR-114…125), la migración de modales (ADR-126…129), la seguridad de login y de backups (ADR-130…143) y el RBAC editable (ADR-145…147). Este repo no tenía ningún tag de versión. ADR-044 reservaba `1.2.0` para el fiscal ARCA (R2), que todavía no arrancó (ADR-013 sigue Propuesto). Antes de abrir la fase online (análisis en `docs/Revisiones/2026-11-16-analisis-fase-online.md`) hace falta un punto de partida versionado.
+
+**Decisión.**
+1. Lo integrado hasta el merge de #64 se publica como **Retail 1.2.0**. Es una versión menor (funcionalidades nuevas, sin cambios incompatibles para el usuario), no un parche.
+2. Mapa de versiones corregido (misma escalera de escape que ADR-042/044: la entrega ya lista toma la próxima minor y el fiscal se corre un número):
+
+| Versión | Contenido | Nota |
+|---------|-----------|------|
+| `1.0.x` | R1 + R3 | Sin cambios. |
+| `1.1.x` | Remitos + Presupuestos + Agenda + Motor de Precios v2 + mejoras UX | Sin cambios (1.1.1 = congelamiento de la ferretería). |
+| `1.2.0` | **Base multi-rubro + seguridad + RBAC editable** | Nuevo. Este release. |
+| `1.3.0` | **Fiscal AFIP/ARCA (R2)** | Corrido un número (antes `1.2.0`). ADR-013 sigue abierto. |
+| `1.x` | F1 de la fase online (preparación local, sin red) | Según el análisis de la fase online; número a fijar al planificarla. |
+| `2.0.0` | R4 — multi-terminal / nube | Sin cambios. |
+| `2.x` | R5 | Sin cambios. |
+
+3. **Tags por app:** Retail y Elaborados se versionan por separado, así que los tags llevan el nombre de la app: `retail-v1.2.0`. Elaborados conserva su propia línea (1.0.0, ADR-111/112); su tag se crea cuando se publique un instalador de Elaborados desde este repo.
+4. Los paquetes `@core/*` y `@ferreteria/shared` son privados (no se publican): su campo `version` acompaña al de Retail por convención y no tiene significado propio.
+5. **Baranda nueva:** `apps/retail/src/main/actualizacion/__tests__/changelog.test.ts` falla si la versión del `package.json` de Retail no tiene entrada en el changelog que la app muestra al reabrir tras actualizar. Un release sin notas ya no pasa la suite.
+
+**Consecuencias.**
+- (+) Hay un punto de partida versionado y etiquetado antes de la fase online.
+- (+) El número refleja el alcance real del salto desde 1.1.1.
+- (−) Las referencias a "1.2.0 = fiscal" en documentos viejos quedan desactualizadas; se corrigen en `Estado.md` y CLAUDE.md §9, y el ADR-Log conserva la historia (ADR-042/044 se leen junto con este).
+- RBAC (ADR-145…147) se probó en parte en la app real (de ahí salieron las dos correcciones del 2026-11-10); queda pendiente una pasada completa.
+
+**Alternativas.** `1.1.2` sin tocar el mapa → descartada: escondería un salto de funcionalidades como si fueran solo correcciones.

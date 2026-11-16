@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { obtenerNotas, CHANGELOG } from '../changelog';
 
@@ -11,6 +13,13 @@ describe('changelog', () => {
 
   it('devuelve null para una versión sin entrada', () => {
     expect(obtenerNotas('99.99.99')).toBeNull();
+  });
+
+  it('la versión del package.json tiene sus notas (se muestran al reabrir tras actualizar)', () => {
+    const { version } = JSON.parse(
+      readFileSync(resolve(__dirname, '../../../../package.json'), 'utf8'),
+    ) as { version: string };
+    expect(obtenerNotas(version), `falta la entrada '${version}' en CHANGELOG`).not.toBeNull();
   });
 
   it('todas las entradas tienen título y al menos una nota', () => {
