@@ -44,6 +44,7 @@ export const POLITICAS_CANALES_CORE: PoliticasCanales = {
   'usuario:desactivar': 'permiso:usuario.administrar',
   'usuario:reactivar': 'permiso:usuario.administrar',
   'permiso:matriz': 'permiso:usuario.administrar',
+  'permiso:actualizarRol': 'permiso:usuario.administrar',
 
   'parametros:set': 'permiso:config.fiscal',
   'parametros:listFlags': 'permiso:config.fiscal',

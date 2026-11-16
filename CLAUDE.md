@@ -583,6 +583,9 @@ N `aviso`.
 - **`rol`**: `id`, `nombre` (único), `descripcion`, `es_sistema`, `activo`, sync.
 - **`permiso`**: `id`, `codigo` (único), `descripcion`, `modulo`, sync.
 - **`rol_permiso`**: `id`, `rol_id`, `permiso_id`, sync.
+- **`rol_permiso_override`** (ADR-147): `id`, `rol_id`, `permiso_id`, `otorgado` (false =
+  revocado a mano, true = agregado a mano), `usuario_modificacion_id`, `fecha_actualizacion`,
+  sync. Índice único (`rol_id`,`permiso_id`) en la migración. `runSeed` lo respeta.
 - **`usuario_preferencias`** (1:1 con usuario): `id`, `usuario_id` (FK única), `tema`
   (`claro`|`oscuro`), `acento` (`amber`|`blue`|`green`|`violet`|`brick`), `ui_font`
   (`Hanken Grotesk`|`Figtree`|`Onest`), `densidad` (`comfortable`|`compact`),
@@ -720,7 +723,10 @@ refactor. La conversión de presupuesto a venta la gatea `venta.crear`.
 
 > **Al agregar un permiso:** sumarlo a `PERMISOS` en `src/main/auth/seed.ts` (y a
 > `OPERADOR_PERMISOS` si corresponde). `runSeed` corre en cada arranque y es aditivo, así
-> que llega también a instalaciones ya inicializadas. Ojo: hay tests que afirman el
+> que llega también a instalaciones ya inicializadas. **Excepción (ADR-147):** lo que un
+> administrador cambió desde «Roles y permisos» (tabla `rol_permiso_override`) manda sobre la
+> fábrica: un permiso revocado ahí no vuelve al reiniciar. Los arrays del seed son los valores
+> **de fábrica**, no necesariamente los permisos actuales de una instalación. Ojo: hay tests que afirman el
 > **conteo exacto** de permisos por rol (`auth/__tests__/seed.test.ts`,
 > `ipc/__tests__/auth.ipc.test.ts`) — hay que actualizar esos números.
 

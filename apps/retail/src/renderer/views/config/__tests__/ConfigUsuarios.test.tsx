@@ -84,3 +84,15 @@ describe('ConfigUsuarios — mail obligatorio (ADR-136)', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/correo electrónico no es válido/i);
   });
 });
+
+describe('ConfigUsuarios — restablecer la contraseña de otro', () => {
+  // Visto en la app: el modal decía el nombre completo («Cajero») y se intentó ingresar con ese
+  // nombre en vez del usuario («Marcos»).
+  it('el modal dice con qué usuario se ingresa y que la clave es provisoria', async () => {
+    renderView();
+    fireEvent.click(await screen.findByTitle('Cambiar contraseña'));
+    const dialogo = await screen.findByRole('dialog');
+    expect(dialogo).toHaveTextContent(/ingresa con el usuario\s*ana/i);
+    expect(dialogo).toHaveTextContent(/provisoria/i);
+  });
+});

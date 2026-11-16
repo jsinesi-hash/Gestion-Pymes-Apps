@@ -171,7 +171,10 @@ describe('Login — contraseña vencida y mail obligatorio (ADR-136)', () => {
 
   it('PASSWORD_VENCIDA muestra el paso de cambio y no navega', async () => {
     await ingresarCon('PASSWORD_VENCIDA');
-    expect(await screen.findByText(/tu contraseña venció/i)).toBeInTheDocument();
+    // Cubre los dos casos: venció por plazo o un administrador la restableció.
+    expect(await screen.findByText(/elegí una contraseña nueva/i)).toBeInTheDocument();
+    expect(screen.getByText(/restableció/i)).toBeInTheDocument();
+    expect(screen.getByText(/a partir de ahora/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Nueva contraseña')).toBeInTheDocument();
     expect(ultimaRuta).toBe('/login');
   });

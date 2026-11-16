@@ -39,7 +39,11 @@ export function coreCanales(invoke: Invoke) {
       reactivar: (p: unknown) => invoke('usuario:reactivar', p),
     },
     rol: { list: () => invoke('rol:list') },
-    permisos: { matriz: () => invoke('permiso:matriz') },
+    permisos: {
+      matriz: () => invoke('permiso:matriz'),
+      // ADR-147: guarda el conjunto completo de permisos de un rol.
+      actualizarRol: (p: { rolId: string; permisos: string[] }) => invoke('permiso:actualizarRol', p),
+    },
     preferencias: {
       get: (p: unknown) => invoke('preferencias:get', p),
       save: (p: unknown) => invoke('preferencias:save', p),

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { bridge, propsFilaActivable } from '@core/ui';
+import { bridge, propsFilaActivable, useAuth, traducirError } from '@core/ui';
 type ItemSugerido = {
   producto_id: string;
   nombre_corto: string;
@@ -49,6 +49,8 @@ const f = () => bridge();
 
 export function OcSugeridaView() {
   const navigate = useNavigate();
+  // Crear la OC y asignar proveedor es de quien gestiona proveedores; el resto solo ve la sugerencia.
+  const gestiona = useAuth().can('proveedor.gestionar');
   const [sugerencia, setSugerencia]       = useState<Sugerencia | null>(null);
   const [loading, setLoading]             = useState(true);
   const [creando, setCreando]             = useState<string | null>(null);
@@ -86,7 +88,7 @@ export function OcSugeridaView() {
       }
       navigate(`/compras/ordenes/${ocId}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error al crear la orden de compra.');
+      setError(traducirError(e).mensaje);
     } finally {
       setCreando(null);
     }
@@ -118,7 +120,7 @@ export function OcSugeridaView() {
       setAsignandoId(null);
       cargar();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error al asignar el proveedor.');
+      setError(traducirError(e).mensaje);
     } finally {
       setAsignando(false);
     }
@@ -188,11 +190,13 @@ export function OcSugeridaView() {
         <div key={grupo.proveedor_id} className="card">
           <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontWeight: 700, fontSize: '15px' }}>{grupo.razon_social}</span>
-            <button className="btn-primary" style={{ fontSize: '12px', padding: '5px 12px' }}
-              onClick={() => handleCrearOC(grupo)}
-              disabled={creando === grupo.proveedor_id}>
-              {creando === grupo.proveedor_id ? 'Creando...' : 'Crear OC y editar'}
-            </button>
+            {gestiona && (
+              <button className="btn-primary" style={{ fontSize: '12px', padding: '5px 12px' }}
+                onClick={() => handleCrearOC(grupo)}
+                disabled={creando === grupo.proveedor_id}>
+                {creando === grupo.proveedor_id ? 'Creando...' : 'Crear OC y editar'}
+              </button>
+            )}
           </div>
           <div className="table-wrap" style={{ margin: 0 }}>
             <table>
@@ -251,16 +255,18 @@ export function OcSugeridaView() {
               <tbody>
                 {filteredSinProv.map(item => (
                   <React.Fragment key={item.producto_id}>
-                    <tr {...propsFilaActivable(() => handleAbrirAsignacion(item.producto_id))}>
+                    <tr {...(gestiona ? propsFilaActivable(() => handleAbrirAsignacion(item.producto_id)) : {})}>
                       <td>{item.nombre_corto}</td>
                       <td>{item.unidad_compra ?? '—'}</td>
                       <td className="r"><span className="num">{item.stock_minimo}</span></td>
                       <td className="r"><span className="num">{item.stock_minimo - item.stock_fisico}</span></td>
                       <td className="r"><span className="num">{item.cantidad_sugerida_uv}</span></td>
                       <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        <span style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 500 }}>
-                          {asignandoId === item.producto_id ? 'Cancelar' : 'Asignar proveedor'}
-                        </span>
+                        {gestiona && (
+                          <span style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 500 }}>
+                            {asignandoId === item.producto_id ? 'Cancelar' : 'Asignar proveedor'}
+                          </span>
+                        )}
                       </td>
                     </tr>
                     {asignandoId === item.producto_id && (

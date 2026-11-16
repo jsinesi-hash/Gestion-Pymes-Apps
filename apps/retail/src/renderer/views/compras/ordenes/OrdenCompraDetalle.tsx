@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEscapeAction, bridge } from '@core/ui';
+import { useEscapeAction, bridge, useAuth } from '@core/ui';
 import { useCallIpc } from '@core/ui';
 import { AltaExpressModal } from '../../productos/AltaExpressModal';
 
@@ -56,6 +56,10 @@ export function OrdenCompraDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const callIpc = useCallIpc();
+  const { can } = useAuth();
+  // Emitir, anular y editar ítems es de quien gestiona proveedores; recibir, de `compra.recibir`.
+  const gestiona = can('proveedor.gestionar');
+  const recibe = can('compra.recibir');
   // Escape hace lo mismo que el botón «Volver» de más abajo.
   useEscapeAction(() => navigate(-1), { layer: 'page' });
   const [oc, setOc] = useState<OC | null>(null);
@@ -83,6 +87,7 @@ export function OrdenCompraDetalle() {
   }, [refresh]);
 
   const borrador = oc?.estado === 'borrador';
+  const editable = borrador && gestiona;
 
   async function handleEmitir() {
     if (!id || !window.confirm('¿Emitir esta orden de compra? No podrá modificar los ítems después.')) return;
@@ -192,7 +197,7 @@ export function OrdenCompraDetalle() {
         </button>
         <h1><span className="num">{oc.numero_interno}</span></h1>
         <div className="detail-actions">
-          {borrador && (
+          {editable && (
             <>
               <button className="btn-primary" onClick={handleEmitir} disabled={saving}>Emitir OC</button>
               <button className="btn-secondary" onClick={handleAnular} disabled={saving}>Anular</button>
@@ -200,10 +205,12 @@ export function OrdenCompraDetalle() {
           )}
           {(oc.estado === 'emitida' || oc.estado === 'recibida_parcial') && (
             <>
-              <button className="btn-primary" onClick={() => navigate(`/compras/ordenes/${id}/recibir`)} disabled={saving}>
-                Recibir mercadería
-              </button>
-              <button className="btn-secondary" onClick={handleAnular} disabled={saving}>Anular</button>
+              {recibe && (
+                <button className="btn-primary" onClick={() => navigate(`/compras/ordenes/${id}/recibir`)} disabled={saving}>
+                  Recibir mercadería
+                </button>
+              )}
+              {gestiona && <button className="btn-secondary" onClick={handleAnular} disabled={saving}>Anular</button>}
             </>
           )}
         </div>
@@ -229,7 +236,7 @@ export function OrdenCompraDetalle() {
       <div className="card">
         <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Ítems</span>
-          {borrador && !showAddItem && (
+          {editable && !showAddItem && (
             <button className="btn-secondary" style={{ fontSize: '12px', padding: '4px 10px' }}
               onClick={() => setShowAddItem(true)}>+ Agregar ítem</button>
           )}
@@ -245,7 +252,7 @@ export function OrdenCompraDetalle() {
                 <th className="r">Costo unit.</th>
                 <th className="c">IVA</th>
                 <th className="r">Subtotal c/IVA</th>
-                {borrador && <th />}
+                {editable && <th />}
               </tr>
             </thead>
             <tbody>
@@ -312,7 +319,7 @@ export function OrdenCompraDetalle() {
                       <td className="r">
                         <span className="num">$ {fmtARS(subtotalConIva(item.subtotal_centavos, item.alicuota_iva))}</span>
                       </td>
-                      {borrador && (
+                      {editable && (
                         <td>
                           <div style={{ display: 'flex', gap: '4px' }}>
                             <button className="btn-secondary" style={{ fontSize: '11px', padding: '3px 8px' }}

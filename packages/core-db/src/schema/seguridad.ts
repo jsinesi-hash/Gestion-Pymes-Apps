@@ -86,3 +86,22 @@ export const recuperacion_password = sqliteTable('recuperacion_password', {
   usado:       integer('usado', { mode: 'boolean' }).notNull().default(false),
   creado_en:   integer('creado_en', { mode: 'timestamp' }).notNull(),
 });
+
+/**
+ * ADR-147 — Cambios a los permisos de fábrica de un rol hechos desde «Roles y permisos».
+ * `otorgado = false` es una revocación: `runSeed` (que corre en cada arranque y es aditivo) no
+ * vuelve a otorgar ese permiso. `otorgado = true` es un permiso agregado a mano. Una fila por
+ * (rol, permiso); el índice único vive en la migración, como el resto de los índices del núcleo.
+ */
+export const rol_permiso_override = sqliteTable('rol_permiso_override', {
+  id:                      text('id').primaryKey(),
+  rol_id:                  text('rol_id').notNull().references(() => rol.id),
+  permiso_id:              text('permiso_id').notNull().references(() => permiso.id),
+  otorgado:                integer('otorgado', { mode: 'boolean' }).notNull(),
+  usuario_modificacion_id: text('usuario_modificacion_id'),
+  fecha_actualizacion:     integer('fecha_actualizacion', { mode: 'timestamp' }).notNull(),
+  version:    integer('version').notNull().default(1),
+  origin_id:  text('origin_id').notNull(),
+  sync_state: text('sync_state', { enum: ['pending', 'synced', 'conflict'] }).notNull().default('pending'),
+  updated_at: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});

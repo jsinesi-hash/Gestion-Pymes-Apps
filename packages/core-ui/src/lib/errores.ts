@@ -75,7 +75,11 @@ const CODIGOS: Record<string, Formateador> = {
     const motivo = args[0] as MotivoPasswordDebil;
     return { mensaje: mensajePasswordDebil(motivo) ?? 'La contraseña no cumple los requisitos de seguridad.' };
   },
-  LAST_SUPERVISOR: msg('No se puede desactivar el último supervisor activo.'),
+  LAST_SUPERVISOR: msg('Tiene que quedar al menos un usuario activo que pueda administrar usuarios.'),
+  // ADR-147: editor de permisos por rol.
+  SIN_ADMINISTRADOR: msg('Tiene que quedar al menos un usuario activo que pueda administrar usuarios.'),
+  PERMISO_PROPIO_ADMIN: msg('No podés quitarle «Administrar usuarios» a tu propio rol.'),
+  PERMISO_DESCONOCIDO: msg('Uno de los permisos no existe. Recargá la pantalla e intentá de nuevo.'),
   AUTO_DESACTIVACION: msg('No podés desactivar tu propio usuario.'),
   CANTIDAD_INVALIDA: msg('Ingresá una cantidad válida.'),
   MOTIVO_REQUERIDO: msg('Ingresá el motivo.'),
@@ -144,7 +148,7 @@ const CODIGOS: Record<string, Formateador> = {
   USUARIO_DUPLICADO: msg('Ya existe un usuario con ese nombre.'),
   PASSWORD_REQUERIDA: msg('Ingresá tu contraseña actual.'),
   PASSWORD_INCORRECTA: msg('La contraseña es incorrecta.'),
-  PASSWORD_VENCIDA: msg('Tu contraseña venció. Elegí una nueva para continuar.'),
+  PASSWORD_VENCIDA: msg('Tenés que elegir una contraseña nueva para continuar.'),
   PASSWORD_NO_VENCIDA: msg('Tu contraseña todavía está vigente.'),
   PASSWORD_IGUAL_A_LA_ACTUAL: msg('La nueva contraseña tiene que ser distinta de la actual.'),
   EMAIL_REQUERIDO: msg('Ingresá un correo electrónico.'),

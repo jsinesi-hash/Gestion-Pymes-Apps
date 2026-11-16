@@ -37,6 +37,11 @@ function createTestDb() {
     path.resolve(__dirname, '../../db/migrations/0050_adr136_password_vigencia.sql'), 'utf8'
   );
   for (const stmt of sql0050.split('--> statement-breakpoint').map(s => s.trim()).filter(Boolean)) sqlite.exec(stmt);
+  // ADR-147 (0052): `rol_permiso_override`, que runSeed lee para respetar los cambios hechos desde la UI.
+  const sql0052 = fs.readFileSync(
+    path.resolve(__dirname, '../../db/migrations/0052_adr147_rol_permiso_override.sql'), 'utf8'
+  );
+  for (const stmt of sql0052.split('--> statement-breakpoint').map(s => s.trim()).filter(Boolean)) sqlite.exec(stmt);
   return drizzle(sqlite, { schema });
 }
 

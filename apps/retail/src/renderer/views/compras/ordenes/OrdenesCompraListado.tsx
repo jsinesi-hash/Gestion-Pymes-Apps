@@ -142,13 +142,16 @@ export function OrdenesCompraListado() {
       <div className="toolbar">
         <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>Órdenes de compra</h2>
         <div className="ml-auto" />
-        <button className="btn-secondary" onClick={handleSugerida} disabled={creando}>
-          OC Sugerida
-        </button>
+        {/* Crear OC (sugerida o manual) es de quien gestiona proveedores; el Operador solo recibe. */}
         {can('proveedor.gestionar') && (
-          <Link to="/compras/ordenes/nueva">
-            <button className="btn-primary">+ Nueva OC manual</button>
-          </Link>
+          <>
+            <button className="btn-secondary" onClick={handleSugerida} disabled={creando}>
+              OC Sugerida
+            </button>
+            <Link to="/compras/ordenes/nueva">
+              <button className="btn-primary">+ Nueva OC manual</button>
+            </Link>
+          </>
         )}
       </div>
 

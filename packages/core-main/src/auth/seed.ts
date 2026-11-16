@@ -34,15 +34,26 @@ function upsertRolPermisos(
   rolSupervisorId: string | undefined,
   sync: SyncMeta,
 ): void {
+  // ADR-147: lo que un administrador cambió desde «Roles y permisos» manda sobre la fábrica.
+  const overrides = db.select({
+    rol_id: schema.rol_permiso_override.rol_id,
+    permiso_id: schema.rol_permiso_override.permiso_id,
+    otorgado: schema.rol_permiso_override.otorgado,
+  }).from(schema.rol_permiso_override).all();
+  const revocados = new Set(overrides.filter(o => !o.otorgado).map(o => `${o.rol_id}|${o.permiso_id}`));
+  const otorgar = (rolId: string, permisoId: string) => {
+    if (!revocados.has(`${rolId}|${permisoId}`)) upsertRolPermiso(db, rolId, permisoId, sync);
+  };
+
   for (const p of permisos) {
     const permisoId = permisoIds[p.codigo];
     if (!permisoId) continue;
-    if (operador.has(p.codigo) && rolOperadorId) {
-      upsertRolPermiso(db, rolOperadorId, permisoId, sync);
-    }
-    if (rolSupervisorId) {
-      upsertRolPermiso(db, rolSupervisorId, permisoId, sync);
-    }
+    if (operador.has(p.codigo) && rolOperadorId) otorgar(rolOperadorId, permisoId);
+    if (rolSupervisorId) otorgar(rolSupervisorId, permisoId);
+  }
+  // Los agregados a mano se reponen si faltan (p. ej. tras restaurar un backup parcial).
+  for (const o of overrides) {
+    if (o.otorgado) upsertRolPermiso(db, o.rol_id, o.permiso_id, sync);
   }
 }
 

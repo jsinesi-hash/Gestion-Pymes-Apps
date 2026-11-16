@@ -9,9 +9,12 @@ vi.mock('react-router-dom', async (importOriginal) => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
+
+let mockCan: (codigo: string) => boolean = () => true;
 vi.mock('@core/ui', async (importOriginal) => ({ ...(await importOriginal<any>()),
-  useAuth: () => ({ can: () => true }),
+  useAuth: () => ({ can: (c: string) => mockCan(c) }),
 }));
+const sinGestionarProveedores = (c: string) => c !== 'proveedor.gestionar';
 
 const OCS = [
   {
@@ -40,7 +43,7 @@ function renderView() {
 }
 
 describe('OrdenesCompraListado', () => {
-  beforeEach(() => setup());
+  beforeEach(() => { setup(); mockCan = () => true; });
   afterEach(() => mockNavigate.mockClear());
 
   it('clic en la fila abre el detalle de la OC (ADR-069)', async () => {
@@ -48,5 +51,20 @@ describe('OrdenesCompraListado', () => {
     const filaCelda = await screen.findByText('Distribuidora SA');
     fireEvent.click(filaCelda.closest('tr')!);
     expect(mockNavigate).toHaveBeenCalledWith('/compras/ordenes/oc-1');
+  });
+
+  it('con permiso de gestionar proveedores ofrece OC sugerida y manual', async () => {
+    renderView();
+    await screen.findByText('Distribuidora SA');
+    expect(screen.getByRole('button', { name: /oc sugerida/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /nueva oc manual/i })).toBeInTheDocument();
+  });
+
+  it('sin ese permiso (Operador) lista las OC pero no ofrece crearlas', async () => {
+    mockCan = sinGestionarProveedores;
+    renderView();
+    expect(await screen.findByText('Distribuidora SA')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /oc sugerida/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /nueva oc manual/i })).not.toBeInTheDocument();
   });
 });

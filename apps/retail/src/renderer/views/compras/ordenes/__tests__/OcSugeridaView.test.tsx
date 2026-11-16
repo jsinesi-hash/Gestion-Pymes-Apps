@@ -3,6 +3,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { OcSugeridaView } from '../OcSugeridaView';
 
+vi.mock('@core/ui', async (importOriginal) => ({ ...(await importOriginal<any>()),
+  useAuth: () => ({ can: () => true }),
+}));
+
 const SUGERENCIA = {
   grupos: [
     {
