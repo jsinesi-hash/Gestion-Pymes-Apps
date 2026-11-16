@@ -105,9 +105,10 @@ locales de internet inestable, el tema pesa más.
 
 ### 3.4 Numeraciones correlativas
 
-**Hoy:** la venta ya numera por terminal. **SKU, remito, presupuesto y producción** usan
-contadores globales en `parametros_sistema` (`sku_proximo_secuencial`, `remito_proximo_secuencial`,
-`presupuesto_proximo_secuencial`, y el de producción en Elaborados). ADR-025 y ADR-045 ya
+**Hoy:** la venta, la orden de compra y la producción de Elaborados ya numeran por terminal.
+**SKU, remito y presupuesto** usan contadores globales en `parametros_sistema`
+(`sku_proximo_secuencial`, `remito_proximo_secuencial`, `presupuesto_proximo_secuencial`).
+*(Corregido el 2026-11-16: la primera versión incluía a producción entre los globales. Ver ADR-154.)* ADR-025 y ADR-045 ya
 dejaron anotada esta deuda "para R4".
 
 **Cambio:** decidir por documento:
@@ -282,6 +283,14 @@ globales, `version` a mano) y deja todo listo para enchufar el hub.
    soporte son un producto aparte del sync.
 
 ## 7. Preguntas abiertas para el PO
+
+> **Respondidas el 2026-11-16** (ver ADR-153 a 156):
+> 1. Stock entre terminales sin conexión: **permitir y alertar** (ADR-153).
+> 2. Caja: **configurable por negocio**, por terminal o compartida (ADR-155).
+> 3. Sucursales: **no por ahora**, quedan para R5 (ADR-156).
+> 4. Hub de red local: **ambas modalidades**, en una PC del cliente o en un equipo entregado (ADR-156).
+> 5. Acceso remoto: **la app de escritorio desde otra PC** fuera del local, vía el hub en la nube (ADR-156).
+> Además: crédito con el mismo criterio que stock (ADR-153).
 
 - ¿Se tolera stock negativo transitorio entre terminales (con alerta), o una venta sin hub
   debe limitarse?

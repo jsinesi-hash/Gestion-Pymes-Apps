@@ -268,7 +268,11 @@ No se puede desactivar el último Supervisor activo. Roles base con `es_sistema 
   global. (ADR-009)
 - **Redondeo a $1 sobre el TOTAL** de la venta; diferencia en `Venta.ajuste_redondeo`;
   las líneas conservan centavos. (ADR-010)
-- **Sin stock disponible no hay venta** (sin excepción).
+- **Sin stock disponible no hay venta**: cada terminal lo valida contra su stock local, sin
+  excepción. En modo distribuido (fase online, ADR-153) el stock consolidado puede quedar
+  negativo por ventas concurrentes de terminales sin conexión entre sí: se acepta, se alerta
+  una sola vez y el producto no se vende hasta corregirlo. Lo mismo vale para el límite de
+  crédito.
 - **Productos inactivos no se venden.**
 - El stock **siempre** cambia vía un `MovimientoStock` (nunca hay stock sin movimiento).
 - **Costo promedio ponderado** en cada entrada con costo:
