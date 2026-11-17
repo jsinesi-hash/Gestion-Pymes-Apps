@@ -5385,11 +5385,11 @@ Elaborados no tiene tareas programadas hoy. El backup automático se dispara al 
 
 ## ADR-157 — Dinero en centavos en todo el esquema (serie de centavos)
 
-**Estado:** Propuesto (2026-11-17, espera aprobación del usuario) · **Fecha:** 2026-11-17 · **Fase:** entre F1 y F2 de la fase online (plan de F1, «Serie aparte») · **Concreta:** la doctrina de `CLAUDE.md` §7 («toda tabla nueva va en centavos») para las tablas que quedaron en pesos. **Plan:** `docs/superpowers/plans/2026-11-17-serie-centavos.md`.
+**Estado:** Aceptado (aprobado por el usuario el 2026-11-17, las tres decisiones como se propusieron) · **Fecha:** 2026-11-17 · **Fase:** entre F1 y F2 de la fase online (plan de F1, «Serie aparte») · **Concreta:** la doctrina de `CLAUDE.md` §7 («toda tabla nueva va en centavos») para las tablas que quedaron en pesos. **Plan:** `docs/superpowers/plans/2026-11-17-serie-centavos.md`.
 
 **Contexto.** Quedan 17 columnas de dinero en pesos `REAL`: `caja` (`monto_inicial`, `monto_esperado`, `monto_contado`, `diferencia`), `movimiento_caja.monto`, `venta` (`subtotal`, `importe_iva`, `total`, `ajuste_redondeo`) y `comprobante` (`importe_neto`, `importe_iva`, `importe_total`) en el núcleo, compartidas por las dos apps; `venta_detalle` (`precio_unitario`, `subtotal`), `producto` (`precio_venta_lista`, `precio_costo_promedio`) y `movimiento_stock.costo_unitario` en Retail. `venta.descuento_global`, `venta_detalle.descuento_linea` y `producto.margen_ganancia` son porcentajes y no entran. El resto del dinero ya está en centavos, así que convive una frontera: el POS calcula y manda pesos, el núcleo convierte con `Math.round(x * 100)` y vuelve a pesos con `/ 100` para `movimiento_caja` y la cuenta corriente, y `verificarTotalesVenta` tiene que tolerar un centavo de diferencia por el float. Sincronizar (F2) con dos convenciones multiplica esos bordes, y la integración fiscal (1.3.0) va a leer los importes de `comprobante`.
 
-**Decisión (propuesta).**
+**Decisión.**
 1. **Todas las columnas de dinero pasan a centavos `INTEGER` y se renombran a `*_centavos`.** El renombre hace que el compilador marque cada uso (no queda un `* 100` o `/ 100` olvidado) y sigue la convención del resto del esquema.
 2. **Migración en el lugar, por grupos de tablas que se usan juntas** (caja; venta, comprobante y líneas; precios y costo del producto): `ADD COLUMN … _centavos INTEGER`, `UPDATE … = CAST(ROUND(x * 100) AS INTEGER)`, `DROP COLUMN x`. Sin período de convivencia: no hay todavía terminales que sincronicen, así que cada PR cambia esquema y código juntos y deja la app consistente.
 3. **Centavos en toda la cadena** (IPC, exportaciones, tickets, PDF, reportes, SQL crudo); los pesos existen solo en los bordes de la UI: al tipear (conversión en el campo) y al mostrar (`formatCurrency`/`fmtARS`, que ya reciben centavos). `verificarTotalesVenta` compara centavos exactos.
@@ -5405,4 +5405,4 @@ Elaborados no tiene tareas programadas hoy. El backup automático se dispara al 
 - (−) El costo promedio de Retail pierde los decimales por debajo del centavo (igual que Elaborados hoy).
 - (−) Las migraciones reescriben columnas con datos reales: cada PR compara sumas por tabla antes y después sobre una copia de la base real.
 
-**Pendiente de confirmar por el usuario:** el renombre a `*_centavos`, el costo promedio en centavos enteros y el orden respecto del fiscal (puntos 1, 4 y 6).
+**Confirmado por el usuario (2026-11-17):** el renombre a `*_centavos`, el costo promedio en centavos enteros y la serie antes del fiscal (puntos 1, 4 y 6).
