@@ -63,6 +63,58 @@ export function recalcularStock(db: Db, productoId: string): { guardado: number;
   return { guardado: fila.stock_fisico, proyectado, corregido };
 }
 
+/** Entradas cuyo costo entra al promedio: las mismas que lo actualizan en los handlers. */
+const MOTIVOS_CON_COSTO = new Set(['inicial', 'entrada_manual', 'recepcion_compra']);
+
+/**
+ * Costo promedio ponderado proyectado desde el libro (ADR-151, corrección de F1 PR1): se reproducen
+ * los movimientos en orden, siguiendo el stock (el conteo lo vuelve a fijar), y cada entrada con
+ * costo de esos motivos promedia `(stock · costo + cantidad · costo_entrada) / (stock + cantidad)`.
+ * Una entrada de cantidad 0 con costo fija el costo (alta o importación sin stock), igual que
+ * cuando el stock resultante no es positivo. Ventas, devoluciones y salidas no lo cambian.
+ */
+export function proyectarCostoPromedio(db: Db, productoId: string): number {
+  const movs = db.all<{ tipo: string; motivo: string; cantidad: number; stock_resultante: number; costo_unitario: number | null }>(sql`
+    select tipo, motivo, cantidad, stock_resultante, costo_unitario from movimiento_stock
+    where producto_id = ${productoId} order by fecha, rowid`);
+  let stock = 0;
+  let costo = 0;
+  for (const m of movs) {
+    if (m.motivo === 'ajuste_conteo') { stock = m.stock_resultante; continue; }
+    const q = m.tipo === 'salida' ? -Math.abs(m.cantidad) : m.tipo === 'entrada' ? Math.abs(m.cantidad) : m.cantidad;
+    if (m.tipo === 'entrada' && MOTIVOS_CON_COSTO.has(m.motivo) && m.costo_unitario != null && m.costo_unitario > 0) {
+      const n = stock + q;
+      costo = q === 0 || n <= 0 ? m.costo_unitario : (stock * costo + q * m.costo_unitario) / n;
+    }
+    stock += q;
+  }
+  return costo;
+}
+
+const mismoCosto = (a: number, b: number) => Math.abs(a - b) <= 1e-6 * Math.max(1, Math.abs(a));
+
+/** Productos cuyo costo promedio guardado no coincide con la proyección del libro. */
+export function diferenciasDeCostoPromedio(db: Db): { producto_id: string; guardado: number; proyectado: number }[] {
+  return db.select({ producto_id: schema.producto.id, guardado: schema.producto.precio_costo_promedio })
+    .from(schema.producto).all()
+    .map((p) => ({ ...p, proyectado: proyectarCostoPromedio(db, p.producto_id) }))
+    .filter((p) => !mismoCosto(p.guardado, p.proyectado));
+}
+
+/** Reconstruye el costo promedio guardado desde el libro; solo escribe si no coincide. */
+export function recalcularCostoPromedio(db: Db, productoId: string): { guardado: number; proyectado: number; corregido: boolean } {
+  const fila = db.select().from(schema.producto).where(eq(schema.producto.id, productoId)).get();
+  if (!fila) throw new Error('NOT_FOUND');
+  const proyectado = proyectarCostoPromedio(db, productoId);
+  const corregido = !mismoCosto(fila.precio_costo_promedio, proyectado);
+  if (corregido) {
+    db.update(schema.producto).set({
+      precio_costo_promedio: proyectado, version: fila.version + 1, sync_state: 'pending', updated_at: new Date(),
+    }).where(eq(schema.producto.id, productoId)).run();
+  }
+  return { guardado: fila.precio_costo_promedio, proyectado, corregido };
+}
+
 /** Evita arrastrar ruido de coma flotante (0.1 + 0.2) a la comparación y al saldo corregido. */
 function redondear(n: number): number {
   return Math.round(n * 1e6) / 1e6;

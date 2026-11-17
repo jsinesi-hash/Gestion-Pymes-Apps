@@ -1103,6 +1103,24 @@ export function confirmarProductos(db: Db, payload: { rows: ImportRowResult[] })
               observaciones: null,
               ...sync,
             }).run();
+          } else if (costo > 0) {
+            // ADR-151: sin stock, el costo igual tiene que quedar en el libro (cantidad 0 lo fija),
+            // para que el costo promedio se pueda proyectar. El alta desde la pantalla ya lo hace.
+            tx.insert(schema.movimiento_stock).values({
+              id: generateId(),
+              producto_id: id,
+              tipo: 'entrada',
+              motivo: 'inicial',
+              cantidad: 0,
+              stock_resultante: 0,
+              costo_unitario: costo,
+              referencia_tipo: 'importacion',
+              referencia_id: 'importacion-masiva',
+              usuario_id: session.userId,
+              fecha: now,
+              observaciones: null,
+              ...sync,
+            }).run();
           }
         });
         const stockMsg = stockInicial > 0 ? ` (+${stockInicial} uds stock inicial)` : '';

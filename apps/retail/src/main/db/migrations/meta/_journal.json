@@ -401,5 +401,12 @@
       "tag": "0056_adr154_numeracion_por_terminal",
       "breakpoints": true
     }
+    ,{
+      "idx": 57,
+      "version": "7",
+      "when": 1795478400000,
+      "tag": "0057_adr151_costo_sin_movimiento",
+      "breakpoints": true
+    }
   ]
 }
