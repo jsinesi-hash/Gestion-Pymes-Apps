@@ -1,7 +1,8 @@
 import { eq, and, or, like, sql, getTableColumns, gt, lte, asc, desc, inArray } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { generateId, formatSku } from '@ferreteria/shared';
+import { generateId } from '@ferreteria/shared';
+import { reservarSku } from '../catalog/sku';
 export { parseSku } from '@ferreteria/shared';
 import * as schema from '../db/schema';
 import { getSession, getOriginId, str, optStr, num, bool, id as vId, optId } from '@core/main';
@@ -66,20 +67,6 @@ export type ProductoListParams = {
   page: number;
   pageSize: number;
 };
-
-// Lee y actualiza sku_proximo_secuencial atómicamente dentro de una transacción.
-// Single-node; para multinodo (R4) se reemplaza por rango por nodo o generación server-side.
-function nextSkuAtomico(tx: Db): { sku: string; secuencial: number } {
-  const row = tx.select().from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, 'sku_proximo_secuencial')).get();
-  if (!row) throw new Error('sku_proximo_secuencial no encontrado en parametros_sistema');
-  const secuencial = Number.parseInt(row.valor, 10);
-  const sku = formatSku(secuencial);
-  tx.update(schema.parametros_sistema)
-    .set({ valor: String(secuencial + 1), actualizado_en: new Date() })
-    .where(eq(schema.parametros_sistema.clave, 'sku_proximo_secuencial')).run();
-  return { sku, secuencial };
-}
 
 // PROD-3 (ADR-079): resuelve (creando si falta) la categoría raíz "Sin clasificar" para
 // el alta express. Categoría normal, editable/renombrable después.
@@ -161,7 +148,7 @@ export function productoCreateHandler(db: Db, payload: unknown) {
     ? stock_inicial.costo : null;
 
   db.transaction((tx) => {
-    const { sku, secuencial } = nextSkuAtomico(tx);
+    const { sku, secuencial } = reservarSku(tx);
 
     tx.insert(schema.producto).values({
       id,

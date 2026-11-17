@@ -88,7 +88,8 @@ export function PresupuestosView() {
     });
 
     const valor = (p: PresupuestoListado): string | number => {
-      if (orden === 'numero') return p.numero_secuencial ?? 0;
+      // ADR-154: ordena por el número (ver RemitosView); un borrador sin número va al final en desc.
+      if (orden === 'numero') return p.numero ?? '';
       if (orden === 'fecha_validez') return ymd(p.fecha_validez);
       if (orden === 'total') return p.total_centavos;
       if (orden === 'cliente') return (p.cliente_nombre_completo ?? '').toLowerCase();
@@ -220,7 +221,7 @@ export function PresupuestosView() {
             <tbody>
               {filtrados.map((p) => (
                 <tr key={p.id} {...propsFilaActivable(() => setDetalleId(p.id))}>
-                  <td className="num">{p.numero ?? '—'}</td>
+                  <td className="num" style={{ whiteSpace: 'nowrap' }}>{p.numero ?? '—'}</td>
                   <td>{resaltarCoincidencia(p.cliente_nombre_completo ?? 'Consumidor Final', texto)}</td>
                   <td><EstadoBadge estado={p.estado} /></td>
                   <td>{fmtFecha(p.fecha_validez)}</td>

@@ -99,7 +99,9 @@ export function RemitosView() {
 
     const valorOrden = (r: RemitoListado): string | number => {
       if (orden === 'fecha_emision') return fechaYmd(r.fecha_emision);
-      if (orden === 'numero') return r.numero_secuencial;
+      // ADR-154: el número (con terminal y cero-padded) ordena bien; el secuencial es por terminal
+      // y no compara entre formatos. Los RE-NNNNNNN viejos quedan antes que los RE-<terminal>-.
+      if (orden === 'numero') return r.numero;
       return (r[orden] ?? '').toString().toLowerCase();
     };
 

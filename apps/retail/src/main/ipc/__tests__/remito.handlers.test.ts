@@ -4,7 +4,6 @@ import * as schema from '../../db/schema';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
 import { crearVentaConfirmada } from './remito.helpers';
 import {
-  formatNumeroRemito,
   nextNumeroRemitoAtomico,
   remitoPendientePorVentaHandler,
   remitoCrearHandler,
@@ -56,40 +55,29 @@ describe('permisos de remito', () => {
 });
 
 describe('parametros sembrados por la migracion 0023', () => {
-  it('siembra el contador y los flags de remito', () => {
+  it('siembra los flags de remito; el contador global se retiró (ADR-154, migración 0056)', () => {
     const claves = db.select().from(schema.parametros_sistema).all()
       .reduce<Record<string, string>>((acc, p) => { acc[p.clave] = p.valor; return acc; }, {});
 
-    expect(claves['remito_proximo_secuencial']).toBe('1');
+    expect(claves['remito_proximo_secuencial']).toBeUndefined();
+    expect(claves['remito_correlativo_C1']).toBeUndefined(); // se crea con el primer remito
     // ADR-060 (migración 0035): el módulo viene encendido de fábrica en 1.1.x.
     expect(claves['remitos_habilitado']).toBe('true');
     expect(claves['remito_valorizado']).toBe('false');
   });
 });
 
-describe('formatNumeroRemito', () => {
-  it('proyecta RE- + 7 digitos cero-padded, sin Luhn', () => {
-    expect(formatNumeroRemito(1)).toBe('RE-0000001');
-    expect(formatNumeroRemito(42)).toBe('RE-0000042');
-    expect(formatNumeroRemito(9999999)).toBe('RE-9999999');
-  });
-
-  it('no trunca si el secuencial excede 7 digitos', () => {
-    expect(formatNumeroRemito(10000000)).toBe('RE-10000000');
-  });
-});
-
 describe('nextNumeroRemitoAtomico', () => {
   const leerContador = () => db.select().from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, 'remito_proximo_secuencial')).get()!.valor;
+    .where(eq(schema.parametros_sistema.clave, 'remito_correlativo_C1')).get()?.valor;
 
-  it('arranca en 1 y avanza el contador en parametros_sistema', () => {
+  it('numera por terminal: arranca en 1 y avanza el correlativo de la terminal', () => {
     expect(db.transaction((tx) => nextNumeroRemitoAtomico(tx)))
-      .toEqual({ numero: 'RE-0000001', secuencial: 1 });
+      .toEqual({ numero: 'RE-C1-000001', secuencial: 1 });
     expect(db.transaction((tx) => nextNumeroRemitoAtomico(tx)))
-      .toEqual({ numero: 'RE-0000002', secuencial: 2 });
+      .toEqual({ numero: 'RE-C1-000002', secuencial: 2 });
 
-    expect(leerContador()).toBe('3');
+    expect(leerContador()).toBe('2');
   });
 
   it('no consume secuencial si la transaccion falla (rollback)', () => {
@@ -98,7 +86,7 @@ describe('nextNumeroRemitoAtomico', () => {
       throw new Error('boom');
     })).toThrow('boom');
 
-    expect(leerContador()).toBe('1');
+    expect(leerContador()).toBeUndefined();
   });
 });
 
@@ -193,7 +181,7 @@ describe('remitoCrearHandler', () => {
       lineas: [{ venta_detalle_id: detalleIds[0], cantidad_entregada: 4 }],
     });
 
-    expect(r.numero).toBe('RE-0000001');
+    expect(r.numero).toBe('RE-C1-000001');
     expect(r.numero_secuencial).toBe(1);
     expect(r.estado).toBe('emitido');
     expect(r.venta_id).toBe(ventaId);
@@ -344,7 +332,7 @@ describe('remitoCrearHandler', () => {
       transportista_id: unTransportista(),
       lineas: [{ venta_detalle_id: detalleIds[0], cantidad_entregada: 1 }],
     });
-    expect(r.numero).toBe('RE-0000001');
+    expect(r.numero).toBe('RE-C1-000001');
   });
 
   it('rechaza cantidad cero o negativa', () => {
@@ -390,7 +378,7 @@ describe('remitoCrearHandler', () => {
       transportista_id: unTransportista(),
       lineas: [{ venta_detalle_id: detalleIds[0], cantidad_entregada: 2.5 }],
     });
-    expect(r.numero).toBe('RE-0000001');
+    expect(r.numero).toBe('RE-C1-000001');
   });
 
   it('rechaza remito sin lineas', () => {
@@ -494,9 +482,27 @@ describe('remitoListarHandler', () => {
     const filas = remitoListarHandler(db, {});
 
     expect(filas).toHaveLength(2);
-    expect(filas[0].numero).toBe('RE-0000002');
-    expect(filas[1].numero).toBe('RE-0000001');
+    expect(filas[0].numero).toBe('RE-C1-000002');
+    expect(filas[1].numero).toBe('RE-C1-000001');
     expect(filas[0].cliente_nombre_completo).toBe('Cliente Remito Test');
+  });
+
+  it('ADR-154: ordena por fecha de emisión, así conviven el formato viejo y el nuevo', () => {
+    const { id: userId } = loginAsAdmin(db);
+    const { ventaId, detalleIds } = crearVentaConfirmada(db, userId, [10]);
+    const p = {
+      venta_id: ventaId,
+      domicilio_entrega: DOMICILIO,
+      transportista_id: unTransportista(),
+      lineas: [{ venta_detalle_id: detalleIds[0], cantidad_entregada: 1 }],
+    };
+    const viejo = remitoCrearHandler(db, p);
+    // Simula un remito emitido antes de 1.x con el contador global (número alto, formato viejo).
+    db.update(schema.remito).set({ numero: 'RE-0000050', numero_secuencial: 50, fecha_emision: new Date(2026, 0, 1) })
+      .where(eq(schema.remito.id, viejo.id)).run();
+    remitoCrearHandler(db, p);
+
+    expect(remitoListarHandler(db, {}).map((r) => r.numero)).toEqual(['RE-C1-000002', 'RE-0000050']);
   });
 
   it('filtra por estado', () => {
@@ -550,7 +556,7 @@ describe('remitoObtenerHandler', () => {
 
     const full = remitoObtenerHandler(db, { id: r.id });
 
-    expect(full.numero).toBe('RE-0000001');
+    expect(full.numero).toBe('RE-C1-000001');
     expect(full.lineas).toHaveLength(2);
     expect(full.cliente_nombre_completo).toBe('Cliente Remito Test');
   });
@@ -680,7 +686,7 @@ describe('remitoAnularHandler', () => {
       transportista_id: unTransportista(),
       lineas: [{ venta_detalle_id: detalleIds[0], cantidad_entregada: 10 }],
     });
-    expect(r2.numero).toBe('RE-0000002');
+    expect(r2.numero).toBe('RE-C1-000002');
   });
 
   it('exige motivo', () => {
@@ -735,7 +741,7 @@ describe('remitoAnularHandler', () => {
 
 describe('renderRemitoHtml', () => {
   const base = {
-    numero: 'RE-0000001',
+    numero: 'RE-C1-000001',
     fecha_emision: new Date('2026-07-19T10:00:00Z'),
     estado: 'emitido' as const,
     domicilio_entrega: 'Av. Siempreviva 742',
@@ -752,7 +758,7 @@ describe('renderRemitoHtml', () => {
 
   it('incluye numero, cliente, domicilio, transportista y lineas', () => {
     const html = renderRemitoHtml(base);
-    expect(html).toContain('RE-0000001');
+    expect(html).toContain('RE-C1-000001');
     expect(html).toContain('Ferreteria Sur');
     expect(html).toContain('30111222');
     expect(html).toContain('Av. Siempreviva 742');
@@ -798,7 +804,7 @@ describe('renderRemitoHtml', () => {
       observaciones: null,
       cliente_nombre_completo: null,
     });
-    expect(html).toContain('RE-0000001');
+    expect(html).toContain('RE-C1-000001');
     expect(html).not.toContain('null');
   });
 });

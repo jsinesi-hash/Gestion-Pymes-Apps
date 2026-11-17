@@ -196,6 +196,20 @@ describe('RemitosView', () => {
     expect(filasDesc[0]).toHaveTextContent('RE-0000002');
   });
 
+  it('ADR-154: ordena por número también con el formato viejo y el nuevo mezclados', async () => {
+    listar.mockResolvedValue([
+      { ...FILAS[0], id: 'n', numero: 'RE-C1-000001', numero_secuencial: 1 },
+      { ...FILAS[1], id: 'v', numero: 'RE-0000050', numero_secuencial: 50 },
+    ]);
+    render(<RemitosView />);
+    await screen.findByText('RE-C1-000001');
+
+    fireEvent.click(screen.getByRole('columnheader', { name: /número/i }));
+    const filasAsc = screen.getAllByRole('row').slice(1);
+    expect(filasAsc[0]).toHaveTextContent('RE-0000050'); // los viejos se emitieron antes
+    expect(filasAsc[1]).toHaveTextContent('RE-C1-000001');
+  });
+
   it('ordena por cliente alfabeticamente', async () => {
     render(<RemitosView />);
     await screen.findByText('RE-0000002');

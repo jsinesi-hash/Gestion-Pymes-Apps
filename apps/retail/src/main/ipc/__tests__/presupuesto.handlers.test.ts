@@ -4,7 +4,6 @@ import * as schema from '../../db/schema';
 import { setupDb, loginAsAdmin, clearSession } from './helpers';
 import { sembrarProducto, sembrarCliente, sembrarVenta } from './presupuesto.helpers';
 import {
-  formatNumeroPresupuesto,
   nextNumeroPresupuestoAtomico,
   computarPresupuesto,
   presupuestoCrearHandler,
@@ -42,40 +41,33 @@ describe('migracion 0025: permisos y parametros', () => {
     }
   });
 
-  it('siembra el contador, el default de validez y el feature flag', () => {
+  it('siembra el default de validez y el feature flag; el contador global se retiró (ADR-154)', () => {
     const claves = db.select().from(schema.parametros_sistema).all()
       .reduce<Record<string, string>>((a, p) => { a[p.clave] = p.valor; return a; }, {});
-    expect(claves['presupuesto_proximo_secuencial']).toBe('1');
+    expect(claves['presupuesto_proximo_secuencial']).toBeUndefined();
+    expect(claves['presupuesto_correlativo_C1']).toBeUndefined(); // se crea con el primer emitido
     expect(claves['presupuesto_validez_dias_default']).toBe('15');
     // ADR-060 (migración 0035): el módulo viene encendido de fábrica en 1.1.x.
     expect(claves['presupuestos_habilitado']).toBe('true');
   });
 });
 
-describe('formatNumeroPresupuesto', () => {
-  it('proyecta PR- + 7 digitos, sin Luhn', () => {
-    expect(formatNumeroPresupuesto(1)).toBe('PR-0000001');
-    expect(formatNumeroPresupuesto(42)).toBe('PR-0000042');
-    expect(formatNumeroPresupuesto(9999999)).toBe('PR-9999999');
-  });
-});
-
 describe('nextNumeroPresupuestoAtomico', () => {
   const leer = () => db.select().from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, 'presupuesto_proximo_secuencial')).get()!.valor;
+    .where(eq(schema.parametros_sistema.clave, 'presupuesto_correlativo_C1')).get()?.valor;
 
   it('arranca en 1 y avanza el contador', () => {
     expect(db.transaction((tx) => nextNumeroPresupuestoAtomico(tx)))
-      .toEqual({ numero: 'PR-0000001', secuencial: 1 });
+      .toEqual({ numero: 'PR-C1-000001', secuencial: 1 });
     expect(db.transaction((tx) => nextNumeroPresupuestoAtomico(tx)))
-      .toEqual({ numero: 'PR-0000002', secuencial: 2 });
-    expect(leer()).toBe('3');
+      .toEqual({ numero: 'PR-C1-000002', secuencial: 2 });
+    expect(leer()).toBe('2');
   });
 
   it('no consume secuencial si la transaccion falla (rollback)', () => {
     expect(() => db.transaction((tx) => { nextNumeroPresupuestoAtomico(tx); throw new Error('boom'); }))
       .toThrow('boom');
-    expect(leer()).toBe('1');
+    expect(leer()).toBeUndefined();
   });
 });
 
@@ -170,7 +162,7 @@ describe('presupuestoEmitirHandler', () => {
     const emitido = presupuestoEmitirHandler(db, { id: p.id, validez_dias: 30 });
 
     expect(emitido.estado).toBe('emitido');
-    expect(emitido.numero).toBe('PR-0000001');
+    expect(emitido.numero).toBe('PR-C1-000001');
     expect(emitido.numero_secuencial).toBe(1);
     expect(emitido.validez_dias).toBe(30);
     expect(emitido.fecha_emision).toBeTruthy();
@@ -190,8 +182,8 @@ describe('presupuestoEmitirHandler', () => {
     const p = presupuestoCrearHandler(db, { lineas: [] });
     expect(() => presupuestoEmitirHandler(db, { id: p.id })).toThrow('SIN_LINEAS');
     const cont = db.select().from(schema.parametros_sistema)
-      .where(eq(schema.parametros_sistema.clave, 'presupuesto_proximo_secuencial')).get()!.valor;
-    expect(cont).toBe('1');
+      .where(eq(schema.parametros_sistema.clave, 'presupuesto_correlativo_C1')).get()?.valor;
+    expect(cont).toBeUndefined();
   });
 
   it('numera correlativamente entre presupuestos', () => {
@@ -199,8 +191,8 @@ describe('presupuestoEmitirHandler', () => {
     const prod = sembrarProducto(db, userId);
     const a = presupuestoCrearHandler(db, { lineas: [{ producto_id: prod, cantidad: 1 }] });
     const b = presupuestoCrearHandler(db, { lineas: [{ producto_id: prod, cantidad: 1 }] });
-    expect(presupuestoEmitirHandler(db, { id: a.id }).numero).toBe('PR-0000001');
-    expect(presupuestoEmitirHandler(db, { id: b.id }).numero).toBe('PR-0000002');
+    expect(presupuestoEmitirHandler(db, { id: a.id }).numero).toBe('PR-C1-000001');
+    expect(presupuestoEmitirHandler(db, { id: b.id }).numero).toBe('PR-C1-000002');
   });
 });
 
@@ -350,7 +342,7 @@ describe('renderPresupuestoHtml', () => {
         descuento_linea_pct: l.descuento_linea_pct, subtotal_centavos: l.subtotal_centavos,
       })),
     });
-    expect(html).toContain('PR-0000001');
+    expect(html).toContain('PR-C1-000001');
     expect(html).toContain('no válido como factura');
     expect(html).toContain('TOTAL');
   });

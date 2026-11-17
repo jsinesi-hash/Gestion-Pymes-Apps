@@ -6,7 +6,7 @@ import { app, dialog, BrowserWindow, type IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId, resolverPrecio, nombreCompletoCliente, type LineaPrecioInput } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession, getOriginId, id, optId, num, optStr, arr } from '@core/main';
+import { getSession, getOriginId, siguienteNumeroPorTerminal, id, optId, num, optStr, arr } from '@core/main';
 import { getPrecioEnListaHandler } from './lista-precio-valor';
 import { renderPresupuestoHtml } from '../print/presupuesto-template';
 
@@ -16,24 +16,13 @@ type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
 const MS_POR_DIA = 24 * 60 * 60 * 1000;
 
 /** Proyeccion PR- + 7 digitos cero-padded. Secuencial estilo SKU SIN digito Luhn (ADR-046 §2). */
-export function formatNumeroPresupuesto(secuencial: number): string {
-  return `PR-${String(secuencial).padStart(7, '0')}`;
-}
-
 /**
- * Lee e incrementa presupuesto_proximo_secuencial dentro de la transaccion de emision.
- * Single-node; multinodo diferido a R4. Mismo patron que nextNumeroRemitoAtomico.
- * El contador se consume recien despues de validar, para no dejar huecos.
+ * Asigna `PR-<terminal>-NNNNNN` dentro de la transacción de emisión (ADR-154). Se llama recién
+ * después de validar, para no dejar huecos. `secuencial` es el correlativo de la terminal.
  */
 export function nextNumeroPresupuestoAtomico(tx: Tx): { numero: string; secuencial: number } {
-  const row = tx.select().from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, 'presupuesto_proximo_secuencial')).get();
-  if (!row) throw new Error('presupuesto_proximo_secuencial no encontrado en parametros_sistema');
-  const secuencial = Number.parseInt(row.valor, 10);
-  tx.update(schema.parametros_sistema)
-    .set({ valor: String(secuencial + 1), actualizado_en: new Date() })
-    .where(eq(schema.parametros_sistema.clave, 'presupuesto_proximo_secuencial')).run();
-  return { numero: formatNumeroPresupuesto(secuencial), secuencial };
+  const { numero, correlativo } = siguienteNumeroPorTerminal(tx, 'PR', 'presupuesto');
+  return { numero, secuencial: correlativo };
 }
 
 export function getValidezDiasDefault(db: Db | Tx): number {

@@ -170,4 +170,17 @@ describe('PresupuestosView', () => {
     filas = screen.getAllByText(/PR-000000/);
     expect(filas[0]).toHaveTextContent('PR-0000001');
   });
+
+  it('ADR-154: ordena por número también con el formato viejo y el nuevo mezclados', async () => {
+    listar.mockResolvedValue([
+      unPresupuesto({ id: 'n', numero: 'PR-C1-000001', numero_secuencial: 1 }),
+      unPresupuesto({ id: 'v', numero: 'PR-0000050', numero_secuencial: 50 }),
+    ]);
+    renderView();
+    await screen.findByText('PR-C1-000001');
+    // default: número desc → el nuevo (emitido después) primero
+    const filas = screen.getAllByText(/^PR-/);
+    expect(filas[0]).toHaveTextContent('PR-C1-000001');
+    expect(filas[1]).toHaveTextContent('PR-0000050');
+  });
 });
