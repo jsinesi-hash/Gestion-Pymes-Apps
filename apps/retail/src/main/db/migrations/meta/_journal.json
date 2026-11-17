@@ -408,5 +408,12 @@
       "tag": "0057_adr151_costo_sin_movimiento",
       "breakpoints": true
     }
+    ,{
+      "idx": 58,
+      "version": "7",
+      "when": 1795564800000,
+      "tag": "0058_adr155_configuracion_negocio",
+      "breakpoints": true
+    }
   ]
 }

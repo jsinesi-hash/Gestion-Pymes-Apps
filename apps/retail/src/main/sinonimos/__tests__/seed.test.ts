@@ -5,6 +5,7 @@ import * as schema from '../../db/schema';
 import { runSinonimoSeed } from '../seed';
 import { SINONIMO_GRUPOS } from '../dataset';
 import { normalizarTermino } from '../normalizar';
+import { listarParametros } from '@core/main';
 
 describe('normalizarTermino', () => {
   it('minúsculas, sin acentos, sin puntuación, espacios colapsados', () => {
@@ -65,8 +66,7 @@ describe('runSinonimoSeed (ADR-067)', () => {
 
   it('siembra el flag sinonimos_habilitado (migración 0037; encendido de fábrica por 0044/ADR-061)', () => {
     const db = createTestDb();
-    const flag = db.select().from(schema.parametros_sistema)
-      .where(eq(schema.parametros_sistema.clave, 'sinonimos_habilitado')).get();
+    const flag = listarParametros(db).find((p) => p.clave === 'sinonimos_habilitado');
     // 0037 lo sembró en 'false'; 0044 (ADR-061) lo flipeó a 'true' junto con el resto.
     expect(flag?.valor).toBe('true');
   });

@@ -4,6 +4,7 @@ import { eq, and, desc, gte, lte, sql, isNull } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import { requirePermission } from '@core/main';
 import { productosBajoMinimo } from '../agenda/bajo-minimo';
+import { leerParametroNumero } from '@core/main';
 
 /** ADR-150 §7: las líneas que reemplazó una retoma quedan con lápida y no cuentan. */
 const vdViva = () => isNull(schema.venta_detalle.deleted_at);
@@ -121,11 +122,7 @@ export function dashboardVentasHandler(db: Db): DashboardVentas {
 export function dashboardStockHandler(db: Db): DashboardStock {
   const now = new Date();
 
-  const paramRow = db.select({ valor: schema.parametros_sistema.valor })
-    .from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, 'dashboard_dias_sin_movimiento'))
-    .get();
-  const diasSinMovimiento = paramRow ? Number.parseInt(paramRow.valor, 10) : 90;
+  const diasSinMovimiento = Math.trunc(leerParametroNumero(db, 'dashboard_dias_sin_movimiento', 90));
 
   const invRow = db.select({
     valor: sql<number>`coalesce(sum(${schema.existencias.stock_fisico} * ${schema.producto.precio_costo_promedio}), 0)`,
@@ -203,11 +200,7 @@ export function dashboardStockHandler(db: Db): DashboardStock {
 export function dashboardCajaHandler(db: Db): DashboardCaja {
   const { start, end } = todayRange();
 
-  const umbralRow = db.select({ valor: schema.parametros_sistema.valor })
-    .from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, 'umbral_diferencia_caja'))
-    .get();
-  const umbral_diferencia_caja = umbralRow ? Number.parseFloat(umbralRow.valor) : 0;
+  const umbral_diferencia_caja = leerParametroNumero(db, 'umbral_diferencia_caja', 0);
 
   const cajaRow = db.select({
     id:            schema.caja.id,

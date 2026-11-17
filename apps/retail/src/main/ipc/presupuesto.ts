@@ -9,6 +9,7 @@ import * as schema from '../db/schema';
 import { getSession, getOriginId, siguienteNumeroPorTerminal, id, optId, num, optStr, arr } from '@core/main';
 import { getPrecioEnListaHandler } from './lista-precio-valor';
 import { renderPresupuestoHtml } from '../print/presupuesto-template';
+import { leerParametroNumero } from '@core/main';
 
 type Db = BetterSQLite3Database<typeof schema>;
 type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
@@ -26,10 +27,8 @@ export function nextNumeroPresupuestoAtomico(tx: Tx): { numero: string; secuenci
 }
 
 export function getValidezDiasDefault(db: Db | Tx): number {
-  const row = db.select().from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, 'presupuesto_validez_dias_default')).get();
-  const n = row ? Number.parseInt(row.valor, 10) : 15;
-  return Number.isFinite(n) && n > 0 ? n : 15;
+  const n = Math.trunc(leerParametroNumero(db, 'presupuesto_validez_dias_default', 15));
+  return n > 0 ? n : 15;
 }
 
 // ── Motor de calculo (reutiliza el mismo resolver que el POS) ──────────────────

@@ -8,6 +8,7 @@ import { runSinonimoSeed } from '../../sinonimos/seed';
 import { normalizarTermino } from '../../sinonimos/normalizar';
 import { backfillNombreCortoNorm } from '../../sinonimos/backfill';
 import { productoListHandler } from '../producto';
+import { escribirParametro } from '@core/main';
 
 function insertarProducto(
   db: ReturnType<typeof createTestDb>,
@@ -41,9 +42,7 @@ function insertarProducto(
 }
 
 function setFlag(db: ReturnType<typeof createTestDb>, on: boolean) {
-  db.update(schema.parametros_sistema)
-    .set({ valor: on ? 'true' : 'false' })
-    .where(eq(schema.parametros_sistema.clave, 'sinonimos_habilitado')).run();
+  escribirParametro(db, 'sinonimos_habilitado', on ? 'true' : 'false');
 }
 
 function buscar(db: ReturnType<typeof createTestDb>, texto: string) {

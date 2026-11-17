@@ -4,6 +4,7 @@ import { generateId } from '@ferreteria/shared';
 import * as schema from '../db/schema';
 import { getAdapter } from './canales/registry';
 import type { Canal } from './canales/tipos';
+import { leerFlag as leerFlagConfig } from '@core/main';
 
 type Db = BetterSQLite3Database<typeof schema>;
 type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
@@ -31,11 +32,8 @@ const FLAG_EMAIL_POR_ORIGEN: Record<string, string> = {
   bajo_minimo: 'notif_bajo_minimo_email',
 };
 
-function leerFlag(db: Db | Tx, clave: string): boolean {
-  const row = db.select().from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, clave)).get();
-  return row?.valor === 'true';
-}
+// ADR-155 §1: los notif_* son configuración del negocio; el acceso único sabe dónde viven.
+const leerFlag = (db: Db | Tx, clave: string): boolean => leerFlagConfig(db, clave);
 
 /** Expande rol->usuarios activos; usuario->[ese usuario]. Congela el contacto (email). */
 function resolverDestinatarios(

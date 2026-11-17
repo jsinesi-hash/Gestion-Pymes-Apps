@@ -5,6 +5,7 @@ import type { OnCajaCerrada } from '@core/main';
 import type { ComandoAviso } from '../agenda/aviso-servicio';
 import { insertarAvisos, despacharAviso } from '../agenda/aviso-servicio';
 import { productosBajoMinimo } from '../agenda/bajo-minimo';
+import { leerParametro, leerParametroNumero } from '@core/main';
 
 type Db = BetterSQLite3Database<typeof schema>;
 type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
@@ -17,14 +18,10 @@ interface ResumenCierre {
 
 const TOP_BAJO_MINIMO = 10;
 
-function leerNum(db: Db, clave: string, def: number): number {
-  const v = db.select().from(schema.parametros_sistema).where(eq(schema.parametros_sistema.clave, clave)).get()?.valor;
-  const n = v ? Number.parseInt(v, 10) : def;
-  return Number.isFinite(n) ? n : def;
-}
+const leerNum = (db: Db, clave: string, def: number): number => Math.trunc(leerParametroNumero(db, clave, def));
 
 function resolverDestinatario(db: Db): ComandoAviso['destinatario'] {
-  const raw = db.select().from(schema.parametros_sistema).where(eq(schema.parametros_sistema.clave, 'notif_cierre_destinatario')).get()?.valor;
+  const raw = leerParametro(db, 'notif_cierre_destinatario');
   try {
     const parsed = raw ? JSON.parse(raw) : null;
     if (parsed && (parsed.tipo === 'usuario' || parsed.tipo === 'rol')) return parsed;

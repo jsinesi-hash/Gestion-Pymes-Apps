@@ -2,16 +2,13 @@ import { and, eq, inArray } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
 import { normalizarTermino } from './normalizar';
+import { leerFlag } from '@core/main';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
 // ADR-067 — ¿está encendida la expansión por sinónimos? (flag de build/config).
 export function esSinonimosHabilitado(db: Db): boolean {
-  const f = db.select({ valor: schema.parametros_sistema.valor })
-    .from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, 'sinonimos_habilitado'))
-    .get();
-  return f?.valor === 'true';
+  return leerFlag(db, 'sinonimos_habilitado');
 }
 
 // Dado un texto de búsqueda, devuelve los términos HERMANOS NORMALIZADOS (los otros del/los

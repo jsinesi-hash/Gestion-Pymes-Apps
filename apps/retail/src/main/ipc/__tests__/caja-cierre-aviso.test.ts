@@ -4,6 +4,7 @@ import { setupDb } from './helpers';
 import { generateId } from '@ferreteria/shared';
 import * as schema from '../../db/schema';
 import { construirComandoCierre } from '../caja-cierre-aviso';
+import { escribirParametro } from '@core/main';
 
 function resumenBase(over = {}) {
   return {
@@ -52,7 +53,7 @@ describe('construirComandoCierre', () => {
   });
 
   it('respeta notif_cierre_destinatario si apunta a un usuario', () => {
-    db.update(schema.parametros_sistema).set({ valor: '{"tipo":"usuario","id":"abc"}' }).where(eq(schema.parametros_sistema.clave, 'notif_cierre_destinatario')).run();
+    escribirParametro(db, 'notif_cierre_destinatario', '{"tipo":"usuario","id":"abc"}');
     const cmd = construirComandoCierre(db, { cajaRow, resumen: resumenBase(), diferencia: 0, monto_contado: 25000, usuarioCierreId: 'u1', now: new Date() });
     expect(cmd.destinatario).toEqual({ tipo: 'usuario', id: 'abc' });
   });

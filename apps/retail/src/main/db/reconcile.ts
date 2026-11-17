@@ -64,10 +64,11 @@ function reconcile0036Sustitutos(sqlite: Database.Database): void {
     `);
   }
 
-  // Flag sustitutos_habilitado (default false). INSERT idempotente por PK `clave`.
+  // Flag sustitutos_habilitado (default false). Es configuración del negocio (ADR-155 §1, migración
+  // 0058): se siembra en configuracion_negocio. INSERT idempotente por PK `id`.
   sqlite
     .prepare(
-      "INSERT OR IGNORE INTO parametros_sistema (clave, valor, tipo, descripcion) VALUES ('sustitutos_habilitado', 'false', 'bool', 'Sustitutos curados: equivalentes/reemplazos y flag discontinuado')",
+      "INSERT OR IGNORE INTO configuracion_negocio (id, valor, tipo, descripcion, origin_id, updated_at) VALUES ('sustitutos_habilitado', 'false', 'bool', 'Sustitutos curados: equivalentes/reemplazos y flag discontinuado', COALESCE((SELECT origin_id FROM usuario ORDER BY fecha_creacion LIMIT 1), 'C1'), CAST(strftime('%s', 'now') AS INTEGER))",
     )
     .run();
 }

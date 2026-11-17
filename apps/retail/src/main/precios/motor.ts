@@ -15,6 +15,7 @@ import { getDefaultPresentacionId } from '../ipc/presentacion';
 import { resolveProductosAfectados } from '../ipc/lista-precio-valor';
 import { validarFila, type Umbrales } from './validacion';
 import { recontarBatch } from './publicacion';
+import { leerParametroNumero } from '@core/main';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
@@ -33,12 +34,7 @@ export type CrearBatchParams = {
   excluir_manuales_dias?: number;
 };
 
-function leerParamNumero(db: Db, clave: string, def: number): number {
-  const row = db.select().from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, clave)).get();
-  const n = row ? Number(row.valor) : NaN;
-  return Number.isFinite(n) ? n : def;
-}
+const leerParamNumero = (db: Db, clave: string, def: number): number => leerParametroNumero(db, clave, def);
 
 function leerUmbrales(db: Db): Umbrales {
   return {

@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { setupDb, loginAsAdmin } from '../../ipc/__tests__/helpers';
 import * as schema from '../../db/schema';
 import { insertarAvisos, emitirAviso, despacharAviso, type ComandoAviso } from '../aviso-servicio';
+import { escribirParametro } from '@core/main';
 
 function cmd(over: Partial<ComandoAviso> = {}): ComandoAviso {
   return {
@@ -50,8 +51,7 @@ describe('aviso-servicio', () => {
   it('con el flag notif_cierre_caja_email=true si crea el aviso email (congela contacto)', () => {
     const db = setupDb();
     const admin = loginAsAdmin(db);
-    db.update(schema.parametros_sistema).set({ valor: 'true' })
-      .where(eq(schema.parametros_sistema.clave, 'notif_cierre_caja_email')).run();
+    escribirParametro(db, 'notif_cierre_caja_email', 'true');
     // el admin del seed puede no tener email; le ponemos uno
     db.update(schema.usuario).set({ email: 'admin@ferre.test' }).where(eq(schema.usuario.id, admin.id)).run();
     db.transaction((tx) =>
@@ -74,8 +74,7 @@ describe('aviso-servicio', () => {
   it('despacharAviso de un email sin SMTP configurado lo deja fallido, sin lanzar', async () => {
     const db = setupDb();
     const admin = loginAsAdmin(db);
-    db.update(schema.parametros_sistema).set({ valor: 'true' })
-      .where(eq(schema.parametros_sistema.clave, 'notif_cierre_caja_email')).run();
+    escribirParametro(db, 'notif_cierre_caja_email', 'true');
     const ids = db.transaction((tx) =>
       insertarAvisos(tx, cmd({ destinatario: { tipo: 'usuario', id: admin.id }, canales: ['email'] }), new Date()),
     );

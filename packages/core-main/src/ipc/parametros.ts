@@ -1,9 +1,9 @@
-import { eq } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '@core/db';
 import { getSession } from '../auth/session';
 import { getCachedParametro, setCachedParametro, invalidateCachedParametro } from './parametros-cache';
+import { escribirParametro, leerParametro, listarParametros } from '../configuracion';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
@@ -17,21 +17,17 @@ function requireSupervisor() {
 export function parametrosGetHandler(db: Db, payload: { clave: string }): string | null {
   const cached = getCachedParametro(payload.clave);
   if (cached.loaded) return cached.value;
-  const row = db.select().from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, payload.clave))
-    .get();
-  const valor = row?.valor ?? null;
+  // ADR-155 §1: la clave puede ser del negocio o de la terminal; el acceso único sabe dónde está.
+  const valor = leerParametro(db, payload.clave);
   setCachedParametro(payload.clave, valor);
   return valor;
 }
 
 export function parametrosSetHandler(db: Db, payload: { clave: string; valor: string }): void {
   const session = requireSupervisor();
-  const now = new Date();
-  db.update(schema.parametros_sistema)
-    .set({ valor: payload.valor, actualizado_en: now, actualizado_por: session.userId })
-    .where(eq(schema.parametros_sistema.clave, payload.clave))
-    .run();
+  // Solo actualiza claves existentes (no crea una nueva desde la UI).
+  if (leerParametro(db, payload.clave) == null) return;
+  escribirParametro(db, payload.clave, payload.valor, session.userId);
   invalidateCachedParametro(payload.clave);
 }
 
@@ -69,11 +65,8 @@ export function limpiarReferenciasInternas(desc: string | null): string | null {
 
 export function parametrosListFlagsHandler(db: Db): FeatureFlagInfo[] {
   requireSupervisor();
-  const rows = db.select().from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.tipo, 'bool'))
-    .all();
-  return rows
-    .filter(r => r.clave.endsWith('_habilitado'))
+  return listarParametros(db)
+    .filter(r => r.tipo === 'bool' && r.clave.endsWith('_habilitado'))
     .map(r => ({ clave: r.clave, valor: r.valor, descripcion: limpiarReferenciasInternas(r.descripcion ?? null) }))
     .sort((a, b) => a.clave.localeCompare(b.clave));
 }

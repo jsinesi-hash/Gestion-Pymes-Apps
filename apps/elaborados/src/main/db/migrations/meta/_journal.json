@@ -127,6 +127,13 @@
       "when": 1792691842973,
       "tag": "0017_adr150_lapidas_lineas",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1792778242973,
+      "tag": "0018_adr155_configuracion_negocio",
+      "breakpoints": true
     }
   ]
 }

@@ -11,6 +11,7 @@ import { cajaAbrirHandler } from '@core/main';
 import { ventaConfirmarHandler, type VentaConfirmarPayload } from '../venta';
 import { dashboardVentasHandler, dashboardStockHandler, dashboardCajaHandler } from '../dashboard';
 import { requirePermission, setSession } from '@core/main';
+import { escribirParametro } from '@core/main';
 
 const CF_ID = 'cf000000-0000-0000-0000-000000000001';
 type Db = ReturnType<typeof setupDb>;
@@ -222,7 +223,7 @@ describe('dashboardStockHandler', () => {
     let result = dashboardStockHandler(db);
     expect(result.sin_movimiento.map(s => s.producto_id)).not.toContain(prod.id);
     // umbral=30: hace50 sí supera → aparece
-    db.update(schema.parametros_sistema).set({ valor: '30' }).where(eq(schema.parametros_sistema.clave, 'dashboard_dias_sin_movimiento')).run();
+    escribirParametro(db, 'dashboard_dias_sin_movimiento', '30');
     result = dashboardStockHandler(db);
     expect(result.sin_movimiento.map(s => s.producto_id)).toContain(prod.id);
   });

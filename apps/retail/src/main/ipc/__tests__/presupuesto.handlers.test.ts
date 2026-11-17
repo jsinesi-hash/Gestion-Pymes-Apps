@@ -18,6 +18,7 @@ import {
   presupuestoConfigHandler,
 } from '../presupuesto';
 import { renderPresupuestoHtml } from '../../print/presupuesto-template';
+import { listarParametros } from '@core/main';
 
 let db: ReturnType<typeof setupDb>;
 
@@ -42,7 +43,7 @@ describe('migracion 0025: permisos y parametros', () => {
   });
 
   it('siembra el default de validez y el feature flag; el contador global se retiró (ADR-154)', () => {
-    const claves = db.select().from(schema.parametros_sistema).all()
+    const claves = listarParametros(db)
       .reduce<Record<string, string>>((a, p) => { a[p.clave] = p.valor; return a; }, {});
     expect(claves['presupuesto_proximo_secuencial']).toBeUndefined();
     expect(claves['presupuesto_correlativo_C1']).toBeUndefined(); // se crea con el primer emitido
@@ -53,8 +54,7 @@ describe('migracion 0025: permisos y parametros', () => {
 });
 
 describe('nextNumeroPresupuestoAtomico', () => {
-  const leer = () => db.select().from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, 'presupuesto_correlativo_C1')).get()?.valor;
+  const leer = () => listarParametros(db).find((p) => p.clave === 'presupuesto_correlativo_C1')?.valor;
 
   it('arranca en 1 y avanza el contador', () => {
     expect(db.transaction((tx) => nextNumeroPresupuestoAtomico(tx)))
@@ -181,8 +181,7 @@ describe('presupuestoEmitirHandler', () => {
     const { id: userId } = loginAsAdmin(db);
     const p = presupuestoCrearHandler(db, { lineas: [] });
     expect(() => presupuestoEmitirHandler(db, { id: p.id })).toThrow('SIN_LINEAS');
-    const cont = db.select().from(schema.parametros_sistema)
-      .where(eq(schema.parametros_sistema.clave, 'presupuesto_correlativo_C1')).get()?.valor;
+    const cont = listarParametros(db).find((p) => p.clave === 'presupuesto_correlativo_C1')?.valor;
     expect(cont).toBeUndefined();
   });
 
