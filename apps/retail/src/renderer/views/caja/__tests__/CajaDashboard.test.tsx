@@ -17,7 +17,7 @@ const mockCaja = {
   id: 'caja-1',
   usuario_id: 'u-1',
   fecha_apertura: new Date('2026-07-14T08:00:00'),
-  monto_inicial: 0,
+  monto_inicial_centavos: 0,
   estado: 'abierta' as const, observaciones: null,
 };
 

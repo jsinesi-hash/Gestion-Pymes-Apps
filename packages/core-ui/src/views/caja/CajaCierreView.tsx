@@ -11,7 +11,7 @@ import { rutearCampoError } from '../../lib/rutearCampoError';
 // ADR-085 (SEC-2, Task 14): mapa de código de error de dominio → id del campo del form,
 // usado por rutearCampoError para decidir si el mensaje va inline (monto/obs) o al
 // alert general de la vista.
-const CAMPOS_ERROR: Record<string, string> = { monto_contado: 'monto-declarado', observaciones: 'cierre-obs' };
+const CAMPOS_ERROR: Record<string, string> = { monto_contado_centavos: 'monto-declarado', observaciones: 'cierre-obs' };
 
 function fmt(n: number) { return n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
@@ -66,7 +66,7 @@ export function CajaCierreView() {
   function cerrarCaja(supervisor_credenciales?: { nombre_usuario: string; password: string }) {
     return bridge().caja.cerrar({
       caja_id: caja!.id,
-      monto_contado: montoDeclarado,
+      monto_contado_centavos: Math.round(montoDeclarado * 100), // ADR-157
       observaciones: obs || undefined,
       supervisor_credenciales,
     });
@@ -80,7 +80,7 @@ export function CajaCierreView() {
     setClosing(false);
     if (!r.ok) {
       const routed = rutearCampoError(r.error, CAMPOS_ERROR);
-      if (routed.campo === 'monto_contado') setErrorMonto(routed.mensaje);
+      if (routed.campo === 'monto_contado_centavos') setErrorMonto(routed.mensaje);
       else setErrorCierre(routed.mensaje);
       return;
     }
@@ -105,7 +105,7 @@ export function CajaCierreView() {
       setAuthModal(false);
       const routed = rutearCampoError(err, CAMPOS_ERROR);
       toast.error(routed.mensaje);
-      if (routed.campo === 'monto_contado') setErrorMonto(routed.mensaje);
+      if (routed.campo === 'monto_contado_centavos') setErrorMonto(routed.mensaje);
       else setErrorCierre(routed.mensaje);
       return;
     }
@@ -145,7 +145,7 @@ export function CajaCierreView() {
             </div>
             <div className="srow total">
               <span className="sl">Total ventas</span>
-              <span className="sv num">$ {fmt(resumen.total_ventas)}</span>
+              <span className="sv num">$ {fmt(resumen.total_ventas_centavos / 100)}</span>
             </div>
           </div>
 
@@ -159,7 +159,7 @@ export function CajaCierreView() {
                 <span className="sl" style={{ textTransform: 'capitalize' }}>{fp.forma_pago}</span>
                 <div className="flex items-center gap-2">
                   <span className="text-muted text-xs">{fp.cantidad_operaciones} ops.</span>
-                  <span className="sv num">$ {fmt(fp.ingresado)}</span>
+                  <span className="sv num">$ {fmt(fp.ingresado_centavos / 100)}</span>
                 </div>
               </div>
             ))}
@@ -172,11 +172,11 @@ export function CajaCierreView() {
 
           <div className="srow">
             <span className="sl">Fondo de apertura</span>
-            <span className="sv num">$ {fmt(resumen.monto_inicial)}</span>
+            <span className="sv num">$ {fmt(resumen.monto_inicial_centavos / 100)}</span>
           </div>
           <div className="srow total">
             <span className="sl">Efectivo esperado</span>
-            <span className="sv num">$ {fmt(resumen.esperado_efectivo)}</span>
+            <span className="sv num">$ {fmt(resumen.esperado_efectivo_centavos / 100)}</span>
           </div>
 
           <div style={{ padding: '12px var(--pad)' }}>

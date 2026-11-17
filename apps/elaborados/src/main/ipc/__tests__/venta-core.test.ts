@@ -45,7 +45,7 @@ describe('confirmarVenta (core)', () => {
 
   function preparar(conCuenta?: { limite: number }) {
     loginAsAdmin(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     const cli = crearCliente(db, conCuenta);
     return { caja, ...cli };
   }
@@ -70,7 +70,7 @@ describe('confirmarVenta (core)', () => {
     const movs = db.select().from(schema.movimiento_caja)
       .where(eq(schema.movimiento_caja.referencia_id, venta.id)).all();
     expect(movs).toHaveLength(1);
-    expect(movs[0]).toMatchObject({ tipo: 'ingreso', motivo: 'venta', monto: 1000, forma_pago: 'efectivo' });
+    expect(movs[0]).toMatchObject({ tipo: 'ingreso', motivo: 'venta', monto_centavos: 100000, forma_pago: 'efectivo' });
   });
 
   it('el correlativo incrementa por venta', () => {
@@ -176,7 +176,7 @@ describe('confirmarVenta (core)', () => {
       .where(eq(schema.movimiento_caja.referencia_id, venta.id)).all();
     expect(movs).toHaveLength(2);
     const tarjeta = movs.find(m => m.forma_pago === 'tarjeta')!;
-    expect(tarjeta.monto).toBe(630); // 600 + recargo 30
+    expect(tarjeta.monto_centavos).toBe(63000); // 600 + recargo 30, en centavos
     const pagos = db.select().from(schema.venta_pago).where(eq(schema.venta_pago.venta_id, venta.id)).all();
     expect(pagos.find(p => p.medio_pago === 'cheque')!.numero_cheque).toBe('123');
   });
@@ -216,7 +216,7 @@ describe('anularVenta (core)', () => {
 
   function ventaConfirmada(conCuenta?: { limite: number }, pagos?: ConfirmarVentaInput['pagos']) {
     loginAsAdmin(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     const cli = crearCliente(db, conCuenta);
     const { venta } = confirmarVenta(db, input(caja.id, cli.clienteId, pagos ? { pagos } : {}), { aplicarLineas: vi.fn() });
     return { caja, venta, ...cli };
@@ -234,7 +234,7 @@ describe('anularVenta (core)', () => {
     const egresos = db.select().from(schema.movimiento_caja)
       .where(eq(schema.movimiento_caja.referencia_id, venta.id)).all().filter(m => m.tipo === 'egreso');
     expect(egresos).toHaveLength(1);
-    expect(egresos[0]).toMatchObject({ motivo: 'ajuste', monto: 1000, observaciones: 'error' });
+    expect(egresos[0]).toMatchObject({ motivo: 'ajuste', monto_centavos: 100000, observaciones: 'error' });
   });
 
   it('anula una venta con cuenta corriente: revierte el saldo', () => {

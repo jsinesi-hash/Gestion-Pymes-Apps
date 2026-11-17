@@ -8,9 +8,9 @@ import { escribirParametro } from '@core/main';
 
 function resumenBase(over = {}) {
   return {
-    caja_id: 'c1', monto_inicial: 5000,
-    por_forma_pago: [{ forma_pago: 'efectivo', ingresado: 20000, cantidad_operaciones: 8 }],
-    esperado_efectivo: 25000, ventas_count: 8, total_ventas: 20000, ...over,
+    caja_id: 'c1', monto_inicial_centavos: 500_000,
+    por_forma_pago: [{ forma_pago: 'efectivo', ingresado_centavos: 2_000_000, cantidad_operaciones: 8 }],
+    esperado_efectivo_centavos: 2_500_000, ventas_count: 8, total_ventas_centavos: 2_000_000, ...over,
   };
 }
 const cajaRow = { id: 'c1', usuario_id: 'u1', fecha_apertura: new Date('2026-07-22T09:00:00'), fecha_cierre: new Date('2026-07-22T18:00:00') } as any;
@@ -33,7 +33,7 @@ describe('construirComandoCierre', () => {
   beforeEach(() => { db = setupDb(); });
 
   it('severidad normal cuando |diferencia| <= umbral (centavos)', () => {
-    const cmd = construirComandoCierre(db, { cajaRow, resumen: resumenBase(), diferencia: -10, monto_contado: 24990, usuarioCierreId: 'u1', now: new Date() });
+    const cmd = construirComandoCierre(db, { cajaRow, resumen: resumenBase(), diferencia_centavos: -1000, monto_contado_centavos: 2499000, usuarioCierreId: 'u1', now: new Date() });
     expect(cmd.severidad).toBe('normal');
     expect(cmd.origen_tipo).toBe('cierre_caja');
     expect(cmd.origen_id).toBe('c1');
@@ -42,25 +42,25 @@ describe('construirComandoCierre', () => {
   });
 
   it('severidad alerta cuando |diferencia| supera el umbral ($2.000 = 200000c)', () => {
-    const cmd = construirComandoCierre(db, { cajaRow, resumen: resumenBase(), diferencia: -3000, monto_contado: 22000, usuarioCierreId: 'u1', now: new Date() });
+    const cmd = construirComandoCierre(db, { cajaRow, resumen: resumenBase(), diferencia_centavos: -300000, monto_contado_centavos: 2200000, usuarioCierreId: 'u1', now: new Date() });
     expect(cmd.severidad).toBe('alerta');
     expect(cmd.titulo.toLowerCase()).toContain('descuadre');
   });
 
   it('destinatario default = rol supervisor', () => {
-    const cmd = construirComandoCierre(db, { cajaRow, resumen: resumenBase(), diferencia: 0, monto_contado: 25000, usuarioCierreId: 'u1', now: new Date() });
+    const cmd = construirComandoCierre(db, { cajaRow, resumen: resumenBase(), diferencia_centavos: 0, monto_contado_centavos: 2500000, usuarioCierreId: 'u1', now: new Date() });
     expect(cmd.destinatario).toEqual({ tipo: 'rol', rol: 'supervisor' });
   });
 
   it('respeta notif_cierre_destinatario si apunta a un usuario', () => {
     escribirParametro(db, 'notif_cierre_destinatario', '{"tipo":"usuario","id":"abc"}');
-    const cmd = construirComandoCierre(db, { cajaRow, resumen: resumenBase(), diferencia: 0, monto_contado: 25000, usuarioCierreId: 'u1', now: new Date() });
+    const cmd = construirComandoCierre(db, { cajaRow, resumen: resumenBase(), diferencia_centavos: 0, monto_contado_centavos: 2500000, usuarioCierreId: 'u1', now: new Date() });
     expect(cmd.destinatario).toEqual({ tipo: 'usuario', id: 'abc' });
   });
 
   it('incluye bajo_minimo (top por faltante, incluye stock 0) en datos', () => {
     sembrarBajoMinimo(db);
-    const cmd = construirComandoCierre(db, { cajaRow, resumen: resumenBase(), diferencia: 0, monto_contado: 25000, usuarioCierreId: 'u1', now: new Date() });
+    const cmd = construirComandoCierre(db, { cajaRow, resumen: resumenBase(), diferencia_centavos: 0, monto_contado_centavos: 2500000, usuarioCierreId: 'u1', now: new Date() });
     const datos = cmd.datos as any;
     expect(datos.bajo_minimo.total).toBe(2);
     expect(datos.bajo_minimo.top[0].nombre_corto).toBe('Tornillo'); // faltante 10 > Tuerca 9
@@ -81,7 +81,7 @@ describe('construirComandoCierre', () => {
       db.insert(schema.producto).values({ id: pid, sku: `SKU-X${i}`, sku_secuencial: 100 + i, nombre_corto: `X${i}`, nombre_largo: `X${i}`, unidad_venta: 'u', categoria_id: catId, usuario_creacion_id: 'u1', fecha_creacion: now, origin_id: 't', updated_at: now } as any).run();
       db.insert(schema.existencias).values({ id: generateId(), producto_id: pid, stock_fisico: 1, stock_minimo: 2, origin_id: 't', updated_at: now } as any).run();
     }
-    const datos = construirComandoCierre(db, { cajaRow, resumen: resumenBase(), diferencia: 0, monto_contado: 25000, usuarioCierreId: 'u1', now }).datos as any;
+    const datos = construirComandoCierre(db, { cajaRow, resumen: resumenBase(), diferencia_centavos: 0, monto_contado_centavos: 2500000, usuarioCierreId: 'u1', now }).datos as any;
     expect(datos.bajo_minimo.total).toBe(14);
     expect(datos.bajo_minimo.top).toHaveLength(10);
     expect(Object.keys(datos.bajo_minimo.top[0]).sort()).toEqual(['nombre_corto', 'stock_fisico', 'stock_minimo']);
@@ -90,7 +90,7 @@ describe('construirComandoCierre', () => {
   it('bajo_minimo NO incluye productos inactivos (ADR bajo mínimo único)', () => {
     sembrarBajoMinimo(db);
     db.update(schema.producto).set({ activo: false }).where(eq(schema.producto.nombre_corto, 'Tornillo')).run();
-    const datos = construirComandoCierre(db, { cajaRow, resumen: resumenBase(), diferencia: 0, monto_contado: 25000, usuarioCierreId: 'u1', now: new Date() }).datos as any;
+    const datos = construirComandoCierre(db, { cajaRow, resumen: resumenBase(), diferencia_centavos: 0, monto_contado_centavos: 2500000, usuarioCierreId: 'u1', now: new Date() }).datos as any;
     expect(datos.bajo_minimo.total).toBe(1);
     expect(datos.bajo_minimo.top.map((p: any) => p.nombre_corto)).toEqual(['Tuerca']);
   });

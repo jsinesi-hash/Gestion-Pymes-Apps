@@ -161,13 +161,13 @@ export function confirmarVenta(
       }).run();
 
       if (pago.medio_pago !== 'cuenta_corriente') {
-        const montoCaja = (pago.monto_centavos + (pago.recargo_centavos ?? 0)) / 100;
+        const montoCaja = pago.monto_centavos + (pago.recargo_centavos ?? 0); // ADR-157: centavos
         tx.insert(schema.movimiento_caja).values({
           id: generateId(),
           caja_id: input.caja_id,
           tipo: 'ingreso',
           motivo: 'venta',
-          monto: montoCaja,
+          monto_centavos: montoCaja,
           forma_pago: pago.medio_pago,
           referencia_tipo: 'venta',
           referencia_id: ventaId,

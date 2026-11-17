@@ -44,7 +44,7 @@ describe('proyección del costo promedio (Retail)', () => {
   it('alta con costo, entradas con y sin costo, ventas y conteos: el guardado coincide con la proyección', () => {
     const a = producto('A', { cantidad: 10, costo: 100 });
     stockEntradaHandler(db, { producto_id: a.id, cantidad: 10, costo_unitario: 200 }); // 150
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, {
       caja_id: caja.id, cliente_id: CF_ID,
       lineas: [{ producto_id: a.id, descripcion: 'x', cantidad: 5, precio_unitario: 1000, descuento_linea: 0, alicuota_iva: 21, subtotal: 5000 }],

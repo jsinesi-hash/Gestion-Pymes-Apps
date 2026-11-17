@@ -37,8 +37,8 @@ describe('Elaborados E1 — plataforma del core sobre su propia BD', () => {
   it('caja: abrir y cerrar sin hooks', () => {
     const db = setupDb();
     loginAsAdmin(db);
-    const c = cajaAbrirHandler(db, { monto_inicial: 0 });
-    expect(cajaCerrarHandler(db, { caja_id: c.id, monto_contado: 0 }).estado).toBe('cerrada');
+    const c = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
+    expect(cajaCerrarHandler(db, { caja_id: c.id, monto_contado_centavos: 0 }).estado).toBe('cerrada');
   });
 
   it('preferencias valida contra la navegación de Elaborados', () => {

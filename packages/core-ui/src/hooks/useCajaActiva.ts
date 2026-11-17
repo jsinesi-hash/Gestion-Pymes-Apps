@@ -5,7 +5,7 @@ export type CajaActiva = {
   id: string;
   usuario_id: string;
   fecha_apertura: Date;
-  monto_inicial: number;
+  monto_inicial_centavos: number; // ADR-157
   estado: 'abierta' | 'cerrada';
   observaciones: string | null;
 };

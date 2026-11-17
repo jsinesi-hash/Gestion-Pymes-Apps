@@ -53,7 +53,7 @@ export function seedVentasDemo(db: Db): { creadas: number } {
   if (sabores.length < 3) throw new Error('SEED_VENTAS: el grupo "Sabores" tiene menos de 3 opciones');
   const cliCuenta = clienteConCuentaHolgada(db);
 
-  const caja = cajaGetActivaHandler(db) ?? cajaAbrirHandler(db, { monto_inicial: 0 });
+  const caja = cajaGetActivaHandler(db) ?? cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
 
   const vender = (lineas: Linea[], medio: 'efectivo' | 'tarjeta' | 'cuenta_corriente', cliente_id: string) => {
     const { total_centavos } = ventaCotizarHandler(db, { lineas });

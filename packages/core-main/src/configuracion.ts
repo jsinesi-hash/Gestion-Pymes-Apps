@@ -14,7 +14,7 @@ type DbConfig = Pick<BetterSQLite3Database<typeof schema>, 'select' | 'insert' |
 /** Claves del negocio que lee el núcleo. Cada app declara las suyas (baranda de PR7). */
 export const CLAVES_NEGOCIO_CORE = [
   'caja_modo',
-  'umbral_diferencia_caja',
+  'umbral_diferencia_caja_centavos',
   'pos.ventas_en_espera.max',
   'pos.ventas_en_espera.ttl_horas',
   'bloqueo_inactividad_habilitado',

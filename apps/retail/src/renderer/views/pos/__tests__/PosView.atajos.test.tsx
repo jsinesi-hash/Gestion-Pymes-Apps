@@ -5,7 +5,7 @@ import { AuthContext } from '@core/ui';
 import { PosSessionProvider } from '../../../context/PosSessionContext';
 import { PosView } from '../PosView';
 
-const mockCaja = { id: 'c-1', estado: 'abierta', monto_inicial: 0, usuario_id: 'u-1', fecha_apertura: new Date() };
+const mockCaja = { id: 'c-1', estado: 'abierta', monto_inicial_centavos: 0, usuario_id: 'u-1', fecha_apertura: new Date() };
 const mockProd = { id: 'p-1', nombre_corto: 'Tornillo', activo: true, precio_venta_lista: 1000, impuesto_id: null, permite_fraccion: false };
 
 function buildAuth(canOverride: boolean) {

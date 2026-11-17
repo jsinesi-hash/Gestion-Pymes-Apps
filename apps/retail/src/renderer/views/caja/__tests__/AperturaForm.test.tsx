@@ -8,7 +8,7 @@ const mockOnSuccess = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockAbrir.mockResolvedValue({ id: 'caja-1', estado: 'abierta', monto_inicial: 5000 });
+  mockAbrir.mockResolvedValue({ id: 'caja-1', estado: 'abierta', monto_inicial_centavos: 500000 });
   (window as any).ferreteria = { caja: { abrir: mockAbrir } };
 });
 
@@ -30,7 +30,7 @@ describe('AperturaForm', () => {
       target: { value: '5000' },
     });
     fireEvent.click(screen.getByRole('button', { name: /abrir caja/i }));
-    await waitFor(() => expect(mockAbrir).toHaveBeenCalledWith({ monto_inicial: 5000, observaciones: undefined }));
+    await waitFor(() => expect(mockAbrir).toHaveBeenCalledWith({ monto_inicial_centavos: 500000, observaciones: undefined }));
     await waitFor(() => expect(mockOnSuccess).toHaveBeenCalledOnce());
   });
 

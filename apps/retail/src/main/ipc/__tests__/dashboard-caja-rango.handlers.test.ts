@@ -32,7 +32,7 @@ function crearProductoYCaja(db: Db) {
     unidad_venta: 'u', precio_venta_lista: 1000,
   });
   stockEntradaHandler(db, { producto_id: prod.id, cantidad: 100 });
-  const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+  const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
   return { prod, caja };
 }
 
@@ -67,7 +67,7 @@ describe('dashboardCajaRangoHandler', () => {
     const r = dashboardCajaRangoHandler(db, { desde, hasta });
     expect(r.turnos).toHaveLength(0);
     expect(r.por_medio_pago).toHaveLength(0);
-    expect(r.recargo_tarjeta_total).toBe(0);
+    expect(r.recargo_tarjeta_total_centavos).toBe(0);
   });
 
   it('agrega ingresos y egresos por turno', () => {
@@ -76,8 +76,8 @@ describe('dashboardCajaRangoHandler', () => {
     const { desde, hasta } = todayRange();
     const r = dashboardCajaRangoHandler(db, { desde, hasta });
     expect(r.turnos).toHaveLength(1);
-    expect(r.turnos[0].ingresos).toBeGreaterThan(0);
-    expect(r.turnos[0].egresos).toBe(0);
+    expect(r.turnos[0].ingresos_centavos).toBeGreaterThan(0);
+    expect(r.turnos[0].egresos_centavos).toBe(0);
   });
 
   it('breakdown por medio de pago: efectivo y tarjeta separados', () => {
@@ -96,7 +96,7 @@ describe('dashboardCajaRangoHandler', () => {
     ventaConfirmarHandler(db, makeTarjetaPayload(caja.id, prod.id, 2000, 5)); // recargo 5% = $100
     const { desde, hasta } = todayRange();
     const r = dashboardCajaRangoHandler(db, { desde, hasta });
-    expect(r.recargo_tarjeta_total).toBeCloseTo(100, 0); // 5% de $2000 = $100
+    expect(r.recargo_tarjeta_total_centavos).toBe(10000); // 5% de $2000 = $100
   });
 
   it('período fuera de rango no devuelve datos de hoy', () => {

@@ -6,10 +6,11 @@ type FilaCaja = {
   cajero_nombre: string | null;
   fecha_apertura: Date;
   fecha_cierre: Date | null;
-  monto_inicial: number;
-  monto_esperado: number | null;
-  monto_contado: number | null;
-  diferencia: number | null;
+  // ADR-157: la consulta devuelve centavos; el archivo muestra pesos.
+  monto_inicial_centavos: number;
+  monto_esperado_centavos: number | null;
+  monto_contado_centavos: number | null;
+  diferencia_centavos: number | null;
 };
 
 export const exportCaja: DefinicionExport<FilaCaja> = {
@@ -34,17 +35,17 @@ export const exportCaja: DefinicionExport<FilaCaja> = {
             const fallback = v ? new Date(v) : '';
             return v instanceof Date ? v : fallback;
           } },
-        { campo: 'monto_inicial', label: 'Monto inicial',
-          formato: ars, formatoXlsx: (v) => v },
-        { campo: 'monto_esperado', label: 'Esperado',
-          formato: (v) => v == null ? '' : ars(v),
-          formatoXlsx: (v) => v ?? 0 },
-        { campo: 'monto_contado', label: 'Contado',
-          formato: (v) => v == null ? '' : ars(v),
-          formatoXlsx: (v) => v ?? 0 },
-        { campo: 'diferencia', label: 'Diferencia',
-          formato: (v) => v == null ? '' : ars(v),
-          formatoXlsx: (v) => v ?? 0 },
+        { campo: 'monto_inicial_centavos', label: 'Monto inicial',
+          formato: (v) => ars(v / 100), formatoXlsx: (v) => v / 100 },
+        { campo: 'monto_esperado_centavos', label: 'Esperado',
+          formato: (v) => v == null ? '' : ars(v / 100),
+          formatoXlsx: (v) => (v ?? 0) / 100 },
+        { campo: 'monto_contado_centavos', label: 'Contado',
+          formato: (v) => v == null ? '' : ars(v / 100),
+          formatoXlsx: (v) => (v ?? 0) / 100 },
+        { campo: 'diferencia_centavos', label: 'Diferencia',
+          formato: (v) => v == null ? '' : ars(v / 100),
+          formatoXlsx: (v) => (v ?? 0) / 100 },
       ],
     },
   ],

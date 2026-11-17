@@ -34,7 +34,7 @@ describe('venta — caracterización previa a E3a', () => {
       unidad_venta: 'u', precio_venta_lista: 1000,
     });
     stockEntradaHandler(db, { producto_id: prod.id, cantidad: 10 });
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     return { prod, caja };
   }
 
@@ -116,7 +116,7 @@ describe('venta — caracterización previa a E3a', () => {
       .where(eq(schema.movimiento_caja.referencia_id, venta.id)).all()
       .filter(m => m.tipo === 'egreso');
     expect(egresos).toHaveLength(1);
-    expect(egresos[0].monto).toBe(1000);
+    expect(egresos[0].monto_centavos).toBe(100000); // venta.total $1000 → centavos
     expect(egresos[0].observaciones).toBe('legacy');
   });
 });

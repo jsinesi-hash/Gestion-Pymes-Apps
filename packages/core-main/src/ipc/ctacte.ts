@@ -195,7 +195,7 @@ export function ctacteRegistrarCobroHandler(db: Db, payload: unknown) {
         caja_id: caja.id,
         tipo: 'ingreso',
         motivo: 'cobro_cta_cte',
-        monto: v_monto_centavos / 100,  // real ARS, not centavos
+        monto_centavos: v_monto_centavos, // ADR-157: centavos
         forma_pago: 'efectivo',
         referencia_tipo: 'movimiento_cc',
         referencia_id: movId,

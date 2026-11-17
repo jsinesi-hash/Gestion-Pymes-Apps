@@ -71,7 +71,7 @@ describe('detalleVentasHandler', () => {
 
   it('sin filtros devuelve ventas confirmadas paginadas', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, { precio: 1000 }));
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, { precio: 2000 }));
 
@@ -86,7 +86,7 @@ describe('detalleVentasHandler', () => {
   it('excluye ventas no confirmadas', () => {
     const { prod } = crearProducto(db);
     const session = loginAsAdmin(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id));
 
     // Insertar una venta en borrador directamente con usuario_id real
@@ -116,7 +116,7 @@ describe('detalleVentasHandler', () => {
 
   it('filtra por fechaDesde y fechaHasta', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id));
 
     const manana = new Date();
@@ -130,7 +130,7 @@ describe('detalleVentasHandler', () => {
 
   it('el filtro de un solo día cubre ese día local completo (00:00 a 23:59)', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     const temprana = ventaConfirmarHandler(db, makePayload(caja.id, prod.id));
     const tardia   = ventaConfirmarHandler(db, makePayload(caja.id, prod.id));
 
@@ -150,7 +150,7 @@ describe('detalleVentasHandler', () => {
 
   it('el filtro de un día no arrastra ventas de los días vecinos', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     const anterior = ventaConfirmarHandler(db, makePayload(caja.id, prod.id));
     const delDia   = ventaConfirmarHandler(db, makePayload(caja.id, prod.id));
     const siguiente = ventaConfirmarHandler(db, makePayload(caja.id, prod.id));
@@ -170,7 +170,7 @@ describe('detalleVentasHandler', () => {
 
   it('filtra por clienteId', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id));
 
     expect(detalleVentasHandler(db, { clienteId: CF_ID }, 1, 100).total).toBe(1);
@@ -179,7 +179,7 @@ describe('detalleVentasHandler', () => {
 
   it('filtra por categoriaId con EXISTS subquery', () => {
     const { prod, cat } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id));
 
     expect(detalleVentasHandler(db, { categoriaId: cat.id }, 1, 100).total).toBe(1);
@@ -188,7 +188,7 @@ describe('detalleVentasHandler', () => {
 
   it('filtra por productoTexto (LIKE en nombre_corto)', () => {
     const { prod } = crearProducto(db, 'Tornillo Especial');
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id));
 
     expect(detalleVentasHandler(db, { productoTexto: 'Tornillo' }, 1, 100).total).toBe(1);
@@ -197,7 +197,7 @@ describe('detalleVentasHandler', () => {
 
   it('filtra por medioPago con EXISTS subquery', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, { medioPago: 'tarjeta' }));
 
     expect(detalleVentasHandler(db, { medioPago: 'tarjeta' }, 1, 100).total).toBe(1);
@@ -206,7 +206,7 @@ describe('detalleVentasHandler', () => {
 
   it('pagina correctamente', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, { precio: 1000 }));
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, { precio: 2000 }));
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, { precio: 3000 }));
@@ -225,7 +225,7 @@ describe('detalleVentasHandler', () => {
 
   it('incluye medios_pago concatenados para pago mixto', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     const total = 2000;
     const payload: VentaConfirmarPayload = {
       caja_id: caja.id, cliente_id: CF_ID,
@@ -246,7 +246,7 @@ describe('detalleVentasHandler', () => {
 
   it('rows incluyen los campos requeridos', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id));
 
     const r = detalleVentasHandler(db, {}, 1, 100);
@@ -269,7 +269,7 @@ describe('reporteVentasQueryAll', () => {
 
   it('devuelve todas las filas sin paginación', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     for (let i = 0; i < 5; i++) {
       ventaConfirmarHandler(db, makePayload(caja.id, prod.id, { precio: 1000 + i * 100 }));
     }
@@ -284,7 +284,7 @@ describe('reporteVentasDetalleQueryAll', () => {
 
   it('devuelve una fila por venta_detalle con campos de producto y categoria', () => {
     const { prod } = crearProducto(db, 'Tubo PVC');
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, { precio: 500, cantidad: 3 }));
 
     const rows = reporteVentasDetalleQueryAll(db, {});
@@ -301,7 +301,7 @@ describe('reporteVentasDetalleQueryAll', () => {
 
   it('respeta filtro de categoria', () => {
     const { prod, cat } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id));
 
     expect(reporteVentasDetalleQueryAll(db, { categoriaId: cat.id })).toHaveLength(1);

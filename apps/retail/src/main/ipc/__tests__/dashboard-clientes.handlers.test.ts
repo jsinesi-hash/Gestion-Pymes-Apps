@@ -32,7 +32,7 @@ function setupCatalog(db: Db) {
     unidad_venta: 'u', precio_venta_lista: 1000,
   });
   stockEntradaHandler(db, { producto_id: prod.id, cantidad: 100 });
-  const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+  const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
   return { prod, caja };
 }
 

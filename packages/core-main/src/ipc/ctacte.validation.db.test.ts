@@ -163,7 +163,7 @@ describe('ctacteRegistrarCobroHandler — validación de payload (ADR-085)', () 
   });
 
   it('acepta payload válido con caja abierta (efectivo)', () => {
-    cajaAbrirHandler(db, { monto_inicial: 0 });
+    cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     const r = ctacteRegistrarCobroHandler(db, { cuentaId, monto_centavos: 10000, forma_pago: 'efectivo' } as any);
     expect(r.saldo_centavos).toBe(40000);
   });

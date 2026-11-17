@@ -31,13 +31,13 @@ export function AperturaForm({ onSuccess }: Readonly<Props>) {
     setCampoError(null);
     try {
       await bridge().caja.abrir({
-        monto_inicial: parsedMonto,
+        monto_inicial_centavos: Math.round(parsedMonto * 100), // ADR-157: el main recibe centavos
         observaciones: obs || undefined,
       });
       toast.success('Caja abierta');
       onSuccess();
     } catch (err) {
-      const r = rutearCampoError(err, { monto_inicial: 'monto' });
+      const r = rutearCampoError(err, { monto_inicial_centavos: 'monto' });
       if (r.campo) setCampoError({ campo: r.campo, mensaje: r.mensaje });
       else setError(r.mensaje);
     } finally {
@@ -70,7 +70,7 @@ export function AperturaForm({ onSuccess }: Readonly<Props>) {
             autoFocus
             style={{ fontSize: '20px', fontWeight: 700 }}
           />
-          {campoError?.campo === 'monto_inicial' && <span className="field-error">{campoError.mensaje}</span>}
+          {campoError?.campo === 'monto_inicial_centavos' && <span className="field-error">{campoError.mensaje}</span>}
         </div>
 
         <div className="field">

@@ -75,7 +75,7 @@ describe('dashboardVentasKpisRangoHandler', () => {
 
   it('cuenta ventas confirmadas del rango', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 1, 1000));
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 1, 2000));
     const { desde, hasta } = todayRange();
@@ -95,7 +95,7 @@ describe('dashboardVentasKpisRangoHandler', () => {
     const pB = productoCreateHandler(db, { nombre_corto: 'ProdB', categoria_id: catB.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 800 });
     stockEntradaHandler(db, { producto_id: pA.id, cantidad: 10 });
     stockEntradaHandler(db, { producto_id: pB.id, cantidad: 10 });
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, pA.id, 1, 500, 0));
     ventaConfirmarHandler(db, makePayload(caja.id, pB.id, 1, 800, 0));
     const { desde, hasta } = todayRange();
@@ -133,7 +133,7 @@ describe('dashboardVentasEvolucionHandler', () => {
 
   it('venta de hoy aparece en la hora correcta del actual', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 1, 1000));
     const { desde, hasta } = todayRange();
     const ayer_d = new Date(desde.getTime() - 86400000);
@@ -174,7 +174,7 @@ describe('dashboardVentasHeatmapHandler', () => {
 
   it('venta de hoy aparece con hora y dia_semana correctos', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 1, 1000));
     const { desde, hasta } = todayRange();
     const r = dashboardVentasHeatmapHandler(db, { desde, hasta });
@@ -201,7 +201,7 @@ describe('dashboardVentasDiaMesHandler', () => {
 
   it('venta de hoy tiene dia correcto (1-31)', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 1, 500));
     const { desde, hasta } = todayRange();
     const r = dashboardVentasDiaMesHandler(db, { desde, hasta });
@@ -225,7 +225,7 @@ describe('dashboardVentasVendedorHandler', () => {
 
   it('devuelve el usuario con su nombre y total de ventas', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 1, 1000));
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 1, 2000));
     const { desde, hasta } = todayRange();
@@ -258,7 +258,7 @@ describe('dashboardProductosAbcHandler', () => {
     const pChico  = productoCreateHandler(db, { nombre_corto: 'Chico',  categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 500 });
     stockEntradaHandler(db, { producto_id: pGrande.id, cantidad: 100 });
     stockEntradaHandler(db, { producto_id: pChico.id,  cantidad: 100 });
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     // pGrande: 10 × 800 = 8000 (76.2% del total 10500) → clase A (pct_acumulado <= 80)
     // pChico:   5 × 500 = 2500 (100% acumulado) → clase C (pct_acumulado > 95)
     ventaConfirmarHandler(db, makePayload(caja.id, pGrande.id, 10, 800, 0));
@@ -286,7 +286,7 @@ describe('dashboardProductosMargenCategoriaHandler', () => {
   it('calcula margen por categoría correctamente', () => {
     // precio_venta=121 IVA inc, iva=21%, neto=100, costo=50 → margen/u=50
     const { prod, cat } = crearProducto(db, 'Prod', 121, 50);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 2, 121, 21));
     const { desde, hasta } = todayRange();
     const r = dashboardProductosMargenCategoriaHandler(db, { desde, hasta });

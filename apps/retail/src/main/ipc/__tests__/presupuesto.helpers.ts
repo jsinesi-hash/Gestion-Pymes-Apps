@@ -72,7 +72,7 @@ export function sembrarVenta(db: Db, usuarioId: string, clienteId: string): stri
   const cajaId = generateId();
   db.insert(schema.caja).values({
     id: cajaId, usuario_id: usuarioId, fecha_apertura: now,
-    monto_inicial: 0, estado: 'abierta', ...sync(now),
+    monto_inicial_centavos: 0, estado: 'abierta', ...sync(now),
   }).run();
   const ventaId = generateId();
   db.insert(schema.venta).values({

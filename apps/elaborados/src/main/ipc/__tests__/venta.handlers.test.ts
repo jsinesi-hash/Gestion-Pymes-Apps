@@ -99,7 +99,7 @@ describe('venta handlers (Elaborados)', () => {
     function preparar() {
       loginAsAdmin(db);
       const c = catalogo(db);
-      const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+      const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
       return { c, caja };
     }
     const pote = (c: ReturnType<typeof catalogo>, opcionIds: string[], cantidad = 1) => ({
@@ -273,7 +273,7 @@ describe('venta handlers (Elaborados)', () => {
     function preparar() {
       loginAsAdmin(db);
       const c = catalogo(db);
-      const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+      const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
       return { c, caja };
     }
     /** Arma un pedido como lo hará venta.espera:pausar: valoriza con el dominio y pausa con el core. */
@@ -355,7 +355,7 @@ describe('venta handlers (Elaborados)', () => {
     function ventaHecha() {
       loginAsAdmin(db);
       const c = catalogo(db);
-      const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+      const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
       const r = ventaConfirmarHandler(db, {
         caja_id: caja.id, cliente_id: CONSUMIDOR_FINAL_ID,
         lineas: [

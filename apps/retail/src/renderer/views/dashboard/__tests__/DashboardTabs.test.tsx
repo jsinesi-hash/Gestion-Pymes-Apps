@@ -27,7 +27,7 @@ const VENTAS_DATA = {
   por_hora: [], por_forma_pago: [], top_cantidad: [], top_margen: [],
 };
 const STOCK_DATA  = { valor_inventario: 100000, sin_stock: [], bajo_minimo: [], sin_movimiento: [] };
-const CAJA_DATA   = { caja_activa: null, ingresos_dia: 0, egresos_dia: 0, efectivo_esperado: 0, arqueos_recientes: [], umbral_diferencia_caja: 50000 };
+const CAJA_DATA   = { caja_activa: null, ingresos_dia_centavos: 0, egresos_dia_centavos: 0, efectivo_esperado_centavos: 0, arqueos_recientes: [], umbral_diferencia_caja_centavos: 5000000 };
 const KPIS_RANGO  = { total: 0, count: 0, ticket_promedio: 0, importe_iva: 0, por_forma_pago: [], top_cantidad: [], top_margen: [] };
 
 function mockSession(): SessionData {
@@ -71,7 +71,7 @@ beforeEach(() => {
       ventasVendedor:           vi.fn().mockResolvedValue([]),
       productosAbc:             vi.fn().mockResolvedValue([]),
       productosMargenCategoria: vi.fn().mockResolvedValue([]),
-      cajaRango:                vi.fn().mockResolvedValue({ turnos: [], por_medio_pago: [], recargo_tarjeta_total: 0 }),
+      cajaRango:                vi.fn().mockResolvedValue({ turnos: [], por_medio_pago: [], recargo_tarjeta_total_centavos: 0 }),
       clientesRango:            vi.fn().mockResolvedValue({ ranking: [], clientes_nuevos: 0 }),
       clientesEstado:           vi.fn().mockResolvedValue({ deuda_total: 0, deuda_vencida: 0, clientes_inactivos: 0 }),
       proveedoresRango:         vi.fn().mockResolvedValue({ ranking: [] }),
