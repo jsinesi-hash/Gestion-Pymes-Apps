@@ -6,8 +6,12 @@ import * as schema from '../../db/schema';
 import { setupDb, createTestDb, loginAsAdmin, clearSession } from '../../__tests__/helpers';
 import { articuloCreateHandler } from '../../ipc/articulo';
 import { movimientoArticuloCreateHandler } from '../../ipc/movimiento-articulo';
+import { recetaProduccionSetHandler } from '../../ipc/receta-produccion';
+import { produccionCrearHandler, produccionAnularHandler } from '../../ipc/produccion';
 import { ejecutarSeedDev } from '../../dev-seed';
-import { diferenciasDeStock, proyectarStock, recalcularStock } from '../stock-proyeccion';
+import {
+  diferenciasDeCostoPromedio, diferenciasDeStock, proyectarCostoPromedio, proyectarStock, recalcularCostoPromedio, recalcularStock,
+} from '../stock-proyeccion';
 
 // ADR-151: el stock de un artículo es una proyección de su libro desde el último conteo.
 describe('proyección del stock (Elaborados)', () => {
@@ -70,10 +74,40 @@ describe('proyección del stock (Elaborados)', () => {
     expect(diferenciasDeStock(db)).toEqual([]);
   });
 
-  it('el seed de desarrollo (catálogo demo, clientes y ventas) cuadra en stock y cuenta corriente', () => {
+  it('el seed de desarrollo (catálogo demo, clientes y ventas) cuadra en stock, costo y cuenta corriente', () => {
     const otra = createTestDb();
     ejecutarSeedDev(otra);
     expect(diferenciasDeStock(otra)).toEqual([]);
+    expect(diferenciasDeCostoPromedio(otra)).toEqual([]);
     expect(diferenciasDeCuentaCorriente(otra)).toEqual([]);
+  });
+
+  it('una producción promedia el costo del elaborado y su anulación no lo revierte: todo cuadra', () => {
+    const leche = articulo('Leche');
+    const helado = articuloCreateHandler(db, { nombre: 'Helado', tipo: 'elaborado', unidad: 'kg', bloquea_sin_stock: false });
+    movimientoArticuloCreateHandler(db, { articulo_id: leche.id, motivo: 'compra', cantidad: 10, costo_unitario_centavos: 900 });
+    recetaProduccionSetHandler(db, { articulo_id: helado.id, rinde_cantidad: 3, items: [{ articulo_id: leche.id, cantidad: 2 }] });
+    produccionCrearHandler(db, { articulo_id: helado.id, cantidad_producida: 3 });
+    const segunda = produccionCrearHandler(db, { articulo_id: helado.id, cantidad_producida: 6 });
+    produccionAnularHandler(db, { id: segunda.id, motivo: 'error', supervisor_credenciales: { nombre_usuario: 'admin', password: 'admin1234' } }); // NOSONAR
+    expect(diferenciasDeStock(db)).toEqual([]);
+    expect(diferenciasDeCostoPromedio(db)).toEqual([]);
+  });
+
+  it('costo promedio: compras con y sin costo, mermas y conteos reproducen el costo guardado (con su redondeo)', () => {
+    const leche = articulo('Leche');
+    const costo = (id: string) => db.select().from(schema.articulo).where(eq(schema.articulo.id, id)).get()!.costo_promedio_centavos;
+    movimientoArticuloCreateHandler(db, { articulo_id: leche.id, motivo: 'compra', cantidad: 3, costo_unitario_centavos: 1000 });
+    movimientoArticuloCreateHandler(db, { articulo_id: leche.id, motivo: 'compra', cantidad: 4, costo_unitario_centavos: 1333 }); // redondea
+    movimientoArticuloCreateHandler(db, { articulo_id: leche.id, motivo: 'compra', cantidad: 2, costo_unitario_centavos: null }); // no promedia
+    mover(leche.id, 'merma', -1);
+    mover(leche.id, 'conteo', -3);
+    movimientoArticuloCreateHandler(db, { articulo_id: leche.id, motivo: 'compra', cantidad: 1, costo_unitario_centavos: 2000 });
+    expect(proyectarCostoPromedio(db, leche.id)).toBe(costo(leche.id));
+    expect(diferenciasDeCostoPromedio(db)).toEqual([]);
+
+    db.update(schema.articulo).set({ costo_promedio_centavos: 1 }).where(eq(schema.articulo.id, leche.id)).run();
+    expect(recalcularCostoPromedio(db, leche.id)).toMatchObject({ guardado: 1, corregido: true });
+    expect(diferenciasDeCostoPromedio(db)).toEqual([]);
   });
 });
