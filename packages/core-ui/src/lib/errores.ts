@@ -111,6 +111,8 @@ const CODIGOS: Record<string, Formateador> = {
     };
   },
   PRECIO_DESACTUALIZADO: msg('El precio cambió. Requiere autorización del supervisor.'),
+  // ADR-154 §2: solo en modo distribuido, cuando la terminal agotó su bloque de SKU.
+  SKU_SIN_BLOQUE: msg('No quedan códigos de producto disponibles en esta terminal. Conectate al servidor para recibir más.'),
   CCC_NO_DISPONIBLE: msg('El cliente no tiene cuenta corriente habilitada.'),
   LIMITE_CREDITO_EXCEDIDO: msg('La venta supera el límite de crédito. Requiere autorización del supervisor.'),
   VENTA_ESPERA_NOT_FOUND: msg('No se encontró la venta en espera.'),

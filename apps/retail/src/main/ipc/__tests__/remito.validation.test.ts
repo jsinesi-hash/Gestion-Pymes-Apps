@@ -146,7 +146,7 @@ describe('remitoCrearHandler — validación de payload (ADR-085)', () => {
       transportista_id: unTransportista(),
       lineas: [{ venta_detalle_id: detalleIds[0], cantidad_entregada: 4 }],
     } as any);
-    expect(r.numero).toBe('RE-0000001');
+    expect(r.numero).toBe('RE-C1-000001');
     expect(r.estado).toBe('emitido');
     const lineas = db.select().from(schema.remito_linea).all();
     expect(lineas[0].producto_id).toBe(productoIds[0]);

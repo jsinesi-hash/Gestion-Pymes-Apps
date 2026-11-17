@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq, inArray } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { formatSku } from '@ferreteria/shared';
+import { reservarSku } from '../catalog/sku';
 import * as schema from '../db/schema';
 import { crearPresentacionDefault } from '../ipc/presentacion';
 import { normalizarTermino } from '../sinonimos/normalizar';
@@ -17,7 +17,7 @@ export const DEMO_REFERENCIA_TIPO = 'seed_demo';
 // ADR-062 — Catálogo demo de arranque (10–15 productos) en el base-seed.
 //
 // Siembra un catálogo demo GENÉRICO respetando las invariantes del dominio:
-//   • SKU vía el contador `sku_proximo_secuencial` (ADR-025) + `formatSku`.
+//   • SKU vía `reservarSku` (bloque local de la terminal, ADR-154 §2) + `formatSku`.
 //   • Stock SIEMPRE vía `existencias` + `movimiento_stock` (motivo `inicial`) — ADR-006.
 //   • Precio vía `lista_precio_valor` en centavos (motor ADR-034) + presentación
 //     default (ADR-040), replicando la lógica de `productoCreateHandler`.
@@ -75,20 +75,6 @@ export const DEMO_PRODUCTOS: DemoProducto[] = [
   { nombre_corto: 'Caño PVC 3/4" 3m',       nombre_largo: 'Caño PVC sanitario presión 3/4 pulgada x 3 metros',     categoria: 'Caños y Conexiones',      marca: 'Ferrum',     ubicacion: 'B-02-02', unidad_venta: 'unidad', costo: 780,   precio: 1321,                          stock_fisico: 20,  stock_minimo: 8   },
   { nombre_corto: 'Válvula esfera 1/2"',    nombre_largo: 'Válvula esfera 1/2 pulgada bronce hembra-hembra',       categoria: 'Llaves y Válvulas',       marca: 'Ferrum',     ubicacion: 'B-02-03', unidad_venta: 'unidad', costo: 1200,  precio: 2033,                          stock_fisico: 15,  stock_minimo: 5, activo: false }, // inactivo
 ];
-
-// Lee y avanza el contador de SKU atómicamente dentro de la transacción (single-node,
-// igual que productoCreateHandler; multinodo se resuelve en R4).
-function nextSku(tx: Db): { sku: string; secuencial: number } {
-  const row = tx.select().from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, 'sku_proximo_secuencial')).get();
-  if (!row) throw new Error('sku_proximo_secuencial no encontrado en parametros_sistema');
-  const secuencial = Number.parseInt(row.valor, 10);
-  const sku = formatSku(secuencial);
-  tx.update(schema.parametros_sistema)
-    .set({ valor: String(secuencial + 1), actualizado_en: new Date() })
-    .where(eq(schema.parametros_sistema.clave, 'sku_proximo_secuencial')).run();
-  return { sku, secuencial };
-}
 
 // Devuelve el id de la lista predeterminada+activa, creándola si no existe (ADR-062:
 // no hay lista de fábrica). Se hace sin el handler para no depender de sesión de UI.
@@ -168,7 +154,7 @@ export function runDemoCatalogSeed(db: Db): void {
       if (!categoriaId) throw new Error(`Categoría demo no encontrada: ${p.categoria}`);
       const marcaId = marcaIds[p.marca] ?? null;
 
-      const { sku, secuencial } = nextSku(tx);
+      const { sku, secuencial } = reservarSku(tx);
       const productoId = randomUUID();
       const activo = p.activo ?? true;
 

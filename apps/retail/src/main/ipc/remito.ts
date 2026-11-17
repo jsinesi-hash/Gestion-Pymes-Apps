@@ -6,30 +6,19 @@ import { app, dialog, BrowserWindow, type IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId, nombreCompletoCliente } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession, getOriginId, id, optId, str, optStr, num, arr } from '@core/main';
+import { getSession, getOriginId, siguienteNumeroPorTerminal, id, optId, str, optStr, num, arr } from '@core/main';
 import { renderRemitoHtml } from '../print/remito-template';
 
 type Db = BetterSQLite3Database<typeof schema>;
 type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
 
-/** Proyeccion RE- + 7 digitos cero-padded. Sin digito verificador (ADR-045 §3). */
-export function formatNumeroRemito(secuencial: number): string {
-  return `RE-${String(secuencial).padStart(7, '0')}`;
-}
-
 /**
- * Lee e incrementa remito_proximo_secuencial dentro de la transaccion de emision.
- * Single-node; multinodo diferido a R4 (ADR-045 §3). Mismo patron que nextSkuAtomico.
+ * Asigna `RE-<terminal>-NNNNNN` dentro de la transacción de emisión (ADR-154, reemplaza al
+ * contador global de ADR-045 §3). `secuencial` es el correlativo de la terminal.
  */
 export function nextNumeroRemitoAtomico(tx: Tx): { numero: string; secuencial: number } {
-  const row = tx.select().from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, 'remito_proximo_secuencial')).get();
-  if (!row) throw new Error('remito_proximo_secuencial no encontrado en parametros_sistema');
-  const secuencial = Number.parseInt(row.valor, 10);
-  tx.update(schema.parametros_sistema)
-    .set({ valor: String(secuencial + 1), actualizado_en: new Date() })
-    .where(eq(schema.parametros_sistema.clave, 'remito_proximo_secuencial')).run();
-  return { numero: formatNumeroRemito(secuencial), secuencial };
+  const { numero, correlativo } = siguienteNumeroPorTerminal(tx, 'RE', 'remito');
+  return { numero, secuencial: correlativo };
 }
 
 export type LineaPendiente = {
@@ -376,7 +365,8 @@ export function remitoListarHandler(db: Db, payload: ListarRemitosPayload = {}) 
     .leftJoin(schema.venta, eq(schema.venta.id, schema.remito.venta_id))
     .leftJoin(schema.cliente, eq(schema.cliente.id, schema.venta.cliente_id))
     .where(and(...filtros))
-    .orderBy(desc(schema.remito.numero_secuencial))
+    // ADR-154: el correlativo es por terminal y convive con el formato viejo; manda la fecha.
+    .orderBy(desc(schema.remito.fecha_emision), desc(schema.remito.numero))
     .all()
     .map(({ cliente_nombre, cliente_apellido, ...r }) => ({
       ...r,

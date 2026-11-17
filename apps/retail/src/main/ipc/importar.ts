@@ -1,13 +1,14 @@
 ﻿import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { eq, and } from 'drizzle-orm';
-import { generateId, formatSku, canonicalizarUbicacion, canonicalizarCodigoUbicacion, parseBooleanoImport, leerCsv } from '@ferreteria/shared';
+import { generateId, canonicalizarUbicacion, canonicalizarCodigoUbicacion, parseBooleanoImport, leerCsv } from '@ferreteria/shared';
 import { getOriginId, getSession, requirePermission } from '@core/main';
 import * as schema from '../db/schema';
 import { clienteUpsertHandler } from '@core/main';
 import { proveedorUpsertHandler } from './proveedor';
 import { crearPresentacionDefault } from './presentacion';
 import { normalizarTermino } from '../sinonimos/normalizar';
+import { reservarSku } from '../catalog/sku';
 
 export type Db = BetterSQLite3Database<typeof schema>;
 
@@ -1038,15 +1039,9 @@ export function confirmarProductos(db: Db, payload: { rows: ImportRowResult[] })
         let stockInicial = (row.data!['stock_inicial'] as number) || 0;
 
         db.transaction(tx => {
-          // Leer y actualizar el contador de SKU atómicamente.
-          const param = tx.select().from(schema.parametros_sistema)
-            .where(eq(schema.parametros_sistema.clave, 'sku_proximo_secuencial')).get();
-          if (!param) throw new Error('sku_proximo_secuencial no encontrado');
-          const secuencial = Number.parseInt(param.valor, 10);
-          skuAsignado = formatSku(secuencial);
-          tx.update(schema.parametros_sistema)
-            .set({ valor: String(secuencial + 1), actualizado_en: now })
-            .where(eq(schema.parametros_sistema.clave, 'sku_proximo_secuencial')).run();
+          // ADR-154 §2: el SKU sale del bloque local de la terminal.
+          const { sku, secuencial } = reservarSku(tx);
+          skuAsignado = sku;
 
           tx.insert(schema.producto).values({
             id,

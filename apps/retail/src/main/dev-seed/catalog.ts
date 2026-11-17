@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { formatSku } from '@ferreteria/shared';
+import { reservarSku } from '../catalog/sku';
 import * as schema from '../db/schema';
 import { normalizarTermino } from '../sinonimos/normalizar';
 
@@ -133,14 +133,7 @@ export function seedCatalog(db: Db, force: boolean): void {
   for (const p of PRODUCTOS) {
     const id = randomUUID();
 
-    // Leer y actualizar contador de SKU atómicamente (single-node; R4 gestiona multinodo).
-    const paramRow = db.select().from(schema.parametros_sistema)
-      .where(eq(schema.parametros_sistema.clave, 'sku_proximo_secuencial')).get();
-    const secuencial = paramRow ? Number.parseInt(paramRow.valor, 10) : 1;
-    const sku = formatSku(secuencial);
-    db.update(schema.parametros_sistema)
-      .set({ valor: String(secuencial + 1) })
-      .where(eq(schema.parametros_sistema.clave, 'sku_proximo_secuencial')).run();
+    const { sku, secuencial } = reservarSku(db); // ADR-154 §2
 
     db.insert(schema.producto).values({
       id,
