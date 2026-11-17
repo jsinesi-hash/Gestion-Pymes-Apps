@@ -3,7 +3,9 @@
 > Fuente de verdad sobre qué está hecho, qué está en curso y qué viene después.
 > Actualizar al completar cada fase o tomar una decisión de diseño significativa.
 
-**Última actualización:** 2026-11-16 (**Fase online F1 · PR2: baranda B3 con PGlite** — rama `feat/f1-baranda-b3`: el esquema que sincroniza se genera para Postgres desde Drizzle y un test por app lo aplica en PGlite junto con los índices de la base migrada; PGlite 0.5.13 como devDependency. → siguiente: PR3, captura de cambios con `sync_outbox` y triggers.)
+**Última actualización:** 2026-11-17 (**Fase online F1 · PR3: captura de cambios** — rama `feat/f1-outbox-triggers`: tablas locales `sync_outbox` y `sync_aplicando` (migraciones Retail 0053 y Elaborados 0015) y triggers de alta y modificación generados desde el registro de sync, que encolan la fila sin columnas proyectadas y suben la versión. Se instalan solo en modo distribuido: en standalone no hay triggers. → siguiente: PR4, sin borrados físicos.)
+
+**Anterior:** 2026-11-16 (**Fase online F1 · PR2: baranda B3 con PGlite** — rama `feat/f1-baranda-b3`: el esquema que sincroniza se genera para Postgres desde Drizzle y un test por app lo aplica en PGlite junto con los índices de la base migrada; PGlite 0.5.13 como devDependency. → siguiente: PR3, captura de cambios con `sync_outbox` y triggers.)
 
 **Anterior:** 2026-11-16 (**Fase online F1 · PR1: registro de sync por app** — rama `feat/f1-registro-sync`: cada tabla declara si es `maestro`, `libro` o `local` (núcleo + Retail + Elaborados); `verificarRegistroSync` reemplaza a la lista de excepciones de B2; el costo promedio ponderado se suma a las columnas proyectadas (corrección de ADR-151). Plan de F1 en `docs/superpowers/plans/2026-11-16-fase-online-f1.md`. → siguiente: PR2, baranda B3 con PGlite.)
 
@@ -297,7 +299,7 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 | 147 | RBAC Fase 2: editor de permisos por rol (PERF-3 opción B) con excepciones que sobreviven al seed | Aceptado — implementado (sin verificar en la app real) |
 | 148 | Release 1.2.0 de Retail y corrección del mapa de versiones: el fiscal ARCA pasa a 1.3.0 | Aceptado |
 | 149 | Fase online F0: base de datos del hub (SQLite en red local, Postgres en nube) y baranda B3 en PGlite | Aceptado — sin implementar (F1/F2) |
-| 150 | Fase online F0: protocolo de sync terminal ↔ hub (cursor del hub, emparejamiento, tipos de tabla, sin borrados físicos) | Aceptado — sin implementar (F1/F2) |
+| 150 | Fase online F0: protocolo de sync terminal ↔ hub (cursor del hub, emparejamiento, tipos de tabla, sin borrados físicos) | Aceptado — en implementación (F1: registro y captura de cambios hechos) |
 | 151 | Fase online F0: saldos de stock y cuenta corriente como proyección; el conteo de stock como punto de corte | Aceptado — sin implementar (F1/F2) |
 | 152 | Fase online F0: tareas programadas en una terminal coordinadora (revisa ADR-047 §10) | Aceptado — sin implementar (F1/F2) |
 | 153 | Fase online F0: stock y crédito con terminales sin conexión — permitir y alertar | Aceptado — sin implementar (F1/F2) |
@@ -364,6 +366,7 @@ barandas B1 (fiscal) y B2 (sync) como implementación. Detalle en `docs/ADR-091`
 
 ## Bitácora de decisiones
 
+- `2026-11-17` — **F1 · PR3 — Captura de cambios** (rama `feat/f1-outbox-triggers`, ADR-150 §4 y §6). `triggersSync` en `@core/db` genera, para cada tabla `maestro`/`libro`, un trigger de alta y uno de modificación que encolan en `sync_outbox` la fila en JSON sin las columnas proyectadas; si el handler no subió `version`, la sube. Un cambio solo de proyectadas o de campos de sync no encola. El interruptor de cambios recibidos es una tabla normal que se llena y vacía dentro de la misma transacción del pull. Los triggers no se crean en las migraciones: se instalan con `instalarTriggersSync` al pasar a modo distribuido (PR8). Costo medido: ~11 µs por escritura. → siguiente: PR4.
 - `2026-11-16` — **F1 · PR2 — Baranda B3 con PGlite** (rama `feat/f1-baranda-b3`, ADR-149). B3 pasa de intención a test. Los índices se leen de la base migrada porque varios solo existen en las migraciones SQL. La baranda encontró en su primera corrida un índice parcial de Retail que no compilaba en Postgres (`preferido = 1` sin comillas); se corrigió el traductor, con test. PGlite se descargó con aprobación del usuario y se instaló sin reinstalar `node_modules`. → siguiente: PR3.
 - `2026-11-16` — **F1 · PR1 — Registro de sync por app** (rama `feat/f1-registro-sync`, ADR-150 §3). Plan de F1 aprobado (8 PRs + serie de centavos). Libros verificados como solo inserción; `venta`, `comprobante` y `produccion` quedan como `maestro` porque cambian de estado. Hallazgos: el costo promedio ponderado es otra columna derivada del libro (ADR-151, corrección) y el seed crea filas con UUID aleatorio por instalación (F2: una terminal nueva arranca del snapshot antes de sembrar; nota en ADR-150). → siguiente: PR2 (B3 con PGlite).
 - `2026-11-16` — **ADR-153 a 156 — Fase online F0** (rama `docs/f0-fase-online`, aceptados por el usuario). El usuario respondió las 5 preguntas: stock «permitir y alertar» (y crédito igual), caja configurable por negocio, sin sucursales, hub de red local en las dos modalidades y acceso remoto como app de escritorio. Al relevar la numeración se vio que OC y producción de Elaborados ya numeraban por terminal: solo remito, presupuesto y SKU son globales (el análisis §3.4 se corrigió). F0 completa. → siguiente: plan de F1.

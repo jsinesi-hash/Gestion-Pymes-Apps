@@ -9,3 +9,10 @@ export { CAMPOS_SYNC } from './__boundary__/sync-fields';
 export { combinarRegistros, registroSyncCore, verificarRegistroSync } from './__boundary__/registro-sync';
 export type { EntradaSync, RegistroSync, TipoSync } from './__boundary__/registro-sync';
 export { columnasBooleanas, ddlPostgres, traducirIndicePostgres } from './__boundary__/ddl-postgres';
+export {
+  aplicandoCambiosRecibidos,
+  desinstalarTriggersSync,
+  instalarTriggersSync,
+  nombresTriggersSync,
+  triggersSync,
+} from './__boundary__/triggers-sync';
