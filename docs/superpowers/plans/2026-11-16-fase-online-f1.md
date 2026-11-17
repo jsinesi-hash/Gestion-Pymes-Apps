@@ -62,6 +62,7 @@ Cada PR: rama propia desde `main`, TDD (rojo → verde), suite completa, `Estado
 - Cierre documental: corrección en ADR-151 (Retail no necesita columna nueva; la pantalla de conteo de Elaborados cambia o no, según lo que se decida).
 - **Valida:** tests nuevos; script de integridad sobre una copia de la base real.
 - **Riesgo:** medio — si una base real tiene saldos que no cuadran con su libro, aparece acá (es un hallazgo, no un error del PR).
+- **División (2026-11-17):** PR6a = proyección de stock (las dos apps) y cuenta corriente + integridad; PR6b = costo promedio (la importación lo pisa sin movimiento: requiere decisión) y monto esperado de caja.
 
 ### PR7 — Configuración del negocio vs. de la terminal (análisis §3.5, ADR-155 §1)
 - **Qué:** clasificar cada clave de `parametros_sistema` como `negocio` (sincroniza) o `terminal` (local). Opción a decidir en el PR con prueba: columna `ambito` + campos de sync en `parametros_sistema` con clave natural, o tabla nueva para lo del negocio. Agrega `caja_modo` (`por_terminal`, sin UI todavía: en standalone no se ofrece `compartida`).
