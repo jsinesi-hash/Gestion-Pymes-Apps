@@ -50,6 +50,8 @@ export const presupuesto_detalle = sqliteTable('presupuesto_detalle', {
   subtotal_centavos:        integer('subtotal_centavos').notNull().default(0),
   // Coherencia con multi-presentación (ADR-040)
   presentacion_id:          text('presentacion_id').references(() => producto_presentacion.id),
+  // ADR-150 §7: lápida. La línea que sale de un documento en borrador queda marcada, no se borra.
+  deleted_at: integer('deleted_at', { mode: 'timestamp' }),
   version:    integer('version').notNull().default(1),
   origin_id:  text('origin_id').notNull(),
   sync_state: text('sync_state', { enum: ['pending', 'synced', 'conflict'] }).notNull().default('pending'),

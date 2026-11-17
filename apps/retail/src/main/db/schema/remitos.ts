@@ -69,6 +69,8 @@ export const remito_linea = sqliteTable('remito_linea', {
   producto_id:        text('producto_id').notNull().references(() => producto.id),
   descripcion:        text('descripcion').notNull(),
   unidad:             text('unidad'),
+  // ADR-150 §7: lápida. La línea que sale de un documento en borrador queda marcada, no se borra.
+  deleted_at: integer('deleted_at', { mode: 'timestamp' }),
   version:    integer('version').notNull().default(1),
   origin_id:  text('origin_id').notNull(),
   sync_state: text('sync_state', { enum: ['pending', 'synced', 'conflict'] }).notNull().default('pending'),

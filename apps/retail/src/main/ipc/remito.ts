@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { eq, and, ne, desc } from 'drizzle-orm';
+import { eq, and, ne, desc, isNull, sql } from 'drizzle-orm';
 import { app, dialog, BrowserWindow, type IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId, nombreCompletoCliente } from '@ferreteria/shared';
@@ -68,7 +68,7 @@ export function remitoPendientePorVentaHandler(
   })
     .from(schema.venta_detalle)
     .leftJoin(schema.producto, eq(schema.producto.id, schema.venta_detalle.producto_id))
-    .where(eq(schema.venta_detalle.venta_id, payload.venta_id))
+    .where(and(eq(schema.venta_detalle.venta_id, payload.venta_id), isNull(schema.venta_detalle.deleted_at)))
     .all();
 
   const ventaRow = db.select({ cliente_id: schema.venta.cliente_id }).from(schema.venta)
@@ -95,6 +95,7 @@ export function remitoPendientePorVentaHandler(
     eq(schema.remito.venta_id, payload.venta_id),
     ne(schema.remito.estado, 'anulado'),
     eq(schema.remito.activo, true),
+    isNull(schema.remito_linea.deleted_at),
   ];
   if (payload.excluir_remito_id) {
     filtrosEntregadas.push(ne(schema.remito.id, payload.excluir_remito_id));
@@ -285,7 +286,7 @@ export function remitoEditarHandler(db: Db, payload: unknown) {
   if (!transportistaRow) throw new Error('TRANSPORTISTA_INVALIDO');
 
   const lineasActuales = db.select().from(schema.remito_linea)
-    .where(eq(schema.remito_linea.remito_id, v_id)).all();
+    .where(and(eq(schema.remito_linea.remito_id, v_id), isNull(schema.remito_linea.deleted_at))).all();
   const lineasActualesPorId = new Map(lineasActuales.map((l) => [l.id, l]));
 
   for (const l of v_lineas) {
@@ -310,7 +311,13 @@ export function remitoEditarHandler(db: Db, payload: unknown) {
     for (const l of v_lineas) {
       const actual = lineasActualesPorId.get(l.remito_linea_id)!;
       if (l.cantidad_entregada <= 0) {
-        tx.delete(schema.remito_linea).where(eq(schema.remito_linea.id, l.remito_linea_id)).run();
+        // ADR-150 §7: la línea que sale del remito queda con lápida, no se borra.
+        tx.update(schema.remito_linea).set({
+          deleted_at: now,
+          version: sql`${schema.remito_linea.version} + 1`,
+          sync_state: 'pending',
+          updated_at: now,
+        }).where(eq(schema.remito_linea.id, l.remito_linea_id)).run();
         continue;
       }
       const pend = pendientePorDetalle.get(actual.venta_detalle_id);
@@ -325,7 +332,7 @@ export function remitoEditarHandler(db: Db, payload: unknown) {
     }
 
     const lineasRestantes = tx.select().from(schema.remito_linea)
-      .where(eq(schema.remito_linea.remito_id, v_id)).all();
+      .where(and(eq(schema.remito_linea.remito_id, v_id), isNull(schema.remito_linea.deleted_at))).all();
     if (lineasRestantes.length === 0) throw new Error('REMITO_QUEDARIA_SIN_LINEAS');
 
     tx.update(schema.remito).set({
@@ -398,7 +405,7 @@ export function remitoObtenerHandler(db: Db, payload: { id: string }) {
   if (!cab) throw new Error('NOT_FOUND');
 
   const lineas = db.select().from(schema.remito_linea)
-    .where(eq(schema.remito_linea.remito_id, payload.id)).all();
+    .where(and(eq(schema.remito_linea.remito_id, payload.id), isNull(schema.remito_linea.deleted_at))).all();
 
   return {
     ...cab.remito,

@@ -63,6 +63,8 @@ export const item_oc = sqliteTable('item_oc', {
   costo_unitario_centavos: integer('costo_unitario_centavos').notNull(),    // congelado al emitir
   alicuota_iva:            real('alicuota_iva').notNull(),                  // snapshot
   subtotal_centavos:       integer('subtotal_centavos').notNull(),
+  // ADR-150 §7: lápida. La línea que sale de un documento en borrador queda marcada, no se borra.
+  deleted_at: integer('deleted_at', { mode: 'timestamp' }),
   version:    integer('version').notNull().default(1),
   origin_id:  text('origin_id').notNull(),
   sync_state: text('sync_state', { enum: ['pending', 'synced', 'conflict'] }).notNull().default('pending'),

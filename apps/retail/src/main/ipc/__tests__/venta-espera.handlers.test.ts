@@ -7,7 +7,8 @@ import { categoriaCreateHandler } from '../categoria';
 import { productoCreateHandler } from '../producto';
 import { stockEntradaHandler } from '../stock';
 import { cajaAbrirHandler, cajaCerrarHandler } from '@core/main';
-import { ventaConfirmarHandler, ventaListByCajaHandler, type VentaConfirmarPayload } from '../venta';
+import { ventaConfirmarHandler, ventaListByCajaHandler, ventaGetHandler, ventaAnularHandler, type VentaConfirmarPayload } from '../venta';
+import { dashboardVentasHandler } from '../dashboard';
 import { redondearPeso } from '@ferreteria/shared';
 import {
   ventaEsperaPausarHandler,
@@ -257,6 +258,25 @@ describe('venta-espera handlers', () => {
     const ex = db.select().from(schema.existencias)
       .where(eq(schema.existencias.producto_id, prod.id)).get()!;
     expect(ex.stock_fisico).toBe(8); // 10 - 2
+  });
+
+  it('ADR-150 §7: retomar deja con lápida las líneas de la espera y nada las cuenta dos veces', () => {
+    const { prod } = crearProductoConStock(10);
+    loginAsAdmin(db);
+    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const { venta_id } = ventaEsperaPausarHandler(db, makePausarPayload(caja.id, prod.id));
+    ventaEsperaRetomarHandler(db, { venta_id });
+    ventaConfirmarHandler(db, { ...makeConfirmarPayload(caja.id, prod.id), venta_en_espera_id: venta_id });
+
+    const filas = db.select().from(schema.venta_detalle).where(eq(schema.venta_detalle.venta_id, venta_id)).all();
+    expect(filas.filter((f) => f.deleted_at != null)).toHaveLength(1);
+    expect(ventaGetHandler(db, { id: venta_id })!.detalles).toHaveLength(1);
+    expect(dashboardVentasHandler(db).top_cantidad).toEqual([expect.objectContaining({ producto_id: prod.id, cantidad: 2 })]);
+
+    // Anular revierte solo las líneas vivas: el stock vuelve a 10, no a 12.
+    ventaAnularHandler(db, { venta_id, motivo: 'x', supervisor_credenciales: { nombre_usuario: 'admin', password: 'admin1234' } }); // NOSONAR
+    const ex = db.select().from(schema.existencias).where(eq(schema.existencias.producto_id, prod.id)).get()!;
+    expect(ex.stock_fisico).toBe(10);
   });
 
   it('confirmar post-retomar sin caja abierta → CAJA_REQUERIDA', () => {

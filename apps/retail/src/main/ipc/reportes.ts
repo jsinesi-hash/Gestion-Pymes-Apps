@@ -112,7 +112,7 @@ function buildWhere(filtros: ReporteVentasFiltros): { where: string; params: unk
     let sub = `EXISTS (
       SELECT 1 FROM venta_detalle vd
       JOIN producto p ON p.id = vd.producto_id
-      WHERE vd.venta_id = v.id`;
+      WHERE vd.venta_id = v.id AND vd.deleted_at IS NULL`;
     if (filtros.categoriaId) {
       sub += ' AND p.categoria_id = ?';
       params.push(filtros.categoriaId);
@@ -223,7 +223,7 @@ export function reporteVentasDetalleQueryAll(db: Db, filtros: ReporteVentasFiltr
     FROM venta v
     JOIN cliente c  ON c.id  = v.cliente_id
     JOIN usuario u  ON u.id  = v.usuario_id
-    JOIN venta_detalle vd  ON vd.venta_id  = v.id
+    JOIN venta_detalle vd  ON vd.venta_id  = v.id AND vd.deleted_at IS NULL
     JOIN producto p        ON p.id         = vd.producto_id
     JOIN categoria cat     ON cat.id       = p.categoria_id
     WHERE ${where}

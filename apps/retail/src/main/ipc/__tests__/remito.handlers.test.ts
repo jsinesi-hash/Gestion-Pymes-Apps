@@ -845,7 +845,7 @@ describe('remitoEditarHandler', () => {
     expect(lineasFinales.find((l) => l.id === lineas[0].id)?.cantidad_entregada).toBe(6);
   });
 
-  it('elimina la linea si la cantidad editada queda en 0', () => {
+  it('quita la linea (lápida) si la cantidad editada queda en 0', () => {
     const { id: userId } = loginAsAdmin(db);
     const { r, transportistaId, lineas } = emitirRemitoDePrueba(db, userId);
 
@@ -859,10 +859,20 @@ describe('remitoEditarHandler', () => {
       ],
     });
 
-    const lineasFinales = db.select().from(schema.remito_linea)
-      .where(eq(schema.remito_linea.remito_id, r.id)).all();
-    expect(lineasFinales).toHaveLength(1);
-    expect(lineasFinales[0].id).toBe(lineas[0].id);
+    // ADR-150 §7: la línea queda con lápida; el remito muestra solo la viva.
+    const visibles = remitoObtenerHandler(db, { id: r.id }).lineas;
+    expect(visibles.map((l) => l.id)).toEqual([lineas[0].id]);
+    const quitada = db.select().from(schema.remito_linea)
+      .where(eq(schema.remito_linea.id, lineas[1].id)).get()!;
+    expect(quitada.deleted_at).toBeInstanceOf(Date);
+    expect(quitada.version).toBe(lineas[1].version + 1);
+
+    // Lo que tenía la línea quitada vuelve a quedar pendiente de entrega.
+    const detalle = db.select().from(schema.venta_detalle)
+      .where(eq(schema.venta_detalle.id, lineas[1].venta_detalle_id)).get()!;
+    const pendiente = remitoPendientePorVentaHandler(db, { venta_id: r.venta_id }).lineas
+      .find((l) => l.venta_detalle_id === lineas[1].venta_detalle_id)!;
+    expect(pendiente.cantidad_pendiente).toBe(detalle.cantidad);
   });
 
   it('rechaza si todas las lineas quedarian en 0', () => {

@@ -1,9 +1,12 @@
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { eq, and, desc, gte, lte, sql } from 'drizzle-orm';
+import { eq, and, desc, gte, lte, sql, isNull } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import { requirePermission } from '@core/main';
 import { productosBajoMinimo } from '../agenda/bajo-minimo';
+
+/** ADR-150 §7: las líneas que reemplazó una retoma quedan con lápida y no cuentan. */
+const vdViva = () => isNull(schema.venta_detalle.deleted_at);
 
 type Db = BetterSQLite3Database<typeof schema>;
 
@@ -90,7 +93,7 @@ export function dashboardVentasHandler(db: Db): DashboardVentas {
   }).from(schema.venta_detalle)
     .innerJoin(schema.venta, eq(schema.venta_detalle.venta_id, schema.venta.id))
     .innerJoin(schema.producto, eq(schema.venta_detalle.producto_id, schema.producto.id))
-    .where(baseWhere)
+    .where(and(baseWhere, vdViva()))
     .groupBy(schema.venta_detalle.producto_id)
     .orderBy(desc(sql`sum(${schema.venta_detalle.cantidad})`))
     .limit(5).all();
@@ -102,7 +105,7 @@ export function dashboardVentasHandler(db: Db): DashboardVentas {
   }).from(schema.venta_detalle)
     .innerJoin(schema.venta, eq(schema.venta_detalle.venta_id, schema.venta.id))
     .innerJoin(schema.producto, eq(schema.venta_detalle.producto_id, schema.producto.id))
-    .where(baseWhere)
+    .where(and(baseWhere, vdViva()))
     .groupBy(schema.venta_detalle.producto_id)
     .orderBy(desc(sql`sum((${schema.venta_detalle.precio_unitario} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio}) * ${schema.venta_detalle.cantidad})`))
     .limit(5).all();
@@ -138,7 +141,7 @@ export function dashboardStockHandler(db: Db): DashboardStock {
     unidades_30d: sql<number>`sum(${schema.venta_detalle.cantidad})`,
   }).from(schema.venta_detalle)
     .innerJoin(schema.venta, eq(schema.venta_detalle.venta_id, schema.venta.id))
-    .where(and(eq(schema.venta.estado, 'confirmada'), gte(schema.venta.fecha, hace30Dias)))
+    .where(and(eq(schema.venta.estado, 'confirmada'), gte(schema.venta.fecha, hace30Dias), vdViva()))
     .groupBy(schema.venta_detalle.producto_id)
     .all();
   const velocidadMap = new Map(velocidades.map(v => [v.producto_id, v.unidades_30d]));

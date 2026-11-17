@@ -1,8 +1,11 @@
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { eq, and, desc, gte, lte, sql, inArray } from 'drizzle-orm';
+import { eq, and, desc, gte, lte, sql, inArray, isNull } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import { requirePermission } from '@core/main';
+
+/** ADR-150 §7: las líneas que reemplazó una retoma quedan con lápida y no cuentan. */
+const vdViva = () => isNull(schema.venta_detalle.deleted_at);
 
 type Db = BetterSQLite3Database<typeof schema>;
 
@@ -92,7 +95,7 @@ function getVentaIdsFiltrados(db: Db, desde: Date, hasta: Date, categoria_id: st
     .from(schema.venta_detalle)
     .innerJoin(schema.venta, eq(schema.venta_detalle.venta_id, schema.venta.id))
     .innerJoin(schema.producto, eq(schema.venta_detalle.producto_id, schema.producto.id))
-    .where(and(base, eq(schema.producto.categoria_id, categoria_id)))
+    .where(and(base, eq(schema.producto.categoria_id, categoria_id), vdViva()))
     .all()
     .map(r => r.venta_id);
 }
@@ -118,6 +121,7 @@ export function dashboardVentasKpisRangoHandler(
           base,
           categoria_id ? eq(schema.producto.categoria_id, categoria_id) : undefined,
           producto_id  ? eq(schema.venta_detalle.producto_id, producto_id) : undefined,
+          vdViva(),
         ),
       )
       .all();
@@ -157,7 +161,7 @@ export function dashboardVentasKpisRangoHandler(
   }).from(schema.venta_detalle)
     .innerJoin(schema.venta, eq(schema.venta_detalle.venta_id, schema.venta.id))
     .innerJoin(schema.producto, eq(schema.venta_detalle.producto_id, schema.producto.id))
-    .where(detalleWhere)
+    .where(and(detalleWhere, vdViva()))
     .groupBy(schema.venta_detalle.producto_id)
     .orderBy(desc(sql`sum(${schema.venta_detalle.cantidad})`))
     .limit(10)
@@ -170,7 +174,7 @@ export function dashboardVentasKpisRangoHandler(
   }).from(schema.venta_detalle)
     .innerJoin(schema.venta, eq(schema.venta_detalle.venta_id, schema.venta.id))
     .innerJoin(schema.producto, eq(schema.venta_detalle.producto_id, schema.producto.id))
-    .where(detalleWhere)
+    .where(and(detalleWhere, vdViva()))
     .groupBy(schema.venta_detalle.producto_id)
     .orderBy(desc(sql`sum((${schema.venta_detalle.precio_unitario} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio}) * ${schema.venta_detalle.cantidad})`))
     .limit(10)
@@ -335,7 +339,7 @@ export function dashboardProductosAbcHandler(
   }).from(schema.venta_detalle)
     .innerJoin(schema.venta, eq(schema.venta_detalle.venta_id, schema.venta.id))
     .innerJoin(schema.producto, eq(schema.venta_detalle.producto_id, schema.producto.id))
-    .where(base)
+    .where(and(base, vdViva()))
     .groupBy(schema.venta_detalle.producto_id)
     .orderBy(desc(sql`sum(${schema.venta_detalle.subtotal})`))
     .all();
@@ -370,7 +374,7 @@ export function dashboardProductosMargenCategoriaHandler(
     .innerJoin(schema.venta, eq(schema.venta_detalle.venta_id, schema.venta.id))
     .innerJoin(schema.producto, eq(schema.venta_detalle.producto_id, schema.producto.id))
     .innerJoin(schema.categoria, eq(schema.producto.categoria_id, schema.categoria.id))
-    .where(base)
+    .where(and(base, vdViva()))
     .groupBy(schema.categoria.id)
     .orderBy(desc(sql`sum((${schema.venta_detalle.precio_unitario} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio}) * ${schema.venta_detalle.cantidad})`))
     .all();

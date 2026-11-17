@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { eq, and, ne, lt, inArray, desc } from 'drizzle-orm';
+import { eq, and, ne, lt, inArray, desc, isNull, sql } from 'drizzle-orm';
 import { app, dialog, BrowserWindow, type IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId, resolverPrecio, nombreCompletoCliente, type LineaPrecioInput } from '@ferreteria/shared';
@@ -241,6 +241,21 @@ function insertarLineas(tx: Tx, presupuestoId: string, lineas: LineaComputada[],
   }
 }
 
+/** Líneas vivas del presupuesto (ADR-150 §7: las reemplazadas quedan con lápida). */
+function lineasVivas(id: string) {
+  return and(eq(schema.presupuesto_detalle.presupuesto_id, id), isNull(schema.presupuesto_detalle.deleted_at));
+}
+
+/** ADR-150 §7: las líneas que reemplaza una edición quedan con lápida, no se borran. */
+function darDeBajaLineas(tx: Tx, presupuestoId: string, now: Date) {
+  tx.update(schema.presupuesto_detalle).set({
+    deleted_at: now,
+    version: sql`${schema.presupuesto_detalle.version} + 1`,
+    sync_state: 'pending',
+    updated_at: now,
+  }).where(lineasVivas(presupuestoId)).run();
+}
+
 /** Edita un borrador: reemplaza cabecera + lineas y recalcula en vivo. Solo estado='borrador'. */
 export function presupuestoEditarHandler(db: Db, payload: unknown) {
   const session = getSession();
@@ -271,8 +286,7 @@ export function presupuestoEditarHandler(db: Db, payload: unknown) {
   return db.transaction((tx) => {
     const computo = computarPresupuesto(tx, { descuento_global_pct: descGlobal, lineas: v_lineas });
 
-    tx.delete(schema.presupuesto_detalle)
-      .where(eq(schema.presupuesto_detalle.presupuesto_id, v_id)).run();
+    darDeBajaLineas(tx, v_id, now);
 
     tx.update(schema.presupuesto).set({
       cliente_id: clienteIdRaw === undefined ? existing.cliente_id : (v_cliente_id ?? null),
@@ -339,7 +353,7 @@ export function presupuestoEmitirHandler(db: Db, payload: unknown) {
   if (existing.estado !== 'borrador') throw new Error(`ESTADO_INVALIDO:${existing.estado}`);
 
   const detalles = db.select().from(schema.presupuesto_detalle)
-    .where(eq(schema.presupuesto_detalle.presupuesto_id, v_id)).all();
+    .where(lineasVivas(v_id)).all();
   if (detalles.length === 0) throw new Error('SIN_LINEAS');
 
   const validezDias = v_validez_dias ?? existing.validez_dias;
@@ -360,10 +374,20 @@ export function presupuestoEmitirHandler(db: Db, payload: unknown) {
       })),
     });
 
-    // Reescribe las lineas con el snapshot congelado.
-    tx.delete(schema.presupuesto_detalle)
-      .where(eq(schema.presupuesto_detalle.presupuesto_id, v_id)).run();
-    insertarLineas(tx, v_id, computo.lineas, now);
+    // Congela el snapshot en las mismas líneas: computarPresupuesto conserva el orden 1 a 1.
+    computo.lineas.forEach((l, i) => {
+      tx.update(schema.presupuesto_detalle).set({
+        descripcion: l.descripcion,
+        precio_unitario_centavos: l.precio_unitario_centavos,
+        descuento_linea_pct: l.descuento_linea_pct,
+        alicuota_iva: l.alicuota_iva,
+        subtotal_centavos: l.subtotal_centavos,
+        presentacion_id: l.presentacion_id,
+        version: sql`${schema.presupuesto_detalle.version} + 1`,
+        sync_state: 'pending',
+        updated_at: now,
+      }).where(eq(schema.presupuesto_detalle.id, detalles[i].id)).run();
+    });
 
     // El contador se consume recien aca, despues de validar SIN_LINEAS.
     const { numero, secuencial } = nextNumeroPresupuestoAtomico(tx);
@@ -461,7 +485,7 @@ export function presupuestoPrepararConversionHandler(db: Db, payload: unknown): 
   if (p.estado !== 'emitido' && p.estado !== 'vencido') throw new Error(`ESTADO_INVALIDO:${p.estado}`);
 
   const detalles = db.select().from(schema.presupuesto_detalle)
-    .where(eq(schema.presupuesto_detalle.presupuesto_id, v_id)).all();
+    .where(lineasVivas(v_id)).all();
 
   const vencido = p.estado === 'vencido';
 
@@ -594,7 +618,7 @@ function obtenerInterno(db: Db | Tx, id: string) {
   if (!cab) throw new Error('NOT_FOUND');
 
   const lineas = db.select().from(schema.presupuesto_detalle)
-    .where(eq(schema.presupuesto_detalle.presupuesto_id, id)).all();
+    .where(lineasVivas(id)).all();
 
   return {
     ...cab.presupuesto,

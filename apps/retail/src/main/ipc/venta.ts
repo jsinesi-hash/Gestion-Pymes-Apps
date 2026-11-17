@@ -1,4 +1,4 @@
-import { eq, and, asc, gte, lte, inArray } from 'drizzle-orm';
+import { eq, and, asc, gte, lte, inArray, isNull, sql } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId, inicioDelDia, finDelDia, nombreCompletoCliente, verificarTotalesVenta } from '@ferreteria/shared';
@@ -150,6 +150,11 @@ function validarLineasPrevio(db: Db, payload: VentaConfirmarPayload): void {
 
 type Tx = Parameters<typeof marcarPresupuestoConvertido>[0];
 
+/** Líneas vivas de una venta (ADR-150 §7: las que reemplazó una retoma quedan con lápida). */
+export function lineasVivasDeVenta(ventaId: string) {
+  return and(eq(schema.venta_detalle.venta_id, ventaId), isNull(schema.venta_detalle.deleted_at));
+}
+
 function aplicarLineasRetail(tx: Tx, payload: VentaConfirmarPayload, ctx: AplicarLineasCtx): void {
   const { ventaId, now, sync, userId, esRetoma } = ctx;
 
@@ -161,8 +166,13 @@ function aplicarLineasRetail(tx: Tx, payload: VentaConfirmarPayload, ctx: Aplica
   }
 
   if (esRetoma) {
-    tx.delete(schema.venta_detalle)
-      .where(eq(schema.venta_detalle.venta_id, ventaId)).run();
+    // ADR-150 §7: las líneas de la venta en espera quedan con lápida; las confirmadas se insertan abajo.
+    tx.update(schema.venta_detalle).set({
+      deleted_at: now,
+      version: sql`${schema.venta_detalle.version} + 1`,
+      sync_state: 'pending',
+      updated_at: now,
+    }).where(lineasVivasDeVenta(ventaId)).run();
   }
 
   for (const linea of payload.lineas) {
@@ -264,14 +274,14 @@ export function ventaConfirmarHandler(db: Db, rawPayload: unknown) {
   });
 
   const detalles = db.select().from(schema.venta_detalle)
-    .where(eq(schema.venta_detalle.venta_id, venta.id)).all();
+    .where(lineasVivasDeVenta(venta.id)).all();
   return { venta, detalles, comprobante };
 }
 
 function revertirLineasRetail(tx: Tx, ctx: RevertirLineasCtx): void {
   const { venta, now, sync, userId } = ctx;
   const detalles = tx.select().from(schema.venta_detalle)
-    .where(eq(schema.venta_detalle.venta_id, venta.id)).all();
+    .where(lineasVivasDeVenta(venta.id)).all();
 
   for (const det of detalles) {
     const ex = tx.select().from(schema.existencias)
@@ -320,7 +330,7 @@ export function ventaGetHandler(db: Db, payload: { id: string }) {
     .where(eq(schema.venta.id, payload.id)).get();
   if (!venta) return null;
   const detalles = db.select().from(schema.venta_detalle)
-    .where(eq(schema.venta_detalle.venta_id, payload.id)).all();
+    .where(lineasVivasDeVenta(payload.id)).all();
   const comprobante = venta.comprobante_id
     ? db.select().from(schema.comprobante)
         .where(eq(schema.comprobante.id, venta.comprobante_id)).get() ?? null
@@ -390,6 +400,7 @@ export function ventaDetalladoQueryAll(db: Db, filtros: VentaExportFiltros = {})
     desdeDate ? gte(schema.venta.fecha, desdeDate) : undefined,
     hastaDate ? lte(schema.venta.fecha, hastaDate) : undefined,
     estado ? eq(schema.venta.estado, estado) : undefined,
+    isNull(schema.venta_detalle.deleted_at),
   );
 
   return db.select({

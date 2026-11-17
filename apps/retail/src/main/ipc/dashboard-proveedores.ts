@@ -1,7 +1,7 @@
 // packages/client/src/main/ipc/dashboard-proveedores.ts
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { eq, and, gte, lte, sql, desc, inArray, notInArray } from 'drizzle-orm';
+import { eq, and, gte, lte, sql, desc, inArray, notInArray, isNull } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import { requirePermission } from '@core/main';
 
@@ -37,6 +37,7 @@ export function dashboardProveedoresRangoHandler(
     .innerJoin(schema.proveedor, eq(schema.orden_compra.proveedor_id, schema.proveedor.id))
     .where(and(
       inArray(schema.orden_compra.estado, ['recibida_parcial', 'recibida_total', 'cerrada']),
+      isNull(schema.item_oc.deleted_at),
       gte(schema.orden_compra.fecha, desde),
       lte(schema.orden_compra.fecha, hasta),
     ))

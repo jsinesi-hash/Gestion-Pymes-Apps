@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { generateId } from '@ferreteria/shared';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
@@ -92,7 +92,7 @@ export function recepcionCrearHandler(db: Db, payload: unknown) {
 
     for (const item of v_items) {
       const itemOc = tx.select().from(schema.item_oc)
-        .where(eq(schema.item_oc.id, item.item_oc_id))
+        .where(and(eq(schema.item_oc.id, item.item_oc_id), isNull(schema.item_oc.deleted_at)))
         .get();
       if (!itemOc) continue;
 
@@ -156,7 +156,7 @@ export function recepcionCrearHandler(db: Db, payload: unknown) {
       cantidad_recibida: schema.item_oc.cantidad_recibida,
     })
       .from(schema.item_oc)
-      .where(eq(schema.item_oc.orden_compra_id, v_orden_compra_id))
+      .where(and(eq(schema.item_oc.orden_compra_id, v_orden_compra_id), isNull(schema.item_oc.deleted_at)))
       .all();
 
     const totalRecibido = allItems.every(i => i.cantidad_recibida >= i.cantidad_pedida);

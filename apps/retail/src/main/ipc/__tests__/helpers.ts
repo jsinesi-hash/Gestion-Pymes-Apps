@@ -12,10 +12,10 @@ import { loginHandler, hashPassword, limiteIntentos } from '@core/main';
 const MIGRATIONS_DIR = path.resolve(__dirname, '../../db/migrations');
 
 /**
- * Tablas que todavía borran físicamente (líneas de documentos en borrador): F1 PR4b las pasa a
- * lápida y esta lista queda vacía. Ninguna tabla nueva entra acá (ADR-150 §7).
+ * Tablas que todavía borran físicamente. F1 PR4b pasó a lápida las últimas (líneas de venta,
+ * presupuesto, remito y OC): la lista queda vacía y ninguna tabla entra acá (ADR-150 §7).
  */
-export const BORRADO_FISICO_PENDIENTE = ['item_oc', 'presupuesto_detalle', 'remito_linea', 'venta_detalle'] as const;
+export const BORRADO_FISICO_PENDIENTE: readonly string[] = [];
 
 export function createTestDb() {
   const sqlite = new Database(':memory:');
