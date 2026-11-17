@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import * as schema from '@core/db';
 import { setupCoreDb } from '../testing/helpers';
 import { runSeed } from './seed';
@@ -12,8 +12,10 @@ describe('runSeed respeta los cambios hechos desde Roles y permisos', () => {
     db.select({ id: schema.rol.id }).from(schema.rol).where(eq(schema.rol.nombre, nombre)).get()!.id;
   const permisoId = (codigo: string) =>
     db.select({ id: schema.permiso.id }).from(schema.permiso).where(eq(schema.permiso.codigo, codigo)).get()!.id;
-  const tiene = (rol: string, codigo: string) => !!db.select({ id: schema.rol_permiso.id }).from(schema.rol_permiso)
-    .where(and(eq(schema.rol_permiso.rol_id, rolId(rol)), eq(schema.rol_permiso.permiso_id, permisoId(codigo)))).get();
+  const filas = (rol: string, codigo: string) => db.select({ id: schema.rol_permiso.id, deleted_at: schema.rol_permiso.deleted_at })
+    .from(schema.rol_permiso)
+    .where(and(eq(schema.rol_permiso.rol_id, rolId(rol)), eq(schema.rol_permiso.permiso_id, permisoId(codigo)))).all();
+  const tiene = (rol: string, codigo: string) => filas(rol, codigo).some((f) => f.deleted_at === null);
 
   function override(rol: string, codigo: string, otorgado: boolean) {
     const now = new Date();
@@ -22,9 +24,14 @@ describe('runSeed respeta los cambios hechos desde Roles y permisos', () => {
       fecha_actualizacion: now, version: 1, origin_id: 'test', sync_state: 'pending', updated_at: now,
     }).run();
   }
+  // Quitar un permiso deja lápida (ADR-150 §7), como hace «Roles y permisos».
   function quitar(rol: string, codigo: string) {
-    db.delete(schema.rol_permiso)
-      .where(and(eq(schema.rol_permiso.rol_id, rolId(rol)), eq(schema.rol_permiso.permiso_id, permisoId(codigo)))).run();
+    db.update(schema.rol_permiso).set({ deleted_at: new Date() })
+      .where(and(
+        eq(schema.rol_permiso.rol_id, rolId(rol)),
+        eq(schema.rol_permiso.permiso_id, permisoId(codigo)),
+        isNull(schema.rol_permiso.deleted_at),
+      )).run();
   }
   const reseed = () => runSeed(db, { permisos: [], operador: [] });
 
@@ -48,6 +55,12 @@ describe('runSeed respeta los cambios hechos desde Roles y permisos', () => {
     quitar('OPERADOR', 'caja.operar');
     reseed();
     expect(tiene('OPERADOR', 'caja.operar')).toBe(true);
+  });
+
+  it('al volver a otorgarlo revive la misma fila: no duplica', () => {
+    quitar('OPERADOR', 'caja.operar');
+    reseed();
+    expect(filas('OPERADOR', 'caja.operar')).toHaveLength(1);
   });
 
   it('un permiso agregado a mano a un rol se conserva al reiniciar', () => {

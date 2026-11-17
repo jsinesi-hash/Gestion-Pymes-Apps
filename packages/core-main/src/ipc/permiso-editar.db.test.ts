@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import * as schema from '@core/db';
 import { setupCoreDb, loginAsAdmin, loginAsOperador, clearSession } from '../testing/helpers';
 import { permisoActualizarRolHandler, permisoMatrizHandler, getSession, getSessionData, hashPassword } from '../index';
@@ -52,6 +52,11 @@ describe('permisoActualizarRolHandler', () => {
     permisoActualizarRolHandler(db, { rolId: op, permisos: base });
     expect(codigosDe('OPERADOR')).toContain('ctacte.cobrar');
     expect(overrides('OPERADOR')).toEqual([{ codigo: 'ctacte.cobrar', otorgado: true }]);
+    // ADR-150 §7: quitar dejó lápida y otorgar la revivió; sigue habiendo una sola fila.
+    const cobrar = db.select({ id: schema.permiso.id }).from(schema.permiso).where(eq(schema.permiso.codigo, 'ctacte.cobrar')).get()!.id;
+    const filas = db.select({ deleted_at: schema.rol_permiso.deleted_at }).from(schema.rol_permiso)
+      .where(and(eq(schema.rol_permiso.rol_id, op), eq(schema.rol_permiso.permiso_id, cobrar))).all();
+    expect(filas).toEqual([{ deleted_at: null }]);
   });
 
   it('rechaza un código de permiso que no existe sin tocar nada', () => {

@@ -1,4 +1,4 @@
-import { eq, and, ne } from 'drizzle-orm';
+import { eq, and, ne, isNull } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
@@ -71,7 +71,10 @@ export function presentacionListByProductoHandler(db: Db, payload: { producto_id
   })
     .from(schema.producto_presentacion)
     .innerJoin(schema.unidad, eq(schema.unidad.id, schema.producto_presentacion.unidad_id))
-    .where(eq(schema.producto_presentacion.producto_id, payload.producto_id))
+    .where(and(
+      eq(schema.producto_presentacion.producto_id, payload.producto_id),
+      isNull(schema.producto_presentacion.deleted_at), // eliminada sin historial (lápida)
+    ))
     .all();
 }
 
@@ -243,8 +246,17 @@ export function presentacionEliminarHandler(db: Db, payload: unknown) {
     return { eliminada: false as const };
   }
 
-  db.delete(schema.producto_presentacion)
-    .where(eq(schema.producto_presentacion.id, v_id)).run();
+  // Nunca se usó: para el usuario desaparece. Sin borrado físico (ADR-150 §7): baja lógica + lápida.
+  // activo = false la saca de todas las lecturas operativas y libera el GTIN (ux_pp_gtin es parcial
+  // por activo); deleted_at la saca del listado del producto y de reactivar.
+  const now = new Date();
+  db.update(schema.producto_presentacion).set({
+    activo: false,
+    deleted_at: now,
+    version: existing.version + 1,
+    sync_state: 'pending',
+    updated_at: now,
+  }).where(eq(schema.producto_presentacion.id, v_id)).run();
   return { eliminada: true as const };
 }
 
@@ -255,7 +267,7 @@ export function presentacionReactivarHandler(db: Db, payload: unknown) {
   const v_id = id(p['id'], 'id');
   const existing = db.select().from(schema.producto_presentacion)
     .where(eq(schema.producto_presentacion.id, v_id)).get();
-  if (!existing) throw new Error('NOT_FOUND');
+  if (!existing || existing.deleted_at) throw new Error('NOT_FOUND');
 
   if (existing.gtin_barcode) {
     const colision = db.select({ id: schema.producto_presentacion.id })

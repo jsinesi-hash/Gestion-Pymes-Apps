@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { eq } from 'drizzle-orm';
 import * as schema from '../db/schema';
-import { createTestDb } from './helpers';
+import { createTestDb, permitirBorradoFisico } from './helpers';
 import { runStartup } from '../startup';
 
 const opts = { skipBackup: true, skipMigrations: true, geoCache: '/no-existe-geo-cache' };
@@ -19,6 +19,7 @@ describe('runStartup — seed base del rubro', () => {
   it('un segundo arranque no duplica ni recrea lo que se borró', async () => {
     const db = createTestDb();
     await runStartup(db, opts);
+    permitirBorradoFisico(db); // simula que la categoría ya no está
     db.delete(schema.categoria_venta).where(eq(schema.categoria_venta.nombre, 'Tortas')).run();
     await runStartup(db, opts);
     const cats = db.select().from(schema.categoria_venta).all();

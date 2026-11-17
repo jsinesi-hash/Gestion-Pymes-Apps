@@ -8,7 +8,7 @@
 // Electron (`scripts/test-node.cjs`), igual que los del main de las apps (CLAUDE.md, «Dos runners»).
 import { createRequire } from 'node:module';
 import Database from 'better-sqlite3';
-import { createDb } from '@core/db';
+import { createDb, instalarBarandaSinBorrado, registroSyncCore } from '@core/db';
 import * as schema from '@core/db';
 
 let sentencias: string[] | null = null;
@@ -32,5 +32,7 @@ export function createCoreTestDb() {
   sqlite.pragma('foreign_keys = OFF');
   for (const s of sentencias) sqlite.exec(s);
   sqlite.pragma('foreign_keys = ON');
+  // Baranda ADR-150 §7: un handler del núcleo que borre una fila de una tabla que sincroniza rompe su test.
+  instalarBarandaSinBorrado(sqlite, schema, registroSyncCore());
   return db;
 }

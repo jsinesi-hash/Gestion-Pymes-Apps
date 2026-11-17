@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { cajaAbrirHandler, runSeed as runSeedCore } from '@core/main';
 import { PERMISOS_ELABORADOS, OPERADOR_PERMISOS_ELABORADOS } from '../../auth/seed';
 import * as schema from '../../db/schema';
-import { createTestDb, loginAsAdmin, clearSession } from '../../__tests__/helpers';
+import { createTestDb, loginAsAdmin, clearSession, permitirBorradoFisico } from '../../__tests__/helpers';
 import { CONSUMIDOR_FINAL_ID, asegurarConsumidorFinal, runCatalogSeedElaborados, runBaseRubroHeladeria } from '../seed';
 import { articuloCreateHandler } from '../../ipc/articulo';
 import { movimientoArticuloCreateHandler } from '../../ipc/movimiento-articulo';
@@ -18,6 +18,8 @@ type Db = ReturnType<typeof createTestDb>;
 
 function dbConBase(): Db {
   const db = createTestDb();
+  // «Quitar catálogo demo» borra físicamente: existe solo en standalone (ADR-150 §7).
+  permitirBorradoFisico(db);
   runSeedCore(db, { permisos: PERMISOS_ELABORADOS, operador: OPERADOR_PERMISOS_ELABORADOS });
   runCatalogSeedElaborados(db);
   runBaseRubroHeladeria(db);

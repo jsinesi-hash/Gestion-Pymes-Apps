@@ -10,15 +10,16 @@ import { createTestDb } from './helpers';
 const registro = registroSyncElaborados();
 const hub = Object.entries(registro).filter(([, e]) => e.tipo !== 'local').map(([t]) => t);
 const triggersInstalados = (sqlite: Database.Database) =>
-  (sqlite.prepare("select name from sqlite_master where type = 'trigger' and name like 'sync_%' order by name").all() as { name: string }[]).map((r) => r.name);
+  (sqlite.prepare("select name from sqlite_master where type = 'trigger' and (name like 'sync_ins_%' or name like 'sync_upd_%' or name like 'sync_del_%') order by name").all() as { name: string }[]).map((r) => r.name);
 
 describe('triggers de sync — Elaborados', () => {
   it('en standalone no hay triggers; al instalarlos, cada tabla maestro/libro tiene los suyos y compilan', () => {
     const sqlite = createTestDb().$client as Database.Database;
-    expect(triggersInstalados(sqlite)).toEqual([]);
+    // La base de test trae la baranda sin borrado (sync_del_*); la captura no está.
+    expect(triggersInstalados(sqlite).filter((n) => !n.startsWith('sync_del_'))).toEqual([]);
     instalarTriggersSync(sqlite, schema, registro);
     expect(triggersInstalados(sqlite)).toEqual([...nombresTriggersSync(schema, registro)].sort());
-    expect(triggersInstalados(sqlite)).toHaveLength(hub.length * 2);
+    expect(triggersInstalados(sqlite)).toHaveLength(hub.length * 3);
     for (const t of hub) {
       expect(() => sqlite.prepare(`insert into "${t}" select * from "${t}" where 0`), t).not.toThrow();
       expect(() => sqlite.prepare(`update "${t}" set "id" = "id" where 0`), t).not.toThrow();

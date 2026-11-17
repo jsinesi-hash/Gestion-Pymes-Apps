@@ -12,7 +12,10 @@ export { columnasBooleanas, ddlPostgres, traducirIndicePostgres } from './__boun
 export {
   aplicandoCambiosRecibidos,
   desinstalarTriggersSync,
+  instalarBarandaSinBorrado,
   instalarTriggersSync,
   nombresTriggersSync,
+  quitarBarandaSinBorrado,
+  triggersSinBorrado,
   triggersSync,
 } from './__boundary__/triggers-sync';

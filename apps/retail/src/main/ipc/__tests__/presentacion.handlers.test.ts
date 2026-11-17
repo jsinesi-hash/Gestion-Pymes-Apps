@@ -368,15 +368,24 @@ describe('presentacion handlers', () => {
 
   // ── ADR-066: eliminar / reactivar ───────────────────────────────────────────
 
-  it('eliminar físico borra la fila si la presentación nunca se usó', () => {
+  it('eliminar una presentación que nunca se usó la saca del producto (lápida, no borrado físico — ADR-150 §7)', () => {
     loginAsAdmin(db);
     const prod = setupProducto(db);
     const nueva = presentacionCreateHandler(db, {
-      producto_id: prod.id, unidad_id: unidadId(db, 'u'), factor_a_stock: 6,
+      producto_id: prod.id, unidad_id: unidadId(db, 'u'), factor_a_stock: 6, gtin_barcode: '7790000000017',
     });
-    presentacionEliminarHandler(db, { id: nueva.id });
+    expect(presentacionEliminarHandler(db, { id: nueva.id })).toEqual({ eliminada: true });
     const pps = presentacionListByProductoHandler(db, { producto_id: prod.id });
     expect(pps.find(p => p.id === nueva.id)).toBeUndefined();
+    const fila = db.select().from(schema.producto_presentacion)
+      .where(eq(schema.producto_presentacion.id, nueva.id)).get()!;
+    expect(fila).toMatchObject({ activo: false });
+    expect(fila.deleted_at).toBeInstanceOf(Date);
+    expect(() => presentacionReactivarHandler(db, { id: nueva.id })).toThrow('NOT_FOUND');
+    // El GTIN queda libre para otra presentación (ux_pp_gtin es parcial por activo).
+    expect(() => presentacionCreateHandler(db, {
+      producto_id: prod.id, unidad_id: unidadId(db, 'u'), factor_a_stock: 12, gtin_barcode: '7790000000017',
+    })).not.toThrow();
   });
 
   it('eliminar con historial (lista_precio_valor) hace baja lógica, no borra', () => {

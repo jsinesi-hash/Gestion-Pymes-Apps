@@ -25,6 +25,12 @@ function createTestDb() {
     path.resolve(__dirname, '../../db/migrations/0052_adr147_rol_permiso_override.sql'), 'utf8'
   );
   for (const stmt of sql0052.split('--> statement-breakpoint').map(s => s.trim()).filter(Boolean)) sqlite.exec(stmt);
+  // ADR-150 §7 (0054): lápida en `rol_permiso`. Solo esa sentencia: las demás tablas de la 0054 no
+  // existen en este harness liviano.
+  const sql0054 = fs.readFileSync(
+    path.resolve(__dirname, '../../db/migrations/0054_adr150_lapidas.sql'), 'utf8'
+  );
+  for (const stmt of sql0054.split('--> statement-breakpoint').map(s => s.trim()).filter(s => s.includes('`rol_permiso`'))) sqlite.exec(stmt);
   return drizzle(sqlite, { schema });
 }
 

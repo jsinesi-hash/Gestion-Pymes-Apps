@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '@core/db';
 import { usuario, rol, rol_permiso, permiso } from '@core/db';
@@ -41,7 +41,7 @@ function rolTienePermiso(db: Db, rolId: string, codigoPermiso: string): boolean 
     .from(rol_permiso)
     .innerJoin(rol, eq(rol.id, rol_permiso.rol_id))
     .innerJoin(permiso, eq(permiso.id, rol_permiso.permiso_id))
-    .where(and(eq(rol_permiso.rol_id, rolId), eq(rol.activo, true), eq(permiso.codigo, codigoPermiso)))
+    .where(and(eq(rol_permiso.rol_id, rolId), isNull(rol_permiso.deleted_at), eq(rol.activo, true), eq(permiso.codigo, codigoPermiso)))
     .get();
   return !!fila;
 }

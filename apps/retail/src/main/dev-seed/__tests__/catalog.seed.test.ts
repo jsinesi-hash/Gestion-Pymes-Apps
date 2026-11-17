@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createTestDb } from '../../ipc/__tests__/helpers';
+import { createTestDb, permitirBorradoFisico } from '../../ipc/__tests__/helpers';
 import { runCatalogSeed } from '../../catalog/seed';
 import { seedCatalog } from '../catalog';
 import * as schema from '../../db/schema';
@@ -75,6 +75,7 @@ describe('seedCatalog', () => {
   it('force: borra y re-inserta', () => {
     const db = setupDb();
     seedCatalog(db, false);
+    permitirBorradoFisico(db); // el seed de desarrollo vacía tablas: solo en standalone
     seedCatalog(db, true); // force
 
     const productos = db.select().from(schema.producto).all();

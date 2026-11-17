@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { generateId } from '@ferreteria/shared';
 import * as schema from '../../db/schema';
-import { setupDb, loginAsAdmin, clearSession } from './helpers';
+import { setupDb, loginAsAdmin, clearSession, permitirBorradoFisico } from './helpers';
 import { runCatalogSeed } from '../../catalog/seed';
 import { categoriaCreateHandler } from '../categoria';
 import { productoCreateHandler } from '../producto';
@@ -107,6 +107,7 @@ describe('venta — caracterización previa a E3a', () => {
   it('anular venta legacy sin venta_pago → un egreso por venta.total', () => {
     const { prod, caja } = prepararProducto();
     const { venta } = ventaConfirmarHandler(db, payload(caja.id, prod.id));
+    permitirBorradoFisico(db); // simula una venta anterior a venta_pago (ADR-032)
     db.delete(schema.venta_pago).where(eq(schema.venta_pago.venta_id, venta.id)).run();
 
     ventaAnularHandler(db, { venta_id: venta.id, motivo: 'legacy', supervisor_credenciales: SUP });

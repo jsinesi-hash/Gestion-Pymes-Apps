@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { generateId } from '@ferreteria/shared';
 import * as schema from '../../db/schema';
-import { setupDb, loginAsAdmin, clearSession } from '../../__tests__/helpers';
+import { setupDb, loginAsAdmin, clearSession, permitirBorradoFisico } from '../../__tests__/helpers';
 import { CONSUMIDOR_FINAL_ID } from '../../catalog/seed';
 import { cajaAbrirHandler, pausarVentaEspera } from '@core/main';
 import { movimientoArticuloCreateHandler } from '../movimiento-articulo';
@@ -239,6 +239,7 @@ describe('venta handlers (Elaborados)', () => {
 
     it('falla dentro de aplicarLineas → rollback total (nada persistido, correlativo incluido)', () => {
       const { c, caja } = preparar();
+      permitirBorradoFisico(db); // provoca la falla: el artículo queda sin fila de existencia
       db.delete(schema.existencia_articulo).where(eq(schema.existencia_articulo.articulo_id, c.choco.id)).run();
       expect(() => ventaConfirmarHandler(db, {
         caja_id: caja.id, cliente_id: CONSUMIDOR_FINAL_ID,
