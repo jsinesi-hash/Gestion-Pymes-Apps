@@ -17,9 +17,9 @@ const VENTAS_DATA = {
 };
 const STOCK_DATA = { valor_inventario: 100000, sin_stock: [], bajo_minimo: [], sin_movimiento: [] };
 const CAJA_DATA  = {
-  caja_activa: { id: 'c1', fecha_apertura: new Date(), monto_inicial: 1000 },
-  ingresos_dia: 5000, egresos_dia: 200, efectivo_esperado: 5800,
-  arqueos_recientes: [], umbral_diferencia_caja: 50000,
+  caja_activa: { id: 'c1', fecha_apertura: new Date(), monto_inicial_centavos: 100000 },
+  ingresos_dia_centavos: 500000, egresos_dia_centavos: 20000, efectivo_esperado_centavos: 580000,
+  arqueos_recientes: [], umbral_diferencia_caja_centavos: 5000000,
 };
 
 function mockSession(permisos: string[]): SessionData {
@@ -103,14 +103,14 @@ describe('StockPanel — expansión de alertas', () => {
 });
 
 const CAJA_SIN_ACTIVA = {
-  caja_activa: null, ingresos_dia: 0, egresos_dia: 0, efectivo_esperado: 0,
-  arqueos_recientes: [], umbral_diferencia_caja: 50000,
+  caja_activa: null, ingresos_dia_centavos: 0, egresos_dia_centavos: 0, efectivo_esperado_centavos: 0,
+  arqueos_recientes: [], umbral_diferencia_caja_centavos: 5000000,
 };
 const CAJA_CON_ARQUEO = {
-  caja_activa: { id: 'c1', fecha_apertura: new Date(), monto_inicial: 1000 },
-  ingresos_dia: 5000, egresos_dia: 200, efectivo_esperado: 5800,
-  arqueos_recientes: [{ caja_id: 'c0', usuario_nombre: 'Ana García', fecha_cierre: new Date(), diferencia: 500 }],
-  umbral_diferencia_caja: 50000,
+  caja_activa: { id: 'c1', fecha_apertura: new Date(), monto_inicial_centavos: 100000 },
+  ingresos_dia_centavos: 500000, egresos_dia_centavos: 20000, efectivo_esperado_centavos: 580000,
+  arqueos_recientes: [{ caja_id: 'c0', usuario_nombre: 'Ana García', fecha_cierre: new Date(), diferencia_centavos: 50000 }],
+  umbral_diferencia_caja_centavos: 5000000,
 };
 
 describe('CajaPanel', () => {

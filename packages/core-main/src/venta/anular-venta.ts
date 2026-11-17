@@ -53,13 +53,13 @@ export function anularVenta(
       // Egreso por cada pago no-CCC
       for (const pago of pagoRows) {
         if (pago.medio_pago === 'cuenta_corriente') continue;
-        const montoCaja = (pago.monto_centavos + pago.recargo_centavos) / 100;
+        const montoCaja = pago.monto_centavos + pago.recargo_centavos; // ADR-157: centavos
         tx.insert(schema.movimiento_caja).values({
           id: generateId(),
           caja_id: ventaRow.caja_id,
           tipo: 'egreso',
           motivo: 'ajuste',
-          monto: montoCaja,
+          monto_centavos: montoCaja,
           forma_pago: pago.medio_pago,
           referencia_tipo: 'anulacion_venta',
           referencia_id: input.venta_id,
@@ -76,7 +76,7 @@ export function anularVenta(
         caja_id: ventaRow.caja_id,
         tipo: 'egreso',
         motivo: 'ajuste',
-        monto: ventaRow.total,
+        monto_centavos: Math.round(ventaRow.total * 100), // venta.total sigue en pesos hasta PR-C2
         forma_pago: ventaRow.forma_pago,
         referencia_tipo: 'anulacion_venta',
         referencia_id: input.venta_id,

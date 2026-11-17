@@ -131,7 +131,7 @@ export function CajaDashboard({ caja, onRefetch, renderVentaDetalle }: Readonly<
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', flex: 1 }}>
           <div className="shift-item">
             <span className="shift-label">Fondo apertura</span>
-            <span className="shift-val num">$ {fmt(caja.monto_inicial)}</span>
+            <span className="shift-val num">$ {fmt(caja.monto_inicial_centavos / 100)}</span>
           </div>
           <div className="shift-sep" />
           <div className="shift-item">

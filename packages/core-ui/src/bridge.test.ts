@@ -24,7 +24,7 @@ describe('bridge()', () => {
 // un `@ts-expect-error` que deja de ser un error rompe `tsc`.
 export function _verificacionDeTipos(): void {
   void bridge().auth.login({ nombreUsuario: 'x', password: 'y' });
-  void bridge().caja.abrir({ monto_inicial: 0 });
+  void bridge().caja.abrir({ monto_inicial_centavos: 0 });
   void bridge().usuario.desactivar({ userId: 'u' });
 
   // @ts-expect-error — el namespace no existe en el catálogo

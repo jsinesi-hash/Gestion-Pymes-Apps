@@ -141,7 +141,7 @@ describe('ventaQueryAll', () => {
       impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 1000,
     });
     stockEntradaHandler(db, { producto_id: prod.id, cantidad: 10 });
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, {
       caja_id: caja.id, cliente_id: CF_ID,
       lineas: [{ producto_id: prod.id, descripcion: 'Tornillo', cantidad: 1,
@@ -183,7 +183,7 @@ describe('ventaDetalladoQueryAll', () => {
       impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 1000,
     });
     stockEntradaHandler(db, { producto_id: prod.id, cantidad: 10 });
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, {
       caja_id: caja.id, cliente_id: CF_ID,
       lineas: [{ producto_id: prod.id, descripcion: 'Tornillo', cantidad: 2,
@@ -269,20 +269,20 @@ describe('remitos / presupuestos queryAll (reusan el list handler)', () => {
 
 describe('cajaArqueosQueryAll', () => {
   it('devuelve cajas con turno correlativo y cajero_nombre', () => {
-    const caja1 = cajaAbrirHandler(db, { monto_inicial: 100 });
-    cajaCerrarHandler(db, { caja_id: caja1.id, monto_contado: 100 });
+    const caja1 = cajaAbrirHandler(db, { monto_inicial_centavos: 100 });
+    cajaCerrarHandler(db, { caja_id: caja1.id, monto_contado_centavos: 100 });
 
     clearSession();
     loginAsAdmin(db);
-    const caja2 = cajaAbrirHandler(db, { monto_inicial: 200 });
-    cajaCerrarHandler(db, { caja_id: caja2.id, monto_contado: 200 });
+    const caja2 = cajaAbrirHandler(db, { monto_inicial_centavos: 200 });
+    cajaCerrarHandler(db, { caja_id: caja2.id, monto_contado_centavos: 200 });
 
     const rows = cajaArqueosQueryAll(db);
     expect(rows.length).toBe(2);
     expect(rows[0].turno).toBe(1);
     expect(rows[1].turno).toBe(2);
     expect(typeof rows[0].cajero_nombre).toBe('string');
-    expect(rows[0].monto_inicial).toBe(100);
-    expect(rows[1].monto_inicial).toBe(200);
+    expect(rows[0].monto_inicial_centavos).toBe(100);
+    expect(rows[1].monto_inicial_centavos).toBe(200);
   });
 });

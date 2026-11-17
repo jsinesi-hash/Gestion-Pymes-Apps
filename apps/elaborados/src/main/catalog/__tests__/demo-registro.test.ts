@@ -71,7 +71,7 @@ describe('registro del catálogo demo', () => {
 
   it('vaciar con una venta posterior → DEMO_EN_USO:ventas y nada se borra', () => {
     runDemoHeladeriaSeed(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     const palito = db.select().from(schema.producto_venta).all().find((p) => p.nombre === 'Palito')!;
     ventaConfirmarHandler(db, {
       caja_id: caja.id, cliente_id: CONSUMIDOR_FINAL_ID,

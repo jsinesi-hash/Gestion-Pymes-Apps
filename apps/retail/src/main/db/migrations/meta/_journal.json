@@ -415,5 +415,12 @@
       "tag": "0058_adr155_configuracion_negocio",
       "breakpoints": true
     }
+    ,{
+      "idx": 59,
+      "version": "7",
+      "when": 1795651200000,
+      "tag": "0059_adr157_caja_centavos",
+      "breakpoints": true
+    }
   ]
 }

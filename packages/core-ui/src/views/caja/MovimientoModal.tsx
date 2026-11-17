@@ -31,14 +31,14 @@ export function MovimientoModal({ cajaId, onClose }: Readonly<Props>) {
         caja_id: cajaId,
         tipo,
         motivo,
-        monto: Number.parseFloat(monto),
+        monto_centavos: Math.round(Number.parseFloat(monto) * 100), // ADR-157
         forma_pago: formaPago,
         observaciones: obs || undefined,
       });
       toast.success('Movimiento registrado');
       onClose();
     } catch (err) {
-      const r = rutearCampoError(err, { monto: 'monto-mov' });
+      const r = rutearCampoError(err, { monto_centavos: 'monto-mov' });
       if (r.campo) setCampoError({ campo: r.campo, mensaje: r.mensaje });
       else setError(r.mensaje);
     } finally {
@@ -69,10 +69,10 @@ export function MovimientoModal({ cajaId, onClose }: Readonly<Props>) {
 
         <div className="field">
           <label htmlFor="monto-mov">Monto</label>
-          <input id="monto-mov" className={`input num${campoError?.campo === 'monto' ? ' error' : ''}`} aria-label="Monto"
+          <input id="monto-mov" className={`input num${campoError?.campo === 'monto_centavos' ? ' error' : ''}`} aria-label="Monto"
             type="number" min="1" step="1"
             value={monto} onChange={e => setMonto(e.target.value)} autoFocus />
-          {campoError?.campo === 'monto' && <span className="field-error">{campoError.mensaje}</span>}
+          {campoError?.campo === 'monto_centavos' && <span className="field-error">{campoError.mensaje}</span>}
         </div>
 
         <div className="field">

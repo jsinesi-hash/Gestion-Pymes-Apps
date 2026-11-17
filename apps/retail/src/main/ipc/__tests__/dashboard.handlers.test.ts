@@ -61,7 +61,7 @@ describe('dashboardVentasHandler', () => {
 
   it('cuenta solo ventas confirmadas del día (excluye borrador)', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id)); // confirmada
     const hoy = new Date();
     const userId = db.select({ id: schema.usuario.id }).from(schema.usuario).get()!.id;
@@ -80,7 +80,7 @@ describe('dashboardVentasHandler', () => {
 
   it('excluye ventas de ayer', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id));
     const ayer = new Date(Date.now() - 24 * 60 * 60 * 1000);
     db.update(schema.venta).set({ fecha: ayer }).run();
@@ -91,7 +91,7 @@ describe('dashboardVentasHandler', () => {
 
   it('ticket_promedio = total / count', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 1, 1000));
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 1, 2000));
     const result = dashboardVentasHandler(db);
@@ -102,7 +102,7 @@ describe('dashboardVentasHandler', () => {
 
   it('por_hora agrupa correctamente (2 ventas en misma hora = 1 slot)', () => {
     const { prod } = crearProducto(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 1, 100));
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 1, 200));
     const result = dashboardVentasHandler(db);
@@ -120,7 +120,7 @@ describe('dashboardVentasHandler', () => {
       stockEntradaHandler(db, { producto_id: p.id, cantidad: 100 });
       return p;
     });
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     prods.forEach((p, i) => ventaConfirmarHandler(db, makePayload(caja.id, p.id, 6 - i, 100)));
     const result = dashboardVentasHandler(db);
     expect(result.top_cantidad).toHaveLength(5);
@@ -132,7 +132,7 @@ describe('dashboardVentasHandler', () => {
   it('top_margen: precio neto − costo promedio × cantidad', () => {
     // precio_venta=121 IVA inc., iva=21%, precio_neto=100, costo=50 → margen/u=50, ×2=100
     const { prod } = crearProducto(db, 'Tornillo', 121, 50);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 2, 121, 21));
     const result = dashboardVentasHandler(db);
     expect(result.top_margen).toHaveLength(1);
@@ -171,7 +171,7 @@ describe('dashboardStockHandler', () => {
     const conVentas = crearActivo(db, 'Con ventas', 50);
     const sinVentas = crearActivo(db, 'Sin ventas', 50);
     stockEntradaHandler(db, { producto_id: conVentas.id, cantidad: 1 });
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, makePayload(caja.id, conVentas.id, 1, 200, 0));
     // conVentas: stock=0, tiene venta reciente
     // sinVentas: sin entrada de stock → existencias con stock_fisico=0, sin ventas
@@ -186,7 +186,7 @@ describe('dashboardStockHandler', () => {
     const prod = crearActivo(db, 'Bajo min');
     stockEntradaHandler(db, { producto_id: prod.id, cantidad: 5 });
     db.update(schema.existencias).set({ stock_minimo: 10 }).where(eq(schema.existencias.producto_id, prod.id)).run();
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     // Sell 5 to get velocity data, then reset stock to 5 and backdate the sale 15 days
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 5, 200, 0));
     // stock is now 0, set it back to 5
@@ -248,30 +248,30 @@ describe('dashboardCajaHandler', () => {
     loginAsAdmin(db);
     const result = dashboardCajaHandler(db);
     expect(result.caja_activa).toBeNull();
-    expect(result.ingresos_dia).toBe(0);
-    expect(result.egresos_dia).toBe(0);
-    expect(result.efectivo_esperado).toBe(0);
+    expect(result.ingresos_dia_centavos).toBe(0);
+    expect(result.egresos_dia_centavos).toBe(0);
+    expect(result.efectivo_esperado_centavos).toBe(0);
   });
 
   it('ingresos_dia y egresos_dia suman solo movimientos de hoy', () => {
     loginAsAdmin(db);
     const userId = db.select({ id: schema.usuario.id }).from(schema.usuario).get()!.id;
-    const caja = cajaAbrirHandler(db, { monto_inicial: 500 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 500 });
     const ahora = new Date();
     db.insert(schema.movimiento_caja).values({
       id: generateId(), caja_id: caja.id, tipo: 'ingreso', motivo: 'venta',
-      monto: 300, forma_pago: 'efectivo', referencia_tipo: 'test', referencia_id: 'r1',
+      monto_centavos: 300, forma_pago: 'efectivo', referencia_tipo: 'test', referencia_id: 'r1',
       usuario_id: userId, fecha: ahora, version: 1, origin_id: 'test', sync_state: 'pending', updated_at: ahora,
     }).run();
     const ayer = new Date(Date.now() - 24 * 60 * 60 * 1000);
     db.insert(schema.movimiento_caja).values({
       id: generateId(), caja_id: caja.id, tipo: 'egreso', motivo: 'gasto',
-      monto: 100, forma_pago: 'efectivo', referencia_tipo: 'test', referencia_id: 'r2',
+      monto_centavos: 100, forma_pago: 'efectivo', referencia_tipo: 'test', referencia_id: 'r2',
       usuario_id: userId, fecha: ayer, version: 1, origin_id: 'test', sync_state: 'pending', updated_at: ahora,
     }).run();
     const result = dashboardCajaHandler(db);
-    expect(result.ingresos_dia).toBe(300);
-    expect(result.egresos_dia).toBe(0);
+    expect(result.ingresos_dia_centavos).toBe(300);
+    expect(result.egresos_dia_centavos).toBe(0);
   });
 
   it('arqueos_recientes: últimas 5 cajas cerradas con usuario_nombre', () => {
@@ -283,14 +283,14 @@ describe('dashboardCajaHandler', () => {
         id: `caja-arch-${i}`, usuario_id: adminId,
         fecha_apertura: new Date(ahora.getTime() - (i + 2) * 60 * 60 * 1000),
         fecha_cierre:   new Date(ahora.getTime() - (i + 1) * 60 * 60 * 1000),
-        monto_inicial: 0, diferencia: i * 10, estado: 'cerrada',
+        monto_inicial_centavos: 0, diferencia_centavos: i * 1000, estado: 'cerrada',
         version: 1, origin_id: 'test', sync_state: 'pending', updated_at: ahora,
       }).run();
     }
     const result = dashboardCajaHandler(db);
     expect(result.arqueos_recientes).toHaveLength(5);
     expect(result.arqueos_recientes[0].usuario_nombre).toBeTruthy();
-    expect(result.arqueos_recientes[0].diferencia).toBeDefined();
+    expect(result.arqueos_recientes[0].diferencia_centavos).toBeDefined();
   });
 });
 

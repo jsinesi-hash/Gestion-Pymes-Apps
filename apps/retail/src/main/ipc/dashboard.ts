@@ -37,17 +37,18 @@ export type DashboardStock = {
   sin_movimiento: StockAlerta[];
 };
 
+// ADR-157: montos en centavos.
 export type ArqueoResumen = {
-  caja_id: string; usuario_nombre: string; fecha_cierre: Date; diferencia: number;
+  caja_id: string; usuario_nombre: string; fecha_cierre: Date; diferencia_centavos: number;
 };
 
 export type DashboardCaja = {
-  caja_activa: { id: string; fecha_apertura: Date; monto_inicial: number } | null;
-  ingresos_dia: number;
-  egresos_dia: number;
-  efectivo_esperado: number;
+  caja_activa: { id: string; fecha_apertura: Date; monto_inicial_centavos: number } | null;
+  ingresos_dia_centavos: number;
+  egresos_dia_centavos: number;
+  efectivo_esperado_centavos: number;
   arqueos_recientes: ArqueoResumen[];
-  umbral_diferencia_caja: number;
+  umbral_diferencia_caja_centavos: number;
 };
 
 function todayRange() {
@@ -200,31 +201,31 @@ export function dashboardStockHandler(db: Db): DashboardStock {
 export function dashboardCajaHandler(db: Db): DashboardCaja {
   const { start, end } = todayRange();
 
-  const umbral_diferencia_caja = leerParametroNumero(db, 'umbral_diferencia_caja', 0);
+  const umbral_diferencia_caja_centavos = leerParametroNumero(db, 'umbral_diferencia_caja_centavos', 0);
 
   const cajaRow = db.select({
     id:            schema.caja.id,
     fecha_apertura: schema.caja.fecha_apertura,
-    monto_inicial: schema.caja.monto_inicial,
+    monto_inicial_centavos: schema.caja.monto_inicial_centavos,
   }).from(schema.caja).where(eq(schema.caja.estado, 'abierta')).get() ?? null;
 
   // System-wide daily totals — all cajas, any user. Intentional: supervisor dashboard overview.
   const movsDia = db.select({
     tipo:      schema.movimiento_caja.tipo,
-    monto:     schema.movimiento_caja.monto,
+    monto:     schema.movimiento_caja.monto_centavos,
     forma_pago: schema.movimiento_caja.forma_pago,
   }).from(schema.movimiento_caja)
     .where(and(gte(schema.movimiento_caja.fecha, start), lte(schema.movimiento_caja.fecha, end)))
     .all();
 
-  const ingresos_dia = movsDia.filter(m => m.tipo === 'ingreso').reduce((s, m) => s + m.monto, 0);
-  const egresos_dia  = movsDia.filter(m => m.tipo === 'egreso').reduce((s, m) => s + m.monto, 0);
+  const ingresos_dia_centavos = movsDia.filter(m => m.tipo === 'ingreso').reduce((s, m) => s + m.monto, 0);
+  const egresos_dia_centavos  = movsDia.filter(m => m.tipo === 'egreso').reduce((s, m) => s + m.monto, 0);
 
-  let efectivo_esperado = 0;
+  let efectivo_esperado_centavos = 0;
   if (cajaRow) {
     const movsCaja = db.select({
       tipo:       schema.movimiento_caja.tipo,
-      monto:      schema.movimiento_caja.monto,
+      monto:      schema.movimiento_caja.monto_centavos,
       forma_pago: schema.movimiento_caja.forma_pago,
     }).from(schema.movimiento_caja)
       .where(eq(schema.movimiento_caja.caja_id, cajaRow.id))
@@ -235,14 +236,14 @@ export function dashboardCajaHandler(db: Db): DashboardCaja {
     const egEf = movsCaja
       .filter(m => m.tipo === 'egreso' && (!m.forma_pago || m.forma_pago === 'efectivo'))
       .reduce((s, m) => s + m.monto, 0);
-    efectivo_esperado = cajaRow.monto_inicial + ingEf - egEf;
+    efectivo_esperado_centavos = cajaRow.monto_inicial_centavos + ingEf - egEf;
   }
 
   const arqueos_recientes = db.select({
     caja_id:        schema.caja.id,
     usuario_nombre: schema.usuario.nombre_completo,
     fecha_cierre:   schema.caja.fecha_cierre,
-    diferencia:     schema.caja.diferencia,
+    diferencia_centavos: schema.caja.diferencia_centavos,
   }).from(schema.caja)
     .innerJoin(schema.usuario, eq(schema.caja.usuario_id, schema.usuario.id))
     .where(eq(schema.caja.estado, 'cerrada'))
@@ -253,10 +254,13 @@ export function dashboardCajaHandler(db: Db): DashboardCaja {
       caja_id:        r.caja_id,
       usuario_nombre: r.usuario_nombre,
       fecha_cierre:   r.fecha_cierre as Date,
-      diferencia:     r.diferencia ?? 0,
+      diferencia_centavos: r.diferencia_centavos ?? 0,
     }));
 
-  return { caja_activa: cajaRow, ingresos_dia, egresos_dia, efectivo_esperado, arqueos_recientes, umbral_diferencia_caja };
+  return {
+    caja_activa: cajaRow, ingresos_dia_centavos, egresos_dia_centavos, efectivo_esperado_centavos,
+    arqueos_recientes, umbral_diferencia_caja_centavos,
+  };
 }
 
 export function registerDashboardHandlers(ipcMain: IpcMain, db: Db): void {

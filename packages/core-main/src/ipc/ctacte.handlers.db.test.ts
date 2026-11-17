@@ -188,14 +188,14 @@ describe('ctacteRegistrarCobroHandler', () => {
 
   it('efectivo + caja abierta: crea mov CC y mov caja en transacción', async () => {
     const { ctacteRegistrarCobroHandler } = await import('../index');
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ctacteRegistrarCobroHandler(db, { cuentaId, monto_centavos: 10000, forma_pago: 'efectivo' });
     const movsCaja = db.select().from(schema.movimiento_caja)
       .where(eq(schema.movimiento_caja.caja_id, caja.id)).all();
     expect(movsCaja).toHaveLength(1);
     expect(movsCaja[0].tipo).toBe('ingreso');
     expect(movsCaja[0].motivo).toBe('cobro_cta_cte');
-    expect(movsCaja[0].monto).toBeCloseTo(100);
+    expect(movsCaja[0].monto_centavos).toBe(10000); // ADR-157: centavos, sin conversión
     expect(movsCaja[0].referencia_tipo).toBe('movimiento_cc');
   });
 

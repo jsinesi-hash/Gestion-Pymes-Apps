@@ -62,7 +62,7 @@ describe('proyección del stock (Retail)', () => {
   it('después de entradas, ventas, mermas, conteos y anulaciones, lo guardado coincide con la proyección', () => {
     const a = producto('A');
     const b = producto('B');
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     stockEntradaHandler(db, { producto_id: a.id, cantidad: 10, costo_unitario: 100 });
     stockEntradaHandler(db, { producto_id: b.id, cantidad: 5 });
     vender(caja.id, a.id, 3);
@@ -116,7 +116,7 @@ describe('proyección del stock (Retail)', () => {
   it('la cuenta corriente cuadra después de una venta a crédito y su anulación', () => {
     const a = producto();
     stockEntradaHandler(db, { producto_id: a.id, cantidad: 10 });
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     const cliente = clienteUpsertHandler(db, {
       tipo_documento: 'DNI', numero_documento: '30111222', nombre: 'Ana', apellido: 'Gómez',
       condicion_fiscal: 'Consumidor Final', habilita_cuenta_corriente: true,

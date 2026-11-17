@@ -34,16 +34,17 @@ export function CajaTabView({ period }: Props) {
   }
 
   const d = state.data;
-  const totalIngresos = d.turnos.reduce((s, t) => s + t.ingresos, 0);
-  const totalEgresos  = d.turnos.reduce((s, t) => s + t.egresos,  0);
+  // ADR-157: el dashboard manda centavos; el gráfico y los totales se muestran en pesos.
+  const totalIngresos = d.turnos.reduce((s, t) => s + t.ingresos_centavos, 0) / 100;
+  const totalEgresos  = d.turnos.reduce((s, t) => s + t.egresos_centavos,  0) / 100;
 
   const barData = d.turnos.map(t => ({
     name:     new Date(t.fecha_apertura).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' }),
-    Ingresos: t.ingresos,
-    Egresos:  t.egresos,
+    Ingresos: t.ingresos_centavos / 100,
+    Egresos:  t.egresos_centavos / 100,
   }));
 
-  const totalMedios = d.por_medio_pago.reduce((s, m) => s + m.monto_total, 0);
+  const totalMedios = d.por_medio_pago.reduce((s, m) => s + m.monto_total_centavos, 0);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -53,7 +54,7 @@ export function CajaTabView({ period }: Props) {
         {[
           { label: 'Ingresos',        value: `$ ${fmt(totalIngresos)}`, color: 'var(--ok)' },
           { label: 'Egresos',         value: `$ ${fmt(totalEgresos)}`,  color: 'var(--danger)' },
-          { label: 'Recargo', value: `$ ${fmt(d.recargo_tarjeta_total)}`, color: 'inherit' },
+          { label: 'Recargo', value: `$ ${fmt(d.recargo_tarjeta_total_centavos / 100)}`, color: 'inherit' },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ background: 'var(--accent-soft)', borderRadius: 8, padding: '0.75rem' }}>
             <div className="text-muted text-xs" style={{ marginBottom: '0.25rem' }}>{label}</div>
@@ -100,9 +101,9 @@ export function CajaTabView({ period }: Props) {
                 {d.por_medio_pago.map(m => (
                   <tr key={m.medio_pago}>
                     <td style={{ padding: '0.3rem 0.5rem', textTransform: 'capitalize' }}>{m.medio_pago.replace('_', ' ')}</td>
-                    <td className="num" style={{ textAlign: 'right', padding: '0.3rem 0.5rem' }}>$ {fmt(m.monto_total)}</td>
+                    <td className="num" style={{ textAlign: 'right', padding: '0.3rem 0.5rem' }}>$ {fmt(m.monto_total_centavos / 100)}</td>
                     <td className="num" style={{ textAlign: 'right', padding: '0.3rem 0.5rem', color: 'var(--ink-3)' }}>
-                      {totalMedios > 0 ? `${Math.round((m.monto_total / totalMedios) * 100)}%` : '—'}
+                      {totalMedios > 0 ? `${Math.round((m.monto_total_centavos / totalMedios) * 100)}%` : '—'}
                     </td>
                   </tr>
                 ))}

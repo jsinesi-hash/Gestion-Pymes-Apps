@@ -67,7 +67,7 @@ export function crearVentaConfirmada(
     id: cajaId,
     usuario_id: usuarioId,
     fecha_apertura: now,
-    monto_inicial: 0,
+    monto_inicial_centavos: 0,
     estado: 'abierta',
     ...sync(now),
   }).run();

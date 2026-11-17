@@ -279,7 +279,7 @@ describe('presentacion handlers', () => {
 
     // Abrir caja
     const adminUser = db.select().from(schema.usuario).get()!;
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
 
     // Vender 2 "cajas" con factor 12 → debe descontar 24 unidades de stock
     ventaConfirmarHandler(db, {
@@ -340,7 +340,7 @@ describe('presentacion handlers', () => {
     });
 
     const adminUser = db.select().from(schema.usuario).get()!;
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
 
     // 1 caja × 12 = 12 > 11 de stock → debe fallar
     expect(() => ventaConfirmarHandler(db, {

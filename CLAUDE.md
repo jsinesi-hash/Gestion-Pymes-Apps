@@ -312,10 +312,11 @@ No se puede desactivar el último Supervisor activo. Roles base con `es_sistema 
 >   `movimiento_cuenta_corriente`, `producto_proveedor`, `lista_precio_valor`,
 >   `promocion`, `recalculo_masivo`, `cambio_programado`, `orden_compra`, `item_oc`,
 >   `recepcion_detalle`, `comprobante_compra`, `presupuesto`, `presupuesto_detalle`,
->   `importacion_costo_proveedor_detalle`. **Toda tabla nueva va en centavos.**
-> - **Pesos (REAL), deuda legacy conocida:** `venta`, `venta_detalle`, `caja`,
->   `movimiento_caja`, `comprobante`, `producto` (`precio_*`, `margen_ganancia`). No se
->   migró; no agregar columnas nuevas de dinero en `real`.
+>   `importacion_costo_proveedor_detalle`, `caja` y `movimiento_caja` (`*_centavos`, ADR-157
+>   PR-C1). **Toda tabla nueva va en centavos.**
+> - **Pesos (REAL), deuda legacy en migración (serie de centavos, ADR-157):** `venta`,
+>   `venta_detalle`, `comprobante`, `producto` (`precio_*`; `margen_ganancia` es porcentaje)
+>   y `movimiento_stock.costo_unitario`. No agregar columnas nuevas de dinero en `real`.
 >
 > Los porcentajes son `real` en todos lados (`*_pct`, `alicuota_iva`,
 > `ajuste_porcentual`, `descuento_*`) — son porcentajes, no montos.
@@ -418,11 +419,12 @@ sin `activo`** — es dato de referencia, no dato de usuario.
   `numero_cheque`/`banco`/`fecha_cheque`/`titular_cheque`, sync.
   *El recargo de tarjeta **nunca** infla `venta.total`; es un KPI aparte.*
 - **`caja`** (turno): `id`, `usuario_id`, `fecha_apertura`, `fecha_cierre`,
-  `monto_inicial`, `monto_esperado`, `monto_contado`, `diferencia`, `estado`
-  (`abierta`|`cerrada`), `observaciones`, `usuario_cierre_id`,
-  `supervisor_autorizacion_id`, sync. Montos en **pesos** (REAL).
+  `monto_inicial_centavos`, `monto_esperado_centavos`, `monto_contado_centavos`,
+  `diferencia_centavos`, `estado` (`abierta`|`cerrada`), `observaciones`, `usuario_cierre_id`,
+  `supervisor_autorizacion_id`, sync. Montos en **centavos** (ADR-157 PR-C1). El umbral es
+  `umbral_diferencia_caja_centavos` (configuración del negocio).
 - **`movimiento_caja`**: `id`, `caja_id`, `tipo` (`ingreso`|`egreso`), `motivo` (`venta`|
-  `cobro_cta_cte`|`pago_proveedor`|`retiro`|`aporte`|`gasto`|`ajuste`), `monto`,
+  `cobro_cta_cte`|`pago_proveedor`|`retiro`|`aporte`|`gasto`|`ajuste`), `monto_centavos`,
   `forma_pago`, `referencia_tipo`, `referencia_id`, `usuario_id`, `fecha`,
   `observaciones`, sync. *Registra todos los medios de pago; el arqueo cuenta solo
   efectivo.*

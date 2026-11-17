@@ -8,7 +8,7 @@ import './bridge-types';
 export function _verificacionDeTipos(): void {
   // universales (core)
   void bridge().auth.whoami();
-  void bridge().caja.abrir({ monto_inicial: 0 });
+  void bridge().caja.abrir({ monto_inicial_centavos: 0 });
   // propios de Retail (preload de la app)
   void bridge().precios.lista.list();
   void bridge().catalogo.movimientoStock.list({ producto_id: 'p' });

@@ -7,24 +7,25 @@ import { requirePermission } from '@core/main';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
+// ADR-157: montos en centavos.
 export type CajaTurnoEntry = {
   caja_id: string;
   usuario_nombre: string;
   fecha_apertura: Date;
-  ingresos: number;
-  egresos: number;
+  ingresos_centavos: number;
+  egresos_centavos: number;
 };
 
 export type CajaRangoMedioPago = {
   medio_pago: string;
-  monto_total: number;
-  recargo_total: number;
+  monto_total_centavos: number;
+  recargo_total_centavos: number;
 };
 
 export type DashboardCajaRango = {
   turnos: CajaTurnoEntry[];
   por_medio_pago: CajaRangoMedioPago[];
-  recargo_tarjeta_total: number;
+  recargo_tarjeta_total_centavos: number;
 };
 
 export function dashboardCajaRangoHandler(
@@ -37,8 +38,8 @@ export function dashboardCajaRangoHandler(
     caja_id:        schema.caja.id,
     usuario_nombre: schema.usuario.nombre_completo,
     fecha_apertura: schema.caja.fecha_apertura,
-    ingresos: sql<number>`coalesce(sum(case when ${schema.movimiento_caja.tipo} = 'ingreso' then ${schema.movimiento_caja.monto} else 0 end), 0)`,
-    egresos:  sql<number>`coalesce(sum(case when ${schema.movimiento_caja.tipo} = 'egreso'  then ${schema.movimiento_caja.monto} else 0 end), 0)`,
+    ingresos_centavos: sql<number>`coalesce(sum(case when ${schema.movimiento_caja.tipo} = 'ingreso' then ${schema.movimiento_caja.monto_centavos} else 0 end), 0)`,
+    egresos_centavos:  sql<number>`coalesce(sum(case when ${schema.movimiento_caja.tipo} = 'egreso'  then ${schema.movimiento_caja.monto_centavos} else 0 end), 0)`,
   }).from(schema.caja)
     .innerJoin(schema.usuario, eq(schema.caja.usuario_id, schema.usuario.id))
     .leftJoin(schema.movimiento_caja, eq(schema.movimiento_caja.caja_id, schema.caja.id))
@@ -66,15 +67,15 @@ export function dashboardCajaRangoHandler(
     .all();
 
   const por_medio_pago: CajaRangoMedioPago[] = mediosRaw.map(r => ({
-    medio_pago:    r.medio_pago,
-    monto_total:   r.monto_total_centavos / 100,
-    recargo_total: r.recargo_total_centavos / 100,
+    medio_pago:             r.medio_pago,
+    monto_total_centavos:   r.monto_total_centavos,
+    recargo_total_centavos: r.recargo_total_centavos,
   }));
 
   const tarjeta = mediosRaw.find(r => r.medio_pago === 'tarjeta');
-  const recargo_tarjeta_total = tarjeta ? tarjeta.recargo_total_centavos / 100 : 0;
+  const recargo_tarjeta_total_centavos = tarjeta ? tarjeta.recargo_total_centavos : 0;
 
-  return { turnos, por_medio_pago, recargo_tarjeta_total };
+  return { turnos, por_medio_pago, recargo_tarjeta_total_centavos };
 }
 
 export function registerDashboardCajaRangoHandlers(ipcMain: IpcMain, db: Db): void {

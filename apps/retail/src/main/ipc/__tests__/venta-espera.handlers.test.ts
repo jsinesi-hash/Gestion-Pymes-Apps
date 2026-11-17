@@ -48,7 +48,7 @@ describe('venta-espera handlers', () => {
 
   function abrirCaja() {
     loginAsAdmin(db);
-    return cajaAbrirHandler(db, { monto_inicial: 0 });
+    return cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
   }
 
   function makePausarPayload(cajaId: string, prodId: string, cantidad = 2, precio = 1000, alias?: string): PausarPayload {
@@ -233,11 +233,11 @@ describe('venta-espera handlers', () => {
   it('confirmar post-retomar asigna caja activa al confirmar', () => {
     const { prod } = crearProductoConStock(10);
     loginAsAdmin(db);
-    const caja1 = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja1 = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     const { venta_id } = ventaEsperaPausarHandler(db, makePausarPayload(caja1.id, prod.id));
 
-    cajaCerrarHandler(db, { caja_id: caja1.id, monto_contado: 0 });
-    const caja2 = cajaAbrirHandler(db, { monto_inicial: 0 });
+    cajaCerrarHandler(db, { caja_id: caja1.id, monto_contado_centavos: 0 });
+    const caja2 = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
 
     ventaEsperaRetomarHandler(db, { venta_id });
 
@@ -261,7 +261,7 @@ describe('venta-espera handlers', () => {
   it('ADR-150 §7: retomar deja con lápida las líneas de la espera y nada las cuenta dos veces', () => {
     const { prod } = crearProductoConStock(10);
     loginAsAdmin(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     const { venta_id } = ventaEsperaPausarHandler(db, makePausarPayload(caja.id, prod.id));
     ventaEsperaRetomarHandler(db, { venta_id });
     ventaConfirmarHandler(db, { ...makeConfirmarPayload(caja.id, prod.id), venta_en_espera_id: venta_id });
@@ -280,9 +280,9 @@ describe('venta-espera handlers', () => {
   it('confirmar post-retomar sin caja abierta → CAJA_REQUERIDA', () => {
     const { prod } = crearProductoConStock(10);
     loginAsAdmin(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     const { venta_id } = ventaEsperaPausarHandler(db, makePausarPayload(caja.id, prod.id));
-    cajaCerrarHandler(db, { caja_id: caja.id, monto_contado: 0 });
+    cajaCerrarHandler(db, { caja_id: caja.id, monto_contado_centavos: 0 });
 
     expect(() => ventaConfirmarHandler(db, {
       ...makeConfirmarPayload('caja-inexistente', prod.id),

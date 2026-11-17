@@ -144,7 +144,7 @@ describe('lista-precio handlers', () => {
     it('confirmar cobra al precio de la lista del cliente', () => {
       loginAsAdmin(db);
       const c = catalogo(db);
-      const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+      const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
       const l = listaPrecioCreateHandler(db, { nombre: 'Mayorista', ajuste_porcentual: -10 });
       const cli = clienteConLista(db, l.id);
       const r = ventaConfirmarHandler(db, {

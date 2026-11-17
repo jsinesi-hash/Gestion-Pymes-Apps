@@ -59,8 +59,8 @@ describe('exportVentas', () => {
 describe('exportCaja', () => {
   it('tiene 1 perfil arqueos', () => { expect(exportCaja.perfiles).toHaveLength(1); });
   it('columna diferencia tiene formatoXlsx numérico', () => {
-    const col = exportCaja.perfiles[0].columnas.find(c => c.campo === 'diferencia')!;
-    expect(col.formatoXlsx!(50, {} as any)).toBe(50);
+    const col = exportCaja.perfiles[0].columnas.find(c => c.campo === 'diferencia_centavos')!;
+    expect(col.formatoXlsx!(5000, {} as any)).toBe(50); // ADR-157: centavos → pesos en el archivo
   });
 });
 

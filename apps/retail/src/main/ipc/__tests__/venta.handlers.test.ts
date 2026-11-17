@@ -53,7 +53,7 @@ describe('venta handlers', () => {
   }
 
   function abrirCaja() {
-    return cajaAbrirHandler(db, { monto_inicial: 0 });
+    return cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
   }
 
   function makePayload(
@@ -558,7 +558,7 @@ describe('venta handlers', () => {
       const { prod } = crearProductoConStock(10);
       const caja = abrirCaja();
       const { venta } = confirmarVenta(caja.id, prod.id);
-      cajaCerrarHandler(db, { caja_id: caja.id, monto_contado: 1000 });
+      cajaCerrarHandler(db, { caja_id: caja.id, monto_contado_centavos: 1000 });
       abrirCaja();
       expect(() => ventaAnularHandler(db, { venta_id: venta.id, motivo: 'Test', supervisor_credenciales: supervisorCreds() }))
         .toThrow('CAJA_ORIGEN_CERRADA');
@@ -762,7 +762,7 @@ describe('venta handlers', () => {
       const movs = db.select().from(schema.movimiento_caja)
         .where(and(eq(schema.movimiento_caja.caja_id, caja.id), eq(schema.movimiento_caja.motivo, 'venta'))).all();
       expect(movs).toHaveLength(1);
-      expect(movs[0].monto).toBe(1000);
+      expect(movs[0].monto_centavos).toBe(100000);
     });
 
     it('pago efectivo con exceso → vuelto_centavos correcto', () => {
@@ -786,8 +786,8 @@ describe('venta handlers', () => {
       const movs = db.select().from(schema.movimiento_caja)
         .where(and(eq(schema.movimiento_caja.caja_id, caja.id), eq(schema.movimiento_caja.motivo, 'venta'))).all();
       expect(movs).toHaveLength(2);
-      expect(movs.some(m => m.forma_pago === 'efectivo' && m.monto === 500)).toBe(true);
-      expect(movs.some(m => m.forma_pago === 'tarjeta' && m.monto === 550)).toBe(true);
+      expect(movs.some(m => m.forma_pago === 'efectivo' && m.monto_centavos === 50000)).toBe(true);
+      expect(movs.some(m => m.forma_pago === 'tarjeta' && m.monto_centavos === 55000)).toBe(true);
     });
 
     it('pago con CCC no genera movimiento de caja', () => {

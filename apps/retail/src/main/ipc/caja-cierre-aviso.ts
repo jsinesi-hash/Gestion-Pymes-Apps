@@ -10,11 +10,15 @@ import { leerParametro, leerParametroNumero } from '@core/main';
 type Db = BetterSQLite3Database<typeof schema>;
 type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
 
+/** ADR-157: montos en centavos (el resumen que arma `cajaCalcularCierreHandler`). */
 interface ResumenCierre {
-  caja_id: string; monto_inicial: number;
-  por_forma_pago: Array<{ forma_pago: string; ingresado: number; cantidad_operaciones: number }>;
-  esperado_efectivo: number; ventas_count: number; total_ventas: number;
+  caja_id: string; monto_inicial_centavos: number;
+  por_forma_pago: Array<{ forma_pago: string; ingresado_centavos: number; cantidad_operaciones: number }>;
+  esperado_efectivo_centavos: number; ventas_count: number; total_ventas_centavos: number;
 }
+
+/** El payload del aviso es una foto para mostrar (mail, pantalla): conserva sus claves en pesos. */
+const aPesos = (centavos: number): number => centavos / 100;
 
 const TOP_BAJO_MINIMO = 10;
 
@@ -45,14 +49,15 @@ function bajoMinimo(db: Db) {
 export function construirComandoCierre(db: Db, args: {
   cajaRow: { id: string; usuario_id: string; fecha_apertura: Date; fecha_cierre: Date | null };
   resumen: ResumenCierre;
-  diferencia: number;      // pesos
-  monto_contado: number;   // pesos
+  diferencia_centavos: number;
+  monto_contado_centavos: number;
   usuarioCierreId: string;
   now: Date;
 }): ComandoAviso {
-  const { cajaRow, resumen, diferencia, monto_contado, usuarioCierreId, now } = args;
+  const { cajaRow, resumen, diferencia_centavos, monto_contado_centavos, usuarioCierreId, now } = args;
+  const diferencia = aPesos(diferencia_centavos);
   const umbralCentavos = leerNum(db, 'arqueo_diferencia_alerta_centavos', 200000);
-  const severidad: 'normal' | 'alerta' = Math.round(Math.abs(diferencia) * 100) > umbralCentavos ? 'alerta' : 'normal';
+  const severidad: 'normal' | 'alerta' = Math.abs(diferencia_centavos) > umbralCentavos ? 'alerta' : 'normal';
   const turno = calcularTurno(db, cajaRow);
   const usuario = db.select({ n: schema.usuario.nombre_completo }).from(schema.usuario).where(eq(schema.usuario.id, usuarioCierreId)).get();
   const fechaCorta = (cajaRow.fecha_cierre ?? now).toLocaleDateString('es-AR');
@@ -65,12 +70,14 @@ export function construirComandoCierre(db: Db, args: {
     fecha: (cajaRow.fecha_cierre ?? now).toISOString(),
     turno,
     usuario_cierre: usuario?.n ?? '',
-    total_vendido: resumen.total_ventas,
+    total_vendido: aPesos(resumen.total_ventas_centavos),
     n_ventas: resumen.ventas_count,
-    desglose_por_medio_pago: resumen.por_forma_pago,
-    fondo_inicial: resumen.monto_inicial,
-    efectivo_esperado: resumen.esperado_efectivo,
-    efectivo_contado: monto_contado,
+    desglose_por_medio_pago: resumen.por_forma_pago.map((fp) => ({
+      forma_pago: fp.forma_pago, ingresado: aPesos(fp.ingresado_centavos), cantidad_operaciones: fp.cantidad_operaciones,
+    })),
+    fondo_inicial: aPesos(resumen.monto_inicial_centavos),
+    efectivo_esperado: aPesos(resumen.esperado_efectivo_centavos),
+    efectivo_contado: aPesos(monto_contado_centavos),
     diferencia,
     bajo_minimo: bajoMinimo(db),
   };
@@ -93,9 +100,9 @@ export function construirComandoCierre(db: Db, args: {
  * del cierre; el envío (email) va después del commit, best-effort.
  * El core tipa `db`/`tx` con su esquema; en Retail son la BD compuesta (superset), de ahí el cast.
  */
-export const avisoCierreCaja: OnCajaCerrada = ({ db, tx, cajaRow, resumen, diferencia, monto_contado, usuarioCierreId, now }) => {
+export const avisoCierreCaja: OnCajaCerrada = ({ db, tx, cajaRow, resumen, diferencia_centavos, monto_contado_centavos, usuarioCierreId, now }) => {
   const rdb = db as unknown as Db;
-  const cmd = construirComandoCierre(rdb, { cajaRow, resumen, diferencia, monto_contado, usuarioCierreId, now });
+  const cmd = construirComandoCierre(rdb, { cajaRow, resumen, diferencia_centavos, monto_contado_centavos, usuarioCierreId, now });
   const ids = insertarAvisos(tx as unknown as Tx, cmd, now);
   return () => { for (const id of ids) void despacharAviso(rdb, id); };
 };

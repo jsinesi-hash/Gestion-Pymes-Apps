@@ -29,7 +29,7 @@ describe('exportadores de reportes', () => {
   it('exporta ventas por producto a CSV en pesos', async () => {
     loginAsAdmin(db);
     const c = catalogo(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, {
       caja_id: caja.id, cliente_id: CONSUMIDOR_FINAL_ID,
       lineas: [{ producto_venta_id: c.palito.id, cantidad: 2 }],

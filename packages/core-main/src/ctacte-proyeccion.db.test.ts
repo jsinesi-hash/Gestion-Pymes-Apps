@@ -26,7 +26,7 @@ describe('proyección del saldo de cuenta corriente', () => {
     });
     cuentaId = db.select().from(schema.cuenta_corriente_cliente)
       .where(eq(schema.cuenta_corriente_cliente.cliente_id, cliente.id)).get()!.id;
-    cajaAbrirHandler(db, { monto_inicial: 0 });
+    cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
   });
 
   it('cargos menos pagos: coincide con el saldo que dejaron los handlers', () => {

@@ -100,7 +100,7 @@ function procesarVenta(
   if (generaMovCaja) {
     db.insert(schema.movimiento_caja).values({
       id: randomUUID(), caja_id: cajaId, tipo: 'ingreso', motivo: 'venta',
-      monto: total, forma_pago: v.forma_pago,
+      monto_centavos: Math.round(total * 100), forma_pago: v.forma_pago,
       referencia_tipo: 'venta', referencia_id: ventaId,
       usuario_id: adminId, fecha, ...SYNC, updated_at: fecha,
     }).run();
@@ -164,10 +164,10 @@ export function seedVentas(db: Db, force: boolean): void {
     usuario_id: admin.id,
     fecha_apertura: apertura,
     fecha_cierre: cierre,
-    monto_inicial: 5000,
-    monto_esperado: 85000,
-    monto_contado: 84800,
-    diferencia: -200,
+    monto_inicial_centavos: 500_000,
+    monto_esperado_centavos: 8_500_000,
+    monto_contado_centavos: 8_480_000,
+    diferencia_centavos: -20_000,
     estado: 'cerrada',
     usuario_cierre_id: admin.id,
     ...SYNC, updated_at: cierre,

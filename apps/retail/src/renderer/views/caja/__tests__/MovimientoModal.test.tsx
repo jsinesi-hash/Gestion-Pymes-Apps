@@ -27,7 +27,7 @@ describe('MovimientoModal', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /confirmar/i }));
     await waitFor(() => expect(mockAddMovimiento).toHaveBeenCalledWith(
-      expect.objectContaining({ caja_id: 'caja-1', monto: 1000 })
+      expect.objectContaining({ caja_id: 'caja-1', monto_centavos: 100000 }) // ADR-157: $1000 en centavos
     ));
     await waitFor(() => expect(mockOnClose).toHaveBeenCalledOnce());
   });

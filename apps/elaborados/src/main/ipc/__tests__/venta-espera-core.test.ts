@@ -44,7 +44,7 @@ describe('venta en espera (core)', () => {
 
   function preparar() {
     loginAsAdmin(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     const { clienteId } = crearCliente(db);
     return { caja, clienteId };
   }
@@ -89,7 +89,7 @@ describe('venta en espera (core)', () => {
 
       const db2 = setupDb();
       loginAsAdmin(db2);
-      const caja2 = cajaAbrirHandler(db2, { monto_inicial: 0 });
+      const caja2 = cajaAbrirHandler(db2, { monto_inicial_centavos: 0 });
       const { clienteId: cli2 } = crearCliente(db2);
       expect(() => pausarVentaEspera(db2, input(caja2.id, cli2), {
         aplicarLineas: () => { throw new Error('BOOM'); },

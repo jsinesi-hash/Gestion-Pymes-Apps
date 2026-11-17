@@ -27,7 +27,7 @@ describe('venta.espera handlers (Elaborados)', () => {
   function armar() {
     loginAsAdmin(db);
     const c = catalogo(db);
-    const caja = cajaAbrirHandler(db, { monto_inicial: 0 });
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     const lineaPote = (opciones: string[]) => ({
       producto_venta_id: c.pote.id, cantidad: 1,
       modificadores: [{ grupo_modificador_id: c.grupo.id, opcion_ids: opciones }],

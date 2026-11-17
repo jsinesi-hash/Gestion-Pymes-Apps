@@ -6,7 +6,7 @@ import * as schema from '@core/db';
 import { getSession } from '../auth/session';
 import { getOriginId } from '../context';
 import { verificarAutorizacion } from '../auth/verificarAutorizacion';
-import { num, optStr, oneOf, id as vId } from '../validation/core';
+import { centavos, optStr, oneOf, id as vId } from '../validation/core';
 import { triggerAutoBackup } from './backup';
 import { parametrosGetHandler } from './parametros';
 
@@ -21,8 +21,8 @@ export type CajaCierreCtx = {
   tx: Parameters<Parameters<Db['transaction']>[0]>[0];
   cajaRow: CajaRow;
   resumen: CierreResumen;
-  diferencia: number;
-  monto_contado: number;
+  diferencia_centavos: number;
+  monto_contado_centavos: number;
   usuarioCierreId: string;
   now: Date;
 };
@@ -46,7 +46,8 @@ export function cajaAbrirHandler(
 ) {
   const session = requireSession();
   const p = (payload ?? {}) as Record<string, unknown>;
-  const monto_inicial = num(p['monto_inicial'], 'monto_inicial', { min: 0 });
+  // ADR-157: la UI manda centavos.
+  const monto_inicial_centavos = centavos(p['monto_inicial_centavos'], 'monto_inicial_centavos');
   const observaciones = optStr(p['observaciones'], 'observaciones');
 
   const existing = db.select({ id: schema.caja.id }).from(schema.caja)
@@ -63,7 +64,7 @@ export function cajaAbrirHandler(
     id,
     usuario_id: session.userId,
     fecha_apertura: now,
-    monto_inicial: monto_inicial,
+    monto_inicial_centavos,
     estado: 'abierta',
     observaciones: observaciones ?? null,
     version: 1,
@@ -84,7 +85,7 @@ export function cajaAddMovimientoHandler(
   const caja_id = vId(p['caja_id'], 'caja_id');
   const tipo = oneOf(p['tipo'], 'tipo', ['ingreso', 'egreso'] as const);
   const motivo = oneOf(p['motivo'], 'motivo', ['retiro', 'gasto', 'aporte'] as const);
-  const monto = num(p['monto'], 'monto', { min: 0 });
+  const monto_centavos = centavos(p['monto_centavos'], 'monto_centavos');
   const forma_pago = optStr(p['forma_pago'], 'forma_pago');
   const observaciones = optStr(p['observaciones'], 'observaciones');
 
@@ -101,7 +102,7 @@ export function cajaAddMovimientoHandler(
     caja_id: caja_id,
     tipo: tipo,
     motivo: motivo,
-    monto: monto,
+    monto_centavos,
     forma_pago: forma_pago ?? 'efectivo',
     referencia_tipo: 'manual',
     referencia_id: id,
@@ -119,13 +120,14 @@ export function cajaAddMovimientoHandler(
     .get()!;
 }
 
+/** ADR-157: todos los montos en centavos. */
 export type ResumenCierre = {
   caja_id: string;
-  monto_inicial: number;
-  por_forma_pago: Array<{ forma_pago: string; ingresado: number; cantidad_operaciones: number }>;
-  esperado_efectivo: number;
+  monto_inicial_centavos: number;
+  por_forma_pago: Array<{ forma_pago: string; ingresado_centavos: number; cantidad_operaciones: number }>;
+  esperado_efectivo_centavos: number;
   ventas_count: number;
-  total_ventas: number;
+  total_ventas_centavos: number;
 };
 
 export function cajaCalcularCierreHandler(db: Db, payload: { caja_id: string }): ResumenCierre {
@@ -138,19 +140,19 @@ export function cajaCalcularCierreHandler(db: Db, payload: { caja_id: string }):
     .where(eq(schema.movimiento_caja.caja_id, payload.caja_id))
     .all();
 
-  const byFP = new Map<string, { ingresado: number; cantidad_operaciones: number }>();
-  let esperado_efectivo = cajaRow.monto_inicial;
+  const byFP = new Map<string, { ingresado_centavos: number; cantidad_operaciones: number }>();
+  let esperado_efectivo_centavos = cajaRow.monto_inicial_centavos;
 
   for (const mov of movimientos) {
     const fp = mov.forma_pago ?? 'efectivo';
-    if (!byFP.has(fp)) byFP.set(fp, { ingresado: 0, cantidad_operaciones: 0 });
+    if (!byFP.has(fp)) byFP.set(fp, { ingresado_centavos: 0, cantidad_operaciones: 0 });
     const entry = byFP.get(fp)!;
     if (mov.tipo === 'ingreso') {
-      entry.ingresado += mov.monto;
+      entry.ingresado_centavos += mov.monto_centavos;
       entry.cantidad_operaciones += 1;
     }
     if (fp === 'efectivo') {
-      esperado_efectivo += mov.tipo === 'ingreso' ? mov.monto : -mov.monto;
+      esperado_efectivo_centavos += mov.tipo === 'ingreso' ? mov.monto_centavos : -mov.monto_centavos;
     }
   }
 
@@ -160,11 +162,12 @@ export function cajaCalcularCierreHandler(db: Db, payload: { caja_id: string }):
 
   return {
     caja_id: payload.caja_id,
-    monto_inicial: cajaRow.monto_inicial,
+    monto_inicial_centavos: cajaRow.monto_inicial_centavos,
     por_forma_pago: Array.from(byFP.entries()).map(([forma_pago, data]) => ({ forma_pago, ...data })),
-    esperado_efectivo,
+    esperado_efectivo_centavos,
     ventas_count: ventas.length,
-    total_ventas: ventas.reduce((s, v) => s + v.total, 0),
+    // venta.total sigue en pesos hasta PR-C2: se convierte por venta para no arrastrar float.
+    total_ventas_centavos: ventas.reduce((s, v) => s + Math.round(v.total * 100), 0),
   };
 }
 
@@ -176,7 +179,7 @@ export function cajaCerrarHandler(
   const session = requireSession();
   const p = (payload ?? {}) as Record<string, unknown>;
   const caja_id = vId(p['caja_id'], 'caja_id');
-  const monto_contado = num(p['monto_contado'], 'monto_contado', { min: 0 });
+  const monto_contado_centavos = centavos(p['monto_contado_centavos'], 'monto_contado_centavos');
   const observaciones = optStr(p['observaciones'], 'observaciones');
   const supervisor_credenciales = p['supervisor_credenciales'] as { nombre_usuario: string; password: string } | undefined;
 
@@ -187,12 +190,13 @@ export function cajaCerrarHandler(
   if (cajaRow.estado !== 'abierta') throw new Error('CAJA_CERRADA');
 
   const resumen = cajaCalcularCierreHandler(db, { caja_id: caja_id });
-  const diferencia = monto_contado - resumen.esperado_efectivo;
+  const diferencia_centavos = monto_contado_centavos - resumen.esperado_efectivo_centavos;
 
-  const umbral = leerParametroNumero(db, 'umbral_diferencia_caja', 50000);
+  // ADR-157: el umbral se guarda en centavos (antes, 50000 comparado contra pesos = $ 50.000).
+  const umbral = leerParametroNumero(db, 'umbral_diferencia_caja_centavos', 5_000_000);
 
   let supervisorId: string | null = null;
-  if (Math.abs(diferencia) > umbral) {
+  if (Math.abs(diferencia_centavos) > umbral) {
     if (!supervisor_credenciales) throw new Error('DIFERENCIA_REQUIERE_AUTORIZACION');
     supervisorId = verificarAutorizacion(db, supervisor_credenciales, 'caja.autorizar_diferencia');
   }
@@ -202,9 +206,9 @@ export function cajaCerrarHandler(
     tx.update(schema.caja).set({
       estado: 'cerrada',
       fecha_cierre: now,
-      monto_esperado: resumen.esperado_efectivo,
-      monto_contado: monto_contado,
-      diferencia,
+      monto_esperado_centavos: resumen.esperado_efectivo_centavos,
+      monto_contado_centavos,
+      diferencia_centavos,
       usuario_cierre_id: session.userId,
       supervisor_autorizacion_id: supervisorId,
       observaciones: observaciones ?? cajaRow.observaciones,
@@ -215,7 +219,7 @@ export function cajaCerrarHandler(
     // El hook corre DENTRO de la transacción del cierre (p. ej. Retail inserta el aviso,
     // ADR-047 §6): si lanza, el cierre se revierte.
     return hooks.onCajaCerrada?.({
-      db, tx, cajaRow, resumen, diferencia, monto_contado,
+      db, tx, cajaRow, resumen, diferencia_centavos, monto_contado_centavos,
       usuarioCierreId: session.userId, now,
     });
   });
@@ -237,10 +241,10 @@ export function cajaArqueosQueryAll(db: Db) {
     cajero_nombre:  schema.usuario.nombre_completo,
     fecha_apertura: schema.caja.fecha_apertura,
     fecha_cierre:   schema.caja.fecha_cierre,
-    monto_inicial:  schema.caja.monto_inicial,
-    monto_esperado: schema.caja.monto_esperado,
-    monto_contado:  schema.caja.monto_contado,
-    diferencia:     schema.caja.diferencia,
+    monto_inicial_centavos:  schema.caja.monto_inicial_centavos,
+    monto_esperado_centavos: schema.caja.monto_esperado_centavos,
+    monto_contado_centavos:  schema.caja.monto_contado_centavos,
+    diferencia_centavos:     schema.caja.diferencia_centavos,
   })
     .from(schema.caja)
     .leftJoin(schema.usuario, eq(schema.usuario.id, schema.caja.usuario_id))

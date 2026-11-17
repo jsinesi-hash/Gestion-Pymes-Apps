@@ -25,7 +25,7 @@ describe('CajaView', () => {
       id: 'c-1',
       usuario_id: 'u-1',
       fecha_apertura: new Date('2026-06-11T08:00:00'),
-      monto_inicial: 10000,
+      monto_inicial_centavos: 1000000,
       estado: 'abierta',
     });
     render(<MemoryRouter><CajaView /></MemoryRouter>);

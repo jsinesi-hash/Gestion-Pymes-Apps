@@ -17,13 +17,13 @@ vi.mock('recharts', () => ({
 
 const DATA: DashboardCajaRango = {
   turnos: [
-    { caja_id: 'c1', usuario_nombre: 'Ana', fecha_apertura: new Date(), ingresos: 5000, egresos: 1000 },
+    { caja_id: 'c1', usuario_nombre: 'Ana', fecha_apertura: new Date(), ingresos_centavos: 500000, egresos_centavos: 100000 },
   ],
   por_medio_pago: [
-    { medio_pago: 'efectivo',  monto_total: 3000, recargo_total: 0 },
-    { medio_pago: 'tarjeta',   monto_total: 2000, recargo_total: 100 },
+    { medio_pago: 'efectivo',  monto_total_centavos: 300000, recargo_total_centavos: 0 },
+    { medio_pago: 'tarjeta',   monto_total_centavos: 200000, recargo_total_centavos: 10000 },
   ],
-  recargo_tarjeta_total: 100,
+  recargo_tarjeta_total_centavos: 10000,
 };
 
 beforeEach(() => {

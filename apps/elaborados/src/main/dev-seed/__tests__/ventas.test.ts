@@ -80,7 +80,7 @@ describe('seedVentasDemo', () => {
     const ahora = new Date();
     const admin = db.select().from(schema.usuario).where(eq(schema.usuario.nombre_usuario, 'admin')).get()!;
     db.insert(schema.caja).values({
-      id: CAJA_PREVIA, usuario_id: admin.id, fecha_apertura: ahora, monto_inicial: 0,
+      id: CAJA_PREVIA, usuario_id: admin.id, fecha_apertura: ahora, monto_inicial_centavos: 0,
       estado: 'abierta', version: 1, origin_id: 'test', sync_state: 'pending', updated_at: ahora,
     }).run();
     seedVentasDemo(db);

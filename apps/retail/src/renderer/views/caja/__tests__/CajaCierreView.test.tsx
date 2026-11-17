@@ -13,16 +13,16 @@ function SondaRuta() {
 
 const RESUMEN = {
   caja_id: 'c-1',
-  monto_inicial: 10000,
-  por_forma_pago: [{ forma_pago: 'efectivo', ingresado: 5000, cantidad_operaciones: 2 }],
-  esperado_efectivo: 15000,
+  monto_inicial_centavos: 1000000,
+  por_forma_pago: [{ forma_pago: 'efectivo', ingresado_centavos: 500000, cantidad_operaciones: 2 }],
+  esperado_efectivo_centavos: 1500000,
   ventas_count: 0,
-  total_ventas: 0,
+  total_ventas_centavos: 0,
 };
 
 const RESUMEN_CON_DECIMALES = {
   ...RESUMEN,
-  esperado_efectivo: 100.123456789,
+  esperado_efectivo_centavos: 10012,
 };
 
 const mockGetActiva = vi.fn();
@@ -33,7 +33,7 @@ const mockGetParam = vi.fn();
 beforeEach(() => {
   vi.clearAllMocks();
   ubicacionActual = '';
-  mockGetActiva.mockResolvedValue({ id: 'c-1', usuario_id: 'u-1', fecha_apertura: new Date(), monto_inicial: 10000, estado: 'abierta' });
+  mockGetActiva.mockResolvedValue({ id: 'c-1', usuario_id: 'u-1', fecha_apertura: new Date(), monto_inicial_centavos: 1000000, estado: 'abierta' });
   mockCalcCierre.mockResolvedValue(RESUMEN);
   mockCerrar.mockResolvedValue({ id: 'c-1', estado: 'cerrada' });
   mockGetParam.mockResolvedValue('50000');
@@ -92,7 +92,7 @@ describe('CajaCierreView', () => {
     fireEvent.change(screen.getByLabelText(/efectivo declarado/i), { target: { value: '15000' } });
     fireEvent.click(screen.getByRole('button', { name: /confirmar cierre/i }));
     await waitFor(() => expect(mockCerrar).toHaveBeenCalledWith(
-      expect.objectContaining({ caja_id: 'c-1', monto_contado: 15000 })
+      expect.objectContaining({ caja_id: 'c-1', monto_contado_centavos: 1500000 })
     ));
   });
 
@@ -112,7 +112,7 @@ describe('CajaCierreView — ruteo de errores (ADR-085 Task 14)', () => {
   it('monto declarado inválido: no llama caja.cerrar, enfoca el campo y muestra error inline', async () => {
     // esperado_efectivo NaN produce un montoDeclarado inicial NaN (Math.round(NaN)/100 = NaN),
     // sin necesidad de mockear los hooks: ejercita el guard de handleConfirm con estado real.
-    mockCalcCierre.mockResolvedValue({ ...RESUMEN, esperado_efectivo: NaN });
+    mockCalcCierre.mockResolvedValue({ ...RESUMEN, esperado_efectivo_centavos: NaN });
     render(<MemoryRouter><CajaCierreView /></MemoryRouter>);
     await waitFor(() => screen.getByLabelText(/efectivo declarado/i));
 
