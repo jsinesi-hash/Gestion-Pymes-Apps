@@ -234,6 +234,11 @@ describe('ocEliminarItemHandler', () => {
     expect(oc.items).toHaveLength(0);
     expect(oc.subtotal_centavos).toBe(0);
     expect(oc.total_centavos).toBe(0);
+    // ADR-150 §7: el ítem queda con lápida y actualizarlo después no lo toca.
+    const fila = () => db.select().from(schema.item_oc).where(eq(schema.item_oc.id, itemId)).get()!;
+    expect(fila().deleted_at).toBeInstanceOf(Date);
+    ocActualizarItemHandler(db, { item_id: itemId, cantidad_pedida: 9 });
+    expect(fila().cantidad_pedida).toBe(5);
   });
 
   it('lanza UNAUTHENTICATED sin sesión', () => {

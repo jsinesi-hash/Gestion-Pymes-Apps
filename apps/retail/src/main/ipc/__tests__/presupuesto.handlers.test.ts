@@ -144,6 +144,11 @@ describe('presupuestoEditarHandler', () => {
     expect(editado.total_centavos).toBe(50000);
     expect(editado.lineas).toHaveLength(1);
     expect(editado.lineas[0].cantidad).toBe(5);
+    // ADR-150 §7: la línea reemplazada queda con lápida, no se borra.
+    const filas = db.select().from(schema.presupuesto_detalle)
+      .where(eq(schema.presupuesto_detalle.presupuesto_id, p.id)).all();
+    expect(filas).toHaveLength(2);
+    expect(filas.find((f) => f.id === p.lineas[0].id)!.deleted_at).toBeInstanceOf(Date);
   });
 
   it('rechaza editar un presupuesto no borrador', () => {
@@ -170,6 +175,10 @@ describe('presupuestoEmitirHandler', () => {
     expect(emitido.validez_dias).toBe(30);
     expect(emitido.fecha_emision).toBeTruthy();
     expect(emitido.lineas[0].precio_unitario_centavos).toBe(10000); // congelado
+    // ADR-150 §7: congela en las mismas líneas (mismo id, sin filas nuevas ni lápidas).
+    expect(emitido.lineas.map((l) => l.id)).toEqual(p.lineas.map((l) => l.id));
+    expect(db.select().from(schema.presupuesto_detalle)
+      .where(eq(schema.presupuesto_detalle.presupuesto_id, p.id)).all()).toHaveLength(1);
     const emisionMs = new Date(emitido.fecha_emision!).getTime();
     const validezMs = new Date(emitido.fecha_validez!).getTime();
     expect(Math.round((validezMs - emisionMs) / MS_DIA)).toBe(30);

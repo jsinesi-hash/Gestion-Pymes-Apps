@@ -1,4 +1,4 @@
-import { eq, and, gt, sql } from 'drizzle-orm';
+import { eq, and, gt, sql, isNull } from 'drizzle-orm';
 import { generateId } from '@ferreteria/shared';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
@@ -25,7 +25,7 @@ function nextNumeroOC(db: Db, terminal: string): string {
 
 function recalcularTotalesOC(db: Db, ocId: string) {
   const items = db.select().from(schema.item_oc)
-    .where(eq(schema.item_oc.orden_compra_id, ocId))
+    .where(and(eq(schema.item_oc.orden_compra_id, ocId), isNull(schema.item_oc.deleted_at)))
     .all();
 
   let subtotal = 0;
@@ -103,7 +103,7 @@ export function ocGetHandler(db: Db, id: string) {
   if (!oc) return null;
 
   const items = db.select().from(schema.item_oc)
-    .where(eq(schema.item_oc.orden_compra_id, id))
+    .where(and(eq(schema.item_oc.orden_compra_id, id), isNull(schema.item_oc.deleted_at)))
     .all();
 
   return { ...oc, items };
@@ -178,7 +178,7 @@ export function ocActualizarItemHandler(db: Db, payload: unknown) {
     : undefined;
 
   const item = db.select().from(schema.item_oc)
-    .where(eq(schema.item_oc.id, v_item_id))
+    .where(and(eq(schema.item_oc.id, v_item_id), isNull(schema.item_oc.deleted_at)))
     .get();
   if (!item) return { id: v_item_id };
 
@@ -206,7 +206,13 @@ export function ocEliminarItemHandler(db: Db, itemId: string) {
     .where(eq(schema.item_oc.id, itemId))
     .get();
 
-  db.delete(schema.item_oc).where(eq(schema.item_oc.id, itemId)).run();
+  // ADR-150 §7: el ítem quitado de la OC queda con lápida, no se borra.
+  db.update(schema.item_oc).set({
+    deleted_at: new Date(),
+    version: sql`${schema.item_oc.version} + 1`,
+    sync_state: 'pending',
+    updated_at: new Date(),
+  }).where(and(eq(schema.item_oc.id, itemId), isNull(schema.item_oc.deleted_at))).run();
 
   if (item) recalcularTotalesOC(db, item.orden_compra_id);
   return { id: itemId };

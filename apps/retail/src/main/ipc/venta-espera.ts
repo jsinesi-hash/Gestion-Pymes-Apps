@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
@@ -106,7 +106,7 @@ export function ventaEsperaListarHandler(db: Db): VentaEsperaItem[] {
   return listarVentasEspera(db, (id) =>
     db.select({ id: schema.venta_detalle.id })
       .from(schema.venta_detalle)
-      .where(eq(schema.venta_detalle.venta_id, id))
+      .where(and(eq(schema.venta_detalle.venta_id, id), isNull(schema.venta_detalle.deleted_at)))
       .all().length);
 }
 
@@ -125,7 +125,7 @@ export function ventaEsperaRetomarHandler(db: Db, rawPayload: unknown): VentaEsp
   if (ventaRow.estado !== 'en_espera') throw new Error('VENTA_NO_EN_ESPERA');
 
   const detalles = db.select().from(schema.venta_detalle)
-    .where(eq(schema.venta_detalle.venta_id, payload.venta_id))
+    .where(and(eq(schema.venta_detalle.venta_id, payload.venta_id), isNull(schema.venta_detalle.deleted_at)))
     .all();
 
   const avisos: VentaEsperaRetomarResult['avisos'] = { stock_caido: [], precio_cambiado: [] };

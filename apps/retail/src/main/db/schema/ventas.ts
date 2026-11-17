@@ -15,6 +15,8 @@ export const venta_detalle = sqliteTable('venta_detalle', {
   // ADR-040: nullable para ventas históricas anteriores a multi-presentación
   presentacion_id:         text('presentacion_id').references(() => producto_presentacion.id),
   factor_a_stock_aplicado: real('factor_a_stock_aplicado'),
+  // ADR-150 §7: lápida. La línea que sale de un documento en borrador queda marcada, no se borra.
+  deleted_at: integer('deleted_at', { mode: 'timestamp' }),
   version:    integer('version').notNull().default(1),
   origin_id:  text('origin_id').notNull(),
   sync_state: text('sync_state', { enum: ['pending', 'synced', 'conflict'] }).notNull().default('pending'),
