@@ -13,6 +13,8 @@ export const venta_linea = sqliteTable('venta_linea', {
   descuento_linea_pct:      real('descuento_linea_pct').notNull().default(0),
   alicuota_iva:             real('alicuota_iva').notNull(),
   subtotal_centavos:        integer('subtotal_centavos').notNull(),
+  // ADR-150 §7: lápida. Lo que sale de un pedido o de una receta queda marcado, no se borra.
+  deleted_at: integer('deleted_at', { mode: 'timestamp' }),
   version:    integer('version').notNull().default(1),
   origin_id:  text('origin_id').notNull(),
   sync_state: text('sync_state', { enum: ['pending', 'synced', 'conflict'] }).notNull().default('pending'),
@@ -27,6 +29,8 @@ export const venta_linea_modificador = sqliteTable('venta_linea_modificador', {
   descripcion:                 text('descripcion').notNull(),
   recargo_centavos:            integer('recargo_centavos').notNull().default(0),
   cantidad_consumida:          real('cantidad_consumida').notNull().default(0),
+  // ADR-150 §7: lápida. Lo que sale de un pedido o de una receta queda marcado, no se borra.
+  deleted_at: integer('deleted_at', { mode: 'timestamp' }),
   version:    integer('version').notNull().default(1),
   origin_id:  text('origin_id').notNull(),
   sync_state: text('sync_state', { enum: ['pending', 'synced', 'conflict'] }).notNull().default('pending'),

@@ -1,4 +1,4 @@
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { nombreCompletoCliente } from '@ferreteria/shared';
@@ -50,7 +50,7 @@ export function ventaEsperaListarHandler(db: Db) {
   requireVentaCrear();
   return listarVentasEspera(db, (ventaId) =>
     db.select({ id: schema.venta_linea.id }).from(schema.venta_linea)
-      .where(eq(schema.venta_linea.venta_id, ventaId)).all().length);
+      .where(and(eq(schema.venta_linea.venta_id, ventaId), isNull(schema.venta_linea.deleted_at))).all().length);
 }
 
 export function ventaEsperaRetomarHandler(db: Db, rawPayload: unknown) {

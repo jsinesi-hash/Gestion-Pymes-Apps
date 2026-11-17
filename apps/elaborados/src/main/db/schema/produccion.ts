@@ -16,6 +16,8 @@ export const receta_produccion_item = sqliteTable('receta_produccion_item', {
   receta_produccion_id: text('receta_produccion_id').notNull().references(() => receta_produccion.id),
   articulo_id:          text('articulo_id').notNull().references(() => articulo.id),
   cantidad:             real('cantidad').notNull(),
+  // ADR-150 §7: lápida. Lo que sale de un pedido o de una receta queda marcado, no se borra.
+  deleted_at: integer('deleted_at', { mode: 'timestamp' }),
   version:    integer('version').notNull().default(1),
   origin_id:  text('origin_id').notNull(),
   sync_state: text('sync_state', { enum: ['pending', 'synced', 'conflict'] }).notNull().default('pending'),

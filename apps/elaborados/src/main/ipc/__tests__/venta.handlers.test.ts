@@ -13,6 +13,7 @@ import {
   parseCarrito, cargarCatalogo, guardarLineasElaborados,
 } from '../venta';
 import { valorizarCarrito } from '../../domain/venta';
+import { reporteVentasProductoQuery } from '../reporte';
 
 const SUP = { nombre_usuario: 'admin', password: 'admin1234' }; // NOSONAR
 
@@ -309,10 +310,19 @@ describe('venta handlers (Elaborados)', () => {
       expect(r.venta.numero_interno.startsWith('HOLD:')).toBe(false);
 
       const lineas = db.select().from(schema.venta_linea).where(eq(schema.venta_linea.venta_id, ventaId)).all();
-      expect(lineas.map((l) => l.descripcion).sort()).toEqual(['Palito', 'Pote 1/4']);
+      expect(lineas.filter((l) => l.deleted_at == null).map((l) => l.descripcion).sort()).toEqual(['Palito', 'Pote 1/4']);
+      expect(lineas.filter((l) => l.deleted_at != null).map((l) => l.descripcion)).toEqual(['Pote 1/4']);
       expect(r.lineas).toHaveLength(2);
       expect(r.lineas.find((l) => l.descripcion === 'Pote 1/4')!.modificadores).toHaveLength(2);
-      expect(db.select().from(schema.venta_linea_modificador).all()).toHaveLength(2); // los del pedido original se borraron
+      // ADR-150 §7: el sabor del pedido original queda con lápida, no se borra.
+      const mods = db.select().from(schema.venta_linea_modificador).all();
+      expect(mods.filter((m) => m.deleted_at == null)).toHaveLength(2);
+      expect(mods.filter((m) => m.deleted_at != null)).toHaveLength(1);
+      // El reporte por producto y sabor cuenta solo las líneas vivas: un pote, no dos.
+      const f = new Date();
+      const dia = `${f.getFullYear()}-${String(f.getMonth() + 1).padStart(2, '0')}-${String(f.getDate()).padStart(2, '0')}`;
+      const rep = reporteVentasProductoQuery(db, { desde: dia, hasta: dia });
+      expect(rep.productos.find((p) => p.descripcion === 'Pote 1/4')!.unidades).toBe(1);
 
       expect(stockDe(db, c.envase.id)).toBe(9);
       expect(stockDe(db, c.palitoArt.id)).toBe(1);
