@@ -3,11 +3,11 @@ import { resolveTerminalConfig } from './terminal';
 
 describe('resolveTerminalConfig', () => {
   it('devuelve origin_id C1 por defecto en primer arranque (null)', () => {
-    expect(resolveTerminalConfig(null)).toEqual({ origin_id: 'C1' });
+    expect(resolveTerminalConfig(null)).toEqual({ origin_id: 'C1', modo: 'standalone' });
   });
 
   it('conserva el origin_id existente si ya hay config', () => {
-    expect(resolveTerminalConfig({ origin_id: 'C2' })).toEqual({ origin_id: 'C2' });
+    expect(resolveTerminalConfig({ origin_id: 'C2' })).toEqual({ origin_id: 'C2', modo: 'standalone' });
   });
 
   it('el origin_id nunca es un UUID', () => {

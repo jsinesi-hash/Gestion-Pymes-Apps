@@ -1,5 +1,6 @@
 import type { EventEmitter } from 'node:events';
 import { registroErrores } from './registro-errores';
+import { esTerminalCoordinadora } from './context';
 
 // Revisión 2026-10-20 (P0): tareas en segundo plano del main (scheduler de precios, vencimiento de
 // presupuestos, worker de avisos) y errores no capturados. Un error en un tick no debe tumbar el
@@ -33,9 +34,29 @@ export function ejecutarSeguro<T>(nombre: string, fn: () => T, log: LogFn = logP
   }
 }
 
+/**
+ * ADR-152: `coordinada` escribe tablas que sincronizan (corre solo en la terminal coordinadora);
+ * `local` escribe estado de la terminal (corre en cada una). Toda tarea lo declara: es obligatorio
+ * en la firma, así una tarea nueva sin tipo no compila.
+ */
+export type TipoTarea = 'coordinada' | 'local';
+
 export interface TareaOpts {
+  tipo: TipoTarea;
   /** Corre una vez de inmediato (también protegida) antes de programar el intervalo. */
   ejecutarAlInicio?: boolean;
+}
+
+const registradas = new Map<string, TipoTarea>();
+
+/** Tareas registradas en este proceso con su tipo (diagnóstico y tests). */
+export function tareasRegistradas(): { nombre: string; tipo: TipoTarea }[] {
+  return [...registradas].map(([nombre, tipo]) => ({ nombre, tipo }));
+}
+
+function ejecutarSiCorresponde(nombre: string, tipo: TipoTarea, fn: () => unknown, log: LogFn) {
+  if (tipo === 'coordinada' && !esTerminalCoordinadora()) return undefined;
+  return ejecutarSeguro(nombre, fn, log);
 }
 
 /** `setInterval` donde cada tick (y el inicial, si se pide) va por `ejecutarSeguro`. */
@@ -44,10 +65,17 @@ export function programarTareaSegura(
   intervaloMs: number,
   fn: () => unknown,
   log: LogFn = logPorDefecto,
-  opts: TareaOpts = {},
+  opts: TareaOpts,
 ): ReturnType<typeof setInterval> {
-  if (opts.ejecutarAlInicio) void ejecutarSeguro(nombre, fn, log);
-  return setInterval(() => { void ejecutarSeguro(nombre, fn, log); }, intervaloMs);
+  registradas.set(nombre, opts.tipo);
+  if (opts.ejecutarAlInicio) void ejecutarSiCorresponde(nombre, opts.tipo, fn, log);
+  return setInterval(() => { void ejecutarSiCorresponde(nombre, opts.tipo, fn, log); }, intervaloMs);
+}
+
+/** Una tarea que corre una sola vez (p. ej. al arrancar), protegida y con su tipo declarado. */
+export function ejecutarTareaUnica(nombre: string, tipo: TipoTarea, fn: () => unknown, log: LogFn = logPorDefecto): void {
+  registradas.set(nombre, tipo);
+  void ejecutarSiCorresponde(nombre, tipo, fn, log);
 }
 
 const MARCA_REGISTRADO = Symbol.for('@core/main.erroresNoCapturados');

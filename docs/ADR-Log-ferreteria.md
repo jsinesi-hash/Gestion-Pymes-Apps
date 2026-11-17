@@ -5290,6 +5290,9 @@ Elaborados no tiene tareas programadas hoy. El backup automático se dispara al 
 - (−) Si ninguna terminal está conectada al hub, las tareas coordinadas esperan; en modo distribuido es aceptable (corren apenas una terminal recupera el permiso).
 - (−) Un aviso `in_app` dirigido a un usuario que trabaja en otra terminal no le aparece; queda como limitación conocida hasta F4.
 
+
+**Implementación (F1 PR8, 2026-11-17).** §1 a §3, lado terminal. `programarTareaSegura` exige `tipo: 'coordinada' | 'local'` en sus opciones (una tarea nueva sin tipo no compila) y suma `ejecutarTareaUnica` para lo que corre una vez al arrancar; las dos registran la tarea (`tareasRegistradas()`) y una `coordinada` no corre si `esTerminalCoordinadora()` es falso (en standalone, siempre es verdadero). Retail declara: catch-up de agenda (ahora por `ejecutarTareaUnica`, antes un `try` suelto), cambios programados y vencimiento de presupuestos como `coordinada`; reintentos de avisos como `local`. La baranda de fuente (`arranque.tareas.test.ts`) exige el tipo de cada una. **Ids deterministas:** `uuidDeterminista` (UUID v5 con namespace propio, `@core/main/ids.ts`, verificado contra el vector del RFC) para el evento de agenda de una rutina (`rutina + fecha`) y, cuando un cambio programado dispara el recálculo, para el `recalculo_masivo` (`cambio`) y cada fila de `lista_precio_valor` (`cambio + lista + producto`). El permiso con vencimiento que otorga el hub es F2.
+
 ---
 
 ## ADR-153 — Fase online F0: stock y crédito con terminales sin conexión (permitir y alertar)
@@ -5375,3 +5378,6 @@ Elaborados no tiene tareas programadas hoy. El backup automático se dispara al 
 - (+) El acceso remoto no agrega una capa nueva: es el mismo cliente de escritorio.
 - (−) El equipo entregado suma logística y soporte; su costo se evalúa en F2.
 - (−) Quien quiera acceso remoto necesita el hub en la nube (F4).
+
+
+**Implementación (F1 PR8, 2026-11-17).** `config.json` de la terminal suma `modo` (`standalone` | `distribuido`); `resolveTerminalConfig` completa `standalone` en un archivo viejo y lo reescribe. `aplicarConfigTerminal` (vía `iniciarTerminal`) solo acepta `standalone` en esta versión: otro valor lanza `MODO_TERMINAL_NO_SOPORTADO` y no cambia nada, igual que `TERMINAL_INVALIDA` con un `origin_id` inválido. El modo vive en el contexto del main (`getModoTerminal`) y decide si la terminal es coordinadora (ADR-152).

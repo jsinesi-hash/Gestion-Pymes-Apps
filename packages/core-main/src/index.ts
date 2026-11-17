@@ -50,4 +50,5 @@ export * from './terminal';
 export * from './numeracion';
 export * from './ctacte-proyeccion';
 export * from './configuracion';
+export * from './ids';
 export * from './userdata-aislado';

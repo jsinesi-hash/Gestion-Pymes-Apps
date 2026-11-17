@@ -4,6 +4,7 @@ import { setupDb, loginAsAdmin } from '../../ipc/__tests__/helpers';
 import * as schema from '../../db/schema';
 import { generateId } from '@ferreteria/shared';
 import { ejecutarCatchUp, completarEventoRutina } from '../motor-rutinas';
+import { uuidDeterminista } from '@core/main';
 
 function crearRutinaDiaria(db: ReturnType<typeof setupDb>, adminId: string, proximo: Date): string {
   const id = generateId();
@@ -61,6 +62,15 @@ describe('motor-rutinas', () => {
     expect(completadas.length).toBe(1);
     const r = db.select().from(schema.rutina).where(eq(schema.rutina.id, rutinaId)).get();
     expect(r!.proximo_disparo!.getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it('ADR-152: el evento de una rutina tiene id determinista (rutina + fecha): dos terminales generan el mismo', () => {
+    const db = setupDb();
+    const admin = loginAsAdmin(db);
+    const rutinaId = crearRutinaDiaria(db, admin.id, new Date(Date.now() - 86400000));
+    ejecutarCatchUp(db, new Date());
+    const [ev] = db.select().from(schema.agenda_evento).where(eq(schema.agenda_evento.rutina_id, rutinaId)).all();
+    expect(ev.id).toBe(uuidDeterminista('agenda_evento', rutinaId, String(ev.fecha.getTime())));
   });
 
   it('catch-up no duplica: correr dos veces no crea eventos repetidos', () => {

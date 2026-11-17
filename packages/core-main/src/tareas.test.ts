@@ -34,7 +34,7 @@ describe('programarTareaSegura', () => {
     vi.useFakeTimers();
     const log = vi.fn();
     let n = 0;
-    const timer = programarTareaSegura('job', 1000, () => { n += 1; if (n === 1) throw new Error('boom'); }, log);
+    const timer = programarTareaSegura('job', 1000, () => { n += 1; if (n === 1) throw new Error('boom'); }, log, { tipo: 'local' });
     vi.advanceTimersByTime(3000);
     clearInterval(timer);
     expect(n).toBe(3);
@@ -45,7 +45,7 @@ describe('programarTareaSegura', () => {
     vi.useFakeTimers();
     const log = vi.fn();
     const fn = vi.fn(() => { throw new Error('al inicio'); });
-    const timer = programarTareaSegura('job', 1000, fn, log, { ejecutarAlInicio: true });
+    const timer = programarTareaSegura('job', 1000, fn, log, { tipo: 'local', ejecutarAlInicio: true });
     clearInterval(timer);
     expect(fn).toHaveBeenCalledTimes(1);
     expect(log).toHaveBeenCalledTimes(1);
@@ -113,7 +113,7 @@ describe('errores registrados en el registro del sistema', () => {
   it('cada tick que falla se registra, y los siguientes siguen corriendo', () => {
     vi.useFakeTimers();
     registroErrores.limpiar();
-    const timer = programarTareaSegura('job', 1000, () => { throw new Error('boom'); }, vi.fn());
+    const timer = programarTareaSegura('job', 1000, () => { throw new Error('boom'); }, vi.fn(), { tipo: 'local' });
     vi.advanceTimersByTime(3000);
     clearInterval(timer);
     vi.useRealTimers();

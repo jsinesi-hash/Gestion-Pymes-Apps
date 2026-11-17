@@ -3,7 +3,7 @@ import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession, getOriginId, centavos, id as vId, resolverListaEfectiva, requirePermission } from '@core/main';
+import { getSession, getOriginId, centavos, id as vId, resolverListaEfectiva, requirePermission, uuidDeterminista } from '@core/main';
 import { getDefaultPresentacionId } from './presentacion';
 
 type Db = BetterSQLite3Database<typeof schema>;
@@ -376,6 +376,8 @@ export function recalcularMasivoHandler(
   db: Db,
   params: RecalcularMasivoParams,
   callerUserId?: string,
+  /** ADR-152 §3: id del cambio programado que lo dispara; con él los ids son deterministas. */
+  semilla?: string,
 ): { recalculo_masivo_id: string; productos_afectados: number } {
   const session = getSession();
   const userId = callerUserId ?? session?.userId;
@@ -383,7 +385,7 @@ export function recalcularMasivoHandler(
 
   const productos = resolveProductosAfectados(db, params);
   const now = new Date();
-  const recalculoId = generateId();
+  const recalculoId = semilla ? uuidDeterminista('recalculo_masivo', semilla) : generateId();
 
   db.transaction((tx) => {
     for (const prod of productos) {
@@ -405,7 +407,8 @@ export function recalcularMasivoHandler(
 
       // Insert new vigente row
       tx.insert(schema.lista_precio_valor).values({
-        id: generateId(),
+        // Con semilla (cambio programado), dos terminales que lo apliquen generan las mismas filas.
+        id: semilla ? uuidDeterminista('lista_precio_valor', semilla, params.lista_precio_id, prod.id) : generateId(),
         lista_precio_id: params.lista_precio_id,
         producto_id: prod.id,
         precio_centavos: nuevoPrecio,

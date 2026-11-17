@@ -63,6 +63,7 @@ export function applyPendingCambiosProgramados(db: Db): void {
           tx as Db,
           params,
           cambio.usuario_creacion_id,
+          cambio.id, // ADR-152 §3: ids deterministas
         );
 
         // Vincular el cambio con el recalculo_masivo generado

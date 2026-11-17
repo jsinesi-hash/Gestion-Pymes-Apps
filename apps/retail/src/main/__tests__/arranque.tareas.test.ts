@@ -31,6 +31,21 @@ describe('arranque de Retail: tareas en segundo plano protegidas', () => {
     expect(fuente).not.toMatch(/^\s*presupuestoVencerLoteHandler\(db\);/m);
   });
 
+  // ADR-152 (F1 PR8): toda tarea declara si es coordinada (escribe tablas que sincronizan: corre
+  // solo en la terminal coordinadora) o local. Si se agrega una tarea, se declara acá también.
+  it.each([
+    ['avisos-reintentos', 'local'],
+    ['cambios-programados', 'coordinada'],
+    ['presupuestos-vencidos', 'coordinada'],
+  ])('la tarea "%s" declara tipo %s', (nombre, tipo) => {
+    expect(fuente).toMatch(new RegExp(`programarTareaSegura\\(\\s*'${nombre}'[^;]*tipo: '${tipo}'`));
+  });
+
+  it('el catch-up de la agenda corre al arrancar como tarea coordinada', () => {
+    expect(fuente).toMatch(/ejecutarTareaUnica\(\s*'agenda-catchup',\s*'coordinada'/);
+    expect(fuente).not.toMatch(/^\s*try \{ ejecutarCatchUp\(/m);
+  });
+
   it('registra los errores no capturados antes de runStartup', () => {
     const registrar = fuente.indexOf('registrarErroresNoCapturados(');
     expect(registrar).toBeGreaterThan(-1);
