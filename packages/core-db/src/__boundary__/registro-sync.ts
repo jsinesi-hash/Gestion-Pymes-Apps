@@ -73,6 +73,9 @@ export function registroSyncCore(): RegistroSync {
   return {
     // config — PR7 de F1 separa las claves del negocio (sincronizan) de las de la terminal.
     parametros_sistema: { tipo: 'local' },
+    // sync — cola de cambios e interruptor de aplicación: estado de la terminal (ADR-150 §4 y §6).
+    sync_outbox: { tipo: 'local' },
+    sync_aplicando: { tipo: 'local' },
     // geo — catálogo de referencia sembrado en cada instalación (ADR-024).
     provincia: { tipo: 'local' },
     departamento: { tipo: 'local' },
