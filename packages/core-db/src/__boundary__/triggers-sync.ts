@@ -2,6 +2,8 @@
 // Captura de cambios (ADR-150 §4 y §6): triggers AFTER INSERT/UPDATE generados desde el registro de
 // sync, que encolan en `sync_outbox` cada cambio de una tabla `maestro` o `libro`. Se instalan SOLO en
 // modo distribuido (F1 PR8 conecta el modo): en standalone nadie consume la cola y crecería sin fin.
+// Junto con ellos va la baranda de ADR-150 §7: un BEFORE DELETE que aborta, porque un borrado físico
+// no deja nada que sincronizar. Los tests de cada app la instalan sola sobre su base (`triggersSinBorrado`).
 import type * as BetterSqlite3 from 'better-sqlite3';
 import { is } from 'drizzle-orm';
 import { getTableConfig, SQLiteTable } from 'drizzle-orm/sqlite-core';
@@ -75,14 +77,62 @@ function triggersDe(t: TablaCaptura): [string, string] {
   return [ins, upd];
 }
 
-/** Sentencias `CREATE TRIGGER` de captura para cada tabla `maestro`/`libro` del esquema. */
-export function triggersSync(schema: Record<string, unknown>, registro: RegistroSync): string[] {
-  return tablasCaptura(schema, registro).flatMap(triggersDe);
+function sinBorrado(tabla: string): string {
+  return (
+    `CREATE TRIGGER ${q(`sync_del_${tabla}`)} BEFORE DELETE ON ${q(tabla)}
+` +
+    `BEGIN
+  SELECT RAISE(ABORT, 'BORRADO_FISICO_EN_TABLA_SYNC: ${tabla}');
+END;`
+  );
 }
 
-/** Nombres de los triggers de captura que corresponden al esquema (para instalarlos, quitarlos y verificarlos). */
+/**
+ * Baranda de ADR-150 §7: un `BEFORE DELETE` que aborta en cada tabla `maestro`/`libro`, salvo las
+ * `excepto`. La instalan los tests sobre su base (cualquier handler que borre rompe su propio test) y
+ * `instalarTriggersSync` en modo distribuido.
+ */
+export function triggersSinBorrado(
+  schema: Record<string, unknown>,
+  registro: RegistroSync,
+  excepto: readonly string[] = [],
+): string[] {
+  const fuera = new Set(excepto);
+  return tablasCaptura(schema, registro).filter((t) => !fuera.has(t.nombre)).map((t) => sinBorrado(t.nombre));
+}
+
+/** Sentencias `CREATE TRIGGER` del modo distribuido: captura (alta y modificación) y baranda sin borrado. */
+export function triggersSync(schema: Record<string, unknown>, registro: RegistroSync): string[] {
+  return tablasCaptura(schema, registro).flatMap((t) => [...triggersDe(t), sinBorrado(t.nombre)]);
+}
+
+/** Nombres de los triggers del modo distribuido (para instalarlos, quitarlos y verificarlos). */
 export function nombresTriggersSync(schema: Record<string, unknown>, registro: RegistroSync): string[] {
-  return tablasCaptura(schema, registro).flatMap((t) => [`sync_ins_${t.nombre}`, `sync_upd_${t.nombre}`]);
+  return tablasCaptura(schema, registro).flatMap((t) => [`sync_ins_${t.nombre}`, `sync_upd_${t.nombre}`, `sync_del_${t.nombre}`]);
+}
+
+/** Instala la baranda sin borrado sola (bases de test). Idempotente. */
+export function instalarBarandaSinBorrado(
+  sqlite: BetterSqlite3.Database,
+  schema: Record<string, unknown>,
+  registro: RegistroSync,
+  excepto: readonly string[] = [],
+): void {
+  sqlite.transaction(() => {
+    for (const s of triggersSinBorrado(schema, registro, excepto)) {
+      sqlite.exec(`DROP TRIGGER IF EXISTS ${s.match(/^CREATE TRIGGER ("[^"]+")/)![1]};`);
+      sqlite.exec(s);
+    }
+  })();
+}
+
+/** Quita la baranda (tests que ejercitan a propósito un borrado de standalone: seeds, catálogo demo). */
+export function quitarBarandaSinBorrado(
+  sqlite: BetterSqlite3.Database,
+  schema: Record<string, unknown>,
+  registro: RegistroSync,
+): void {
+  for (const t of tablasCaptura(schema, registro)) sqlite.exec(`DROP TRIGGER IF EXISTS ${q(`sync_del_${t.nombre}`)};`);
 }
 
 /** Instala (o reinstala) los triggers de captura. Idempotente. Solo para modo distribuido. */

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { setupDb, loginAsAdmin, clearSession } from './helpers';
+import { setupDb, loginAsAdmin, clearSession, permitirBorradoFisico } from './helpers';
 import { runCatalogSeed } from '../../catalog/seed';
 import * as schema from '../../db/schema';
 import {
@@ -13,6 +13,9 @@ import { productoCreateHandler } from '../producto';
 // El seeder demo necesita el catálogo base (IVA/categorías/marcas/unidades).
 function setup() {
   const db = setupDb();          // migraciones + runSeed (auth)
+  // «Quitar catálogo demo» borra físicamente: existe solo en standalone (en distribuido lo frenan
+  // los triggers de sync, ADR-150 §7).
+  permitirBorradoFisico(db);
   runCatalogSeed(db);            // IVA/categorías/marcas/unidades
   loginAsAdmin(db);             // sesión Supervisor (tiene usuario.administrar)
   return db;

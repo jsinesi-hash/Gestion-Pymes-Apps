@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 import type { RegistroSync } from './registro-sync';
-import { nombresTriggersSync, triggersSync } from './triggers-sync';
+import { nombresTriggersSync, triggersSinBorrado, triggersSync } from './triggers-sync';
 
 // Generación pura (texto). Los triggers se ejercitan sobre una base real en los tests de main de
 // cada app (corren bajo Electron, con better-sqlite3).
@@ -28,8 +28,10 @@ describe('triggersSync', () => {
     expect(nombresTriggersSync(schema, registro)).toEqual([
       'sync_ins_mov',
       'sync_upd_mov',
+      'sync_del_mov',
       'sync_ins_saldo',
       'sync_upd_saldo',
+      'sync_del_saldo',
     ]);
     expect(ddl).not.toMatch(/ON "zona"/);
   });
@@ -70,5 +72,26 @@ describe('triggersSync', () => {
   it('falla si una tabla que sincroniza no tiene id', () => {
     const sinId = sqliteTable('sin_id', { clave: text('clave').primaryKey(), ...sync });
     expect(() => triggersSync({ sinId }, { sin_id: { tipo: 'maestro' } })).toThrow('TRIGGER_SIN_ID: sin_id');
+  });
+});
+
+const BR = String.fromCharCode(10);
+
+describe('triggersSinBorrado (ADR-150 §7)', () => {
+  it('aborta el DELETE de cada tabla maestro/libro con un error que nombra la tabla', () => {
+    const ddl = triggersSinBorrado(schema, registro);
+    expect(ddl).toHaveLength(2);
+    const mov = ddl.find((s) => s.includes('"sync_del_mov"'))!;
+    expect(mov).toContain('BEFORE DELETE ON "mov"');
+    expect(mov).toContain("RAISE(ABORT, 'BORRADO_FISICO_EN_TABLA_SYNC: mov')");
+    expect(ddl.join(BR)).not.toMatch(/ON "zona"/);
+  });
+
+  it('respeta las excepciones', () => {
+    expect(triggersSinBorrado(schema, registro, ['mov'])).toHaveLength(1);
+  });
+
+  it('triggersSync incluye la baranda: en modo distribuido tampoco se borra', () => {
+    expect(triggersSync(schema, registro).join(BR)).toContain('BEFORE DELETE ON "saldo"');
   });
 });

@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, notInArray, sql } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
@@ -92,7 +92,12 @@ export function sinonimoGrupoListHandler(db: Db, payload: { busqueda?: string } 
 }
 
 // Inserta las filas de un grupo (canónico + sinónimos + abreviaturas) con dedup por norma.
-function insertarTerminos(
+/**
+ * Deja el grupo con exactamente estos términos. Sin borrado físico (ADR-150 §7): un término que ya
+ * estaba en el grupo (activo o dado de baja) se actualiza y queda activo, con el mismo id; uno nuevo
+ * se inserta; los que salen del grupo quedan con baja lógica.
+ */
+function escribirTerminos(
   tx: Db, grupoId: string, payload: SinonimoGrupoPayload,
   origen: 'manual' | 'import', userId: string, now: Date,
 ): void {
@@ -108,6 +113,25 @@ function insertarTerminos(
     const norm = normalizarTermino(termino);
     if (!norm || vistos.has(norm)) continue;
     vistos.add(norm);
+    const previo = tx.select({ id: schema.sinonimo.id }).from(schema.sinonimo)
+      .where(and(eq(schema.sinonimo.grupo_id, grupoId), eq(schema.sinonimo.termino_norm, norm))).get();
+    if (previo) {
+      tx.update(schema.sinonimo).set({
+        termino,
+        es_canonico: t.es_canonico,
+        es_abreviatura: t.es_abreviatura,
+        rubro: payload.rubro ?? null,
+        nota: payload.nota ?? null,
+        origen,
+        activo: true,
+        usuario_modificacion_id: userId,
+        fecha_actualizacion: now,
+        version: sql`${schema.sinonimo.version} + 1`,
+        sync_state: 'pending',
+        updated_at: now,
+      }).where(eq(schema.sinonimo.id, previo.id)).run();
+      continue;
+    }
     tx.insert(schema.sinonimo).values({
       id: generateId(),
       grupo_id: grupoId,
@@ -126,6 +150,20 @@ function insertarTerminos(
       sync_state: 'pending',
       updated_at: now,
     }).onConflictDoNothing().run();
+  }
+  if (vistos.size > 0) {
+    tx.update(schema.sinonimo).set({
+      activo: false,
+      usuario_modificacion_id: userId,
+      fecha_actualizacion: now,
+      version: sql`${schema.sinonimo.version} + 1`,
+      sync_state: 'pending',
+      updated_at: now,
+    }).where(and(
+      eq(schema.sinonimo.grupo_id, grupoId),
+      eq(schema.sinonimo.activo, true),
+      notInArray(schema.sinonimo.termino_norm, [...vistos]),
+    )).run();
   }
 }
 
@@ -157,7 +195,7 @@ export function sinonimoGrupoCreateHandler(db: Db, payload: unknown): SinonimoGr
   const v_payload = validarGrupoPayload(p);
   const now = new Date();
   const grupoId = generateId();
-  db.transaction((tx) => insertarTerminos(tx, grupoId, v_payload, 'manual', session.userId, now));
+  db.transaction((tx) => escribirTerminos(tx, grupoId, v_payload, 'manual', session.userId, now));
   return sinonimoGrupoGetHandler(db, { grupo_id: grupoId })!;
 }
 
@@ -181,9 +219,8 @@ export function sinonimoGrupoUpdateHandler(db: Db, payload: unknown): SinonimoGr
   const origen = (existentes.find(r => r.es_canonico) ?? existentes[0]).origen;
   const now = new Date();
   db.transaction((tx) => {
-    // Reemplazo total del grupo: borra sus filas y reinserta (conserva grupo_id y origen).
-    tx.delete(schema.sinonimo).where(eq(schema.sinonimo.grupo_id, v_grupo_id)).run();
-    insertarTerminos(tx, v_grupo_id, v_payload, origen === 'seed' ? 'manual' : origen, session.userId, now);
+    // Reemplazo total del grupo (conserva grupo_id y origen); sin borrado físico.
+    escribirTerminos(tx, v_grupo_id, v_payload, origen === 'seed' ? 'manual' : origen, session.userId, now);
   });
   return sinonimoGrupoGetHandler(db, { grupo_id: v_grupo_id })!;
 }
@@ -241,10 +278,18 @@ export function sinonimoImportarHandler(db: Db, payload: unknown): SinonimoImpor
   const now = new Date();
   db.transaction((tx) => {
     if (v_reemplazar) {
-      tx.delete(schema.sinonimo).where(eq(schema.sinonimo.origen, 'import')).run();
+      // Baja lógica de lo importado antes (ADR-150 §7); los grupos manuales no se tocan.
+      tx.update(schema.sinonimo).set({
+        activo: false,
+        usuario_modificacion_id: session.userId,
+        fecha_actualizacion: now,
+        version: sql`${schema.sinonimo.version} + 1`,
+        sync_state: 'pending',
+        updated_at: now,
+      }).where(and(eq(schema.sinonimo.origen, 'import'), eq(schema.sinonimo.activo, true))).run();
     }
     for (const g of grupos) {
-      insertarTerminos(tx, generateId(), g, 'import', session.userId, now);
+      escribirTerminos(tx, generateId(), g, 'import', session.userId, now);
     }
   });
   return { grupos: grupos.length, gruposImportados: grupos.length, errores: [], advertencias };

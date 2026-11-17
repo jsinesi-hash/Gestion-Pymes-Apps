@@ -380,5 +380,12 @@
       "tag": "0053_adr150_sync_outbox",
       "breakpoints": true
     }
+    ,{
+      "idx": 54,
+      "version": "7",
+      "when": 1795219200000,
+      "tag": "0054_adr150_lapidas",
+      "breakpoints": true
+    }
   ]
 }

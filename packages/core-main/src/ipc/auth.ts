@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { eq, and, ne } from 'drizzle-orm';
+import { eq, and, ne, isNull, sql } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import {
@@ -8,6 +8,7 @@ import {
 import * as schema from '@core/db';
 import { verifyPassword, hashPassword } from '../auth/hash';
 import { limiteIntentos } from '../auth/intentos';
+import { upsertRolPermiso } from '../auth/seed';
 import { getSession, setSession, clearSession, getSessionData } from '../auth/session';
 import type { SessionData } from '../auth/session';
 import { getOriginId } from '../context';
@@ -36,6 +37,7 @@ function rolAdministraUsuarios(db: Db, rolId: string): boolean {
     .innerJoin(schema.permiso, eq(schema.permiso.id, schema.rol_permiso.permiso_id))
     .where(and(
       eq(schema.rol_permiso.rol_id, rolId),
+      isNull(schema.rol_permiso.deleted_at),
       eq(schema.rol.activo, true),
       eq(schema.permiso.codigo, PERMISO_ADMINISTRAR),
     ))
@@ -123,7 +125,7 @@ function abrirSesion(db: Db, user: Usuario): SessionData {
   const rolPermisos = db
     .select({ permiso_id: schema.rol_permiso.permiso_id })
     .from(schema.rol_permiso)
-    .where(eq(schema.rol_permiso.rol_id, user.rol_id))
+    .where(and(eq(schema.rol_permiso.rol_id, user.rol_id), isNull(schema.rol_permiso.deleted_at)))
     .all();
 
   const permisoIds = new Set(rolPermisos.map(rp => rp.permiso_id));
@@ -441,6 +443,7 @@ export function permisoMatrizHandler(db: Db) {
     codigo: schema.permiso.codigo,
   }).from(schema.rol_permiso)
     .innerJoin(schema.permiso, eq(schema.rol_permiso.permiso_id, schema.permiso.id))
+    .where(isNull(schema.rol_permiso.deleted_at))
     .all();
   const porRol: Record<string, string[]> = {};
   for (const r of roles) porRol[r.id] = [];
@@ -486,13 +489,19 @@ export function permisoActualizarRolHandler(db: Db, payload: { rolId: string; pe
   db.transaction((tx) => {
     for (const codigo of agregados) {
       const permisoId = idPorCodigo.get(codigo)!;
-      tx.insert(schema.rol_permiso).values({ id: randomUUID(), rol_id: rolId, permiso_id: permisoId, version: 1, ...sync }).run();
+      upsertRolPermiso(tx, rolId, permisoId, { version: 1, ...sync });
       registrarOverride(tx, rolId, permisoId, true, session.userId, now, sync);
     }
     for (const codigo of quitados) {
       const permisoId = idPorCodigo.get(codigo)!;
-      tx.delete(schema.rol_permiso)
-        .where(and(eq(schema.rol_permiso.rol_id, rolId), eq(schema.rol_permiso.permiso_id, permisoId))).run();
+      // Lápida, no borrado físico (ADR-150 §7).
+      tx.update(schema.rol_permiso)
+        .set({ deleted_at: now, version: sql`${schema.rol_permiso.version} + 1`, ...sync })
+        .where(and(
+          eq(schema.rol_permiso.rol_id, rolId),
+          eq(schema.rol_permiso.permiso_id, permisoId),
+          isNull(schema.rol_permiso.deleted_at),
+        )).run();
       registrarOverride(tx, rolId, permisoId, false, session.userId, now, sync);
     }
   });
@@ -509,7 +518,7 @@ function codigosDelRol(db: Db, rolId: string): string[] {
   return db.select({ codigo: schema.permiso.codigo })
     .from(schema.rol_permiso)
     .innerJoin(schema.permiso, eq(schema.permiso.id, schema.rol_permiso.permiso_id))
-    .where(eq(schema.rol_permiso.rol_id, rolId))
+    .where(and(eq(schema.rol_permiso.rol_id, rolId), isNull(schema.rol_permiso.deleted_at)))
     .all().map(r => r.codigo);
 }
 

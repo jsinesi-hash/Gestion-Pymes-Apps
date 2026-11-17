@@ -27,6 +27,8 @@ export const rol_permiso = sqliteTable('rol_permiso', {
   id:         text('id').primaryKey(),
   rol_id:     text('rol_id').notNull().references(() => rol.id),
   permiso_id: text('permiso_id').notNull().references(() => permiso.id),
+  // Lápida (ADR-150 §7): quitar un permiso del rol no borra la fila; volver a otorgarlo la revive.
+  deleted_at: integer('deleted_at', { mode: 'timestamp' }),
   version:    integer('version').notNull().default(1),
   origin_id:  text('origin_id').notNull(),
   sync_state: text('sync_state', { enum: ['pending', 'synced', 'conflict'] }).notNull().default('pending'),

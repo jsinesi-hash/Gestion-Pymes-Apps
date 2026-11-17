@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import path from 'node:path';
-import { createTestDb } from './ipc/__tests__/helpers';
+import { createTestDb, permitirBorradoFisico } from './ipc/__tests__/helpers';
 import { isSeedBaseAplicado } from './base-seed/index';
 import { runStartup } from './startup';
 
@@ -44,6 +44,7 @@ describe('runStartup — permisos nuevos en instalaciones existentes', () => {
 
     const permisoId = sql(db).prepare('SELECT id FROM permiso WHERE codigo = ?').get(codigo)?.id;
     expect(permisoId, `el permiso ${codigo} deberia existir tras el primer arranque`).toBeTruthy();
+    permitirBorradoFisico(db); // simula una instalación anterior a ese permiso
     sql(db).prepare('DELETE FROM rol_permiso WHERE permiso_id = ?').run(permisoId);
     sql(db).prepare('DELETE FROM permiso WHERE id = ?').run(permisoId);
 
@@ -80,6 +81,7 @@ describe('runStartup — permisos nuevos en instalaciones existentes', () => {
 
     // Simula una base creada antes de la feature: la tabla existe (migración) pero vacía,
     // y seed_base_aplicado ya está en true (el first-run guard no vuelve a correr).
+    permitirBorradoFisico(db);
     sql(db).prepare('DELETE FROM sinonimo').run();
     expect(sql(db).prepare('SELECT COUNT(*) c FROM sinonimo').get().c).toBe(0);
     expect(isSeedBaseAplicado(db)).toBe(true);

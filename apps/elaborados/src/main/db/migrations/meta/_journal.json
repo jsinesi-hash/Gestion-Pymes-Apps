@@ -113,6 +113,13 @@
       "when": 1792519042973,
       "tag": "0015_adr150_sync_outbox",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1792605442973,
+      "tag": "0016_adr150_lapidas",
+      "breakpoints": true
     }
   ]
 }

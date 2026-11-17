@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { eq, inArray } from 'drizzle-orm';
 import * as schema from '../../db/schema';
-import { setupDb } from '../../__tests__/helpers';
+import { setupDb, permitirBorradoFisico } from '../../__tests__/helpers';
 import { seedClientesDemo, CLIENTES_DEMO } from '../clientes';
 
 const docs = () => CLIENTES_DEMO.map((c) => c.numero_documento);
@@ -50,6 +50,7 @@ describe('seedClientesDemo', () => {
     const db = setupDb();
     seedClientesDemo(db);
     const uno = db.select().from(schema.cliente).where(eq(schema.cliente.numero_documento, CLIENTES_DEMO[0].numero_documento)).get()!;
+    permitirBorradoFisico(db); // simula que falta uno
     db.delete(schema.cliente).where(eq(schema.cliente.id, uno.id)).run();
     const r = seedClientesDemo(db);
     expect(r.creados).toBe(1);

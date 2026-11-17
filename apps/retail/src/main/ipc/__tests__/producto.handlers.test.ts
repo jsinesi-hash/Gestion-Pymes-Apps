@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import * as schema from '../../db/schema';
-import { setupDb, loginAsAdmin, clearSession } from './helpers';
+import { setupDb, loginAsAdmin, clearSession, permitirBorradoFisico } from './helpers';
 import { runCatalogSeed } from '../../catalog/seed';
 import { categoriaCreateHandler } from '../categoria';
 import { ubicacionCreateHandler } from '../ubicacion';
@@ -392,6 +392,7 @@ describe('producto handlers', () => {
       const base = makeBase(db);
       const p1 = productoCreateHandler(db, { ...base, nombre_corto: 'SinExistencias' });
       // Borrar la fila de existencias para simular inconsistencia
+      permitirBorradoFisico(db);
       db.delete(schema.existencias)
         .where(eq(schema.existencias.producto_id, p1.id))
         .run();

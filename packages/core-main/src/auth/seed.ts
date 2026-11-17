@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '@core/db';
 import { hashPassword } from './hash';
@@ -11,17 +11,28 @@ export type SeedAuthOpts = { permisos: readonly PermisoDef[]; operador: readonly
 
 type SyncMeta = { version: number; origin_id: string; sync_state: 'pending' | 'synced' | 'conflict'; updated_at: Date };
 
-function upsertRolPermiso(
-  db: Db,
+/**
+ * Deja otorgado el permiso al rol. Si la fila existe con lápida (se quitó desde «Roles y permisos»),
+ * la revive en vez de insertar otra: no hay borrado físico en tablas que sincronizan (ADR-150 §7).
+ */
+export function upsertRolPermiso(
+  db: Pick<Db, 'select' | 'insert' | 'update'>,
   rolId: string,
   permisoId: string,
   sync: SyncMeta,
 ): void {
-  const exists = db.select({ id: schema.rol_permiso.id }).from(schema.rol_permiso)
+  const fila = db.select({ id: schema.rol_permiso.id, deleted_at: schema.rol_permiso.deleted_at }).from(schema.rol_permiso)
     .where(and(eq(schema.rol_permiso.rol_id, rolId), eq(schema.rol_permiso.permiso_id, permisoId)))
     .get();
-  if (!exists) {
+  if (!fila) {
     db.insert(schema.rol_permiso).values({ id: randomUUID(), rol_id: rolId, permiso_id: permisoId, ...sync }).run();
+  } else if (fila.deleted_at) {
+    db.update(schema.rol_permiso).set({
+      deleted_at: null,
+      version: sql`${schema.rol_permiso.version} + 1`,
+      sync_state: 'pending',
+      updated_at: sync.updated_at,
+    }).where(eq(schema.rol_permiso.id, fila.id)).run();
   }
 }
 

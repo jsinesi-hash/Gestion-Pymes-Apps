@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import ExcelJS from 'exceljs';
-import { eq, and, or, desc, inArray, ne, sql } from 'drizzle-orm';
+import { eq, and, or, desc, inArray, isNull, ne, sql } from 'drizzle-orm';
 import { generateId } from '@ferreteria/shared';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
@@ -505,7 +505,10 @@ export function importacionCostoCancelarHandler(
 
   const importacion = db.select()
     .from(schema.importacion_costo_proveedor)
-    .where(eq(schema.importacion_costo_proveedor.id, importacionId))
+    .where(and(
+      eq(schema.importacion_costo_proveedor.id, importacionId),
+      isNull(schema.importacion_costo_proveedor.deleted_at),
+    ))
     .get();
   if (!importacion) throw new Error('IMPORTACION_NOT_FOUND');
   if (importacion.estado !== 'pendiente') throw new Error('IMPORTACION_YA_PROCESADA');
@@ -536,19 +539,26 @@ export function importacionCostoEliminarHandler(
 
   const importacion = db.select()
     .from(schema.importacion_costo_proveedor)
-    .where(eq(schema.importacion_costo_proveedor.id, importacionId))
+    .where(and(
+      eq(schema.importacion_costo_proveedor.id, importacionId),
+      isNull(schema.importacion_costo_proveedor.deleted_at),
+    ))
     .get();
   if (!importacion) throw new Error('IMPORTACION_NOT_FOUND');
   if (importacion.estado === 'confirmado') throw new Error('IMPORTACION_CONFIRMADA_NO_SE_PUEDE_ELIMINAR');
 
-  db.transaction(() => {
-    db.delete(schema.importacion_costo_proveedor_detalle)
-      .where(eq(schema.importacion_costo_proveedor_detalle.importacion_id, importacionId))
-      .run();
-    db.delete(schema.importacion_costo_proveedor)
-      .where(eq(schema.importacion_costo_proveedor.id, importacionId))
-      .run();
-  });
+  // Lápida, no borrado físico (ADR-150 §7): la importación desaparece del historial y de la cola de
+  // revisión; su detalle queda, inalcanzable.
+  const now = new Date();
+  db.update(schema.importacion_costo_proveedor)
+    .set({
+      deleted_at: now,
+      version: sql`${schema.importacion_costo_proveedor.version} + 1`,
+      sync_state: 'pending',
+      updated_at: now,
+    })
+    .where(eq(schema.importacion_costo_proveedor.id, importacionId))
+    .run();
 
   return { ok: true };
 }
@@ -584,6 +594,7 @@ export function importacionCostoGetHistorialHandler(db: Db): HistorialItem[] {
   })
     .from(schema.importacion_costo_proveedor)
     .innerJoin(schema.proveedor, eq(schema.importacion_costo_proveedor.proveedor_id, schema.proveedor.id))
+    .where(isNull(schema.importacion_costo_proveedor.deleted_at))
     .orderBy(desc(schema.importacion_costo_proveedor.fecha_importacion))
     .all();
 
@@ -736,6 +747,7 @@ export async function importacionCostoGetColaRevisionHandler(db: Db): Promise<Co
     .where(and(
       eq(schema.importacion_costo_proveedor_detalle.estado, 'sin_matchear'),
       ne(schema.importacion_costo_proveedor.estado, 'cancelado'),
+      isNull(schema.importacion_costo_proveedor.deleted_at), // eliminada (lápida)
     ))
     .all();
 

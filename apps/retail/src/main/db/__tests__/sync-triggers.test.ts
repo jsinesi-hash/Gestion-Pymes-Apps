@@ -18,7 +18,7 @@ function nuevaBase(): Database.Database {
   return createTestDb().$client as Database.Database;
 }
 function triggersInstalados(sqlite: Database.Database): string[] {
-  return (sqlite.prepare("select name from sqlite_master where type = 'trigger' and name like 'sync_%' order by name").all() as { name: string }[]).map((r) => r.name);
+  return (sqlite.prepare("select name from sqlite_master where type = 'trigger' and (name like 'sync_ins_%' or name like 'sync_upd_%' or name like 'sync_del_%') order by name").all() as { name: string }[]).map((r) => r.name);
 }
 function outbox(sqlite: Database.Database) {
   return sqlite.prepare('select tabla, fila_id, operacion, version, fila from sync_outbox order by seq').all() as {
@@ -39,13 +39,14 @@ describe('triggers de sync — Retail', () => {
   });
 
   it('en standalone (base recién migrada) no hay triggers de captura', () => {
-    expect(triggersInstalados(sqlite)).toEqual([]);
+    // La base de test trae la baranda sin borrado (sync_del_*); la captura no está.
+    expect(triggersInstalados(sqlite).filter((n) => !n.startsWith('sync_del_'))).toEqual([]);
   });
 
   it('al instalarlos, toda tabla maestro/libro tiene su trigger de alta y de modificación, y todos compilan', () => {
     instalarTriggersSync(sqlite, schema, registro);
     expect(triggersInstalados(sqlite)).toEqual([...nombresTriggersSync(schema, registro)].sort());
-    expect(triggersInstalados(sqlite)).toHaveLength(hub.length * 2);
+    expect(triggersInstalados(sqlite)).toHaveLength(hub.length * 3);
     // Preparar (sin ejecutar) un INSERT y un UPDATE compila los triggers de la tabla: un error en el
     // cuerpo (columna inexistente, demasiados argumentos) aparece acá y no en producción.
     for (const t of hub) {
@@ -57,7 +58,7 @@ describe('triggers de sync — Retail', () => {
   it('es idempotente y se puede desinstalar', () => {
     instalarTriggersSync(sqlite, schema, registro);
     instalarTriggersSync(sqlite, schema, registro);
-    expect(triggersInstalados(sqlite)).toHaveLength(hub.length * 2);
+    expect(triggersInstalados(sqlite)).toHaveLength(hub.length * 3);
     desinstalarTriggersSync(sqlite, schema, registro);
     expect(triggersInstalados(sqlite)).toEqual([]);
   });

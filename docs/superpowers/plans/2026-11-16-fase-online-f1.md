@@ -47,6 +47,7 @@ Cada PR: rama propia desde `main`, TDD (rojo → verde), suite completa, `Estado
 - **Baranda:** en los tests, un trigger `BEFORE DELETE … RAISE(ABORT)` en toda tabla `maestro`/`libro`: cualquier handler que borre rompe su propio test.
 - **Valida:** suites de main de las dos apps.
 - **Riesgo:** medio-alto — cada lectura de esas tablas tiene que filtrar lo dado de baja. Revisar uso por uso; es el PR con más superficie.
+- **División (2026-11-17):** PR4a = baranda + `rol_permiso`, `sinonimo`, presentaciones e importaciones; PR4b = líneas de venta, presupuesto, remito y OC de Retail (lápida `deleted_at` + filtrar ~30 lecturas); PR4c = receta y líneas de pedido de Elaborados. La baranda entra en PR4a con una lista de excepciones por app que PR4b y PR4c vacían.
 
 ### PR5 — Numeración por terminal en remito y presupuesto; SKU por bloques (ADR-154)
 - **Qué:** `RE-<terminal>-NNNNNN` y `PR-<terminal>-NNNNNN` con correlativo por terminal, como la OC. Se retiran `remito_proximo_secuencial` y `presupuesto_proximo_secuencial` (migración que no toca números emitidos). SKU: abstracción `reservarSku(tx)` sobre un bloque local; en standalone el bloque es todo el rango (comportamiento igual).

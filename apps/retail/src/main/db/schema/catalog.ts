@@ -155,6 +155,9 @@ export const producto_presentacion = sqliteTable('producto_presentacion', {
   es_default:     integer('es_default', { mode: 'boolean' }).notNull().default(false),
   activo:         integer('activo', { mode: 'boolean' }).notNull().default(true),
   sin_confirmar:  integer('sin_confirmar', { mode: 'boolean' }).notNull().default(false),
+  // Lápida (ADR-150 §7): «eliminar» una presentación que nunca se usó. Va con activo = false, así que
+  // las lecturas que ya filtran activo no cambian; el listado del producto y reactivar la excluyen.
+  deleted_at: integer('deleted_at', { mode: 'timestamp' }),
   version:    integer('version').notNull().default(1),
   origin_id:  text('origin_id').notNull(),
   sync_state: text('sync_state', { enum: ['pending', 'synced', 'conflict'] }).notNull().default('pending'),

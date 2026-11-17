@@ -654,21 +654,28 @@ describe('importacionCostoEliminarHandler', () => {
     return id;
   }
 
-  it('elimina físicamente una importación pendiente legacy', () => {
+  // ADR-150 §7: eliminar deja lápida (deleted_at), no borra la fila; para el usuario desaparece.
+  function quedaConLapida(importacionId: string) {
+    const fila = db.select().from(schema.importacion_costo_proveedor)
+      .where(eq(schema.importacion_costo_proveedor.id, importacionId)).get();
+    expect(fila?.deleted_at).toBeInstanceOf(Date);
+    expect(importacionCostoGetHistorialHandler(db).find((h) => h.id === importacionId)).toBeUndefined();
+    expect(() => importacionCostoEliminarHandler(db, { importacionId })).toThrow('IMPORTACION_NOT_FOUND');
+  }
+
+  it('elimina (lápida) una importación pendiente legacy', () => {
     const importacionId = crearImportacionPendienteLegacy();
     const result = importacionCostoEliminarHandler(db, { importacionId });
     expect(result).toEqual({ ok: true });
-    expect(db.select().from(schema.importacion_costo_proveedor)
-      .where(eq(schema.importacion_costo_proveedor.id, importacionId)).get()).toBeUndefined();
+    quedaConLapida(importacionId);
   });
 
-  it('elimina físicamente una importación cancelada', () => {
+  it('elimina (lápida) una importación cancelada', () => {
     const importacionId = crearImportacionPendienteLegacy();
     importacionCostoCancelarHandler(db, { importacionId });
     const result = importacionCostoEliminarHandler(db, { importacionId });
     expect(result).toEqual({ ok: true });
-    expect(db.select().from(schema.importacion_costo_proveedor)
-      .where(eq(schema.importacion_costo_proveedor.id, importacionId)).get()).toBeUndefined();
+    quedaConLapida(importacionId);
   });
 
   it('lanza IMPORTACION_CONFIRMADA_NO_SE_PUEDE_ELIMINAR si ya fue confirmada', async () => {

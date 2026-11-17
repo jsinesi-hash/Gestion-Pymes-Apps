@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as schema from '../../db/schema';
-import { setupDb, loginAsAdmin, clearSession } from '../../__tests__/helpers';
+import { setupDb, loginAsAdmin, clearSession, permitirBorradoFisico } from '../../__tests__/helpers';
 import { runCatalogSeedElaborados } from '../../catalog/seed';
 import { articuloCreateHandler } from '../articulo';
 import { movimientoArticuloCreateHandler } from '../movimiento-articulo';
@@ -12,7 +12,8 @@ type Db = ReturnType<typeof setupDb>;
 
 describe('demo-catalog handlers', () => {
   let db: Db;
-  beforeEach(() => { db = setupDb(); clearSession(); runCatalogSeedElaborados(db); });
+  // «Quitar catálogo demo» borra físicamente: existe solo en standalone (ADR-150 §7).
+  beforeEach(() => { db = setupDb(); permitirBorradoFisico(db); clearSession(); runCatalogSeedElaborados(db); });
 
   it('siembra el catálogo demo bajo demanda y devuelve el estado', () => {
     loginAsAdmin(db);

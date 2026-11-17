@@ -1,7 +1,9 @@
 import Database from 'better-sqlite3';
 import path from 'node:path';
-import { createDb, runMigrations } from '@core/db';
+import type BetterSqlite3 from 'better-sqlite3';
+import { createDb, instalarBarandaSinBorrado, quitarBarandaSinBorrado, runMigrations } from '@core/db';
 import * as schema from '../../db/schema';
+import { registroSyncRetail } from '../../db/registro-sync';
 import { runSeed } from '../../auth/seed';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
@@ -9,11 +11,27 @@ import { loginHandler, hashPassword, limiteIntentos } from '@core/main';
 
 const MIGRATIONS_DIR = path.resolve(__dirname, '../../db/migrations');
 
+/**
+ * Tablas que todavía borran físicamente (líneas de documentos en borrador): F1 PR4b las pasa a
+ * lápida y esta lista queda vacía. Ninguna tabla nueva entra acá (ADR-150 §7).
+ */
+export const BORRADO_FISICO_PENDIENTE = ['item_oc', 'presupuesto_detalle', 'remito_linea', 'venta_detalle'] as const;
+
 export function createTestDb() {
   const sqlite = new Database(':memory:');
   const { db } = createDb(sqlite, schema);
   runMigrations(db, sqlite, MIGRATIONS_DIR);
+  // Baranda ADR-150 §7: un handler que borre una fila de una tabla que sincroniza rompe su test.
+  instalarBarandaSinBorrado(sqlite, schema, registroSyncRetail(), BORRADO_FISICO_PENDIENTE);
   return db;
+}
+
+/**
+ * Quita la baranda de esta base. Solo para tests que borran a propósito: simular datos legacy o
+ * ejercitar un borrado que existe solo en standalone (seeds de desarrollo, «quitar catálogo demo»).
+ */
+export function permitirBorradoFisico(db: ReturnType<typeof createTestDb>): void {
+  quitarBarandaSinBorrado(db.$client as BetterSqlite3.Database, schema, registroSyncRetail());
 }
 
 export function setupDb() {

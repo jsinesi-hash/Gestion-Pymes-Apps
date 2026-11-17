@@ -129,6 +129,8 @@ export const importacion_costo_proveedor = sqliteTable('importacion_costo_provee
   filas_sin_match:   integer('filas_sin_match').notNull().default(0),
   estado:            text('estado', { enum: ['pendiente', 'confirmado', 'cancelado'] }).notNull().default('pendiente'),
   usuario_id:        text('usuario_id').notNull(),
+  // Lápida (ADR-150 §7): «eliminar» una importación pendiente o cancelada la oculta; el detalle queda.
+  deleted_at:        integer('deleted_at', { mode: 'timestamp' }),
   observaciones:     text('observaciones'),
   version:    integer('version').notNull().default(1),
   origin_id:  text('origin_id').notNull(),
