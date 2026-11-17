@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import {
   confirmarVenta, anularVenta, requirePermission,
@@ -143,16 +143,29 @@ export function ventaCotizarHandler(db: Db, rawPayload: unknown) {
 
 // ── venta:confirmar ──────────────────────────────────────────────────────────
 
+/** Líneas vivas de un pedido (ADR-150 §7: las que reemplazó una retoma quedan con lápida). */
+export function lineasVivasDeVenta(ventaId: string) {
+  return and(eq(schema.venta_linea.venta_id, ventaId), isNull(schema.venta_linea.deleted_at));
+}
+
 /** Inserta las líneas (y sus sabores) de la venta. NO toca stock: lo usa también el pedido en espera. */
 export function guardarLineasElaborados(tx: Tx, v: VentaValorizada, ctx: AplicarLineasCtx): void {
   if (ctx.esRetoma) {
-    // Reemplaza las líneas previas del pedido (retomado/actualizado).
+    // Reemplaza las líneas previas del pedido (retomado/actualizado). ADR-150 §7: las previas y sus
+    // sabores quedan con lápida, no se borran.
     const previas = tx.select({ id: schema.venta_linea.id }).from(schema.venta_linea)
-      .where(eq(schema.venta_linea.venta_id, ctx.ventaId)).all();
+      .where(lineasVivasDeVenta(ctx.ventaId)).all();
     if (previas.length > 0) {
-      tx.delete(schema.venta_linea_modificador)
-        .where(inArray(schema.venta_linea_modificador.venta_linea_id, previas.map((l) => l.id))).run();
-      tx.delete(schema.venta_linea).where(eq(schema.venta_linea.venta_id, ctx.ventaId)).run();
+      const lapida = { deleted_at: ctx.now, sync_state: 'pending' as const, updated_at: ctx.now };
+      tx.update(schema.venta_linea_modificador)
+        .set({ ...lapida, version: sql`${schema.venta_linea_modificador.version} + 1` })
+        .where(and(
+          inArray(schema.venta_linea_modificador.venta_linea_id, previas.map((l) => l.id)),
+          isNull(schema.venta_linea_modificador.deleted_at),
+        )).run();
+      tx.update(schema.venta_linea)
+        .set({ ...lapida, version: sql`${schema.venta_linea.version} + 1` })
+        .where(lineasVivasDeVenta(ctx.ventaId)).run();
     }
   }
   for (const l of v.lineas) {
@@ -199,9 +212,12 @@ function aplicarLineasElaborados(tx: Tx, v: VentaValorizada, ctx: AplicarLineasC
 }
 
 export function lineasConModificadores(db: Db, ventaId: string) {
-  const lineas = db.select().from(schema.venta_linea).where(eq(schema.venta_linea.venta_id, ventaId)).all();
+  const lineas = db.select().from(schema.venta_linea).where(lineasVivasDeVenta(ventaId)).all();
   const mods = lineas.length === 0 ? [] : db.select().from(schema.venta_linea_modificador)
-    .where(inArray(schema.venta_linea_modificador.venta_linea_id, lineas.map((l) => l.id))).all();
+    .where(and(
+      inArray(schema.venta_linea_modificador.venta_linea_id, lineas.map((l) => l.id)),
+      isNull(schema.venta_linea_modificador.deleted_at),
+    )).all();
   return lineas.map((l) => ({ ...l, modificadores: mods.filter((m) => m.venta_linea_id === l.id) }));
 }
 

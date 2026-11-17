@@ -74,8 +74,13 @@ describe('venta.espera handlers (Elaborados)', () => {
       expect(despues.numero_interno).toBe(antes.numero_interno);
       expect(despues.alias).toBe('B');
       expect(db.select().from(schema.venta).all()).toHaveLength(1);
-      expect(db.select().from(schema.venta_linea).all()).toHaveLength(2);
-      expect(db.select().from(schema.venta_linea_modificador).all()).toHaveLength(2);
+      // ADR-150 §7: las líneas reemplazadas (y sus sabores) quedan con lápida.
+      const lineas = db.select().from(schema.venta_linea).all();
+      const mods = db.select().from(schema.venta_linea_modificador).all();
+      expect(lineas.filter((l) => l.deleted_at == null)).toHaveLength(2);
+      expect(mods.filter((m) => m.deleted_at == null)).toHaveLength(2);
+      expect(lineas.filter((l) => l.deleted_at != null)).toHaveLength(1);
+      expect(mods.filter((m) => m.deleted_at != null)).toHaveLength(2); // la línea original tenía dos sabores
     });
 
     it('no valida stock (guarda lo que bloquearía al cobrar)', () => {

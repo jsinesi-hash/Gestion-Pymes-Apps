@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray, lte, asc } from 'drizzle-orm';
+import { and, eq, gte, inArray, lte, asc, isNull } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { requirePermission, requireSession } from '@core/main';
@@ -124,7 +124,7 @@ export function reporteVentasProductoQuery(db: Db, payload: unknown): ReporteVen
   const { desde, hasta } = rangoDe(payload);
   const ids = ventasConfirmadas(db, desde, hasta).map((v) => v.id);
   const lineas = porTandas(ids, (lote) => db.select().from(schema.venta_linea)
-    .where(inArray(schema.venta_linea.venta_id, lote)).all());
+    .where(and(inArray(schema.venta_linea.venta_id, lote), isNull(schema.venta_linea.deleted_at))).all());
 
   const productos = new Map<string, VentaProducto>();
   for (const l of lineas) {
@@ -138,7 +138,7 @@ export function reporteVentasProductoQuery(db: Db, payload: unknown): ReporteVen
   const cantidadPorLinea = new Map(lineas.map((l) => [l.id, l.cantidad]));
   const sabores = new Map<string, VentaSabor>();
   for (const m of porTandas([...cantidadPorLinea.keys()], (lote) => db.select().from(schema.venta_linea_modificador)
-    .where(inArray(schema.venta_linea_modificador.venta_linea_id, lote)).all())) {
+    .where(and(inArray(schema.venta_linea_modificador.venta_linea_id, lote), isNull(schema.venta_linea_modificador.deleted_at))).all())) {
     const cant = cantidadPorLinea.get(m.venta_linea_id) ?? 1;
     const s = sabores.get(m.articulo_id) ?? { descripcion: m.descripcion, veces: 0, consumo: 0 };
     s.veces += cant;

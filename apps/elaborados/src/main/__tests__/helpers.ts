@@ -11,10 +11,10 @@ import { asegurarConsumidorFinal } from '../catalog/seed';
 export const MIGRATIONS_DIR = path.resolve(__dirname, '../db/migrations');
 
 /**
- * Tablas que todavía borran físicamente (receta y líneas de pedido): F1 PR4c las pasa a lápida y
- * esta lista queda vacía. Ninguna tabla nueva entra acá (ADR-150 §7).
+ * Tablas que todavía borran físicamente. F1 PR4c pasó a lápida las últimas (receta y líneas de
+ * pedido): la lista queda vacía y ninguna tabla entra acá (ADR-150 §7).
  */
-export const BORRADO_FISICO_PENDIENTE = ['receta_produccion_item', 'venta_linea', 'venta_linea_modificador'] as const;
+export const BORRADO_FISICO_PENDIENTE: readonly string[] = [];
 
 export function createTestDb() {
   const sqlite = new Database(':memory:');

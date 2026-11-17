@@ -6,6 +6,7 @@ import { getOriginId, requirePermission, verificarAutorizacion, str, num, optStr
 import * as schema from '../db/schema';
 import { escalarReceta } from '../domain/receta';
 import { costoDeLote, costoPromedioEntrada } from '../domain/costo';
+import { itemsVivos } from './receta-produccion';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
@@ -56,7 +57,7 @@ export function produccionCrearHandler(db: Db, payload: unknown) {
     .where(eq(schema.receta_produccion.articulo_id, v_articulo_id)).get();
   if (!receta) throw new Error('RECETA_NO_DEFINIDA');
   const recetaItems = db.select().from(schema.receta_produccion_item)
-    .where(eq(schema.receta_produccion_item.receta_produccion_id, receta.id)).all();
+    .where(itemsVivos(receta.id)).all();
 
   const consumos = consumosOverride ?? escalarReceta(recetaItems, v_cantidad_producida, receta.rinde_cantidad);
 

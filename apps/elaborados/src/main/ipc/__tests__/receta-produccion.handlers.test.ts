@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { eq } from 'drizzle-orm';
+import * as schema from '../../db/schema';
 import { setupDb, loginAsAdmin, clearSession } from '../../__tests__/helpers';
 import { articuloCreateHandler } from '../articulo';
 import { recetaProduccionGetHandler, recetaProduccionSetHandler } from '../receta-produccion';
@@ -53,5 +55,26 @@ describe('receta-produccion handlers', () => {
     expect(receta?.rinde_cantidad).toBe(12);
     expect(receta?.items).toHaveLength(1);
     expect(receta?.items[0].cantidad).toBe(6);
+  });
+
+  it('ADR-150 §7: el ítem que sigue conserva su id, el que sale queda con lápida y el nuevo se inserta', () => {
+    loginAsAdmin(db);
+    const choco = articuloCreateHandler(db, { nombre: 'Chocolate', tipo: 'elaborado', unidad: 'kg', bloquea_sin_stock: false });
+    const leche = articuloCreateHandler(db, { nombre: 'Leche', tipo: 'insumo', unidad: 'l', bloquea_sin_stock: false });
+    const cacao = articuloCreateHandler(db, { nombre: 'Cacao', tipo: 'insumo', unidad: 'kg', bloquea_sin_stock: false });
+    const azucar = articuloCreateHandler(db, { nombre: 'Azúcar', tipo: 'insumo', unidad: 'kg', bloquea_sin_stock: false });
+    const antes = recetaProduccionSetHandler(db, { articulo_id: choco.id, rinde_cantidad: 10, items: [
+      { articulo_id: leche.id, cantidad: 5 }, { articulo_id: cacao.id, cantidad: 1 },
+    ] })!;
+    const despues = recetaProduccionSetHandler(db, { articulo_id: choco.id, rinde_cantidad: 10, items: [
+      { articulo_id: leche.id, cantidad: 6 }, { articulo_id: azucar.id, cantidad: 2 },
+    ] })!;
+    const idLeche = (r: typeof antes) => r.items.find((i) => i.articulo_id === leche.id)!.id;
+    expect(idLeche(despues)).toBe(idLeche(antes));
+    expect(despues.items.map((i) => i.articulo_id).sort()).toEqual([leche.id, azucar.id].sort());
+    const filaCacao = db.select().from(schema.receta_produccion_item)
+      .where(eq(schema.receta_produccion_item.articulo_id, cacao.id)).get()!;
+    expect(filaCacao.deleted_at).toBeInstanceOf(Date);
+    expect(filaCacao.version).toBe(2);
   });
 });
