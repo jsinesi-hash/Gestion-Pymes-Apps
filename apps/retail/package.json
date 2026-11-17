@@ -38,6 +38,7 @@
     "recharts": "^2.15.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.13",
     "@electron-forge/cli": "^7.7.0",
     "@electron-forge/maker-squirrel": "^7.7.0",
     "@electron-forge/maker-zip": "^7.7.0",

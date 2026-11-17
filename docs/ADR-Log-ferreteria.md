@@ -5187,6 +5187,8 @@ Tercer lote de la migración de ADR-125. **Alcance:** 13 modales en 8 archivos d
 - (−) El hub tiene dos implementaciones de almacenamiento; mitigado porque son genéricas y comparten los tests de contrato.
 - (−) El mapa de tipos es una decisión que hay que mantener; los pesos en `REAL` se arrastran hasta la migración a centavos de F1.
 
+
+**Implementación (F1 PR2, 2026-11-16).** `ddlPostgres(schema, registro)` en `@core/db` (`packages/core-db/src/__boundary__/ddl-postgres.ts`) genera el DDL de las tablas `maestro` y `libro` con el mapa de tipos de §3; las FK entre tablas del hub van como `ALTER TABLE … DEFERRABLE INITIALLY DEFERRED` y se omiten las que apuntan a tablas `local` (geo); no se generan defaults (el hub recibe filas completas). Los **índices se leen de la base SQLite migrada** (`sqlite_master`), no de las migraciones como texto: varios únicos parciales solo existen ahí y algunos están escritos en varias líneas o sin comillas. `traducirIndicePostgres` los pasa a Postgres (comillas y `= 1/0` → `true/false` en columnas booleanas). Tests: unitarios + núcleo en `@core/db`, y `b3-postgres.test.ts` en cada app (tablas + índices aplicados en PGlite). PGlite **0.5.13** como devDependency de `@core/db`, Retail y Elaborados, sumado con `pnpm install --lockfile-only` (sin tocar `node_modules`; ver memoria del proyecto) e instalado a mano desde el tarball de npm con su hash sha512 verificado. **Primer hallazgo de la baranda:** `ux_producto_proveedor_preferido` (migración 0019) comparaba `preferido = 1` sin comillas y no compilaba en Postgres.
 ---
 
 ## ADR-150 — Fase online F0: protocolo de sincronización terminal ↔ hub

@@ -34,7 +34,7 @@ importers:
         version: 12.10.0
       drizzle-orm:
         specifier: ^0.38.0
-        version: 0.38.4(@types/better-sqlite3@7.6.13)(@types/react@18.3.30)(better-sqlite3@12.10.0)(react@18.3.1)
+        version: 0.38.4(@electric-sql/pglite@0.5.13)(@types/better-sqlite3@7.6.13)(@types/react@18.3.30)(better-sqlite3@12.10.0)(react@18.3.1)
       electron-squirrel-startup:
         specifier: ^1.0.1
         version: 1.0.1
@@ -48,6 +48,9 @@ importers:
         specifier: ^6.28.0
         version: 6.30.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     devDependencies:
+      '@electric-sql/pglite':
+        specifier: 0.5.13
+        version: 0.5.13
       '@electron-forge/cli':
         specifier: ^7.7.0
         version: 7.11.2(encoding@0.1.13)(esbuild@0.19.12)
@@ -137,7 +140,7 @@ importers:
         version: 12.10.0
       drizzle-orm:
         specifier: ^0.38.0
-        version: 0.38.4(@types/better-sqlite3@7.6.13)(@types/react@18.3.30)(better-sqlite3@12.10.0)(react@18.3.1)
+        version: 0.38.4(@electric-sql/pglite@0.5.13)(@types/better-sqlite3@7.6.13)(@types/react@18.3.30)(better-sqlite3@12.10.0)(react@18.3.1)
       electron-squirrel-startup:
         specifier: ^1.0.1
         version: 1.0.1
@@ -172,6 +175,9 @@ importers:
         specifier: ^2.15.0
         version: 2.15.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     devDependencies:
+      '@electric-sql/pglite':
+        specifier: 0.5.13
+        version: 0.5.13
       '@electron-forge/cli':
         specifier: ^7.7.0
         version: 7.11.2(encoding@0.1.13)
@@ -258,8 +264,11 @@ importers:
         version: link:../shared
       drizzle-orm:
         specifier: ^0.38.0
-        version: 0.38.4(@types/better-sqlite3@7.6.13)(@types/react@18.3.30)(better-sqlite3@12.10.0)(react@18.3.1)
+        version: 0.38.4(@electric-sql/pglite@0.5.13)(@types/better-sqlite3@7.6.13)(@types/react@18.3.30)(better-sqlite3@12.10.0)(react@18.3.1)
     devDependencies:
+      '@electric-sql/pglite':
+        specifier: 0.5.13
+        version: 0.5.13
       '@types/better-sqlite3':
         specifier: ^7.6.0
         version: 7.6.13
@@ -286,7 +295,7 @@ importers:
         version: 12.10.0
       drizzle-orm:
         specifier: ^0.38.0
-        version: 0.38.4(@types/better-sqlite3@7.6.13)(@types/react@18.3.30)(better-sqlite3@12.10.0)(react@18.3.1)
+        version: 0.38.4(@electric-sql/pglite@0.5.13)(@types/better-sqlite3@7.6.13)(@types/react@18.3.30)(better-sqlite3@12.10.0)(react@18.3.1)
       exceljs:
         specifier: ^4.4.0
         version: 4.4.0
@@ -544,6 +553,9 @@ packages:
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
+
+  '@electric-sql/pglite@0.5.13':
+    resolution: {integrity: sha512-4rZuxK1k07w6sSpJzjMri0B9+HuXuC7V9pxVB51pR0T9KPqXg6TD0mdaEwBA9rkcL4jdht4tGDf/wYzAiGhT7g==}
 
   '@electron-forge/cli@7.11.2':
     resolution: {integrity: sha512-c+C4ndLfHbxwZuCn9G8iT9wD/woLdaVkoSVjAIbj+0nJhi8UmiVsz/+Gxlj4cvhMRTzBMBxudstLU7RocMikfg==}
@@ -4851,6 +4863,8 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
+  '@electric-sql/pglite@0.5.13': {}
+
   '@electron-forge/cli@7.11.2(encoding@0.1.13)':
     dependencies:
       '@electron-forge/core': 7.11.2(encoding@0.1.13)
@@ -6990,8 +7004,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.38.4(@types/better-sqlite3@7.6.13)(@types/react@18.3.30)(better-sqlite3@12.10.0)(react@18.3.1):
+  drizzle-orm@0.38.4(@electric-sql/pglite@0.5.13)(@types/better-sqlite3@7.6.13)(@types/react@18.3.30)(better-sqlite3@12.10.0)(react@18.3.1):
     optionalDependencies:
+      '@electric-sql/pglite': 0.5.13
       '@types/better-sqlite3': 7.6.13
       '@types/react': 18.3.30
       better-sqlite3: 12.10.0
