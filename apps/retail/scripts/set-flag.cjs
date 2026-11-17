@@ -1,5 +1,5 @@
 'use strict';
-// Dev helper: habilita/deshabilita un feature flag (parametros_sistema) en la BD local
+// Dev helper: habilita/deshabilita un feature flag (configuracion_negocio o parametros_sistema) en la BD local
 // de userData, SIN tocar el default de produccion (que vive en la migracion, ADR-044).
 //
 // Uso (correr bajo el runtime de Electron para respetar el NMV de better-sqlite3):
@@ -29,12 +29,24 @@ if (!fs.existsSync(dbPath)) {
 const Database = require('better-sqlite3');
 const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
-db.prepare(
-  `INSERT INTO parametros_sistema (clave, valor, tipo, descripcion)
-   VALUES (?, ?, ?, ?)
-   ON CONFLICT(clave) DO UPDATE SET valor = excluded.valor`,
-).run(clave, String(valor), tipo, `Feature flag (dev): ${clave}`);
+// ADR-155 §1: las claves del negocio viven en configuracion_negocio; el resto, en parametros_sistema.
+const esDelNegocio = db.prepare(
+  "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'configuracion_negocio'",
+).get() && db.prepare('SELECT 1 FROM configuracion_negocio WHERE id = ?').get(clave);
+if (esDelNegocio) {
+  db.prepare(
+    "UPDATE configuracion_negocio SET valor = ?, version = version + 1, sync_state = 'pending', updated_at = CAST(strftime('%s', 'now') AS INTEGER) WHERE id = ?",
+  ).run(String(valor), clave);
+} else {
+  db.prepare(
+    `INSERT INTO parametros_sistema (clave, valor, tipo, descripcion)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(clave) DO UPDATE SET valor = excluded.valor`,
+  ).run(clave, String(valor), tipo, `Feature flag (dev): ${clave}`);
+}
 
-const row = db.prepare('SELECT clave, valor, tipo FROM parametros_sistema WHERE clave = ?').get(clave);
-console.log(`OK — ${row.clave} = ${row.valor} (${row.tipo})  @ ${dbPath}`);
+const row = esDelNegocio
+  ? db.prepare('SELECT id AS clave, valor, tipo FROM configuracion_negocio WHERE id = ?').get(clave)
+  : db.prepare('SELECT clave, valor, tipo FROM parametros_sistema WHERE clave = ?').get(clave);
+console.log(`OK — ${row.clave} = ${row.valor} (${row.tipo}) [${esDelNegocio ? 'negocio' : 'terminal'}]  @ ${dbPath}`);
 db.close();

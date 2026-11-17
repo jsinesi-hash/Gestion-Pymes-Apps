@@ -6,6 +6,7 @@ import { getOriginId } from '@core/main';
 import { calcularProximoDisparo, type FrecuenciaDef } from './frecuencia';
 import { insertarAvisos, despacharAviso } from './aviso-servicio';
 import type { Canal } from './canales/tipos';
+import { leerParametroNumero } from '@core/main';
 
 type Db = BetterSQLite3Database<typeof schema>;
 type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
@@ -108,9 +109,7 @@ export function completarEventoRutina(db: Db, eventoId: string, usuarioId: strin
  * agenda_catchup_limite), genera avisos y avanza el puntero.
  */
 export function ejecutarCatchUp(db: Db, now: Date): { materializados: number } {
-  const catchupLimite = Number.parseInt(
-    db.select().from(schema.parametros_sistema)
-      .where(eq(schema.parametros_sistema.clave, 'agenda_catchup_limite')).get()?.valor ?? '90', 10);
+  const catchupLimite = Math.trunc(leerParametroNumero(db, 'agenda_catchup_limite', 90));
   const piso = new Date(now.getTime() - catchupLimite * 24 * 3600 * 1000);
 
   const rutinas = db.select().from(schema.rutina)

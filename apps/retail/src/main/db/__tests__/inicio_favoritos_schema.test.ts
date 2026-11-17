@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { sql } from 'drizzle-orm';
 import { createTestDb } from '../../ipc/__tests__/helpers';
 import * as schema from '../schema';
+import { listarParametros } from '@core/main';
 
 type ColInfo = { name: string; notnull: number; dflt_value: string | null };
 
@@ -26,7 +27,7 @@ describe('migración 0046 — inicio personalizable (ADR-080)', () => {
 
   it('siembra el flag inicio_personalizable_habilitado en false', () => {
     const db = createTestDb();
-    const params = db.select().from(schema.parametros_sistema).all();
+    const params = listarParametros(db);
     const row = params.find((p) => p.clave === 'inicio_personalizable_habilitado');
     expect(row?.valor).toBe('false');
     expect(row?.tipo).toBe('bool');

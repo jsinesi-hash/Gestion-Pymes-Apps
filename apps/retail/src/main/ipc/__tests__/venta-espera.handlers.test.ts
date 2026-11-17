@@ -10,6 +10,7 @@ import { cajaAbrirHandler, cajaCerrarHandler } from '@core/main';
 import { ventaConfirmarHandler, ventaListByCajaHandler, ventaGetHandler, ventaAnularHandler, type VentaConfirmarPayload } from '../venta';
 import { dashboardVentasHandler } from '../dashboard';
 import { redondearPeso } from '@ferreteria/shared';
+import { escribirParametro } from '@core/main';
 import {
   ventaEsperaPausarHandler,
   ventaEsperaListarHandler,
@@ -169,10 +170,7 @@ describe('venta-espera handlers', () => {
   });
 
   it('MAX_EN_ESPERA bloquea cuando se supera el parámetro', () => {
-    db.update(schema.parametros_sistema)
-      .set({ valor: '2' })
-      .where(eq(schema.parametros_sistema.clave, 'pos.ventas_en_espera.max'))
-      .run();
+    escribirParametro(db, 'pos.ventas_en_espera.max', '2');
 
     const { prod } = crearProductoConStock(30);
     const caja = abrirCaja();
@@ -293,10 +291,7 @@ describe('venta-espera handlers', () => {
   });
 
   it('TTL: marca vencida sin auto-descartar', () => {
-    db.update(schema.parametros_sistema)
-      .set({ valor: '1' })
-      .where(eq(schema.parametros_sistema.clave, 'pos.ventas_en_espera.ttl_horas'))
-      .run();
+    escribirParametro(db, 'pos.ventas_en_espera.ttl_horas', '1');
 
     const { prod } = crearProductoConStock(10);
     const caja = abrirCaja();

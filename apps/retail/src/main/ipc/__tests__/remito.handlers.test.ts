@@ -15,6 +15,7 @@ import {
 } from '../remito';
 import { transportistaUpsertHandler } from '../transportista';
 import { renderRemitoHtml } from '../../print/remito-template';
+import { listarParametros } from '@core/main';
 
 let db: ReturnType<typeof setupDb>;
 
@@ -56,7 +57,7 @@ describe('permisos de remito', () => {
 
 describe('parametros sembrados por la migracion 0023', () => {
   it('siembra los flags de remito; el contador global se retiró (ADR-154, migración 0056)', () => {
-    const claves = db.select().from(schema.parametros_sistema).all()
+    const claves = listarParametros(db)
       .reduce<Record<string, string>>((acc, p) => { acc[p.clave] = p.valor; return acc; }, {});
 
     expect(claves['remito_proximo_secuencial']).toBeUndefined();
@@ -68,8 +69,7 @@ describe('parametros sembrados por la migracion 0023', () => {
 });
 
 describe('nextNumeroRemitoAtomico', () => {
-  const leerContador = () => db.select().from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, 'remito_correlativo_C1')).get()?.valor;
+  const leerContador = () => listarParametros(db).find((p) => p.clave === 'remito_correlativo_C1')?.valor;
 
   it('numera por terminal: arranca en 1 y avanza el correlativo de la terminal', () => {
     expect(db.transaction((tx) => nextNumeroRemitoAtomico(tx)))

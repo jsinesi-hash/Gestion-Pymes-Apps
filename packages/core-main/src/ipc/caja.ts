@@ -11,6 +11,7 @@ import { triggerAutoBackup } from './backup';
 import { parametrosGetHandler } from './parametros';
 
 import { requireSession } from '../auth/guard';
+import { leerParametroNumero } from '../configuracion';
 type Db = BetterSQLite3Database<typeof schema>;
 
 export type CajaRow = typeof schema.caja.$inferSelect;
@@ -188,10 +189,7 @@ export function cajaCerrarHandler(
   const resumen = cajaCalcularCierreHandler(db, { caja_id: caja_id });
   const diferencia = monto_contado - resumen.esperado_efectivo;
 
-  const umbralRow = db.select().from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, 'umbral_diferencia_caja'))
-    .get();
-  const umbral = Number.parseFloat(umbralRow?.valor ?? '50000');
+  const umbral = leerParametroNumero(db, 'umbral_diferencia_caja', 50000);
 
   let supervisorId: string | null = null;
   if (Math.abs(diferencia) > umbral) {

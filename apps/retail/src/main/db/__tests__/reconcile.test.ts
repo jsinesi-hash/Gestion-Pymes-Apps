@@ -28,7 +28,8 @@ function fullyMigratedDb(): Database.Database {
 function simulate0036Skipped(sqlite: Database.Database): void {
   sqlite.exec('ALTER TABLE `producto` DROP COLUMN `discontinuado`');
   sqlite.exec('DROP TABLE `producto_equivalencia`');
-  sqlite.prepare("DELETE FROM parametros_sistema WHERE clave = 'sustitutos_habilitado'").run();
+  // ADR-155 §1 (0058): el flag vive en configuracion_negocio.
+  sqlite.prepare("DELETE FROM configuracion_negocio WHERE id = 'sustitutos_habilitado'").run();
 }
 
 const hasCol = (db: Database.Database, table: string, col: string) =>
@@ -36,7 +37,7 @@ const hasCol = (db: Database.Database, table: string, col: string) =>
 const hasTable = (db: Database.Database, name: string) =>
   !!db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(name);
 const hasParam = (db: Database.Database, clave: string) =>
-  !!db.prepare('SELECT 1 FROM parametros_sistema WHERE clave=?').get(clave);
+  !!db.prepare('SELECT 1 FROM configuracion_negocio WHERE id=?').get(clave);
 
 describe('reconcileSchema — repara el drift de la migración 0036 (sustitutos)', () => {
   let db: Database.Database;
@@ -71,7 +72,7 @@ describe('reconcileSchema — repara el drift de la migración 0036 (sustitutos)
     simulate0036Skipped(db);
     reconcileSchema(db);
     expect(() => reconcileSchema(db)).not.toThrow();
-    const count = (db.prepare("SELECT COUNT(*) c FROM parametros_sistema WHERE clave='sustitutos_habilitado'").get() as { c: number }).c;
+    const count = (db.prepare("SELECT COUNT(*) c FROM configuracion_negocio WHERE id='sustitutos_habilitado'").get() as { c: number }).c;
     expect(count).toBe(1);
   });
 
@@ -79,7 +80,7 @@ describe('reconcileSchema — repara el drift de la migración 0036 (sustitutos)
     expect(hasCol(db, 'producto', 'discontinuado')).toBe(true);
     expect(() => reconcileSchema(db)).not.toThrow();
     expect(hasCol(db, 'producto', 'discontinuado')).toBe(true);
-    const count = (db.prepare("SELECT COUNT(*) c FROM parametros_sistema WHERE clave='sustitutos_habilitado'").get() as { c: number }).c;
+    const count = (db.prepare("SELECT COUNT(*) c FROM configuracion_negocio WHERE id='sustitutos_habilitado'").get() as { c: number }).c;
     expect(count).toBe(1);
   });
 });

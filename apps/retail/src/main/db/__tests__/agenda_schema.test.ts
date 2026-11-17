@@ -2,11 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { createTestDb, setupDb, loginAsAdmin } from '../../ipc/__tests__/helpers';
 import * as schema from '../schema';
+import { listarParametros } from '@core/main';
 
 describe('ADR-047 — schema agenda (migracion 0026)', () => {
   it('siembra los 9 parametros con sus defaults', () => {
     const db = createTestDb();
-    const params = db.select().from(schema.parametros_sistema).all();
+    const params = listarParametros(db);
     const byClave = new Map(params.map((p) => [p.clave, p]));
     const esperados: Array<[string, string]> = [
       // ADR-060 (migración 0035): agenda viene encendida de fábrica en 1.1.x

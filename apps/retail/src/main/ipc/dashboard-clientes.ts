@@ -5,6 +5,7 @@ import { eq, and, gte, lte, sql, desc, ne } from 'drizzle-orm';
 import { nombreCompletoCliente } from '@ferreteria/shared';
 import * as schema from '../db/schema';
 import { requirePermission } from '@core/main';
+import { leerParametroNumero } from '@core/main';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
@@ -29,13 +30,7 @@ export type DashboardClientesEstado = {
   clientes_inactivos: number;
 };
 
-function getParam(db: Db, clave: string, defaultVal: number): number {
-  const row = db.select({ valor: schema.parametros_sistema.valor })
-    .from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, clave))
-    .get();
-  return row ? Number.parseInt(row.valor, 10) : defaultVal;
-}
+const getParam = (db: Db, clave: string, defaultVal: number): number => Math.trunc(leerParametroNumero(db, clave, defaultVal));
 
 export function dashboardClientesRangoHandler(
   db: Db,

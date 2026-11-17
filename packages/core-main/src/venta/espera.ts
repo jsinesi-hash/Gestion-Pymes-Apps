@@ -6,6 +6,7 @@ import { getOriginId } from '../context';
 import type { VentaDb, VentaTx, AplicarLineasCtx } from './types';
 
 import { requireSession } from '../auth/guard';
+import { leerParametroNumero } from '../configuracion';
 export type PausarVentaEsperaInput = {
   /** Si viene, actualiza en el lugar esa venta `en_espera` (la app reemplaza las líneas). */
   venta_id?: string;
@@ -91,10 +92,7 @@ export function pausarVentaEspera(
     return { venta_id: ventaId };
   }
 
-  const maxParam = db.select().from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, 'pos.ventas_en_espera.max'))
-    .get();
-  const max = maxParam ? Number.parseInt(maxParam.valor, 10) : 10;
+  const max = Math.trunc(leerParametroNumero(db, 'pos.ventas_en_espera.max', 10));
 
   const enEsperaCount = db.select({ id: schema.venta.id }).from(schema.venta)
     .where(eq(schema.venta.estado, 'en_espera'))
@@ -163,10 +161,7 @@ export function listarVentasEspera(
 ): VentaEsperaResumen[] {
   requireSession();
 
-  const ttlParam = db.select().from(schema.parametros_sistema)
-    .where(eq(schema.parametros_sistema.clave, 'pos.ventas_en_espera.ttl_horas'))
-    .get();
-  const ttlHoras = ttlParam ? Number.parseInt(ttlParam.valor, 10) : 24;
+  const ttlHoras = Math.trunc(leerParametroNumero(db, 'pos.ventas_en_espera.ttl_horas', 24));
 
   const ventas = db.select().from(schema.venta)
     .where(eq(schema.venta.estado, 'en_espera'))

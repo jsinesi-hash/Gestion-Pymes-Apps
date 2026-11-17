@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { sql } from 'drizzle-orm';
 import { createTestDb } from '../../ipc/__tests__/helpers';
+import { listarParametros } from '@core/main';
 
 describe('esquema sustitutos (migración 0036)', () => {
   it('producto tiene la columna discontinuado', () => {
@@ -17,7 +18,7 @@ describe('esquema sustitutos (migración 0036)', () => {
 
   it('siembra el flag sustitutos_habilitado (0036; encendido de fábrica por 0044/ADR-061)', () => {
     const db = createTestDb();
-    const f = db.get(sql`SELECT valor FROM parametros_sistema WHERE clave='sustitutos_habilitado'`) as { valor: string } | undefined;
+    const f = listarParametros(db).find((p) => p.clave === 'sustitutos_habilitado');
     // 0036 lo sembró en 'false'; 0044 (ADR-061) lo flipeó a 'true'.
     expect(f?.valor).toBe('true');
   });
