@@ -48,4 +48,5 @@ export * from './correo/smtp-secret';
 export * from './correo/enviador-smtp';
 export * from './terminal';
 export * from './numeracion';
+export * from './ctacte-proyeccion';
 export * from './userdata-aislado';
