@@ -101,7 +101,7 @@ cd packages/core-db && pnpm exec vitest run
 
 ## Aceptación
 
-- [ ] PR1–PR8 mergeados, cada uno con su suite completa en verde y su cierre documental.
-- [ ] Barandas nuevas activas: registro de sync, B3 en PGlite, triggers por tabla, sin borrados físicos, ámbito de parámetros, tipo de tarea.
-- [ ] Modo standalone sin cambios visibles salvo el formato de número de remito y presupuesto (verificado en la app real).
+- [x] PR1–PR8 mergeados, cada uno con su suite completa en verde y su cierre documental (PR4 y PR6 partidos en 4a/4b/4c y 6a/6b; PR8 al mergear #77).
+- [x] Barandas nuevas activas: registro de sync, B3 en PGlite, triggers por tabla, sin borrados físicos, ámbito de parámetros (tabla `configuracion_negocio`, decisión del usuario en PR7), tipo de tarea.
+- [x] Modo standalone sin cambios visibles salvo el formato de número de remito y presupuesto (verificado en la app real en PR5; PR7 también verificado en la app).
 - [ ] Plan y ADR de la serie de centavos escritos.

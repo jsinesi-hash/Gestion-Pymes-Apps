@@ -2,7 +2,7 @@ import { eq, and, lte } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getOriginId } from '@core/main';
+import { getOriginId, uuidDeterminista } from '@core/main';
 import { calcularProximoDisparo, type FrecuenciaDef } from './frecuencia';
 import { insertarAvisos, despacharAviso } from './aviso-servicio';
 import type { Canal } from './canales/tipos';
@@ -41,7 +41,9 @@ function materializarEnTx(tx: Tx, r: Rutina, fecha: Date, now: Date): string | n
     .get();
   if (yaExiste) return null;
 
-  const eventoId = generateId();
+  // ADR-152 §3: id determinista (rutina + fecha): si dos terminales materializan el mismo disparo,
+  // chocan por id en vez de duplicar el evento.
+  const eventoId = uuidDeterminista('agenda_evento', r.id, String(fecha.getTime()));
   tx.insert(schema.agenda_evento).values({
     id: eventoId, origen: 'rutina', rutina_id: r.id,
     titulo: r.nombre, descripcion: r.descripcion, fecha, estado: 'pendiente',

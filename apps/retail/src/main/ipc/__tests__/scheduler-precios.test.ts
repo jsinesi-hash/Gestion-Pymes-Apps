@@ -4,6 +4,7 @@ import { applyPendingCambiosProgramados } from '../../scheduler/precios';
 import { randomUUID } from 'node:crypto';
 import * as schema from '../../db/schema';
 import { eq } from 'drizzle-orm';
+import { uuidDeterminista } from '@core/main';
 
 describe('applyPendingCambiosProgramados', () => {
   let db: ReturnType<typeof setupDb>;
@@ -64,6 +65,17 @@ describe('applyPendingCambiosProgramados', () => {
       .where(eq(schema.lista_precio_valor.lista_precio_id, listaId)).get();
     // precio_venta_lista = 100 → base = 100 * 100 = 10000 centavos → +20% = 12000
     expect(lpv!.precio_centavos).toBe(12000);
+  });
+
+  it('ADR-152: las filas que genera un cambio programado tienen id determinista (dos terminales, mismas filas)', () => {
+    const { listaId, productoId, cambioId } = seedCambio(db, new Date(Date.now() - 1000));
+    applyPendingCambiosProgramados(db);
+    const cambio = db.select().from(schema.cambio_programado).where(eq(schema.cambio_programado.id, cambioId)).get()!;
+    expect(cambio.recalculo_masivo_id).toBe(uuidDeterminista('recalculo_masivo', cambioId));
+    const lpv = db.select().from(schema.lista_precio_valor)
+      .where(eq(schema.lista_precio_valor.producto_id, productoId)).all()
+      .find((f) => f.lista_precio_id === listaId && f.fecha_hasta == null)!;
+    expect(lpv.id).toBe(uuidDeterminista('lista_precio_valor', cambioId, listaId, productoId));
   });
 
   it('no aplica cambios futuros', () => {
