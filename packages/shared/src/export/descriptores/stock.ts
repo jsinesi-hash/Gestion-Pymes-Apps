@@ -7,7 +7,8 @@ type FilaStock = {
   ubicacion_codigo: string | null;
   stock_fisico: number | null;
   stock_minimo: number | null;
-  precio_costo_promedio: number;
+  /** Centavos (ADR-157); el archivo muestra pesos. */
+  precio_costo_promedio_centavos: number;
 };
 
 export const exportStock: DefinicionExport<FilaStock> = {
@@ -40,11 +41,11 @@ export const exportStock: DefinicionExport<FilaStock> = {
         { campo: 'nombre_corto', label: 'Descripción' },
         { campo: 'stock_fisico', label: 'Stock actual',
           formato: (v) => v ?? 0, formatoXlsx: (v) => v ?? 0 },
-        { campo: 'precio_costo_promedio', label: 'Costo unit.',
-          formato: ars, formatoXlsx: (v) => v },
-        { campo: 'precio_costo_promedio', label: 'Valor total',
-          formato: (v, fila) => ars(v * (fila.stock_fisico ?? 0)),
-          formatoXlsx: (v, fila) => v * (fila.stock_fisico ?? 0) },
+        { campo: 'precio_costo_promedio_centavos', label: 'Costo unit.',
+          formato: (v) => ars(v / 100), formatoXlsx: (v) => v / 100 },
+        { campo: 'precio_costo_promedio_centavos', label: 'Valor total',
+          formato: (v, fila) => ars(Math.round(v * (fila.stock_fisico ?? 0)) / 100),
+          formatoXlsx: (v, fila) => Math.round(v * (fila.stock_fisico ?? 0)) / 100 },
       ],
     },
   ],

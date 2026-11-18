@@ -42,7 +42,7 @@ beforeEach(() => {
     categoria_id: cat.id,
     impuesto_id: imp.id,
     unidad_venta: 'u',
-    precio_venta_lista: 100,
+    precio_venta_lista_centavos: 10000,
   });
   productoId = prod.id;
 
@@ -621,7 +621,7 @@ describe('ADR-083 — proveedorProductosAsociarLoteHandler', () => {
       categoria_id: cat2.id,
       impuesto_id: imp.id,
       unidad_venta: 'u',
-      precio_venta_lista: 200,
+      precio_venta_lista_centavos: 20000,
     });
 
     const { asociados } = proveedorProductosAsociarLoteHandler(db, {
@@ -648,7 +648,7 @@ describe('ADR-083 — proveedorProductosAsociarLoteHandler', () => {
       categoria_id: cat2.id,
       impuesto_id: imp.id,
       unidad_venta: 'u',
-      precio_venta_lista: 200,
+      precio_venta_lista_centavos: 20000,
     });
 
     proveedorProductosAsociarHandler(db, { proveedor_id: proveedorAId, producto_id: productoId, costo_centavos: 100 });

@@ -15,7 +15,7 @@ export const REGISTRO_SYNC_RETAIL: RegistroSync = {
   categoria: { tipo: 'maestro' },
   marca: { tipo: 'maestro' },
   ubicacion: { tipo: 'maestro' },
-  producto: { tipo: 'maestro', proyectadas: ['precio_costo_promedio'] },
+  producto: { tipo: 'maestro', proyectadas: ['precio_costo_promedio_centavos'] },
   producto_presentacion: { tipo: 'maestro' },
   producto_equivalencia: { tipo: 'maestro' },
   existencias: { tipo: 'maestro', proyectadas: ['stock_fisico', 'ultima_fecha_movimiento'] },

@@ -31,7 +31,7 @@ describe('print handlers', () => {
     const imp = db.select().from(schema.impuesto).all()[0];
     const p = productoCreateHandler(db, {
       nombre_corto: 'Taladro', categoria_id: cat.id, impuesto_id: imp.id,
-      unidad_venta: 'u', precio_venta_lista: 1500,
+      unidad_venta: 'u', precio_venta_lista_centavos: 150000,
     });
     const { svc, calls } = makeMockService();
     await printProductLabelHandler(db, { id: p.id, format: 'label' }, svc);

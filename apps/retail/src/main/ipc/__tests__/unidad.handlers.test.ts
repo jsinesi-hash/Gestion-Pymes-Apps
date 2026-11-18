@@ -75,7 +75,7 @@ describe('unidad handlers', () => {
     const imp = db.select().from(schema.impuesto).all()[0];
     productoCreateHandler(db, {
       nombre_corto: 'Prod', categoria_id: cat.id, impuesto_id: imp.id,
-      unidad_venta: 'pz', precio_venta_lista: 100,
+      unidad_venta: 'pz', precio_venta_lista_centavos: 10000,
     });
     expect(() => unidadDesactivarHandler(db, { id: u.id })).toThrow('TIENE_PRODUCTOS:1');
   });
@@ -88,7 +88,7 @@ describe('unidad handlers', () => {
     const imp = db.select().from(schema.impuesto).all()[0];
     productoCreateHandler(db, {
       nombre_corto: 'Prod', categoria_id: cat.id, impuesto_id: imp.id,
-      unidad_venta: 'u', unidad_compra: 'cj', precio_venta_lista: 100,
+      unidad_venta: 'u', unidad_compra: 'cj', precio_venta_lista_centavos: 10000,
     });
     expect(() => unidadDesactivarHandler(db, { id: u.id })).toThrow('TIENE_PRODUCTOS:1');
   });

@@ -74,7 +74,7 @@ describe('marca handlers', () => {
     const imp = db.select().from(schema.impuesto).all()[0];
     productoCreateHandler(db, {
       nombre_corto: 'Prod', categoria_id: cat.id, impuesto_id: imp.id,
-      unidad_venta: 'u', precio_venta_lista: 100, marca_id: marca.id,
+      unidad_venta: 'u', precio_venta_lista_centavos: 10000, marca_id: marca.id,
     });
     expect(() => marcaDesactivarHandler(db, { id: marca.id }))
       .toThrow('TIENE_PRODUCTOS:1');

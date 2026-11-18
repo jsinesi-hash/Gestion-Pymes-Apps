@@ -23,9 +23,9 @@ function crearProducto(db: Db, nombre = 'Tornillo', precio = 1000, costo = 400) 
   const imp = db.select().from(schema.impuesto).where(eq(schema.impuesto.predeterminado, true)).get()!;
   const prod = productoCreateHandler(db, {
     nombre_corto: nombre, categoria_id: cat.id, impuesto_id: imp.id,
-    unidad_venta: 'u', precio_venta_lista: precio,
+    unidad_venta: 'u', precio_venta_lista_centavos: Math.round(precio * 100),
   });
-  db.update(schema.producto).set({ precio_costo_promedio: costo }).where(eq(schema.producto.id, prod.id)).run();
+  db.update(schema.producto).set({ precio_costo_promedio_centavos: Math.round(costo * 100) }).where(eq(schema.producto.id, prod.id)).run();
   stockEntradaHandler(db, { producto_id: prod.id, cantidad: 100 });
   return { prod, imp };
 }
@@ -116,7 +116,7 @@ describe('dashboardVentasHandler', () => {
     const cat = categoriaCreateHandler(db, { nombre: 'C' });
     const imp = db.select().from(schema.impuesto).where(eq(schema.impuesto.predeterminado, true)).get()!;
     const prods = Array.from({ length: 6 }, (_, i) => {
-      const p = productoCreateHandler(db, { nombre_corto: `P${i}`, categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 100 });
+      const p = productoCreateHandler(db, { nombre_corto: `P${i}`, categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 10000 });
       stockEntradaHandler(db, { producto_id: p.id, cantidad: 100 });
       return p;
     });
@@ -151,20 +151,20 @@ describe('dashboardStockHandler', () => {
     const imp = db.select().from(schema.impuesto).where(eq(schema.impuesto.predeterminado, true)).get()!;
     const prod = productoCreateHandler(db, {
       nombre_corto: nombre, categoria_id: cat.id, impuesto_id: imp.id,
-      unidad_venta: 'u', precio_venta_lista: 200,
+      unidad_venta: 'u', precio_venta_lista_centavos: 20000,
     });
-    db.update(schema.producto).set({ precio_costo_promedio: costo }).where(eq(schema.producto.id, prod.id)).run();
+    db.update(schema.producto).set({ precio_costo_promedio_centavos: Math.round(costo * 100) }).where(eq(schema.producto.id, prod.id)).run();
     return prod;
   }
 
-  it('valor_inventario solo considera productos activos', () => {
+  it('valor_inventario_centavos solo considera productos activos', () => {
     const activo   = crearActivo(db, 'Activo', 100);
     const inactivo = crearActivo(db, 'Inactivo', 200);
     stockEntradaHandler(db, { producto_id: activo.id,   cantidad: 5 }); // 5*100=500
     stockEntradaHandler(db, { producto_id: inactivo.id, cantidad: 3 }); // no debe contar
     db.update(schema.producto).set({ activo: false }).where(eq(schema.producto.id, inactivo.id)).run();
     const result = dashboardStockHandler(db);
-    expect(result.valor_inventario).toBeCloseTo(500, 1);
+    expect(result.valor_inventario_centavos).toBe(50000);
   });
 
   it('sin_stock incluye todos los productos con stock_fisico = 0, con o sin ventas recientes', () => {

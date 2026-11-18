@@ -31,7 +31,8 @@ export function useMovimientos(productoId: string) {
         motivo: m.motivo,
         cantidad: m.cantidad,
         stockResultante: m.stock_resultante,
-        costoUnitario: m.costo_unitario ?? null,
+        // El libro guarda centavos (ADR-157); el kardex muestra pesos.
+        costoUnitario: m.costo_unitario_centavos != null ? m.costo_unitario_centavos / 100 : null,
         referenciaTipo: m.referencia_tipo ?? null,
         referenciaId: m.referencia_id ?? null,
         usuarioId: m.usuario_id,

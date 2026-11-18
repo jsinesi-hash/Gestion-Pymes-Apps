@@ -43,7 +43,7 @@ export function ProductoDetalle() {
   const stockNumClass = existencias?.stockFisico === 0 ? ' neg' : stockBajoBadge;
 
   const faltaStock = (existencias?.stockFisico ?? 0) <= 0;
-  const faltaCosto = (producto.precio_costo_promedio ?? 0) <= 0;
+  const faltaCosto = (producto.precio_costo_promedio_centavos ?? 0) <= 0;
 
   return (
     <div className="flex-col gap-4">
@@ -93,7 +93,7 @@ export function ProductoDetalle() {
 
         <div className="card">
           <div className="card-title">Precio y unidades</div>
-          <div className="kv"><span className="k">Precio lista</span><span className="v big num">$ {producto.precio_venta_lista?.toLocaleString('es-AR')}</span></div>
+          <div className="kv"><span className="k">Precio lista</span><span className="v big num">$ {producto.precio_venta_lista_centavos != null ? (producto.precio_venta_lista_centavos / 100).toLocaleString('es-AR') : ''}</span></div>
           <div className="kv"><span className="k">Unidad venta</span><span className="v">{producto.unidad_venta}</span></div>
           {producto.unidad_compra && (
             <div className="kv"><span className="k">Unidad compra</span><span className="v">{producto.unidad_compra}</span></div>
@@ -144,7 +144,7 @@ export function ProductoDetalle() {
 
       <PresentacionesPanel productoId={producto.id} />
 
-      <PrecioPanel productoId={producto.id} precioVentaLista={producto.precio_venta_lista ?? 0} />
+      <PrecioPanel productoId={producto.id} precioVentaListaCentavos={producto.precio_venta_lista_centavos ?? 0} />
 
       {id && <EquivalenciasPanel productoId={id} discontinuado={!!producto.discontinuado} />}
 

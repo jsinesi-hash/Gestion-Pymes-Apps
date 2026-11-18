@@ -35,7 +35,7 @@ describe('proyección del stock (Retail)', () => {
     const cat = categoriaCreateHandler(db, { nombre: `Cat ${nombre}` });
     const imp = db.select().from(schema.impuesto).where(eq(schema.impuesto.predeterminado, true)).get()!;
     return productoCreateHandler(db, {
-      nombre_corto: nombre, categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 1000,
+      nombre_corto: nombre, categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 100000,
     });
   }
 
@@ -53,7 +53,7 @@ describe('proyección del stock (Retail)', () => {
   function movimientoDeOtraTerminal(productoId: string, fecha: Date, tipo: 'salida' | 'entrada', cantidad: number) {
     db.insert(schema.movimiento_stock).values({
       id: generateId(), producto_id: productoId, tipo, motivo: tipo === 'salida' ? 'venta' : 'entrada_manual',
-      cantidad, stock_resultante: 0, costo_unitario: null, referencia_tipo: 'venta', referencia_id: generateId(),
+      cantidad, stock_resultante: 0, costo_unitario_centavos: null, referencia_tipo: 'venta', referencia_id: generateId(),
       usuario_id: db.select().from(schema.usuario).get()!.id, fecha, observaciones: null,
       version: 1, origin_id: 'C2', sync_state: 'synced', updated_at: fecha,
     }).run();
@@ -63,7 +63,7 @@ describe('proyección del stock (Retail)', () => {
     const a = producto('A');
     const b = producto('B');
     const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
-    stockEntradaHandler(db, { producto_id: a.id, cantidad: 10, costo_unitario: 100 });
+    stockEntradaHandler(db, { producto_id: a.id, cantidad: 10, costo_unitario_centavos: 10000 });
     stockEntradaHandler(db, { producto_id: b.id, cantidad: 5 });
     vender(caja.id, a.id, 3);
     stockMermaHandler(db, { producto_id: a.id, cantidad: 1, observaciones: 'rota' });

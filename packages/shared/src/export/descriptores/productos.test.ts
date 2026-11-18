@@ -17,20 +17,20 @@ describe('exportProductos descriptor', () => {
     expect(p.columnas[0].label).toBe('sku');
     expect(p.columnas[1].label).toBe('nombre');
   });
-  it('columna precio_venta_lista de lista-precios formatea pesos con coma', () => {
+  it('columna precio_venta_lista_centavos de lista-precios formatea pesos con coma', () => {
     const p = exportProductos.perfiles.find(p => p.id === 'lista-precios')!;
-    const col = p.columnas.find(c => c.campo === 'precio_venta_lista')!;
-    expect(col.formato!(1500, {} as any)).toBe('1500,00');
+    const col = p.columnas.find(c => c.campo === 'precio_venta_lista_centavos')!;
+    expect(col.formato!(150000, {} as any)).toBe('1500,00');
   });
   it('columna precio de reimportable usa punto decimal', () => {
     const p = exportProductos.perfiles.find(p => p.id === 'reimportable')!;
-    const col = p.columnas.find(c => c.campo === 'precio_venta_lista')!;
-    expect(col.formato!(1500, {} as any)).toBe('1500.00');
+    const col = p.columnas.find(c => c.campo === 'precio_venta_lista_centavos')!;
+    expect(col.formato!(150050, {} as any)).toBe('1500.50');
   });
   it('formatoXlsx de precio devuelve number', () => {
     const p = exportProductos.perfiles.find(p => p.id === 'lista-precios')!;
-    const col = p.columnas.find(c => c.campo === 'precio_venta_lista')!;
-    expect(col.formatoXlsx!(1500, {} as any)).toBe(1500);
+    const col = p.columnas.find(c => c.campo === 'precio_venta_lista_centavos')!;
+    expect(col.formatoXlsx!(150000, {} as any)).toBe(1500);
   });
   it('perfil completo incluye marca, nombre largo y stock máximo', () => {
     const p = exportProductos.perfiles.find(p => p.id === 'completo')!;

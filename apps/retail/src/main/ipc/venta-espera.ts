@@ -147,8 +147,7 @@ export function ventaEsperaRetomarHandler(db: Db, rawPayload: unknown): VentaEsp
       });
     }
 
-    // producto.precio_venta_lista sigue en pesos hasta el PR-C3: se compara en centavos.
-    const precioActualCentavos = Math.round(prod.precio_venta_lista * 100);
+    const precioActualCentavos = prod.precio_venta_lista_centavos;
     if (precioActualCentavos !== det.precio_unitario_centavos) {
       avisos.precio_cambiado.push({
         producto_id: det.producto_id,

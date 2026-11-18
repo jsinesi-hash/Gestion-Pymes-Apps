@@ -24,7 +24,7 @@ function SortIcon({ active, dir }: { active: boolean; dir: 'asc' | 'desc' }) {
 // a la forma exacta del row.
 type ProductoRow = {
   id: string; sku: string; nombre_corto: string;
-  precio_venta_lista?: number; stock_fisico?: number | null; activo: boolean;
+  precio_venta_lista_centavos?: number; stock_fisico?: number | null; activo: boolean;
   ubicacion_sector?: string | null; ubicacion_estante?: string | null; ubicacion_posicion?: string | null;
 };
 
@@ -34,7 +34,7 @@ function ProductoFila({ producto: p, onOpen }: { producto: ProductoRow; onOpen: 
     <tr {...filaProps}>
       <td><span className="p-name">{p.nombre_corto}</span></td>
       <td className="c" style={{ whiteSpace: 'nowrap' }}><span className="num p-code">{p.sku}</span></td>
-      <td className="r"><span className="num">$ {p.precio_venta_lista?.toLocaleString('es-AR')}</span></td>
+      <td className="r"><span className="num">$ {p.precio_venta_lista_centavos != null ? (p.precio_venta_lista_centavos / 100).toLocaleString('es-AR') : ''}</span></td>
       <td className="c"><span className="num">{p.stock_fisico ?? 0}</span></td>
       <td className="c">{p.ubicacion_sector ?? <span style={{ opacity: 0.4 }}>—</span>}</td>
       <td className="c">{p.ubicacion_estante ?? <span style={{ opacity: 0.4 }}>—</span>}</td>
@@ -200,7 +200,7 @@ export function ProductosListado() {
                 <tr>
                   {th('nombre_corto', 'Nombre')}
                   {th('sku', 'SKU', 'c')}
-                  {th('precio_venta_lista', 'Precio lista', 'r')}
+                  {th('precio_venta_lista_centavos', 'Precio lista', 'r')}
                   {th('stock_fisico', 'Stock', 'c')}
                   {th('ubicacion_sector', 'Sector', 'c')}
                   {th('ubicacion_estante', 'Estante', 'c')}

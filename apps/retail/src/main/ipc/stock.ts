@@ -1,16 +1,16 @@
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { eq, and, gt, lte, or, asc } from 'drizzle-orm';
-import { generateId } from '@ferreteria/shared';
+import { generateId, costoPromedioEntrada } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession, getOriginId, str, optStr, num, id as vId } from '@core/main';
+import { getSession, getOriginId, str, optStr, num, centavos, id as vId } from '@core/main';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
 export type StockEntradaPayload = {
   producto_id: string;
   cantidad: number;
-  costo_unitario?: number;
+  costo_unitario_centavos?: number;
   observaciones?: string;
 };
 
@@ -33,7 +33,8 @@ export function stockEntradaHandler(db: Db, payload: unknown) {
   const p = (payload ?? {}) as Record<string, unknown>;
   const producto_id = vId(p['producto_id'], 'producto_id');
   const cantidad = num(p['cantidad'], 'cantidad');
-  const costo_unitario = p['costo_unitario'] === undefined ? undefined : num(p['costo_unitario'], 'costo_unitario');
+  const costo_unitario_centavos = p['costo_unitario_centavos'] === undefined
+    ? undefined : centavos(p['costo_unitario_centavos'], 'costo_unitario_centavos');
   const observaciones = optStr(p['observaciones'], 'observaciones');
 
   if (cantidad <= 0) throw new Error('CANTIDAD_INVALIDA');
@@ -60,15 +61,13 @@ export function stockEntradaHandler(db: Db, payload: unknown) {
   };
 
   return db.transaction((tx) => {
-    // Recalculate CPP if costo_unitario provided and > 0
-    if (costo_unitario !== undefined && costo_unitario > 0) {
-      const nuevoCpp =
-        (ex.stock_fisico * prod.precio_costo_promedio + cantidad * costo_unitario) /
-        stockResultante;
+    // Recalcula el costo promedio si la entrada trae costo (ADR-157: centavos, redondeo por entrada).
+    if (costo_unitario_centavos !== undefined && costo_unitario_centavos > 0) {
+      const nuevoCpp = costoPromedioEntrada(ex.stock_fisico, prod.precio_costo_promedio_centavos, cantidad, costo_unitario_centavos);
 
       tx.update(schema.producto)
         .set({
-          precio_costo_promedio: nuevoCpp,
+          precio_costo_promedio_centavos: nuevoCpp,
           version: prod.version + 1,
           sync_state: 'pending',
           updated_at: now,
@@ -84,7 +83,7 @@ export function stockEntradaHandler(db: Db, payload: unknown) {
       motivo: 'entrada_manual',
       cantidad: cantidad,
       stock_resultante: stockResultante,
-      costo_unitario: costo_unitario ?? null,
+      costo_unitario_centavos: costo_unitario_centavos ?? null,
       referencia_tipo: 'entrada_manual',
       referencia_id: id, // referencia_id = movement's own id for manual entries (no originating document)
       usuario_id: session.userId,
@@ -145,7 +144,7 @@ export function stockAjusteHandler(db: Db, payload: unknown) {
       motivo: 'ajuste_conteo',
       cantidad: delta,
       stock_resultante: cantidad_contada,
-      costo_unitario: null,
+      costo_unitario_centavos: null,
       referencia_tipo: 'ajuste_conteo',
       referencia_id: id,
       usuario_id: session.userId,
@@ -206,7 +205,7 @@ export function stockMermaHandler(db: Db, payload: unknown) {
       motivo: 'merma_rotura',
       cantidad: -cantidad,
       stock_resultante: stockResultante,
-      costo_unitario: null,
+      costo_unitario_centavos: null,
       referencia_tipo: 'merma_rotura',
       referencia_id: id,
       usuario_id: session.userId,
@@ -266,7 +265,7 @@ export function stockQueryAll(db: Db, filtros: StockExportFiltros = {}) {
     id:                    schema.producto.id,
     sku:                   schema.producto.sku,
     nombre_corto:          schema.producto.nombre_corto,
-    precio_costo_promedio: schema.producto.precio_costo_promedio,
+    precio_costo_promedio_centavos: schema.producto.precio_costo_promedio_centavos,
     ubicacion_codigo:      schema.ubicacion.codigo,
     stock_fisico:          schema.existencias.stock_fisico,
     stock_minimo:          schema.existencias.stock_minimo,

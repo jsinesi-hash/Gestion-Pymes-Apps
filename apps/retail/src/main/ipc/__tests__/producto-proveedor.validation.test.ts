@@ -33,7 +33,7 @@ beforeEach(() => {
     categoria_id: cat.id,
     impuesto_id: imp.id,
     unidad_venta: 'u',
-    precio_venta_lista: 100,
+    precio_venta_lista_centavos: 10000,
   });
   productoId = prod.id;
 

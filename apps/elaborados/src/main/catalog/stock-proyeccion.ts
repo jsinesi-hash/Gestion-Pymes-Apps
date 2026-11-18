@@ -1,7 +1,7 @@
 import { eq, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
-import { costoPromedioEntrada } from '../domain/costo';
+import { costoPromedioEntrada } from '@ferreteria/shared';
 
 type Db = BetterSQLite3Database<typeof schema>;
 

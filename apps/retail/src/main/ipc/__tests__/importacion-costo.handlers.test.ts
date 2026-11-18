@@ -71,7 +71,7 @@ beforeEach(() => {
     categoria_id: cat.id,
     impuesto_id: imp.id,
     unidad_venta: 'u',
-    precio_venta_lista: 50000,
+    precio_venta_lista_centavos: 5000000,
   });
   productoId = prod.id;
 
@@ -173,7 +173,7 @@ describe('importacionCostoParseArchivoHandler', () => {
     const imp = db.select({ id: schema.impuesto.id }).from(schema.impuesto).get()!;
     const otroProducto = productoCreateHandler(db, {
       nombre_corto: 'Tuerca 4mm', categoria_id: cat.id, impuesto_id: imp.id,
-      unidad_venta: 'u', precio_venta_lista: 20000,
+      unidad_venta: 'u', precio_venta_lista_centavos: 2000000,
     });
     productoProveedorUpsertHandler(db, {
       producto_id: otroProducto.id, proveedor_id: proveedorId,
@@ -223,7 +223,7 @@ describe('importacionCostoParseArchivoHandler', () => {
     const imp = db.select({ id: schema.impuesto.id }).from(schema.impuesto).get()!;
     const ajeno = productoCreateHandler(db, {
       nombre_corto: 'Producto sin vínculo previo', categoria_id: cat.id, impuesto_id: imp.id,
-      unidad_venta: 'u', precio_venta_lista: 10000,
+      unidad_venta: 'u', precio_venta_lista_centavos: 1000000,
     });
     db.update(schema.producto).set({ gtin_barcode: '7790000000001' })
       .where(eq(schema.producto.id, ajeno.id)).run();
@@ -242,7 +242,7 @@ describe('importacionCostoParseArchivoHandler', () => {
     const imp = db.select({ id: schema.impuesto.id }).from(schema.impuesto).get()!;
     const ajeno = productoCreateHandler(db, {
       nombre_corto: 'Otro producto sin vínculo', categoria_id: cat.id, impuesto_id: imp.id,
-      unidad_venta: 'u', precio_venta_lista: 10000,
+      unidad_venta: 'u', precio_venta_lista_centavos: 1000000,
     });
     const sku = db.select({ sku: schema.producto.sku }).from(schema.producto)
       .where(eq(schema.producto.id, ajeno.id)).get()!.sku;
@@ -260,7 +260,7 @@ describe('importacionCostoParseArchivoHandler', () => {
     const imp = db.select({ id: schema.impuesto.id }).from(schema.impuesto).get()!;
     const ajeno = productoCreateHandler(db, {
       nombre_corto: 'Producto a vincular al confirmar', categoria_id: cat.id, impuesto_id: imp.id,
-      unidad_venta: 'u', precio_venta_lista: 10000,
+      unidad_venta: 'u', precio_venta_lista_centavos: 1000000,
     });
     db.update(schema.producto).set({ gtin_barcode: '7790000000002' })
       .where(eq(schema.producto.id, ajeno.id)).run();
@@ -485,7 +485,7 @@ describe('importacionCostoResolverFilaHandler', () => {
       categoria_id: cat.id,
       impuesto_id: imp.id,
       unidad_venta: 'u',
-      precio_venta_lista: 10000,
+      precio_venta_lista_centavos: 1000000,
     });
 
     const { importacionId } = await crearImportacionConfirmada('COD_PRODUCTO_PROV,COSTO\nTUERCA-COD,120.00\n');
@@ -817,7 +817,7 @@ describe('importacionCostoRevalidarFilaHandler', () => {
     const imp = db.select({ id: schema.impuesto.id }).from(schema.impuesto).get()!;
     const ajeno = productoCreateHandler(db, {
       nombre_corto: 'Ajeno revalidar', categoria_id: cat.id, impuesto_id: imp.id,
-      unidad_venta: 'u', precio_venta_lista: 10000,
+      unidad_venta: 'u', precio_venta_lista_centavos: 1000000,
     });
     db.update(schema.producto).set({ gtin_barcode: '7790000000003' })
       .where(eq(schema.producto.id, ajeno.id)).run();

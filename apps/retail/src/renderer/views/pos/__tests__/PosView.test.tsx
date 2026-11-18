@@ -6,7 +6,7 @@ import { PosSessionProvider } from '../../../context/PosSessionContext';
 import { PosView } from '../PosView';
 
 const mockCaja = { id: 'c-1', estado: 'abierta', monto_inicial_centavos: 0, usuario_id: 'u-1', fecha_apertura: new Date() };
-const mockProd = { id: 'p-1', nombre_corto: 'Tornillo', activo: true, precio_venta_lista: 1000, impuesto_id: null, permite_fraccion: false };
+const mockProd = { id: 'p-1', nombre_corto: 'Tornillo', activo: true, precio_venta_lista_centavos: 100000, impuesto_id: null, permite_fraccion: false };
 const mockEx = { producto_id: 'p-1', stock_fisico: 10 };
 const mockVentaResult = {
   venta: { id: 'v-1', numero_interno: 'V-C1-000001', total_centavos: 100000, forma_pago: 'efectivo', fecha: new Date() },

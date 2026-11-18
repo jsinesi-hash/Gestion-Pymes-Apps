@@ -14,7 +14,7 @@ type FiltrosUpdate = {
 // Columnas ordenables del listado de productos (ADR-053). Coinciden con los valores
 // aceptados por el IPC `producto.list` (ProductoListParams.sortBy).
 export type ProductoSortCol =
-  | 'nombre_corto' | 'sku' | 'precio_venta_lista' | 'stock_fisico'
+  | 'nombre_corto' | 'sku' | 'precio_venta_lista_centavos' | 'stock_fisico'
   | 'ubicacion_sector' | 'ubicacion_estante' | 'ubicacion_posicion';
 
 interface CatalogoContextValue {

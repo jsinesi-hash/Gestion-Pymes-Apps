@@ -5,10 +5,10 @@ import { useAuth, bridge } from '@core/ui';
 
 type Props = {
   productoId: string;
-  precioVentaLista: number;
+  precioVentaListaCentavos: number;
 };
 
-export function PrecioPanel({ productoId, precioVentaLista }: Readonly<Props>) {
+export function PrecioPanel({ productoId, precioVentaListaCentavos }: Readonly<Props>) {
   const { listas, loading: loadingListas } = useListasPrecios();
   const { vigentes, loading: loadingVigentes, refetch } = useListaPrecioValor(productoId);
   const { can } = useAuth();
@@ -23,7 +23,7 @@ export function PrecioPanel({ productoId, precioVentaLista }: Readonly<Props>) {
   }
 
   function getFallbackCentavos(lista: any): number {
-    return Math.round(Math.round(precioVentaLista * 100) * (1 + lista.ajuste_porcentual / 100));
+    return Math.round(precioVentaListaCentavos * (1 + lista.ajuste_porcentual / 100));
   }
 
   async function handleConfirmarManual(listaId: string) {

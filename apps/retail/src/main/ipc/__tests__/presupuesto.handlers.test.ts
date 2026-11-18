@@ -244,7 +244,7 @@ describe('presupuestoPrepararConversionHandler', () => {
     presupuestoVencerLoteHandler(db, { ahora: Date.now() + 5 * MS_DIA });
 
     // sube el precio del producto: la reprecificacion debe reflejarlo
-    db.update(schema.producto).set({ precio_venta_lista: 200 })
+    db.update(schema.producto).set({ precio_venta_lista_centavos: 20000 })
       .where(eq(schema.producto.id, prod)).run();
 
     const conv = presupuestoPrepararConversionHandler(db, { id: p.id });

@@ -41,7 +41,7 @@ function setup(margenPct: number) {
   const imp = db.select().from(schema.impuesto).get()!;
   const prod = productoCreateHandler(db, {
     nombre_corto: 'Amoladora', categoria_id: cat.id, impuesto_id: imp.id,
-    unidad_venta: 'u', precio_venta_lista: 100, // => precio_anterior 10000
+    unidad_venta: 'u', precio_venta_lista_centavos: 10000, // => precio_anterior 10000
   });
   productoId = prod.id;
 
@@ -136,7 +136,7 @@ describe('price-batch — re-validar (ADR-070)', () => {
     const imp = db.select().from(schema.impuesto).get()!;
     const prod = productoCreateHandler(db, {
       nombre_corto: 'Taladro', categoria_id: cat.id, impuesto_id: imp.id,
-      unidad_venta: 'u', precio_venta_lista: 100,
+      unidad_venta: 'u', precio_venta_lista_centavos: 10000,
     });
     productoId = prod.id;
     const lista = listaPrecioCreateHandler(db, { nombre: 'General', ajuste_porcentual: 0, modo_calculo: 'margen_costo' });

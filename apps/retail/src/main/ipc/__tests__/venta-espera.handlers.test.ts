@@ -40,7 +40,7 @@ describe('venta-espera handlers', () => {
       categoria_id: cat.id,
       impuesto_id: imp.id,
       unidad_venta: 'u',
-      precio_venta_lista: precio,
+      precio_venta_lista_centavos: Math.round(precio * 100),
     });
     stockEntradaHandler(db, { producto_id: prod.id, cantidad: stock });
     return { prod, imp };
@@ -209,7 +209,7 @@ describe('venta-espera handlers', () => {
 
     // Cambiar precio lista
     db.update(schema.producto)
-      .set({ precio_venta_lista: 1500 })
+      .set({ precio_venta_lista_centavos: 150000 })
       .where(eq(schema.producto.id, prod.id))
       .run();
 

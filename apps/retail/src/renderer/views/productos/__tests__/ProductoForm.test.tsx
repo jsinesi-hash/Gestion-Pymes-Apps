@@ -67,7 +67,7 @@ describe('ProductoForm', () => {
   it('modo edicion: titulo dice Editar producto', async () => {
     mockGet.mockResolvedValue({
       id: 'edit-id', nombre_corto: 'Taladro', categoria_id: 'c1',
-      impuesto_id: 'i1', unidad_venta: 'unidad', precio_venta_lista: 1500, activo: true,
+      impuesto_id: 'i1', unidad_venta: 'unidad', precio_venta_lista_centavos: 150000, activo: true,
     });
     renderEdit();
     await waitFor(() => expect(screen.getByText('Editar producto')).toBeInTheDocument());
@@ -76,7 +76,7 @@ describe('ProductoForm', () => {
   it('modo edicion: pre-llena nombre_corto', async () => {
     mockGet.mockResolvedValue({
       id: 'edit-id', nombre_corto: 'Taladro', categoria_id: 'c1',
-      impuesto_id: 'i1', unidad_venta: 'unidad', precio_venta_lista: 1500, activo: true,
+      impuesto_id: 'i1', unidad_venta: 'unidad', precio_venta_lista_centavos: 150000, activo: true,
     });
     renderEdit();
     await waitFor(() => expect(screen.getByTestId('nombre_corto')).toHaveValue('Taladro'));

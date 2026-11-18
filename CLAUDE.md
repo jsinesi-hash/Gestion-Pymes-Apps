@@ -307,15 +307,16 @@ No se puede desactivar el último Supervisor activo. Roles base con `es_sistema 
 > `usuario_modificacion_id`/`fecha_actualizacion`). `*_resultante` en libros de
 > movimientos. Snapshots en líneas. Los timestamps son INTEGER Unix.
 >
-> **Unidades de dinero — leer antes de tocar importes.** Conviven dos convenciones:
+> **Unidades de dinero — leer antes de tocar importes.** Todo el dinero va en centavos (ADR-157):
 > - **Centavos (INTEGER), doctrina vigente:** `venta_pago`, `cuenta_corriente_cliente`,
 >   `movimiento_cuenta_corriente`, `producto_proveedor`, `lista_precio_valor`,
 >   `promocion`, `recalculo_masivo`, `cambio_programado`, `orden_compra`, `item_oc`,
 >   `recepcion_detalle`, `comprobante_compra`, `presupuesto`, `presupuesto_detalle`,
 >   `importacion_costo_proveedor_detalle`, `caja`, `movimiento_caja` (ADR-157 PR-C1), `venta`,
->   `venta_detalle` y `comprobante` (`*_centavos`, ADR-157 PR-C2). **Toda tabla nueva va en centavos.**
-> - **Pesos (REAL), deuda legacy en migración (serie de centavos, ADR-157):** `producto`
->   (`precio_*`; `margen_ganancia` es porcentaje) y `movimiento_stock.costo_unitario`. No agregar columnas nuevas de dinero en `real`.
+>   `venta_detalle`, `comprobante` (ADR-157 PR-C2), `producto` (`precio_*_centavos`) y
+>   `movimiento_stock.costo_unitario_centavos` (ADR-157 PR-C3). **Toda tabla nueva va en centavos.**
+> - **No quedan columnas de dinero en pesos (REAL).** No agregar columnas nuevas de dinero en `real`;
+>   los pesos existen solo en los bordes de la UI (al tipear y al mostrar) y en los CSV.
 >
 > Los porcentajes son `real` en todos lados (`*_pct`, `alicuota_iva`,
 > `ajuste_porcentual`, `descuento_*`) — son porcentajes, no montos.
@@ -325,7 +326,7 @@ No se puede desactivar el último Supervisor activo. Roles base con `es_sistema 
 - **`producto`** (maestro): `id`, `sku` (único), `sku_secuencial`, `gtin_barcode`
   (nullable), `nombre_corto`, `nombre_largo`, `descripcion_tecnica`, `unidad_venta`
   (= unidad de **stock**, texto), `unidad_compra`, `factor_conversion` (default 1),
-  `permite_fraccion`, `precio_costo_promedio`, `precio_venta_lista` (IVA incluido),
+  `permite_fraccion`, `precio_costo_promedio_centavos`, `precio_venta_lista_centavos` (IVA incluido),
   `margen_ganancia`, `impuesto_id`, `moneda` (default `ARS`), `categoria_id` (NOT NULL),
   `marca_id`, `producto_padre_id`, `garantia_meses`, `ubicacion_id`, `activo`, auditoría,
   sync.
@@ -346,7 +347,7 @@ No se puede desactivar el último Supervisor activo. Roles base con `es_sistema 
 - **`movimiento_stock`** (inmutable): `id`, `producto_id`, `tipo`
   (`entrada`|`salida`|`ajuste`|`transferencia`), `motivo` (`venta`|`recepcion_compra`|
   `devolucion`|`ajuste_conteo`|`merma_rotura`|`inicial`|`entrada_manual`), `cantidad`,
-  `stock_resultante`, `costo_unitario`, `referencia_tipo`, `referencia_id`,
+  `stock_resultante`, `costo_unitario_centavos`, `referencia_tipo`, `referencia_id`,
   `ubicacion_id`, `usuario_id`, `fecha`, `observaciones`, sync.
 - **`categoria`** (autorreferenciada, N niveles): `id`, `categoria_padre_id` (null = raíz),
   `nombre`, `descripcion`, `activo`, auditoría, sync.

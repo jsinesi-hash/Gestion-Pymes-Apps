@@ -54,7 +54,7 @@ describe('StockEntradaModal', () => {
     expect(mockStockEntrada).toHaveBeenCalledWith({
       producto_id: 'p-1',
       cantidad: 5,
-      costo_unitario: undefined,
+      costo_unitario_centavos: undefined,
       observaciones: undefined,
     });
     await waitFor(() => expect(onSuccess).toHaveBeenCalledOnce());

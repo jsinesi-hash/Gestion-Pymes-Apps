@@ -65,7 +65,7 @@ export function getPrecioEnListaHandler(
     return { precio_centavos: vigente.precio_centavos, origen: 'vigente' };
   }
 
-  // Step 3: fallback = producto.precio_venta_lista * 100 * (1 + lista.ajuste_porcentual/100)
+  // Step 3: fallback = producto.precio_venta_lista_centavos * (1 + lista.ajuste_porcentual/100)
   const prod = db.select().from(schema.producto)
     .where(eq(schema.producto.id, productoId))
     .get();
@@ -78,7 +78,7 @@ export function getPrecioEnListaHandler(
   }
 
   const precio_centavos = Math.round(
-    prod.precio_venta_lista * 100 * (1 + lista.ajuste_porcentual / 100),
+    prod.precio_venta_lista_centavos * (1 + lista.ajuste_porcentual / 100),
   );
 
   return { precio_centavos, origen: 'fallback' };
@@ -243,16 +243,16 @@ export function listarVigentesPorListaHandler(
 export function resolveProductosAfectados(
   db: Db,
   params: RecalcularMasivoParams,
-): { id: string; precio_venta_lista: number }[] {
+): { id: string; precio_venta_lista_centavos: number }[] {
   const { alcance, alcance_id, lista_precio_id, excluir_manuales_dias } = params;
 
   // Fetch all active products matching the scope
-  let productos: { id: string; precio_venta_lista: number }[];
+  let productos: { id: string; precio_venta_lista_centavos: number }[];
 
   if (alcance === 'catalogo') {
     productos = db.select({
       id: schema.producto.id,
-      precio_venta_lista: schema.producto.precio_venta_lista,
+      precio_venta_lista_centavos: schema.producto.precio_venta_lista_centavos,
     })
       .from(schema.producto)
       .where(eq(schema.producto.activo, true))
@@ -261,7 +261,7 @@ export function resolveProductosAfectados(
     if (!alcance_id) throw new Error('alcance_id required for rubro');
     productos = db.select({
       id: schema.producto.id,
-      precio_venta_lista: schema.producto.precio_venta_lista,
+      precio_venta_lista_centavos: schema.producto.precio_venta_lista_centavos,
     })
       .from(schema.producto)
       .where(and(
@@ -273,7 +273,7 @@ export function resolveProductosAfectados(
     if (!alcance_id) throw new Error('alcance_id required for marca');
     productos = db.select({
       id: schema.producto.id,
-      precio_venta_lista: schema.producto.precio_venta_lista,
+      precio_venta_lista_centavos: schema.producto.precio_venta_lista_centavos,
     })
       .from(schema.producto)
       .where(and(
@@ -285,7 +285,7 @@ export function resolveProductosAfectados(
     if (!alcance_id) throw new Error('alcance_id required for proveedor');
     productos = db.select({
       id: schema.producto.id,
-      precio_venta_lista: schema.producto.precio_venta_lista,
+      precio_venta_lista_centavos: schema.producto.precio_venta_lista_centavos,
     })
       .from(schema.producto)
       .innerJoin(
@@ -327,11 +327,11 @@ export function resolveProductosAfectados(
 
 function resolveBaseCentavos(
   db: Db,
-  prod: { id: string; precio_venta_lista: number },
+  prod: { id: string; precio_venta_lista_centavos: number },
   params: RecalcularMasivoParams,
 ): number {
   if (params.base_calculo === 'precio_lista') {
-    return Math.round(prod.precio_venta_lista * 100);
+    return prod.precio_venta_lista_centavos;
   }
 
   if (params.base_calculo === 'costo_proveedor') {
@@ -341,7 +341,7 @@ function resolveBaseCentavos(
         eq(schema.producto_proveedor.preferido, true),
       ))
       .get();
-    if (!pp) return Math.round(prod.precio_venta_lista * 100); // fallback
+    if (!pp) return prod.precio_venta_lista_centavos; // fallback
     return pp.costo_centavos;
   }
 
@@ -356,7 +356,7 @@ function resolveBaseCentavos(
       .get();
     if (!vigente) {
       // Fallback to precio_lista if no vigente row
-      return Math.round(prod.precio_venta_lista * 100);
+      return prod.precio_venta_lista_centavos;
     }
     return vigente.precio_centavos;
   }

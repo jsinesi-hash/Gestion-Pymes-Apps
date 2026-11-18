@@ -94,14 +94,14 @@ export function listaPrecioCreateHandler(db: Db, rawPayload: unknown) {
     // Auto-seed lista_precio_valor for all active products
     const productosActivos = tx.select({
       id: schema.producto.id,
-      precio_venta_lista: schema.producto.precio_venta_lista,
+      precio_venta_lista_centavos: schema.producto.precio_venta_lista_centavos,
     }).from(schema.producto)
       .where(eq(schema.producto.activo, true))
       .all();
 
     const ajuste = payload.ajuste_porcentual ?? 0;
     for (const prod of productosActivos) {
-      const baseCs = Math.round(prod.precio_venta_lista * 100);
+      const baseCs = prod.precio_venta_lista_centavos;
       tx.insert(schema.lista_precio_valor).values({
         id: generateId(),
         lista_precio_id: id,

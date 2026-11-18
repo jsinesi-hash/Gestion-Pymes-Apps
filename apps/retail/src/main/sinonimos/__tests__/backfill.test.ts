@@ -15,7 +15,7 @@ function crearProducto(db: Db, nombre_corto: string) {
   const imp = db.select().from(schema.impuesto).all()[0];
   return productoCreateHandler(db, {
     nombre_corto, categoria_id: cat.id, impuesto_id: imp.id,
-    unidad_venta: 'unidad', precio_venta_lista: 5000,
+    unidad_venta: 'unidad', precio_venta_lista_centavos: 500000,
   });
 }
 

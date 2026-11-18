@@ -35,7 +35,7 @@ describe('lista-precio handlers', () => {
       categoria_id: cat.id,
       impuesto_id: imp.id,
       unidad_venta: 'u',
-      precio_venta_lista: 1000,
+      precio_venta_lista_centavos: 100000,
     });
   }
 

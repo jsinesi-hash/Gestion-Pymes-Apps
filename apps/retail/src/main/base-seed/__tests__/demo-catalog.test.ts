@@ -74,8 +74,8 @@ describe('runDemoCatalogSeed', () => {
         eq(schema.lista_precio_valor.producto_id, p.id),
         eq(schema.lista_precio_valor.lista_precio_id, lista.id),
       )).get()!;
-    // lista predeterminada con ajuste 0 → centavos = pesos * 100 redondeado
-    expect(lpv.precio_centavos).toBe(Math.round(p.precio_venta_lista * 100));
+    // lista predeterminada con ajuste 0 → el mismo precio de lista en centavos
+    expect(lpv.precio_centavos).toBe(p.precio_venta_lista_centavos);
   });
 
   it('cada producto tiene una presentación default (ADR-040)', () => {

@@ -19,7 +19,7 @@ function renderDetalle(id = 'p1') {
 
 const BASE_PRODUCTO = {
   id: 'p1', sku: '00001', nombre_corto: 'Taladro', nombre_largo: 'Taladro percutor',
-  gtin_barcode: null, precio_venta_lista: 5000,
+  gtin_barcode: null, precio_venta_lista_centavos: 500000,
   unidad_venta: 'unidad', descripcion_tecnica: null, activo: true,
   ubicacion_id: null, ubicacion_codigo: null,
   ubicacion_sector: null, ubicacion_estante: null, ubicacion_posicion: null,
@@ -57,7 +57,7 @@ beforeEach(() => {
 
 describe('ProductoDetalle — checklist "Para vender falta" (PROD-2, ADR-078)', () => {
   it('muestra la card cuando falta costo (precio_costo_promedio === 0), con stock cargado', async () => {
-    mockGet.mockResolvedValue({ ...BASE_PRODUCTO, precio_costo_promedio: 0 });
+    mockGet.mockResolvedValue({ ...BASE_PRODUCTO, precio_costo_promedio_centavos: 0 });
     mockExistenciasGet.mockResolvedValue({
       id: 'ex-1', producto_id: 'p1', stock_fisico: 5, stock_minimo: 0,
       stock_maximo: null, ultima_fecha_movimiento: null,
@@ -70,7 +70,7 @@ describe('ProductoDetalle — checklist "Para vender falta" (PROD-2, ADR-078)', 
   });
 
   it('muestra la card cuando falta stock (stockFisico === 0), con costo cargado', async () => {
-    mockGet.mockResolvedValue({ ...BASE_PRODUCTO, precio_costo_promedio: 100 });
+    mockGet.mockResolvedValue({ ...BASE_PRODUCTO, precio_costo_promedio_centavos: 10000 });
     mockExistenciasGet.mockResolvedValue({
       id: 'ex-1', producto_id: 'p1', stock_fisico: 0, stock_minimo: 0,
       stock_maximo: null, ultima_fecha_movimiento: null,
@@ -83,7 +83,7 @@ describe('ProductoDetalle — checklist "Para vender falta" (PROD-2, ADR-078)', 
   });
 
   it('NO muestra la card cuando hay costo y stock cargados', async () => {
-    mockGet.mockResolvedValue({ ...BASE_PRODUCTO, precio_costo_promedio: 100 });
+    mockGet.mockResolvedValue({ ...BASE_PRODUCTO, precio_costo_promedio_centavos: 10000 });
     mockExistenciasGet.mockResolvedValue({
       id: 'ex-1', producto_id: 'p1', stock_fisico: 10, stock_minimo: 0,
       stock_maximo: null, ultima_fecha_movimiento: null,
@@ -94,7 +94,7 @@ describe('ProductoDetalle — checklist "Para vender falta" (PROD-2, ADR-078)', 
   });
 
   it('muestra la card con ambos botones cuando faltan costo y stock', async () => {
-    mockGet.mockResolvedValue({ ...BASE_PRODUCTO, precio_costo_promedio: 0 });
+    mockGet.mockResolvedValue({ ...BASE_PRODUCTO, precio_costo_promedio_centavos: 0 });
     mockExistenciasGet.mockResolvedValue({
       id: 'ex-1', producto_id: 'p1', stock_fisico: 0, stock_minimo: 0,
       stock_maximo: null, ultima_fecha_movimiento: null,

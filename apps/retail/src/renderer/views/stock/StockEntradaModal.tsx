@@ -39,13 +39,13 @@ export function StockEntradaModal({ productoId, onSuccess, onClose }: Readonly<S
         cantidad: cantidadNum,
         // Las claves opcionales se omiten en vez de enviar `undefined` explícito
         // (exactOptionalPropertyTypes, payload tipado en el preload). Por IPC es equivalente.
-        ...(!Number.isNaN(costoNum) && costoNum > 0 ? { costo_unitario: costoNum } : {}),
+        ...(!Number.isNaN(costoNum) && costoNum > 0 ? { costo_unitario_centavos: Math.round(costoNum * 100) } : {}),
         ...(observaciones.trim() ? { observaciones: observaciones.trim() } : {}),
       });
       toast.success('Entrada registrada');
       onSuccess();
     } catch (err: any) {
-      const r = rutearCampoError(err, { cantidad: 'entrada-cantidad', costo_unitario: 'entrada-costo', observaciones: 'entrada-observaciones' });
+      const r = rutearCampoError(err, { cantidad: 'entrada-cantidad', costo_unitario_centavos: 'entrada-costo', observaciones: 'entrada-observaciones' });
       if (r.campo) setCampoError({ campo: r.campo, mensaje: r.mensaje });
       else setError(r.mensaje);
     } finally {
@@ -76,10 +76,10 @@ export function StockEntradaModal({ productoId, onSuccess, onClose }: Readonly<S
 
             <div className="field">
               <label htmlFor="entrada-costo">Costo unitario (opcional)</label>
-              <input id="entrada-costo" className={`input num${campoError?.campo === 'costo_unitario' ? ' error' : ''}`} type="number" min="0" step="any"
+              <input id="entrada-costo" className={`input num${campoError?.campo === 'costo_unitario_centavos' ? ' error' : ''}`} type="number" min="0" step="any"
                 value={costo} onChange={e => setCosto(e.target.value)}
                 placeholder="Deja en blanco para no actualizar CPP" />
-              {campoError?.campo === 'costo_unitario' && <span className="field-error">{campoError.mensaje}</span>}
+              {campoError?.campo === 'costo_unitario_centavos' && <span className="field-error">{campoError.mensaje}</span>}
               {willUpdateCpp && (
                 <span className="text-xs text-muted">Se actualizará el CPP con ${costoNum.toFixed(2)}/u</span>
               )}

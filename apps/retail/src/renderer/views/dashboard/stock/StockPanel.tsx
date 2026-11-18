@@ -59,7 +59,7 @@ export function StockPanel({ state }: { state: PS<DashboardStock> }) {
     <div className="card" style={{ padding: '1.25rem', minWidth: 0 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
         <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>Stock</h2>
-        {state.data && <span className="num text-muted" style={{ fontSize: '0.8rem' }}>Inventario: $ {fmt(state.data.valor_inventario)}</span>}
+        {state.data && <span className="num text-muted" style={{ fontSize: '0.8rem' }}>Inventario: $ {fmt(state.data.valor_inventario_centavos / 100)}</span>}
       </div>
       {state.loading && <div className="text-muted" style={{ textAlign: 'center', padding: '1.5rem', opacity: 0.5 }}>Cargando…</div>}
       {state.error  && <div className="alert-danger">Error al cargar stock</div>}

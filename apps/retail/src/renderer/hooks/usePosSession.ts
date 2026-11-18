@@ -204,7 +204,7 @@ export function usePosSession() {
 
       const basePrecio = precioResuelto.precio_centavos
         ? precioResuelto.precio_centavos
-        : Math.round(prod.precio_venta_lista * 100);
+        : prod.precio_venta_lista_centavos;
       const precioListaCentavos = Math.round(basePrecio * resolvedFactor);
       const precioOrigen = precioResuelto.origen as 'promocion' | 'vigente' | 'fallback';
       const ajustePct = 0; // already incorporated in precioListaCentavos by the backend

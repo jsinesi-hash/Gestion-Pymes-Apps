@@ -28,7 +28,7 @@ function setupProducto(db: ReturnType<typeof setupDb>, unidadVenta = 'u') {
     categoria_id: cat.id,
     impuesto_id: imp.id,
     unidad_venta: unidadVenta,
-    precio_venta_lista: 100,
+    precio_venta_lista_centavos: 10000,
   });
 }
 
@@ -231,7 +231,7 @@ describe('presentacion handlers', () => {
       categoria_id: cat.id,
       impuesto_id: imp.id,
       unidad_venta: 'u',
-      precio_venta_lista: 200,
+      precio_venta_lista_centavos: 20000,
       gtin_barcode: '7790009998888',
     });
     const defaultPp = presentacionListByProductoHandler(db, { producto_id: prod.id })
@@ -256,7 +256,7 @@ describe('presentacion handlers', () => {
     const imp = db.select().from(schema.impuesto).all()[0];
     const prod = productoCreateHandler(db, {
       nombre_corto: 'ProdVenta', categoria_id: cat.id, impuesto_id: imp.id,
-      unidad_venta: 'u', precio_venta_lista: 1000,
+      unidad_venta: 'u', precio_venta_lista_centavos: 100000,
     });
 
     // Dar stock inicial de 24 unidades
@@ -323,7 +323,7 @@ describe('presentacion handlers', () => {
     const imp = db.select().from(schema.impuesto).all()[0];
     const prod = productoCreateHandler(db, {
       nombre_corto: 'ProdV2', categoria_id: cat.id, impuesto_id: imp.id,
-      unidad_venta: 'u', precio_venta_lista: 500,
+      unidad_venta: 'u', precio_venta_lista_centavos: 50000,
     });
 
     db.update(schema.existencias)

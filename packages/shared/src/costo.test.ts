@@ -3,6 +3,7 @@ import {
   resolverComponentesComerciales,
   calcularCostoNeto,
   costoNeto,
+  costoPromedioEntrada,
 } from './costo.js';
 
 // ADR-049 §1 — Costo neto: componentes comerciales como default por proveedor
@@ -163,5 +164,30 @@ describe('costoNeto (resolver + calcular)', () => {
       { bonificacionPctDefault: 0, costoFinancieroPctDefault: 0, fletePctDefault: 0 },
     );
     expect(r.netoCentavos).toBe(54321);
+  });
+});
+
+// ADR-157 (PR-C3): el costo promedio ponderado de las dos apps, en centavos enteros.
+describe('costoPromedioEntrada', () => {
+  it('con stock previo positivo, pondera por cantidad', () => {
+    // 10 u a $100 + 10 u a $200 → 20 u a $150
+    expect(costoPromedioEntrada(10, 10000, 10, 20000)).toBe(15000);
+  });
+
+  it('con stock previo en 0, el costo nuevo es el que entra', () => {
+    expect(costoPromedioEntrada(0, 99999, 5, 12000)).toBe(12000);
+  });
+
+  it('con stock previo negativo, el costo nuevo es el que entra (no promedia contra negativo)', () => {
+    expect(costoPromedioEntrada(-3, 8000, 5, 12000)).toBe(12000);
+  });
+
+  it('una entrada de cantidad 0 con costo fija el costo (alta o importación sin stock)', () => {
+    expect(costoPromedioEntrada(4, 8000, 0, 12000)).toBe(12000);
+  });
+
+  it('redondea al centavo entero', () => {
+    expect(costoPromedioEntrada(3, 10000, 1, 10001)).toBe(Math.round((3 * 10000 + 1 * 10001) / 4));
+    expect(Number.isInteger(costoPromedioEntrada(3, 333, 7, 1001))).toBe(true);
   });
 });

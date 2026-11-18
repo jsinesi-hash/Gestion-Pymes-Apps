@@ -5,7 +5,8 @@ import { generateId } from '@ferreteria/shared';
 import { getOriginId, requirePermission, verificarAutorizacion, str, num, optStr, arr, id as vId, requireSession } from '@core/main';
 import * as schema from '../db/schema';
 import { escalarReceta } from '../domain/receta';
-import { costoDeLote, costoPromedioEntrada } from '../domain/costo';
+import { costoPromedioEntrada } from '@ferreteria/shared';
+import { costoDeLote } from '../domain/costo';
 import { itemsVivos } from './receta-produccion';
 
 type Db = BetterSQLite3Database<typeof schema>;

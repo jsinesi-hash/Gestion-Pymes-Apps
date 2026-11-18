@@ -55,7 +55,7 @@ describe('lista-precio-valor handlers', () => {
       categoria_id: cat.id,
       impuesto_id: imp.id,
       unidad_venta: 'u',
-      precio_venta_lista: precio,
+      precio_venta_lista_centavos: Math.round(precio * 100),
     });
   }
 
@@ -438,7 +438,7 @@ describe('lista-precio-valor handlers', () => {
         categoria_id: cat.id,
         impuesto_id: imp.id,
         unidad_venta: 'u',
-        precio_venta_lista: 1000,
+        precio_venta_lista_centavos: 100000,
         gtin_barcode: '7791234567890',
       });
 

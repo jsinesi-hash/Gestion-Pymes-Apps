@@ -79,7 +79,7 @@ describe('categoria handlers', () => {
       const imp = db.select().from(schema.impuesto).all()[0];
       productoCreateHandler(db, {
         nombre_corto: 'Prod', categoria_id: cat.id, impuesto_id: imp.id,
-        unidad_venta: 'u', precio_venta_lista: 100,
+        unidad_venta: 'u', precio_venta_lista_centavos: 10000,
       });
       expect(() => categoriaDesactivarHandler(db, { id: cat.id }))
         .toThrow('TIENE_PRODUCTOS:1');

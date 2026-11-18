@@ -171,13 +171,13 @@ export function dashboardVentasKpisRangoHandler(
   const top_margen = db.select({
     producto_id:     schema.venta_detalle.producto_id,
     nombre:          schema.producto.nombre_corto,
-    margen_estimado_centavos: sql<number>`CAST(ROUND(sum((${schema.venta_detalle.precio_unitario_centavos} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio} * 100.0) * ${schema.venta_detalle.cantidad})) AS INTEGER)`,
+    margen_estimado_centavos: sql<number>`CAST(ROUND(sum((${schema.venta_detalle.precio_unitario_centavos} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio_centavos}) * ${schema.venta_detalle.cantidad})) AS INTEGER)`,
   }).from(schema.venta_detalle)
     .innerJoin(schema.venta, eq(schema.venta_detalle.venta_id, schema.venta.id))
     .innerJoin(schema.producto, eq(schema.venta_detalle.producto_id, schema.producto.id))
     .where(and(detalleWhere, vdViva()))
     .groupBy(schema.venta_detalle.producto_id)
-    .orderBy(desc(sql`sum((${schema.venta_detalle.precio_unitario_centavos} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio} * 100.0) * ${schema.venta_detalle.cantidad})`))
+    .orderBy(desc(sql`sum((${schema.venta_detalle.precio_unitario_centavos} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio_centavos}) * ${schema.venta_detalle.cantidad})`))
     .limit(10)
     .all();
 
@@ -369,7 +369,7 @@ export function dashboardProductosMargenCategoriaHandler(
   return db.select({
     categoria_id: schema.categoria.id,
     nombre:       schema.categoria.nombre,
-    margen_total_centavos: sql<number>`CAST(ROUND(sum((${schema.venta_detalle.precio_unitario_centavos} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio} * 100.0) * ${schema.venta_detalle.cantidad})) AS INTEGER)`,
+    margen_total_centavos: sql<number>`CAST(ROUND(sum((${schema.venta_detalle.precio_unitario_centavos} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio_centavos}) * ${schema.venta_detalle.cantidad})) AS INTEGER)`,
     revenue_centavos: sql<number>`sum(${schema.venta_detalle.subtotal_centavos})`,
   }).from(schema.venta_detalle)
     .innerJoin(schema.venta, eq(schema.venta_detalle.venta_id, schema.venta.id))
@@ -377,7 +377,7 @@ export function dashboardProductosMargenCategoriaHandler(
     .innerJoin(schema.categoria, eq(schema.producto.categoria_id, schema.categoria.id))
     .where(and(base, vdViva()))
     .groupBy(schema.categoria.id)
-    .orderBy(desc(sql`sum((${schema.venta_detalle.precio_unitario_centavos} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio} * 100.0) * ${schema.venta_detalle.cantidad})`))
+    .orderBy(desc(sql`sum((${schema.venta_detalle.precio_unitario_centavos} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio_centavos}) * ${schema.venta_detalle.cantidad})`))
     .all();
 }
 

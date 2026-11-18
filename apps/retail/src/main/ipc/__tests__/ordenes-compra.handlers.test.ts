@@ -48,7 +48,7 @@ beforeEach(() => {
     categoria_id: cat.id,
     impuesto_id: imp.id,
     unidad_venta: 'u',
-    precio_venta_lista: 100,
+    precio_venta_lista_centavos: 10000,
   });
   productoId = prod.id;
 
@@ -158,7 +158,7 @@ describe('ocAgregarItemHandler', () => {
     const imp = db.select().from(schema.impuesto).get()!;
     const prod2 = productoCreateHandler(db, {
       nombre_corto: 'Tuerca', categoria_id: cat.id,
-      impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 50,
+      impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 5000,
     });
     const { id: ocId } = ocCrearHandler(db, { proveedor_id: proveedorId, tipo: 'manual' });
     ocAgregarItemHandler(db, {

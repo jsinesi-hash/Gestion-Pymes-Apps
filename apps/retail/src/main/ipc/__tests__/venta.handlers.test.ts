@@ -46,7 +46,7 @@ describe('venta handlers', () => {
       categoria_id: cat.id,
       impuesto_id: imp.id,
       unidad_venta: 'u',
-      precio_venta_lista: precio,
+      precio_venta_lista_centavos: Math.round(precio * 100),
     });
     stockEntradaHandler(db, { producto_id: prod.id, cantidad: stock });
     return { prod, imp, session };
@@ -344,10 +344,10 @@ describe('venta handlers', () => {
           eq(schema.movimiento_stock.producto_id, prod.id),
           eq(schema.movimiento_stock.motivo, 'venta'),
         )).get()!;
-      expect(mov.costo_unitario).toBe(500); // 50000 centavos / 100, sin bonif/flete/cost.fin.
+      expect(mov.costo_unitario_centavos).toBe(50000); // el costo del proveedor preferido, sin bonif/flete/cost.fin.
     });
 
-    it('sin proveedor preferido, costo_unitario sigue siendo null (comportamiento actual)', () => {
+    it('sin proveedor preferido, costo_unitario_centavos sigue siendo null (comportamiento actual)', () => {
       const { prod } = crearProductoConStock(10, 1000);
       const caja = abrirCaja();
       ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 1, 1000));
@@ -356,7 +356,7 @@ describe('venta handlers', () => {
           eq(schema.movimiento_stock.producto_id, prod.id),
           eq(schema.movimiento_stock.motivo, 'venta'),
         )).get()!;
-      expect(mov.costo_unitario).toBeNull();
+      expect(mov.costo_unitario_centavos).toBeNull();
     });
   });
 
