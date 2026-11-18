@@ -10,9 +10,9 @@ const mockStock  = vi.fn();
 const mockCaja   = vi.fn();
 
 const VENTAS_DATA = {
-  total_dia: 5000, count_dia: 3, ticket_promedio: 1666.67, importe_iva_dia: 867.77,
-  por_hora: [{ hora: 10, total: 5000 }],
-  por_forma_pago: [{ forma_pago: 'efectivo', total: 5000, count: 3 }],
+  total_dia_centavos: 500000, count_dia: 3, ticket_promedio_centavos: 166667, importe_iva_dia_centavos: 86777,
+  por_hora: [{ hora: 10, total_centavos: 500000 }],
+  por_forma_pago: [{ forma_pago: 'efectivo', total_centavos: 500000, count: 3 }],
   top_cantidad: [], top_margen: [],
 };
 const STOCK_DATA = { valor_inventario: 100000, sin_stock: [], bajo_minimo: [], sin_movimiento: [] };

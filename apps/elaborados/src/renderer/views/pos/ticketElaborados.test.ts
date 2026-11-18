@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { ticketDesdeVentaElaborados } from './ticketElaborados';
 
 const venta = (o: Record<string, unknown> = {}) => ({
-  numero_interno: 'V-C1-000007', fecha: 1760000000000, total: 810, descuento_global: 0, ajuste_redondeo: 0,
+  numero_interno: 'V-C1-000007', fecha: 1760000000000, total_centavos: 81000, descuento_global: 0, ajuste_redondeo_centavos: 0,
   estado: 'confirmada', ...o,
 });
 const linea = (o: Record<string, unknown> = {}) => ({
@@ -14,7 +14,7 @@ const cliente = { nombre: 'Consumidor Final' };
 describe('ticketDesdeVentaElaborados', () => {
   it('arma descripciones con y sin sabores y copia montos en centavos', () => {
     const t = ticketDesdeVentaElaborados(
-      { venta: venta({ total: 1900 }), lineas: [
+      { venta: venta({ total_centavos: 190000 }), lineas: [
         linea({ descripcion: 'Pote', precio_unitario_centavos: 100000, subtotal_centavos: 100000 }),
         linea({ descripcion: 'Cucurucho', precio_unitario_centavos: 90000, subtotal_centavos: 90000,
           modificadores: [{ descripcion: 'Choco', recargo_centavos: 0 }, { descripcion: 'DDL', recargo_centavos: 0 }] }),
@@ -31,7 +31,7 @@ describe('ticketDesdeVentaElaborados', () => {
 
   it('descuento global 10% sobre 90000 da 9000 y el ticket cierra', () => {
     const t = ticketDesdeVentaElaborados(
-      { venta: venta({ descuento_global: 10, total: 810, ajuste_redondeo: 0 }), lineas: [linea()] },
+      { venta: venta({ descuento_global: 10, total_centavos: 81000, ajuste_redondeo_centavos: 0 }), lineas: [linea()] },
       cliente, [{ medio: 'efectivo', montoCentavos: 81000 }],
     );
     expect(t.descuentoGlobalCentavos).toBe(9000);
@@ -49,7 +49,7 @@ describe('ticketDesdeVentaElaborados', () => {
   });
 
   it('incluye el IVA por alícuota', () => {
-    const t = ticketDesdeVentaElaborados({ venta: venta({ total: 900 }), lineas: [linea()] }, cliente, []);
+    const t = ticketDesdeVentaElaborados({ venta: venta({ total_centavos: 90000 }), lineas: [linea()] }, cliente, []);
     expect(t.ivaPorAlicuota).toHaveLength(1);
     expect(t.ivaPorAlicuota[0].alicuota).toBe(21);
     expect(t.ivaPorAlicuota[0].ivaCentavos).toBeGreaterThan(0);

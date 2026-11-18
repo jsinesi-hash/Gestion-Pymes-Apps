@@ -47,8 +47,8 @@ describe('proyección del costo promedio (Retail)', () => {
     const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
     ventaConfirmarHandler(db, {
       caja_id: caja.id, cliente_id: CF_ID,
-      lineas: [{ producto_id: a.id, descripcion: 'x', cantidad: 5, precio_unitario: 1000, descuento_linea: 0, alicuota_iva: 21, subtotal: 5000 }],
-      descuento_global: 0, subtotal: 5000, importe_iva: 867.77, total: 5000, ajuste_redondeo: 0,
+      lineas: [{ producto_id: a.id, descripcion: 'x', cantidad: 5, precio_unitario_centavos: 100000, descuento_linea: 0, alicuota_iva: 21, subtotal_centavos: 500000 }],
+      descuento_global: 0, subtotal_centavos: 500000, importe_iva_centavos: 86777, total_centavos: 500000, ajuste_redondeo_centavos: 0,
       pagos: [{ medio_pago: 'efectivo', monto_centavos: 500_000 }],
     });
     stockEntradaHandler(db, { producto_id: a.id, cantidad: 5, costo_unitario: 300 }); // (15·150 + 5·300) / 20

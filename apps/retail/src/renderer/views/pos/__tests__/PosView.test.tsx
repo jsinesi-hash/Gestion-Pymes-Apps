@@ -9,8 +9,8 @@ const mockCaja = { id: 'c-1', estado: 'abierta', monto_inicial_centavos: 0, usua
 const mockProd = { id: 'p-1', nombre_corto: 'Tornillo', activo: true, precio_venta_lista: 1000, impuesto_id: null, permite_fraccion: false };
 const mockEx = { producto_id: 'p-1', stock_fisico: 10 };
 const mockVentaResult = {
-  venta: { id: 'v-1', numero_interno: 'V-C1-000001', total: 1000, forma_pago: 'efectivo', fecha: new Date() },
-  detalles: [{ id: 'd-1', descripcion: 'Tornillo', cantidad: 1, precio_unitario: 1000, subtotal: 1000 }],
+  venta: { id: 'v-1', numero_interno: 'V-C1-000001', total_centavos: 100000, forma_pago: 'efectivo', fecha: new Date() },
+  detalles: [{ id: 'd-1', descripcion: 'Tornillo', cantidad: 1, precio_unitario_centavos: 100000, subtotal_centavos: 100000 }],
   comprobante: { tipo: 'ticket_interno' },
 };
 

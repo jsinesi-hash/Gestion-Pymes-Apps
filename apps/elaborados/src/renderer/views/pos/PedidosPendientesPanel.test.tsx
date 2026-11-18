@@ -8,7 +8,7 @@ import type { PedidoPendiente } from '../../hooks/usePedidosPendientes';
 const ahora = Date.now();
 const ped = (o: Partial<PedidoPendiente> = {}): PedidoPendiente => ({
   id: 'v1', alias: 'Marta', observaciones: 'Calle 1', en_espera_desde: new Date(ahora - 5 * 60_000),
-  turno_creacion_id: null, cliente_id: 'c1', total: 1500.5, count_items: 3, vencida: false, ...o,
+  turno_creacion_id: null, cliente_id: 'c1', total_centavos: 150050, count_items: 3, vencida: false, ...o,
 });
 const props = (o: Partial<ComponentProps<typeof PedidosPendientesPanel>> = {}) => ({
   pedidos: [ped()], pedidoActualId: null, carritoVacio: true, onRetomar: vi.fn(), onDescartar: vi.fn(), onCerrar: vi.fn(), error: null, ...o,

@@ -27,7 +27,7 @@ function crearCliente(db: Db) {
 function input(cajaId: string, clienteId: string, over: Partial<PausarVentaEsperaInput> = {}): PausarVentaEsperaInput {
   return {
     caja_id: cajaId, cliente_id: clienteId,
-    subtotal: 500, descuento_global: 0, importe_iva: 86.78, total: 500, ajuste_redondeo: 0,
+    subtotal_centavos: 50000, descuento_global: 0, importe_iva_centavos: 8678, total_centavos: 50000, ajuste_redondeo_centavos: 0,
     ...over,
   };
 }
@@ -63,8 +63,8 @@ describe('venta en espera (core)', () => {
       expect(v.observaciones).toBe('sin sal');
       expect(v.en_espera_desde).toBeInstanceOf(Date);
       expect(v.turno_creacion_id).toBe(caja.id);
-      expect(v.total).toBe(500);
-      expect(v.subtotal).toBe(500);
+      expect(v.total_centavos).toBe(50000);
+      expect(v.subtotal_centavos).toBe(50000);
       expect(v.forma_pago).toBe('efectivo');
       expect(aplicarLineas).toHaveBeenCalledTimes(1);
       expect(aplicarLineas.mock.calls[0][1]).toMatchObject({ ventaId: venta_id, esRetoma: false });
@@ -113,7 +113,7 @@ describe('venta en espera (core)', () => {
 
       // el tope (1) ya esta alcanzado: la actualizacion no lo aplica
       const r = pausarVentaEspera(db,
-        input(caja.id, clienteId, { venta_id, alias: 'B', total: 900, subtotal: 900 }), { aplicarLineas });
+        input(caja.id, clienteId, { venta_id, alias: 'B', total_centavos: 90000, subtotal_centavos: 90000 }), { aplicarLineas });
       expect(r.venta_id).toBe(venta_id);
 
       const filas = db.select().from(schema.venta).all();
@@ -123,7 +123,7 @@ describe('venta en espera (core)', () => {
       expect(desp.numero_interno).toBe(antes.numero_interno);
       expect(desp.en_espera_desde?.getTime()).toBe(antes.en_espera_desde?.getTime());
       expect(desp.alias).toBe('B');
-      expect(desp.total).toBe(900);
+      expect(desp.total_centavos).toBe(90000);
       expect(desp.version).toBe(antes.version + 1);
       expect(aplicarLineas).toHaveBeenCalledTimes(2);
       expect(aplicarLineas.mock.calls[1][1]).toMatchObject({ ventaId: venta_id, esRetoma: true });
@@ -131,14 +131,14 @@ describe('venta en espera (core)', () => {
 
     it('con venta_id: si el hook falla, la actualización hace rollback (encabezado intacto)', () => {
       const { caja, clienteId } = preparar();
-      const { venta_id } = pausarVentaEspera(db, input(caja.id, clienteId, { alias: 'A', total: 500, subtotal: 500 }), { aplicarLineas: vi.fn() });
+      const { venta_id } = pausarVentaEspera(db, input(caja.id, clienteId, { alias: 'A', total_centavos: 50000, subtotal_centavos: 50000 }), { aplicarLineas: vi.fn() });
       const antes = db.select().from(schema.venta).where(eq(schema.venta.id, venta_id)).get()!;
       expect(() => pausarVentaEspera(db,
-        input(caja.id, clienteId, { venta_id, alias: 'B', total: 900, subtotal: 900 }),
+        input(caja.id, clienteId, { venta_id, alias: 'B', total_centavos: 90000, subtotal_centavos: 90000 }),
         { aplicarLineas: () => { throw new Error('BOOM'); } })).toThrow('BOOM');
       const desp = db.select().from(schema.venta).where(eq(schema.venta.id, venta_id)).get()!;
       expect(desp.alias).toBe('A');
-      expect(desp.total).toBe(500);
+      expect(desp.total_centavos).toBe(50000);
       expect(desp.version).toBe(antes.version);
     });
 
@@ -162,7 +162,7 @@ describe('venta en espera (core)', () => {
 
       const { venta } = confirmarVenta(db, {
         caja_id: caja.id, cliente_id: clienteId,
-        subtotal: 500, descuento_global: 0, importe_iva: 86.78, total: 500, ajuste_redondeo: 0,
+        subtotal_centavos: 50000, descuento_global: 0, importe_iva_centavos: 8678, total_centavos: 50000, ajuste_redondeo_centavos: 0,
         pagos: [{ medio_pago: 'efectivo', monto_centavos: 50000 }],
       }, hooks);
       expect(() => pausarVentaEspera(db, input(caja.id, clienteId, { venta_id: venta.id }), hooks))
@@ -196,7 +196,7 @@ describe('venta en espera (core)', () => {
       descartarVentaEspera(db, c.venta_id);
       confirmarVenta(db, {
         caja_id: caja.id, cliente_id: clienteId,
-        subtotal: 500, descuento_global: 0, importe_iva: 86.78, total: 500, ajuste_redondeo: 0,
+        subtotal_centavos: 50000, descuento_global: 0, importe_iva_centavos: 8678, total_centavos: 50000, ajuste_redondeo_centavos: 0,
         pagos: [{ medio_pago: 'efectivo', monto_centavos: 50000 }],
       }, hooks);
       db.update(schema.venta).set({ en_espera_desde: new Date(Date.now() - 2 * 3600 * 1000) })
@@ -204,7 +204,7 @@ describe('venta en espera (core)', () => {
 
       const lista = listarVentasEspera(db, () => 3);
       expect(lista.map(x => x.id)).toEqual([b.venta_id, a.venta_id]);
-      expect(lista[0]).toMatchObject({ alias: 'vieja', vencida: true, total: 500, count_items: 3 });
+      expect(lista[0]).toMatchObject({ alias: 'vieja', vencida: true, total_centavos: 50000, count_items: 3 });
       expect(lista[1]).toMatchObject({ alias: 'reciente', observaciones: 'obs', vencida: false });
     });
 

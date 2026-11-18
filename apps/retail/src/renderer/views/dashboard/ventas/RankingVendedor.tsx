@@ -10,7 +10,7 @@ export function RankingVendedor({ data }: Props) {
   if (data.length === 0) {
     return <div className="text-muted text-xs" style={{ opacity: 0.5 }}>Sin datos</div>;
   }
-  const maxTotal = Math.max(...data.map(d => d.total), 1);
+  const maxTotal = Math.max(...data.map(d => d.total_centavos), 1);
   return (
     <div className="flex-col" style={{ gap: '0.5rem' }}>
       {data.map((v, i) => (
@@ -21,12 +21,12 @@ export function RankingVendedor({ data }: Props) {
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.nombre}</span>
             </span>
             <span style={{ flexShrink: 0, paddingLeft: '0.5rem' }}>
-              <span className="num" style={{ fontWeight: 700 }}>$ {fmt(v.total)}</span>
+              <span className="num" style={{ fontWeight: 700 }}>$ {fmt(v.total_centavos / 100)}</span>
               <span className="text-muted num" style={{ fontSize: '0.7rem', marginLeft: '0.3rem' }}>({v.count})</span>
             </span>
           </div>
           <div style={{ height: 5, borderRadius: 3, background: 'var(--line)', overflow: 'hidden' }}>
-            <div style={{ height: '100%', borderRadius: 3, background: 'var(--accent)', width: `${(v.total / maxTotal) * 100}%` }} />
+            <div style={{ height: '100%', borderRadius: 3, background: 'var(--accent)', width: `${(v.total_centavos / maxTotal) * 100}%` }} />
           </div>
         </div>
       ))}

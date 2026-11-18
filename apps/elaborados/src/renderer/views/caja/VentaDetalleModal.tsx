@@ -6,7 +6,7 @@ type Linea = {
   id: string; descripcion: string; cantidad: number; subtotal_centavos: number; modificadores: Modificador[];
 };
 type Detalle = {
-  venta: { numero_interno: string; fecha: number; total: number; estado: string };
+  venta: { numero_interno: string; fecha: number; total_centavos: number; estado: string };
   lineas: Linea[];
   cliente: { nombre_completo: string } | null;
 };
@@ -64,7 +64,7 @@ export function VentaDetalleModal({ ventaId, onClose }: Readonly<Props>) {
                 })}
               </ul>
               <p style={{ textAlign: 'right' }}>
-                Total: <strong className="num">{formatPesos(Math.round(detalle.venta.total * 100))}</strong>
+                Total: <strong className="num">{formatPesos(detalle.venta.total_centavos)}</strong>
               </p>
             </>
           )}

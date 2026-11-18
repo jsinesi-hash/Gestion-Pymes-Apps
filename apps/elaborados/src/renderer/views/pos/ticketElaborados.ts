@@ -1,8 +1,8 @@
 import { ivaPorAlicuota, type ComprobantePayload, type ItemComprobante, type PagoComprobante } from '@ferreteria/shared';
 
 type VentaElaborados = {
-  numero_interno: string; fecha: string | number | Date; total: number;
-  descuento_global: number; ajuste_redondeo: number; estado?: string;
+  numero_interno: string; fecha: string | number | Date; total_centavos: number;
+  descuento_global: number; ajuste_redondeo_centavos: number; estado?: string;
 };
 type LineaElaborados = {
   descripcion: string; cantidad: number; precio_unitario_centavos: number; descuento_linea_pct?: number;
@@ -11,9 +11,7 @@ type LineaElaborados = {
 };
 export type ResultadoVentaElaborados = { venta: VentaElaborados; lineas: LineaElaborados[] };
 
-const centavos = (pesos: number) => Math.round(pesos * 100);
-
-/** Adaptador: resultado de `venta:confirmar` de Elaborados → B1. Las líneas ya vienen en centavos; la cabecera legada en pesos. */
+/** Adaptador: resultado de `venta:confirmar` de Elaborados → B1. Todo viene en centavos (ADR-157). */
 export function ticketDesdeVentaElaborados(
   r: ResultadoVentaElaborados,
   cliente: { nombre: string },
@@ -39,8 +37,8 @@ export function ticketDesdeVentaElaborados(
     items,
     ivaPorAlicuota: ivaPorAlicuota(items, descuentoGlobalCentavos),
     descuentoGlobalCentavos,
-    ajusteRedondeoCentavos: centavos(r.venta.ajuste_redondeo),
-    totalCentavos: centavos(r.venta.total),
+    ajusteRedondeoCentavos: r.venta.ajuste_redondeo_centavos,
+    totalCentavos: r.venta.total_centavos,
     pagos,
     anulado: r.venta.estado === 'anulada',
   };

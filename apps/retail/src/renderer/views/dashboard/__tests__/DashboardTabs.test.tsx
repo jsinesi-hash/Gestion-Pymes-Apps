@@ -23,12 +23,12 @@ vi.mock('recharts', () => ({
 }));
 
 const VENTAS_DATA = {
-  total_dia: 5000, count_dia: 3, ticket_promedio: 1666.67, importe_iva_dia: 867,
+  total_dia_centavos: 500000, count_dia: 3, ticket_promedio_centavos: 166667, importe_iva_dia_centavos: 86700,
   por_hora: [], por_forma_pago: [], top_cantidad: [], top_margen: [],
 };
 const STOCK_DATA  = { valor_inventario: 100000, sin_stock: [], bajo_minimo: [], sin_movimiento: [] };
 const CAJA_DATA   = { caja_activa: null, ingresos_dia_centavos: 0, egresos_dia_centavos: 0, efectivo_esperado_centavos: 0, arqueos_recientes: [], umbral_diferencia_caja_centavos: 5000000 };
-const KPIS_RANGO  = { total: 0, count: 0, ticket_promedio: 0, importe_iva: 0, por_forma_pago: [], top_cantidad: [], top_margen: [] };
+const KPIS_RANGO  = { total_centavos: 0, count: 0, ticket_promedio_centavos: 0, importe_iva_centavos: 0, por_forma_pago: [], top_cantidad: [], top_margen: [] };
 
 function mockSession(): SessionData {
   return {

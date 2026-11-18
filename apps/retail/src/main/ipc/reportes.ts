@@ -33,15 +33,16 @@ export type ReporteVentasRow = {
   cliente_nombre_completo: string;
   vendedor_nombre: string;
   medios_pago: string;
-  subtotal: number;
-  importe_iva: number;
-  total: number;
+  /** ADR-157: importes en centavos. */
+  subtotal_centavos: number;
+  importe_iva_centavos: number;
+  total_centavos: number;
 }
 
 export interface ReporteVentasResult {
   rows: ReporteVentasRow[];
   total: number;
-  totalImporte: number;
+  totalImporteCentavos: number;
   page: number;
   totalPages: number;
 }
@@ -55,11 +56,11 @@ export type VentaDetalleExportRow = {
   descripcion: string;
   categoria_nombre: string;
   cantidad: number;
-  precio_unitario: number;
+  precio_unitario_centavos: number;
   descuento_linea: number;
   alicuota_iva: number;
-  subtotal_linea: number;
-  total_venta: number;
+  subtotal_linea_centavos: number;
+  total_venta_centavos: number;
 }
 
 function getSqlite(db: Db): SqliteDb {
@@ -138,8 +139,8 @@ const SORT_COL_MAP: Record<string, string> = {
   numero_interno:  'v.numero_interno',
   cliente:         "(c.nombre || ' ' || COALESCE(c.apellido, ''))",
   vendedor:        'u.nombre_completo',
-  total:           'v.total',
-  importe_iva:     'v.importe_iva',
+  total:           'v.total_centavos',
+  importe_iva:     'v.importe_iva_centavos',
 };
 
 function buildOrderBy(sortCol?: string, sortDir?: string): string {
@@ -155,7 +156,7 @@ const CABECERA_SQL = `
     c.apellido      AS cliente_apellido_raw,
     u.nombre_completo AS vendedor_nombre,
     COALESCE(GROUP_CONCAT(DISTINCT vp.medio_pago), v.forma_pago) AS medios_pago,
-    v.subtotal, v.importe_iva, v.total
+    v.subtotal_centavos, v.importe_iva_centavos, v.total_centavos
   FROM venta v
   JOIN cliente c ON c.id = v.cliente_id
   JOIN usuario u ON u.id = v.usuario_id
@@ -177,12 +178,12 @@ export function detalleVentasHandler(
   const orderBy = buildOrderBy(filtros.sortCol, filtros.sortDir);
 
   const count = sqlite.prepare(`
-    SELECT COUNT(*) AS total, COALESCE(SUM(v.total), 0) AS totalImporte
+    SELECT COUNT(*) AS total, COALESCE(SUM(v.total_centavos), 0) AS totalImporteCentavos
     FROM venta v
     JOIN cliente c ON c.id = v.cliente_id
     JOIN usuario u ON u.id = v.usuario_id
     WHERE ${where}
-  `).get(params) as { total: number; totalImporte: number };
+  `).get(params) as { total: number; totalImporteCentavos: number };
 
   const offset = (page - 1) * pageSize;
   const rawRows = sqlite.prepare(
@@ -193,7 +194,7 @@ export function detalleVentasHandler(
   return {
     rows,
     total: count.total,
-    totalImporte: count.totalImporte,
+    totalImporteCentavos: count.totalImporteCentavos,
     page,
     totalPages: Math.max(1, Math.ceil(count.total / pageSize)),
   };
@@ -217,9 +218,9 @@ export function reporteVentasDetalleQueryAll(db: Db, filtros: ReporteVentasFiltr
       u.nombre_completo AS vendedor_nombre,
       p.sku, vd.descripcion,
       cat.nombre       AS categoria_nombre,
-      vd.cantidad, vd.precio_unitario, vd.descuento_linea, vd.alicuota_iva,
-      vd.subtotal      AS subtotal_linea,
-      v.total          AS total_venta
+      vd.cantidad, vd.precio_unitario_centavos, vd.descuento_linea, vd.alicuota_iva,
+      vd.subtotal_centavos AS subtotal_linea_centavos,
+      v.total_centavos     AS total_venta_centavos
     FROM venta v
     JOIN cliente c  ON c.id  = v.cliente_id
     JOIN usuario u  ON u.id  = v.usuario_id

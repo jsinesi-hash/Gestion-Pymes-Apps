@@ -25,15 +25,15 @@ const ventaMock = {
   id: 'v-1',
   numero_interno: 'V-C1-000001',
   fecha: new Date('2026-07-14T09:42:00'),
-  total: 4850,
+  total_centavos: 485000,
   estado: 'confirmada',
   forma_pago: 'efectivo',
   cliente_nombre: 'Consumidor Final',
 };
 
 const mockVentaGet = vi.fn().mockResolvedValue({
-  venta: { ...ventaMock, descuento_global: 0, ajuste_redondeo: 0 },
-  detalles: [{ id: 'd-1', descripcion: 'Tornillo', cantidad: 1, precio_unitario: 4850, subtotal: 4850 }],
+  venta: { ...ventaMock, descuento_global: 0, ajuste_redondeo_centavos: 0 },
+  detalles: [{ id: 'd-1', descripcion: 'Tornillo', cantidad: 1, precio_unitario_centavos: 485000, subtotal_centavos: 485000 }],
   comprobante: { tipo: 'ticket_interno' },
   cliente: { nombre_completo: 'Consumidor Final' },
 });

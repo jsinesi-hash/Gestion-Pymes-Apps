@@ -1,6 +1,7 @@
 import type { DefinicionExport } from '../types';
 import { ars, fecha } from '../helpers';
 
+// ADR-157: las consultas devuelven centavos; el archivo muestra pesos.
 export const exportVentas: DefinicionExport<any> = {
   entidad: 'ventas',
   label: 'Ventas',
@@ -18,7 +19,7 @@ export const exportVentas: DefinicionExport<any> = {
         { campo: 'cliente_nombre', label: 'Cliente', formato: (v) => v ?? '' },
         { campo: 'cajero_nombre',  label: 'Cajero',  formato: (v) => v ?? '' },
         { campo: 'forma_pago', label: 'Medio pago' },
-        { campo: 'total', label: 'Total', formato: ars, formatoXlsx: (v) => v },
+        { campo: 'total_centavos', label: 'Total', formato: (v) => ars(v / 100), formatoXlsx: (v) => v / 100 },
         { campo: 'estado', label: 'Estado' },
       ],
     },
@@ -35,10 +36,10 @@ export const exportVentas: DefinicionExport<any> = {
         { campo: 'descripcion', label: 'Descripción' },
         { campo: 'cantidad', label: 'Cantidad',
           formato: (v) => v ?? 0, formatoXlsx: (v) => v ?? 0 },
-        { campo: 'precio_unitario', label: 'Precio unit.',
-          formato: ars, formatoXlsx: (v) => v },
-        { campo: 'subtotal', label: 'Subtotal',
-          formato: ars, formatoXlsx: (v) => v },
+        { campo: 'precio_unitario_centavos', label: 'Precio unit.',
+          formato: (v) => ars(v / 100), formatoXlsx: (v) => v / 100 },
+        { campo: 'subtotal_centavos', label: 'Subtotal',
+          formato: (v) => ars(v / 100), formatoXlsx: (v) => v / 100 },
       ],
     },
   ],

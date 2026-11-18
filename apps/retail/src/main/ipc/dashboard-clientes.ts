@@ -15,7 +15,7 @@ const CF_ID = 'cf000000-0000-0000-0000-000000000001';
 export type ClienteRankingEntry = {
   cliente_id: string;
   nombre_completo: string;
-  total_facturado: number;
+  total_facturado_centavos: number; // ADR-157
   count_ventas: number;
 };
 
@@ -42,7 +42,7 @@ export function dashboardClientesRangoHandler(
     cliente_id:      schema.venta.cliente_id,
     nombre:          schema.cliente.nombre,
     apellido:        schema.cliente.apellido,
-    total_facturado: sql<number>`sum(${schema.venta.total})`,
+    total_facturado_centavos: sql<number>`sum(${schema.venta.total_centavos})`,
     count_ventas:    sql<number>`count(*)`,
   }).from(schema.venta)
     .innerJoin(schema.cliente, eq(schema.venta.cliente_id, schema.cliente.id))
@@ -52,7 +52,7 @@ export function dashboardClientesRangoHandler(
       lte(schema.venta.fecha, hasta),
     ))
     .groupBy(schema.venta.cliente_id)
-    .orderBy(desc(sql`sum(${schema.venta.total})`))
+    .orderBy(desc(sql`sum(${schema.venta.total_centavos})`))
     .limit(10)
     .all()
     .map(({ nombre, apellido, ...r }) => ({ ...r, nombre_completo: nombreCompletoCliente({ nombre, apellido }) }));

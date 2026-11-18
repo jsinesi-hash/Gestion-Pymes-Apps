@@ -10,7 +10,7 @@ export function ventaListByCajaHandler(db: VentaDb, payload: { caja_id: string }
     id: schema.venta.id,
     numero_interno: schema.venta.numero_interno,
     fecha: schema.venta.fecha,
-    total: schema.venta.total,
+    total_centavos: schema.venta.total_centavos,
     estado: schema.venta.estado,
     forma_pago: schema.venta.forma_pago,
     cliente_nombre_raw: schema.cliente.nombre,

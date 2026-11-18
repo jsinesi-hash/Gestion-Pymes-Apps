@@ -145,9 +145,9 @@ describe('ventaQueryAll', () => {
     ventaConfirmarHandler(db, {
       caja_id: caja.id, cliente_id: CF_ID,
       lineas: [{ producto_id: prod.id, descripcion: 'Tornillo', cantidad: 1,
-        precio_unitario: 1000, descuento_linea: 0, alicuota_iva: 21, subtotal: 1000 }],
-      descuento_global: 0, subtotal: 1000, importe_iva: 173.55,
-      total: 1000, ajuste_redondeo: 0,
+        precio_unitario_centavos: 100000, descuento_linea: 0, alicuota_iva: 21, subtotal_centavos: 100000 }],
+      descuento_global: 0, subtotal_centavos: 100000, importe_iva_centavos: 17355,
+      total_centavos: 100000, ajuste_redondeo_centavos: 0,
       pagos: [{ medio_pago: 'efectivo', monto_centavos: 100000 }],
     });
     return { prod, caja };
@@ -161,7 +161,7 @@ describe('ventaQueryAll', () => {
     expect(row).toHaveProperty('numero_interno');
     expect(row).toHaveProperty('cliente_nombre');
     expect(row).toHaveProperty('cajero_nombre');
-    expect(row).toHaveProperty('total');
+    expect(row).toHaveProperty('total_centavos');
     expect(row.estado).toBe('confirmada');
   });
 
@@ -187,9 +187,9 @@ describe('ventaDetalladoQueryAll', () => {
     ventaConfirmarHandler(db, {
       caja_id: caja.id, cliente_id: CF_ID,
       lineas: [{ producto_id: prod.id, descripcion: 'Tornillo', cantidad: 2,
-        precio_unitario: 1000, descuento_linea: 0, alicuota_iva: 21, subtotal: 2000 }],
-      descuento_global: 0, subtotal: 2000, importe_iva: 347.11,
-      total: 2000, ajuste_redondeo: 0,
+        precio_unitario_centavos: 100000, descuento_linea: 0, alicuota_iva: 21, subtotal_centavos: 200000 }],
+      descuento_global: 0, subtotal_centavos: 200000, importe_iva_centavos: 34711,
+      total_centavos: 200000, ajuste_redondeo_centavos: 0,
       pagos: [{ medio_pago: 'efectivo', monto_centavos: 200000 }],
     });
     const rows = ventaDetalladoQueryAll(db);

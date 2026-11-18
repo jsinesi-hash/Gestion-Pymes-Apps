@@ -18,21 +18,22 @@ function payloadComoElPos(lineas: LineaPos[], descuentoGlobalPct: number): Total
     descuentoGlobalPct,
   });
   const red = redondearPeso(r.totalCentavos);
+  // ADR-157: el POS manda centavos; el IVA, redondeado al centavo.
   const lp = lineas.map((l, i) => ({
     cantidad: l.cantidad,
-    precio_unitario: r.lineas[i]!.precioUnitarioCentavos / 100,
+    precio_unitario_centavos: r.lineas[i]!.precioUnitarioCentavos,
     descuento_linea: l.descuentoLineaPct,
     alicuota_iva: l.alicuota,
-    subtotal: r.lineas[i]!.subtotalCentavos / 100,
+    subtotal_centavos: r.lineas[i]!.subtotalCentavos,
   }));
-  const importe_iva = lp.reduce((s, l) => s + l.subtotal * l.alicuota_iva / (100 + l.alicuota_iva), 0);
+  const importe_iva_centavos = Math.round(lp.reduce((s, l) => s + l.subtotal_centavos * l.alicuota_iva / (100 + l.alicuota_iva), 0));
   return {
     lineas: lp,
     descuento_global: descuentoGlobalPct,
-    subtotal: r.subtotalCentavos / 100,
-    importe_iva,
-    total: red.totalCentavos / 100,
-    ajuste_redondeo: red.ajusteRedondeoCentavos / 100,
+    subtotal_centavos: r.subtotalCentavos,
+    importe_iva_centavos,
+    total_centavos: red.totalCentavos,
+    ajuste_redondeo_centavos: red.ajusteRedondeoCentavos,
   };
 }
 
@@ -47,9 +48,9 @@ describe('verificarTotalesVenta — payload honesto', () => {
     expect(() => verificarTotalesVenta(payloadComoElPos(CARRITO, 7.5))).not.toThrow();
   });
 
-  it('acepta el payload con importes redondeados a 2 decimales (como en los tests de venta)', () => {
+  it('rechaza importes con fracción de centavo (deben ser enteros)', () => {
     const p = payloadComoElPos(CARRITO, 0);
-    expect(() => verificarTotalesVenta({ ...p, importe_iva: Math.round(p.importe_iva * 100) / 100 })).not.toThrow();
+    expect(() => verificarTotalesVenta({ ...p, importe_iva_centavos: p.importe_iva_centavos + 0.5 })).toThrow('TOTALES_INCONSISTENTES');
   });
 
   it('acepta 300 carritos pseudoaleatorios armados con la fórmula del POS', () => {
@@ -76,34 +77,34 @@ describe('verificarTotalesVenta — adulteraciones', () => {
 
   it('rechaza un subtotal de línea que no es precio × cantidad', () => {
     const p = base();
-    p.lineas[0] = { ...p.lineas[0]!, subtotal: p.lineas[0]!.subtotal - 100 };
+    p.lineas[0] = { ...p.lineas[0]!, subtotal_centavos: p.lineas[0]!.subtotal_centavos - 10000 };
     expect(() => verificarTotalesVenta(p)).toThrow('TOTALES_INCONSISTENTES');
   });
 
   it('rechaza un subtotal general distinto de la suma de las líneas', () => {
     const p = base();
-    expect(() => verificarTotalesVenta({ ...p, subtotal: p.subtotal - 1 })).toThrow('TOTALES_INCONSISTENTES');
+    expect(() => verificarTotalesVenta({ ...p, subtotal_centavos: p.subtotal_centavos - 1 })).toThrow('TOTALES_INCONSISTENTES');
   });
 
   it('rechaza un total distinto del subtotal con descuento global redondeado al peso', () => {
     const p = base();
-    expect(() => verificarTotalesVenta({ ...p, total: p.total - 500 })).toThrow('TOTALES_INCONSISTENTES');
+    expect(() => verificarTotalesVenta({ ...p, total_centavos: p.total_centavos - 50000 })).toThrow('TOTALES_INCONSISTENTES');
   });
 
   it('rechaza un total sin redondear (no múltiplo de $1) aunque el ajuste lo acompañe', () => {
     const p = payloadComoElPos([{ precioListaCentavos: 10050, ajustePct: 0, descuentoLineaPct: 0, cantidad: 1, alicuota: 21 }], 0);
-    expect(() => verificarTotalesVenta({ ...p, total: 100.5, ajuste_redondeo: 0 })).toThrow('TOTALES_INCONSISTENTES');
+    expect(() => verificarTotalesVenta({ ...p, total_centavos: 10050, ajuste_redondeo_centavos: 0 })).toThrow('TOTALES_INCONSISTENTES');
   });
 
   it('rechaza un ajuste de redondeo falso', () => {
     const p = base();
-    expect(() => verificarTotalesVenta({ ...p, ajuste_redondeo: p.ajuste_redondeo + 0.3 })).toThrow('TOTALES_INCONSISTENTES');
+    expect(() => verificarTotalesVenta({ ...p, ajuste_redondeo_centavos: p.ajuste_redondeo_centavos + 30 })).toThrow('TOTALES_INCONSISTENTES');
   });
 
-  it('rechaza un IVA que difiere en más de 1 centavo y tolera hasta 1', () => {
+  it('rechaza un IVA que difiere en 2 centavos o más; el redondeo al centavo se acepta', () => {
     const p = base();
-    expect(() => verificarTotalesVenta({ ...p, importe_iva: p.importe_iva + 0.5 })).toThrow('TOTALES_INCONSISTENTES');
-    expect(() => verificarTotalesVenta({ ...p, importe_iva: p.importe_iva + 0.01 })).not.toThrow();
+    expect(() => verificarTotalesVenta(p)).not.toThrow();
+    expect(() => verificarTotalesVenta({ ...p, importe_iva_centavos: p.importe_iva_centavos + 2 })).toThrow('TOTALES_INCONSISTENTES');
   });
 
   it('rechaza un descuento global que no coincide con el usado en el total', () => {
@@ -131,9 +132,9 @@ describe('verificarTotalesVenta — rangos', () => {
     expect(() => verificarTotalesVenta(p)).toThrow('CANTIDAD_INVALIDA');
   });
 
-  it.each([-1, Number.NaN])('precio_unitario %s → PRECIO_INVALIDO', (pu) => {
+  it.each([-1, Number.NaN, 12.5])('precio_unitario_centavos %s → PRECIO_INVALIDO', (pu) => {
     const p = base();
-    p.lineas[0] = { ...p.lineas[0]!, precio_unitario: pu };
+    p.lineas[0] = { ...p.lineas[0]!, precio_unitario_centavos: pu };
     expect(() => verificarTotalesVenta(p)).toThrow('PRECIO_INVALIDO');
   });
 

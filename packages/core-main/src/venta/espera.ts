@@ -12,11 +12,11 @@ export type PausarVentaEsperaInput = {
   venta_id?: string;
   caja_id: string;
   cliente_id: string;
-  subtotal: number;
+  subtotal_centavos: number;
   descuento_global: number;
-  importe_iva: number;
-  total: number;
-  ajuste_redondeo: number;
+  importe_iva_centavos: number;
+  total_centavos: number;
+  ajuste_redondeo_centavos: number;
   alias?: string;
   observaciones?: string;
 };
@@ -32,7 +32,7 @@ export type VentaEsperaResumen = {
   en_espera_desde: Date | null;
   turno_creacion_id: string | null;
   cliente_id: string;
-  total: number;
+  total_centavos: number;
   count_items: number;
   vencida: boolean;
 };
@@ -72,11 +72,11 @@ export function pausarVentaEspera(
       tx.update(schema.venta).set({
         caja_id: input.caja_id,
         cliente_id: input.cliente_id,
-        subtotal: input.subtotal,
+        subtotal_centavos: input.subtotal_centavos,
         descuento_global: input.descuento_global,
-        importe_iva: input.importe_iva,
-        total: input.total,
-        ajuste_redondeo: input.ajuste_redondeo,
+        importe_iva_centavos: input.importe_iva_centavos,
+        total_centavos: input.total_centavos,
+        ajuste_redondeo_centavos: input.ajuste_redondeo_centavos,
         alias: input.alias ?? null,
         observaciones: input.observaciones ?? null,
         usuario_modificacion_id: session.userId,
@@ -110,11 +110,11 @@ export function pausarVentaEspera(
       cliente_id: input.cliente_id,
       usuario_id: session.userId,
       caja_id: input.caja_id,
-      subtotal: input.subtotal,
+      subtotal_centavos: input.subtotal_centavos,
       descuento_global: input.descuento_global,
-      importe_iva: input.importe_iva,
-      total: input.total,
-      ajuste_redondeo: input.ajuste_redondeo,
+      importe_iva_centavos: input.importe_iva_centavos,
+      total_centavos: input.total_centavos,
+      ajuste_redondeo_centavos: input.ajuste_redondeo_centavos,
       forma_pago: 'efectivo',
       estado: 'en_espera',
       alias: input.alias ?? null,
@@ -189,7 +189,7 @@ export function listarVentasEspera(
           : null,
       turno_creacion_id: v.turno_creacion_id ?? null,
       cliente_id: v.cliente_id,
-      total: v.total,
+      total_centavos: v.total_centavos,
       count_items: contarItems(v.id),
       vencida,
     };

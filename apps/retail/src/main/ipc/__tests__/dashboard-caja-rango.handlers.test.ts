@@ -39,9 +39,9 @@ function crearProductoYCaja(db: Db) {
 function makeEfectivoPayload(cajaId: string, prodId: string, total = 1000): VentaConfirmarPayload {
   return {
     caja_id: cajaId, cliente_id: CF_ID,
-    lineas: [{ producto_id: prodId, descripcion: 'Prod', cantidad: 1, precio_unitario: total, descuento_linea: 0, alicuota_iva: 21, subtotal: total }],
-    descuento_global: 0, subtotal: total, importe_iva: Math.round(total * 21 / 121 * 100) / 100,
-    total, ajuste_redondeo: 0,
+    lineas: [{ producto_id: prodId, descripcion: 'Prod', cantidad: 1, precio_unitario_centavos: Math.round(total * 100), descuento_linea: 0, alicuota_iva: 21, subtotal_centavos: Math.round(total * 100) }],
+    descuento_global: 0, subtotal_centavos: Math.round(total * 100), importe_iva_centavos: Math.round(total * 100 * 21 / 121),
+    total_centavos: Math.round(total * 100), ajuste_redondeo_centavos: 0,
     pagos: [{ medio_pago: 'efectivo', monto_centavos: total * 100, recargo_pct: 0, recargo_centavos: 0 }],
   };
 }
@@ -50,9 +50,9 @@ function makeTarjetaPayload(cajaId: string, prodId: string, total = 2000, recarg
   const recargoCentavos = Math.round(total * 100 * recargoPct / 100);
   return {
     caja_id: cajaId, cliente_id: CF_ID,
-    lineas: [{ producto_id: prodId, descripcion: 'Prod', cantidad: 2, precio_unitario: total / 2, descuento_linea: 0, alicuota_iva: 21, subtotal: total }],
-    descuento_global: 0, subtotal: total, importe_iva: Math.round(total * 21 / 121 * 100) / 100,
-    total, ajuste_redondeo: 0,
+    lineas: [{ producto_id: prodId, descripcion: 'Prod', cantidad: 2, precio_unitario_centavos: Math.round(total * 100 / 2), descuento_linea: 0, alicuota_iva: 21, subtotal_centavos: Math.round(total * 100) }],
+    descuento_global: 0, subtotal_centavos: Math.round(total * 100), importe_iva_centavos: Math.round(total * 100 * 21 / 121),
+    total_centavos: Math.round(total * 100), ajuste_redondeo_centavos: 0,
     pagos: [{ medio_pago: 'tarjeta', monto_centavos: total * 100, recargo_pct: recargoPct, recargo_centavos: recargoCentavos }],
   };
 }

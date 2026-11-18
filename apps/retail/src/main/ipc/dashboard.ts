@@ -12,15 +12,17 @@ const vdViva = () => isNull(schema.venta_detalle.deleted_at);
 type Db = BetterSQLite3Database<typeof schema>;
 
 export type TopCantidad = { producto_id: string; nombre: string; cantidad: number };
-export type TopMargen = { producto_id: string; nombre: string; margen_estimado: number };
+/** ADR-157: margen en centavos (el costo del producto se convierte ×100 hasta el PR-C3). */
+export type TopMargen = { producto_id: string; nombre: string; margen_estimado_centavos: number };
 
+// ADR-157: montos en centavos.
 export type DashboardVentas = {
-  total_dia: number;
+  total_dia_centavos: number;
   count_dia: number;
-  ticket_promedio: number;
-  importe_iva_dia: number;
-  por_hora: { hora: number; total: number }[];
-  por_forma_pago: { forma_pago: string; total: number; count: number }[];
+  ticket_promedio_centavos: number;
+  importe_iva_dia_centavos: number;
+  por_hora: { hora: number; total_centavos: number }[];
+  por_forma_pago: { forma_pago: string; total_centavos: number; count: number }[];
   top_cantidad: TopCantidad[];
   top_margen: TopMargen[];
 };
@@ -67,24 +69,24 @@ export function dashboardVentasHandler(db: Db): DashboardVentas {
   );
 
   const totales = db.select({
-    total_dia:       sql<number>`coalesce(sum(${schema.venta.total}), 0)`,
+    total_dia_centavos: sql<number>`coalesce(sum(${schema.venta.total_centavos}), 0)`,
     count_dia:       sql<number>`count(*)`,
-    importe_iva_dia: sql<number>`coalesce(sum(${schema.venta.importe_iva}), 0)`,
+    importe_iva_dia_centavos: sql<number>`coalesce(sum(${schema.venta.importe_iva_centavos}), 0)`,
   }).from(schema.venta).where(baseWhere).get()!;
 
   const count_dia = totales.count_dia ?? 0;
-  const total_dia = totales.total_dia ?? 0;
+  const total_dia_centavos = totales.total_dia_centavos ?? 0;
 
   const por_hora = db.select({
     hora:  sql<number>`CAST(strftime('%H', datetime(${schema.venta.fecha}, 'unixepoch', 'localtime')) AS INTEGER)`,
-    total: sql<number>`sum(${schema.venta.total})`,
+    total_centavos: sql<number>`sum(${schema.venta.total_centavos})`,
   }).from(schema.venta).where(baseWhere)
     .groupBy(sql`CAST(strftime('%H', datetime(${schema.venta.fecha}, 'unixepoch', 'localtime')) AS INTEGER)`)
     .all();
 
   const por_forma_pago = db.select({
     forma_pago: schema.venta.forma_pago,
-    total:      sql<number>`sum(${schema.venta.total})`,
+    total_centavos: sql<number>`sum(${schema.venta.total_centavos})`,
     count:      sql<number>`count(*)`,
   }).from(schema.venta).where(baseWhere).groupBy(schema.venta.forma_pago).all();
 
@@ -103,19 +105,19 @@ export function dashboardVentasHandler(db: Db): DashboardVentas {
   const top_margen = db.select({
     producto_id:     schema.venta_detalle.producto_id,
     nombre:          schema.producto.nombre_corto,
-    margen_estimado: sql<number>`sum((${schema.venta_detalle.precio_unitario} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio}) * ${schema.venta_detalle.cantidad})`,
+    margen_estimado_centavos: sql<number>`CAST(ROUND(sum((${schema.venta_detalle.precio_unitario_centavos} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio} * 100.0) * ${schema.venta_detalle.cantidad})) AS INTEGER)`,
   }).from(schema.venta_detalle)
     .innerJoin(schema.venta, eq(schema.venta_detalle.venta_id, schema.venta.id))
     .innerJoin(schema.producto, eq(schema.venta_detalle.producto_id, schema.producto.id))
     .where(and(baseWhere, vdViva()))
     .groupBy(schema.venta_detalle.producto_id)
-    .orderBy(desc(sql`sum((${schema.venta_detalle.precio_unitario} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio}) * ${schema.venta_detalle.cantidad})`))
+    .orderBy(desc(sql`sum((${schema.venta_detalle.precio_unitario_centavos} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio} * 100.0) * ${schema.venta_detalle.cantidad})`))
     .limit(5).all();
 
   return {
-    total_dia, count_dia,
-    ticket_promedio: count_dia > 0 ? total_dia / count_dia : 0,
-    importe_iva_dia: totales.importe_iva_dia ?? 0,
+    total_dia_centavos, count_dia,
+    ticket_promedio_centavos: count_dia > 0 ? Math.round(total_dia_centavos / count_dia) : 0,
+    importe_iva_dia_centavos: totales.importe_iva_dia_centavos ?? 0,
     por_hora, por_forma_pago, top_cantidad, top_margen,
   };
 }

@@ -312,11 +312,10 @@ No se puede desactivar el último Supervisor activo. Roles base con `es_sistema 
 >   `movimiento_cuenta_corriente`, `producto_proveedor`, `lista_precio_valor`,
 >   `promocion`, `recalculo_masivo`, `cambio_programado`, `orden_compra`, `item_oc`,
 >   `recepcion_detalle`, `comprobante_compra`, `presupuesto`, `presupuesto_detalle`,
->   `importacion_costo_proveedor_detalle`, `caja` y `movimiento_caja` (`*_centavos`, ADR-157
->   PR-C1). **Toda tabla nueva va en centavos.**
-> - **Pesos (REAL), deuda legacy en migración (serie de centavos, ADR-157):** `venta`,
->   `venta_detalle`, `comprobante`, `producto` (`precio_*`; `margen_ganancia` es porcentaje)
->   y `movimiento_stock.costo_unitario`. No agregar columnas nuevas de dinero en `real`.
+>   `importacion_costo_proveedor_detalle`, `caja`, `movimiento_caja` (ADR-157 PR-C1), `venta`,
+>   `venta_detalle` y `comprobante` (`*_centavos`, ADR-157 PR-C2). **Toda tabla nueva va en centavos.**
+> - **Pesos (REAL), deuda legacy en migración (serie de centavos, ADR-157):** `producto`
+>   (`precio_*`; `margen_ganancia` es porcentaje) y `movimiento_stock.costo_unitario`. No agregar columnas nuevas de dinero en `real`.
 >
 > Los porcentajes son `real` en todos lados (`*_pct`, `alicuota_iva`,
 > `ajuste_porcentual`, `descuento_*`) — son porcentajes, no montos.
@@ -394,8 +393,8 @@ sin `activo`** — es dato de referencia, no dato de usuario.
 ### Ventas (`schema/ventas.ts` — 6 tablas)
 
 - **`venta`**: `id`, `numero_interno` (`V-C1-000001`, único), `fecha`, `cliente_id`,
-  `usuario_id`, `caja_id`, `subtotal`, `descuento_global`, `importe_iva`, `total`
-  (redondeado), `ajuste_redondeo`, `vuelto_centavos`, `forma_pago`, `estado`, `alias`,
+  `usuario_id`, `caja_id`, `subtotal_centavos`, `descuento_global` (porcentaje),
+  `importe_iva_centavos`, `total_centavos` (redondeado), `ajuste_redondeo_centavos`, `vuelto_centavos`, `forma_pago`, `estado`, `alias`,
   `en_espera_desde`, `turno_creacion_id`, `comprobante_id`, `presupuesto_id`,
   `observaciones`, auditoría, sync.
   - `estado`: `borrador`|`confirmada`|`anulada`|**`en_espera`**|**`descartada`**
@@ -408,8 +407,8 @@ sin `activo`** — es dato de referencia, no dato de usuario.
   - `presupuesto_id` se completa al convertir (ADR-046). Es TEXT sin `.references()` en
     Drizzle para romper la circularidad; la FK real está en la migración 0025.
 - **`venta_detalle`**: `id`, `venta_id`, `producto_id`, `descripcion` (snapshot),
-  `cantidad`, `precio_unitario` (snapshot), `descuento_linea`, `alicuota_iva` (snapshot),
-  `subtotal`, `presentacion_id` (nullable — ventas previas a ADR-040),
+  `cantidad`, `precio_unitario_centavos` (snapshot), `descuento_linea`, `alicuota_iva` (snapshot),
+  `subtotal_centavos`, `presentacion_id` (nullable — ventas previas a ADR-040),
   `factor_a_stock_aplicado` (nullable, REAL), sync.
   *`cantidad` está en unidades de **presentación**, no de stock. El descuento de stock es
   `cantidad × factor_a_stock_aplicado`, sin dividir.*
@@ -432,7 +431,7 @@ sin `activo`** — es dato de referencia, no dato de usuario.
   venta↔comprobante), `tipo` (`ticket_interno`|`factura_a`|`factura_b`|`factura_c`|
   `nota_credito`|`nota_debito`), `punto_venta`, `numero`, `fecha_emision`, `cae`,
   `cae_vencimiento`, `condicion_fiscal_emisor`, `condicion_fiscal_receptor`,
-  `importe_neto`, `importe_iva`, `importe_total`, `estado` (`pendiente_cae`|`autorizado`|
+  `importe_neto_centavos`, `importe_iva_centavos`, `importe_total_centavos`, `estado` (`pendiente_cae`|`autorizado`|
   `rechazado`|`anulado`), `comprobante_referencia_id`, sync.
   *Hoy se usa **solo** para `ticket_interno`. Los campos fiscales están reservados para R2
   (ARCA); ADR-013 sigue Propuesto — no cerrarlo escribiendo código.*

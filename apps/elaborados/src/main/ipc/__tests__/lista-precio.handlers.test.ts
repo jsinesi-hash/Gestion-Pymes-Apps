@@ -152,7 +152,7 @@ describe('lista-precio handlers', () => {
         lineas: [{ producto_venta_id: c.palito.id, cantidad: 1 }],
         pagos: [{ medio_pago: 'efectivo', monto_centavos: 90000 }],
       });
-      expect(r.venta.total).toBe(900);
+      expect(r.venta.total_centavos).toBe(90000);
     });
   });
 });

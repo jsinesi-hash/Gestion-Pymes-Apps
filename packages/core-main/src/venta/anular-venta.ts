@@ -76,7 +76,7 @@ export function anularVenta(
         caja_id: ventaRow.caja_id,
         tipo: 'egreso',
         motivo: 'ajuste',
-        monto_centavos: Math.round(ventaRow.total * 100), // venta.total sigue en pesos hasta PR-C2
+        monto_centavos: ventaRow.total_centavos,
         forma_pago: ventaRow.forma_pago,
         referencia_tipo: 'anulacion_venta',
         referencia_id: input.venta_id,

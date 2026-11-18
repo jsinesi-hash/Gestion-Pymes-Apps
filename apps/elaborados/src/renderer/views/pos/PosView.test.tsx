@@ -34,7 +34,7 @@ const cotizacion = (extra: any = {}) => ({
   ajuste_redondeo_centavos: 0, importe_iva_centavos: 0, bloqueos: [], advertencias: [], ...extra,
 });
 const RESULTADO = {
-  venta: { numero_interno: 'V-C1-000001', fecha: 1700000000000, total: 500, descuento_global: 0, ajuste_redondeo: 0, estado: 'confirmada' },
+  venta: { numero_interno: 'V-C1-000001', fecha: 1700000000000, total_centavos: 50000, descuento_global: 0, ajuste_redondeo_centavos: 0, estado: 'confirmada' },
   lineas: [{ descripcion: 'Palito', cantidad: 1, precio_unitario_centavos: 50000, alicuota_iva: 21, subtotal_centavos: 50000, modificadores: [] }],
   advertencias: [],
 };
@@ -57,8 +57,8 @@ vi.stubGlobal('elaborados', {
 });
 
 const PEDIDOS = [
-  { id: 've-1', alias: 'Ana', observaciones: 'Calle 1', en_espera_desde: Date.now(), turno_creacion_id: null, cliente_id: 'c1', total: 2700, count_items: 1, vencida: false },
-  { id: 've-2', alias: 'Beto', observaciones: null, en_espera_desde: Date.now(), turno_creacion_id: null, cliente_id: 'cf000000-0000-0000-0000-000000000001', total: 500, count_items: 1, vencida: false },
+  { id: 've-1', alias: 'Ana', observaciones: 'Calle 1', en_espera_desde: Date.now(), turno_creacion_id: null, cliente_id: 'c1', total_centavos: 270000, count_items: 1, vencida: false },
+  { id: 've-2', alias: 'Beto', observaciones: null, en_espera_desde: Date.now(), turno_creacion_id: null, cliente_id: 'cf000000-0000-0000-0000-000000000001', total_centavos: 50000, count_items: 1, vencida: false },
 ];
 const LINEA_POTE = {
   producto_venta_id: 'p-pote', nombre: 'Pote 1/4', cantidad: 2, descuento_linea_pct: 5,

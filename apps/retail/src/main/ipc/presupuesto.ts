@@ -596,7 +596,7 @@ function obtenerInterno(db: Db | Tx, id: string) {
     // Venta asociada (solo si estado='convertido'): trazabilidad cotización → venta.
     // El total puede diferir del cotizado si se editó el carrito al vender (ADR-046 §4).
     venta_numero_interno: schema.venta.numero_interno,
-    venta_total: schema.venta.total,
+    venta_total_centavos: schema.venta.total_centavos,
   })
     .from(schema.presupuesto)
     .leftJoin(schema.cliente, eq(schema.cliente.id, schema.presupuesto.cliente_id))
@@ -616,7 +616,7 @@ function obtenerInterno(db: Db | Tx, id: string) {
     cliente_documento: cab.cliente_documento,
     cliente_condicion_fiscal: cab.cliente_condicion_fiscal,
     venta_numero_interno: cab.venta_numero_interno,
-    venta_total: cab.venta_total,
+    venta_total_centavos: cab.venta_total_centavos,
     lineas,
   };
 }

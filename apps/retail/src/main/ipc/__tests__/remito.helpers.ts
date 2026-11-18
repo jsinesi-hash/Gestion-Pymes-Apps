@@ -80,8 +80,8 @@ export function crearVentaConfirmada(
     cliente_id: clienteId,
     usuario_id: usuarioId,
     caja_id: cajaId,
-    subtotal: 1000,
-    total: 1000,
+    subtotal_centavos: 100000,
+    total_centavos: 100000,
     forma_pago: 'efectivo',
     estado: 'confirmada',
     usuario_creacion_id: usuarioId,
@@ -122,10 +122,10 @@ export function crearVentaConfirmada(
       producto_id: productoId,
       descripcion: `Producto ${i}`,
       cantidad,
-      precio_unitario: 100,
+      precio_unitario_centavos: 10000,
       descuento_linea: 0,
       alicuota_iva: 21,
-      subtotal: cantidad * 100,
+      subtotal_centavos: cantidad * 10000,
       ...sync(now),
     }).run();
     detalleIds.push(detalleId);

@@ -7,8 +7,8 @@ import { calcPeriod } from '../hooks/usePeriod';
 
 const RANGO: DashboardClientesRango = {
   ranking: [
-    { cliente_id: 'c1', nombre_completo: 'Ferretería Norte', total_facturado: 50000, count_ventas: 5 },
-    { cliente_id: 'c2', nombre_completo: 'Construcciones Sur', total_facturado: 30000, count_ventas: 3 },
+    { cliente_id: 'c1', nombre_completo: 'Ferretería Norte', total_facturado_centavos: 5000000, count_ventas: 5 },
+    { cliente_id: 'c2', nombre_completo: 'Construcciones Sur', total_facturado_centavos: 3000000, count_ventas: 3 },
   ],
   clientes_nuevos: 4,
 };

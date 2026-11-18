@@ -21,10 +21,11 @@ function fmtHora(v: any) {
 }
 
 type VentaResumen = {
-  id: string; numero_interno: string; fecha: any; total: number; estado: string;
+  // ADR-157: importes en centavos; se muestran en pesos dividiendo en el borde.
+  id: string; numero_interno: string; fecha: any; total_centavos: number; estado: string;
   forma_pago: string; cliente_nombre: string | null;
 };
-type MovCaja = { id: string; tipo: string; motivo: string; monto: number; forma_pago: string | null; fecha: any; observaciones: string | null };
+type MovCaja = { id: string; tipo: string; motivo: string; monto_centavos: number; forma_pago: string | null; fecha: any; observaciones: string | null };
 
 const MOTIVO_LABEL: Record<string, string> = { retiro: 'Retiro', gasto: 'Gasto', aporte: 'Aporte', cobro_cta_cte: 'Cobro Cta.Cte', pago_proveedor: 'Pago proveedor', ajuste: 'Ajuste' };
 const FORMA_PAGO_LABEL: Record<string, string> = { efectivo: 'Efectivo', tarjeta: 'Tarjeta', transferencia: 'Transferencia', cuenta_corriente: 'Cuenta corriente' };
@@ -70,9 +71,9 @@ export function CajaDashboard({ caja, onRefetch, renderVentaDetalle }: Readonly<
 
   const confirmadas = ventas.filter(v => v.estado === 'confirmada');
   const anuladas = ventas.filter(v => v.estado === 'anulada');
-  const totalVentas = confirmadas.reduce((s, v) => s + v.total, 0);
-  const totalIngresos = movimientos.filter(m => m.tipo === 'ingreso').reduce((s, m) => s + m.monto, 0);
-  const totalEgresos = movimientos.filter(m => m.tipo === 'egreso').reduce((s, m) => s + m.monto, 0);
+  const totalVentas = confirmadas.reduce((s, v) => s + v.total_centavos, 0) / 100;
+  const totalIngresos = movimientos.filter(m => m.tipo === 'ingreso').reduce((s, m) => s + m.monto_centavos, 0) / 100;
+  const totalEgresos = movimientos.filter(m => m.tipo === 'egreso').reduce((s, m) => s + m.monto_centavos, 0) / 100;
   const totalNeto = totalVentas - totalEgresos;
   const movManuales = movimientos.filter(m => m.motivo !== 'venta');
 
@@ -82,7 +83,7 @@ export function CajaDashboard({ caja, onRefetch, renderVentaDetalle }: Readonly<
     .sort((a, b) => {
       let cmp = 0;
       if (sortVentas === 'numero') cmp = a.numero_interno.localeCompare(b.numero_interno);
-      if (sortVentas === 'total')  cmp = a.total - b.total;
+      if (sortVentas === 'total')  cmp = a.total_centavos - b.total_centavos;
       return sortVentasDir === 'asc' ? cmp : -cmp;
     }), [ventas, filterNumero, filterEstado, sortVentas, sortVentasDir]);
 
@@ -113,7 +114,7 @@ export function CajaDashboard({ caja, onRefetch, renderVentaDetalle }: Readonly<
           <div className="srow total">
             <span className="sl">Monto</span>
             <span className={`sv num ${detalleMov.tipo === 'ingreso' ? 'pos' : 'neg'}`}>
-              {detalleMov.tipo === 'egreso' ? '-' : ''}$ {fmt(detalleMov.monto)}
+              {detalleMov.tipo === 'egreso' ? '-' : ''}$ {fmt(detalleMov.monto_centavos / 100)}
             </span>
           </div>
           {detalleMov.observaciones && (
@@ -247,7 +248,7 @@ export function CajaDashboard({ caja, onRefetch, renderVentaDetalle }: Readonly<
                     <td className="text-muted text-sm">{fmtHora(v.fecha)}</td>
                     <td className="text-sm">{v.cliente_nombre ?? '—'}</td>
                     <td className="text-sm text-muted">{fmtFormaPago(v.forma_pago)}</td>
-                    <td className="r"><span className="num">$ {fmt(v.total)}</span></td>
+                    <td className="r"><span className="num">$ {fmt(v.total_centavos / 100)}</span></td>
                     <td className="c">
                       <span className={`badge ${v.estado === 'confirmada' ? 'ok' : 'off'}`}>
                         <span className="bd" />{v.estado === 'confirmada' ? 'Confirmada' : 'Anulada'}
@@ -282,7 +283,7 @@ export function CajaDashboard({ caja, onRefetch, renderVentaDetalle }: Readonly<
                     <td className="text-sm text-muted">{m.forma_pago ?? '—'}</td>
                     <td className="r">
                       <span className={`num ${m.tipo === 'ingreso' ? 'pos' : 'neg'}`}>
-                        {m.tipo === 'egreso' ? '-' : ''}$ {fmt(m.monto)}
+                        {m.tipo === 'egreso' ? '-' : ''}$ {fmt(m.monto_centavos / 100)}
                       </span>
                     </td>
                   </tr>

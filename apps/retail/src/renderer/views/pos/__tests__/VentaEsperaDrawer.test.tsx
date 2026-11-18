@@ -6,7 +6,7 @@ import type { VentaEsperaItem } from '../../../hooks/usePosSession';
 const VENTAS: VentaEsperaItem[] = [
   {
     id: 'v1', alias: 'Juan', en_espera_desde: new Date(), turno_creacion_id: null,
-    cliente_id: 'cf', count_items: 3, total: 1500, vencida: false,
+    cliente_id: 'cf', count_items: 3, total_centavos: 150000, vencida: false,
   },
 ];
 

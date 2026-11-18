@@ -85,10 +85,10 @@ export function VentasTabView({ period }: Props) {
       {kpis.data && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}>
           {[
-            { label: 'Total',  value: `$ ${fmt(kpis.data.total)}` },
+            { label: 'Total',  value: `$ ${fmt(kpis.data.total_centavos / 100)}` },
             { label: 'Ventas', value: String(kpis.data.count) },
-            { label: 'Ticket', value: `$ ${fmt(kpis.data.ticket_promedio)}` },
-            { label: 'IVA',    value: `$ ${fmt(kpis.data.importe_iva)}` },
+            { label: 'Ticket', value: `$ ${fmt(kpis.data.ticket_promedio_centavos / 100)}` },
+            { label: 'IVA',    value: `$ ${fmt(kpis.data.importe_iva_centavos / 100)}` },
           ].map(({ label, value }) => (
             <div key={label} style={{ background: 'var(--accent-soft)', borderRadius: 8, padding: '0.75rem' }}>
               <div className="text-muted text-xs" style={{ marginBottom: '0.25rem' }}>{label}</div>

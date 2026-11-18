@@ -40,14 +40,14 @@ function setup(can?: (p: string) => boolean) {
   );
 }
 
-const emptyResult = { rows: [], total: 0, totalImporte: 0, page: 1, totalPages: 1 };
+const emptyResult = { rows: [], total: 0, totalImporteCentavos: 0, page: 1, totalPages: 1 };
 const oneVenta = {
   rows: [{
     id: 'v1', numero_interno: 'V-C1-000001', fecha: Math.floor(Date.now() / 1000),
     cliente_nombre_completo: 'Constructora ABC', vendedor_nombre: 'María G.',
-    medios_pago: 'efectivo', subtotal: 1000, importe_iva: 174.38, total: 1000,
+    medios_pago: 'efectivo', subtotal_centavos: 100000, importe_iva_centavos: 17438, total_centavos: 100000,
   }],
-  total: 1, totalImporte: 1000, page: 1, totalPages: 1,
+  total: 1, totalImporteCentavos: 100000, page: 1, totalPages: 1,
 };
 
 beforeEach(() => {
@@ -111,7 +111,7 @@ describe('ReporteVentasView', () => {
     setup();
     const mockVentaGet = vi.fn().mockResolvedValue({
       venta: { ...oneVenta.rows[0], estado: 'confirmada', forma_pago: 'efectivo',
-        descuento_global: 0, ajuste_redondeo: 0, importe_iva: 0 },
+        descuento_global: 0, ajuste_redondeo_centavos: 0, importe_iva_centavos: 0 },
       detalles: [], comprobante: null, cliente: { nombre_completo: 'Constructora ABC' },
     });
     (window as any).ferreteria.venta = { get: mockVentaGet, anular: vi.fn() };
@@ -133,7 +133,7 @@ describe('ReporteVentasView', () => {
     setup();
     const mockVentaGet = vi.fn().mockResolvedValue({
       venta: { ...oneVenta.rows[0], estado: 'confirmada', forma_pago: 'efectivo',
-        descuento_global: 0, ajuste_redondeo: 0, importe_iva: 0 },
+        descuento_global: 0, ajuste_redondeo_centavos: 0, importe_iva_centavos: 0 },
       detalles: [], comprobante: null, cliente: { nombre_completo: 'Constructora ABC' },
     });
     (window as any).ferreteria.venta = { get: mockVentaGet, anular: vi.fn() };
@@ -144,8 +144,8 @@ describe('ReporteVentasView', () => {
   });
 
   it('paginación: botón Siguiente llama al IPC con page+1', async () => {
-    const page1 = { rows: [oneVenta.rows[0]], total: 3, totalImporte: 3000, page: 1, totalPages: 3 };
-    const page2 = { rows: [{ ...oneVenta.rows[0], id: 'v2', numero_interno: 'V-C1-000002' }], total: 3, totalImporte: 3000, page: 2, totalPages: 3 };
+    const page1 = { rows: [oneVenta.rows[0]], total: 3, totalImporteCentavos: 300000, page: 1, totalPages: 3 };
+    const page2 = { rows: [{ ...oneVenta.rows[0], id: 'v2', numero_interno: 'V-C1-000002' }], total: 3, totalImporteCentavos: 300000, page: 2, totalPages: 3 };
     mockDetalleVentas.mockResolvedValueOnce(page1).mockResolvedValueOnce(page2);
     setup();
 

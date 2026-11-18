@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { bridge, traducirError } from '@core/ui';
 
-/** Resumen devuelto por `ventaEspera.listar`. `total` viene en PESOS (columna legado del encabezado). */
+/** Resumen devuelto por `ventaEspera.listar`. El total viene en centavos (ADR-157). */
 export type PedidoPendiente = {
   id: string;
   alias: string | null;
@@ -9,7 +9,7 @@ export type PedidoPendiente = {
   en_espera_desde: Date | string | number | null;
   turno_creacion_id: string | null;
   cliente_id: string;
-  total: number;
+  total_centavos: number;
   count_items: number;
   vencida: boolean;
 };

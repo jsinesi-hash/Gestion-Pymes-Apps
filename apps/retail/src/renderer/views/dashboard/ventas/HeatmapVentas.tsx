@@ -14,12 +14,12 @@ export function HeatmapVentas({ data }: Props) {
     return <div className="text-muted text-xs" style={{ opacity: 0.5 }}>Sin datos</div>;
   }
 
-  const maxTotal = Math.max(...data.map(d => d.total), 1);
+  const maxTotal = Math.max(...data.map(d => d.total_centavos), 1);
 
   const grid = new Map<string, number>();
   data.forEach(d => {
     const col = sqlDowToCol(d.dia_semana);
-    grid.set(`${d.hora}-${col}`, d.total);
+    grid.set(`${d.hora}-${col}`, d.total_centavos);
   });
 
   const HORAS_SHOW = [0, 6, 8, 10, 12, 14, 16, 18, 20, 22, 23];
@@ -43,7 +43,7 @@ export function HeatmapVentas({ data }: Props) {
             return (
               <div
                 key={col}
-                title={v > 0 ? `$ ${v.toLocaleString('es-AR', { maximumFractionDigits: 0 })}` : undefined}
+                title={v > 0 ? `$ ${(v / 100).toLocaleString('es-AR', { maximumFractionDigits: 0 })}` : undefined}
                 style={{
                   height: 8,
                   borderRadius: 2,

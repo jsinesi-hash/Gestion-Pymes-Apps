@@ -18,7 +18,7 @@ const get = vi.fn();
 vi.stubGlobal('elaborados', { venta: { get } });
 
 const DETALLE = {
-  venta: { id: 'v1', numero_interno: 'V-C1-000007', fecha: 1700000000000, total: 1500, estado: 'confirmada' },
+  venta: { id: 'v1', numero_interno: 'V-C1-000007', fecha: 1700000000000, total_centavos: 150000, estado: 'confirmada' },
   lineas: [{
     id: 'l1', descripcion: 'Pote 1/4', cantidad: 1, precio_unitario_centavos: 150000, subtotal_centavos: 150000,
     modificadores: [{ id: 'm1', descripcion: 'Choco' }, { id: 'm2', descripcion: 'DDL' }],

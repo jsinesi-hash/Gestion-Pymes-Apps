@@ -51,7 +51,7 @@ describe('venta.espera handlers (Elaborados)', () => {
       expect(v.alias).toBe('Mesa 3');
       expect(v.observaciones).toBe('sin cono');
       expect(v.descuento_global).toBe(10);
-      expect(v.total).toBeGreaterThan(0);
+      expect(v.total_centavos).toBeGreaterThan(0);
       const lineas = db.select().from(schema.venta_linea).where(eq(schema.venta_linea.venta_id, venta_id)).all();
       expect(lineas).toHaveLength(1);
       expect(db.select().from(schema.venta_linea_modificador).all()).toHaveLength(2);
@@ -131,7 +131,7 @@ describe('venta.espera handlers (Elaborados)', () => {
       const va = lista.find((x) => x.id === a.venta_id)!;
       expect(va.alias).toBe('Vieja');
       expect(va.observaciones).toBe('obs');
-      expect(va.total).toBeGreaterThan(0);
+      expect(va.total_centavos).toBeGreaterThan(0);
       expect(va.count_items).toBe(1);
       expect(va.vencida).toBe(true);
       const vb = lista.find((x) => x.id === b.venta_id)!;

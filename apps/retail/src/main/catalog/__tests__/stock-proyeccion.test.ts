@@ -43,8 +43,8 @@ describe('proyección del stock (Retail)', () => {
     const total = 1000 * cantidad;
     return ventaConfirmarHandler(db, {
       caja_id: cajaId, cliente_id: CF_ID,
-      lineas: [{ producto_id: productoId, descripcion: 'x', cantidad, precio_unitario: 1000, descuento_linea: 0, alicuota_iva: 21, subtotal: total }],
-      descuento_global: 0, subtotal: total, importe_iva: Math.round(total * 21 / 121 * 100) / 100, total, ajuste_redondeo: 0,
+      lineas: [{ producto_id: productoId, descripcion: 'x', cantidad, precio_unitario_centavos: 100000, descuento_linea: 0, alicuota_iva: 21, subtotal_centavos: total * 100 }],
+      descuento_global: 0, subtotal_centavos: total * 100, importe_iva_centavos: Math.round(total * 100 * 21 / 121), total_centavos: total * 100, ajuste_redondeo_centavos: 0,
       pagos: [{ medio_pago: 'efectivo', monto_centavos: total * 100 }],
     });
   }
@@ -127,8 +127,8 @@ describe('proyección del stock (Retail)', () => {
     const total = 2000;
     const v = ventaConfirmarHandler(db, {
       caja_id: caja.id, cliente_id: cliente.id,
-      lineas: [{ producto_id: a.id, descripcion: 'x', cantidad: 2, precio_unitario: 1000, descuento_linea: 0, alicuota_iva: 21, subtotal: total }],
-      descuento_global: 0, subtotal: total, importe_iva: Math.round(total * 21 / 121 * 100) / 100, total, ajuste_redondeo: 0,
+      lineas: [{ producto_id: a.id, descripcion: 'x', cantidad: 2, precio_unitario_centavos: 100000, descuento_linea: 0, alicuota_iva: 21, subtotal_centavos: total * 100 }],
+      descuento_global: 0, subtotal_centavos: total * 100, importe_iva_centavos: Math.round(total * 100 * 21 / 121), total_centavos: total * 100, ajuste_redondeo_centavos: 0,
       pagos: [{ medio_pago: 'cuenta_corriente', monto_centavos: total * 100 }],
     });
     expect(diferenciasDeCuentaCorriente(db)).toEqual([]);

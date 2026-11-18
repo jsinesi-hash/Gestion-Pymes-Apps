@@ -63,7 +63,9 @@ describe('venta handlers', () => {
     precio = 1000,
     pagos?: VentaPagoPayload[],
   ): VentaConfirmarPayload {
-    const total = precio * cantidad;
+    // ADR-157: el payload viaja en centavos; `precio` se escribe en pesos por legibilidad.
+    const precioCentavos = Math.round(precio * 100);
+    const total = precioCentavos * cantidad;
     return {
       caja_id: cajaId,
       cliente_id: CF_ID,
@@ -71,17 +73,17 @@ describe('venta handlers', () => {
         producto_id: prodId,
         descripcion: 'Tornillo M6',
         cantidad,
-        precio_unitario: precio,
+        precio_unitario_centavos: precioCentavos,
         descuento_linea: 0,
         alicuota_iva: 21,
-        subtotal: total,
+        subtotal_centavos: total,
       }],
       descuento_global: 0,
-      subtotal: total,
-      importe_iva: Math.round(total * 21 / 121 * 100) / 100,
-      total,
-      ajuste_redondeo: 0,
-      pagos: pagos ?? [{ medio_pago: 'efectivo', monto_centavos: Math.round(total * 100) }],
+      subtotal_centavos: total,
+      importe_iva_centavos: Math.round(total * 21 / 121),
+      total_centavos: total,
+      ajuste_redondeo_centavos: 0,
+      pagos: pagos ?? [{ medio_pago: 'efectivo', monto_centavos: total }],
     };
   }
 
@@ -95,7 +97,7 @@ describe('venta handlers', () => {
 
       expect(result.venta.estado).toBe('confirmada');
       expect(result.venta.numero_interno).toMatch(/^V-C1-\d{6}$/);
-      expect(result.venta.total).toBe(1000);
+      expect(result.venta.total_centavos).toBe(100000);
       expect(result.detalles).toHaveLength(1);
       expect(result.comprobante.tipo).toBe('ticket_interno');
     });
@@ -159,13 +161,13 @@ describe('venta handlers', () => {
       const { prod } = crearProductoConStock(10, 999.50);
       const caja = abrirCaja();
       const payload = makePayload(caja.id, prod.id, 1, 999.50);
-      payload.total = 1000;
-      payload.ajuste_redondeo = 0.50;
+      payload.total_centavos = 100000;
+      payload.ajuste_redondeo_centavos = 50;
       // El pago debe cubrir el total redondeado (100000 centavos)
       payload.pagos[0].monto_centavos = 100000;
       const r = ventaConfirmarHandler(db, payload);
-      expect(r.venta.ajuste_redondeo).toBe(0.50);
-      expect(r.venta.total).toBe(1000);
+      expect(r.venta.ajuste_redondeo_centavos).toBe(50);
+      expect(r.venta.total_centavos).toBe(100000);
     });
 
     it('lanza MEDIO_PAGO_DUPLICADO si se repite un medio de pago', () => {
@@ -369,14 +371,14 @@ describe('venta handlers', () => {
     }
 
     function conLineas(base: VentaConfirmarPayload, lineas: VentaConfirmarPayload['lineas']): VentaConfirmarPayload {
-      const total = lineas.reduce((acc, l) => acc + l.subtotal, 0);
+      const total = lineas.reduce((acc, l) => acc + l.subtotal_centavos, 0);
       return {
         ...base,
         lineas,
-        subtotal: total,
-        importe_iva: Math.round(total * 21 / 121 * 100) / 100,
-        total,
-        pagos: [{ medio_pago: 'efectivo', monto_centavos: Math.round(total * 100) }],
+        subtotal_centavos: total,
+        importe_iva_centavos: Math.round(total * 21 / 121),
+        total_centavos: total,
+        pagos: [{ medio_pago: 'efectivo', monto_centavos: total }],
       };
     }
 
@@ -474,11 +476,11 @@ describe('venta handlers', () => {
     }
 
     it.each([
-      ['total menor al real (cobrar de menos)', (p: VentaConfirmarPayload) => ({ ...p, total: 1, pagos: [{ medio_pago: 'efectivo' as const, monto_centavos: 100 }] })],
-      ['subtotal general distinto de la suma de líneas', (p: VentaConfirmarPayload) => ({ ...p, subtotal: p.subtotal - 10 })],
-      ['subtotal de línea distinto de precio × cantidad', (p: VentaConfirmarPayload) => ({ ...p, lineas: [{ ...p.lineas[0]!, subtotal: 1 }] })],
-      ['ajuste de redondeo falso', (p: VentaConfirmarPayload) => ({ ...p, ajuste_redondeo: 0.4 })],
-      ['IVA inflado', (p: VentaConfirmarPayload) => ({ ...p, importe_iva: p.importe_iva + 50 })],
+      ['total menor al real (cobrar de menos)', (p: VentaConfirmarPayload) => ({ ...p, total_centavos: 100, pagos: [{ medio_pago: 'efectivo' as const, monto_centavos: 100 }] })],
+      ['subtotal general distinto de la suma de líneas', (p: VentaConfirmarPayload) => ({ ...p, subtotal_centavos: p.subtotal_centavos - 1000 })],
+      ['subtotal de línea distinto de precio × cantidad', (p: VentaConfirmarPayload) => ({ ...p, lineas: [{ ...p.lineas[0]!, subtotal_centavos: 100 }] })],
+      ['ajuste de redondeo falso', (p: VentaConfirmarPayload) => ({ ...p, ajuste_redondeo_centavos: 40 })],
+      ['IVA inflado', (p: VentaConfirmarPayload) => ({ ...p, importe_iva_centavos: p.importe_iva_centavos + 5000 })],
     ])('rechaza con TOTALES_INCONSISTENTES: %s', (_nombre, adulterar) => {
       const { prod, payload } = intentar(adulterar);
       expect(() => ventaConfirmarHandler(db, payload)).toThrow('TOTALES_INCONSISTENTES');
@@ -496,8 +498,8 @@ describe('venta handlers', () => {
     it('acepta un descuento global coherente con el total', () => {
       const { payload } = intentar((p) => {
         // 2 × 1500 = 3000; 10% → 2700 (ya es peso entero)
-        const total = 2700;
-        return { ...p, descuento_global: 10, total, pagos: [{ medio_pago: 'efectivo' as const, monto_centavos: total * 100 }] };
+        const total = 270000;
+        return { ...p, descuento_global: 10, total_centavos: total, pagos: [{ medio_pago: 'efectivo' as const, monto_centavos: total }] };
       });
       expect(() => ventaConfirmarHandler(db, payload)).not.toThrow();
     });

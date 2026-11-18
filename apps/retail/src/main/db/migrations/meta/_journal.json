@@ -422,5 +422,12 @@
       "tag": "0059_adr157_caja_centavos",
       "breakpoints": true
     }
+    ,{
+      "idx": 60,
+      "version": "7",
+      "when": 1795737600000,
+      "tag": "0060_adr157_venta_centavos",
+      "breakpoints": true
+    }
   ]
 }
