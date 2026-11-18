@@ -61,7 +61,7 @@ describe('reportes (Elaborados)', () => {
     expect(r.resumen.cantidad).toBe(2);
     expect(r.resumen.total_centavos).toBe(200000);
     expect(r.resumen.costo_centavos).toBe(200);
-    const iva = Math.round(r1.venta.importe_iva * 100);
+    const iva = r1.venta.importe_iva_centavos;
     expect(r.resumen.neto_centavos).toBe(200000 - 2 * iva);
     expect(r.resumen.margen_centavos).toBe(r.resumen.neto_centavos - 200);
     expect(r.por_dia).toHaveLength(1);

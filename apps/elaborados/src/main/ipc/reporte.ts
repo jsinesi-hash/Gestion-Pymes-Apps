@@ -34,8 +34,6 @@ export function rangoDe(payload: unknown): { desde: Date; hasta: Date } {
 const claveDia = (f: Date) =>
   `${f.getFullYear()}-${String(f.getMonth() + 1).padStart(2, '0')}-${String(f.getDate()).padStart(2, '0')}`;
 
-const aCentavos = (pesos: number) => Math.round(pesos * 100);
-
 /** Las ventas que cuentan en cualquier reporte: SOLO confirmadas (en_espera/descartada/anulada no). */
 function ventasConfirmadas(db: Db, desde: Date, hasta: Date) {
   return db.select().from(schema.venta)
@@ -85,8 +83,8 @@ export function reporteVentasPeriodoQuery(db: Db, payload: unknown): ReporteVent
   const resumen = vacio();
   const dias = new Map<string, VentaDia>();
   for (const v of ventas) {
-    const total = aCentavos(v.total);
-    const neto = total - aCentavos(v.importe_iva);
+    const total = v.total_centavos;
+    const neto = total - v.importe_iva_centavos;
     const costo = Math.round(costoPorVenta.get(v.id) ?? 0);
     const dia = claveDia(v.fecha);
     const d = dias.get(dia) ?? { dia, ...vacio() };

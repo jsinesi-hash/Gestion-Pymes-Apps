@@ -36,7 +36,7 @@ describe('RemitoDetalleModal', () => {
 
   it('abre el detalle de la venta/factura al clickear el numero de venta', async () => {
     ventaGet.mockResolvedValue({
-      venta: { id: 'v1', numero_interno: 'V-C1-000010', fecha: Date.now(), estado: 'confirmada', total: 100, descuento_global: 0, ajuste_redondeo: 0, forma_pago: 'efectivo' },
+      venta: { id: 'v1', numero_interno: 'V-C1-000010', fecha: Date.now(), estado: 'confirmada', total_centavos: 10000, descuento_global: 0, ajuste_redondeo_centavos: 0, forma_pago: 'efectivo' },
       detalles: [],
       comprobante: { tipo: 'ticket_interno' },
       cliente: { nombre_completo: 'Ferreteria Sur' },
@@ -77,7 +77,7 @@ describe('RemitoDetalleModal', () => {
 
   it('NO llama onClose con Escape mientras el detalle de venta (submodal) esta abierto', async () => {
     ventaGet.mockResolvedValue({
-      venta: { id: 'v1', numero_interno: 'V-C1-000010', fecha: Date.now(), estado: 'confirmada', total: 100, descuento_global: 0, ajuste_redondeo: 0, forma_pago: 'efectivo' },
+      venta: { id: 'v1', numero_interno: 'V-C1-000010', fecha: Date.now(), estado: 'confirmada', total_centavos: 10000, descuento_global: 0, ajuste_redondeo_centavos: 0, forma_pago: 'efectivo' },
       detalles: [],
       comprobante: { tipo: 'ticket_interno' },
       cliente: { nombre_completo: 'Ferreteria Sur' },

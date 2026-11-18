@@ -48,7 +48,7 @@ export function confirmarVenta(
   // Un mismo medio no puede aparecer dos veces: se carga en una sola línea por su total.
   const mediosUsados = new Set(input.pagos.map(p => p.medio_pago));
   if (mediosUsados.size !== input.pagos.length) throw new Error('MEDIO_PAGO_DUPLICADO');
-  const totalCentavos = Math.round(input.total * 100);
+  const totalCentavos = input.total_centavos;
   const sumPagosCentavos = input.pagos.reduce((acc, p) => acc + p.monto_centavos, 0);
   if (sumPagosCentavos < totalCentavos) throw new Error('SALDO_PENDIENTE');
 
@@ -105,11 +105,11 @@ export function confirmarVenta(
         caja_id: input.caja_id,
         cliente_id: input.cliente_id,
         usuario_id: session.userId,
-        subtotal: input.subtotal,
+        subtotal_centavos: input.subtotal_centavos,
         descuento_global: input.descuento_global,
-        importe_iva: input.importe_iva,
-        total: input.total,
-        ajuste_redondeo: input.ajuste_redondeo,
+        importe_iva_centavos: input.importe_iva_centavos,
+        total_centavos: input.total_centavos,
+        ajuste_redondeo_centavos: input.ajuste_redondeo_centavos,
         vuelto_centavos: vueltoCentavos,
         forma_pago: formaPago,
         estado: 'confirmada',
@@ -128,11 +128,11 @@ export function confirmarVenta(
         cliente_id: input.cliente_id,
         usuario_id: session.userId,
         caja_id: input.caja_id,
-        subtotal: input.subtotal,
+        subtotal_centavos: input.subtotal_centavos,
         descuento_global: input.descuento_global,
-        importe_iva: input.importe_iva,
-        total: input.total,
-        ajuste_redondeo: input.ajuste_redondeo,
+        importe_iva_centavos: input.importe_iva_centavos,
+        total_centavos: input.total_centavos,
+        ajuste_redondeo_centavos: input.ajuste_redondeo_centavos,
         vuelto_centavos: vueltoCentavos,
         forma_pago: formaPago,
         estado: 'confirmada',
@@ -217,9 +217,9 @@ export function confirmarVenta(
       venta_id: ventaId,
       tipo: 'ticket_interno',
       fecha_emision: now,
-      importe_neto: input.total - input.importe_iva,
-      importe_iva: input.importe_iva,
-      importe_total: input.total,
+      importe_neto_centavos: input.total_centavos - input.importe_iva_centavos,
+      importe_iva_centavos: input.importe_iva_centavos,
+      importe_total_centavos: input.total_centavos,
       estado: 'autorizado',
       ...sync,
     }).run();

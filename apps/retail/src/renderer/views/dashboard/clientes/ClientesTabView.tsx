@@ -91,7 +91,7 @@ export function ClientesTabView({ period }: Props) {
               {c.nombre_completo}
               <span className="text-muted text-xs" style={{ marginLeft: '0.4rem' }}>{c.count_ventas} ventas</span>
             </span>
-            <span className="sv num" style={{ flexShrink: 0, paddingLeft: '0.5rem' }}>$ {fmt(c.total_facturado)}</span>
+            <span className="sv num" style={{ flexShrink: 0, paddingLeft: '0.5rem' }}>$ {fmt(c.total_facturado_centavos / 100)}</span>
           </div>
         ))}
       </div>

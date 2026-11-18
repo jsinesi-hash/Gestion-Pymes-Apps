@@ -141,6 +141,13 @@
       "when": 1792864642973,
       "tag": "0019_adr157_caja_centavos",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1792951042973,
+      "tag": "0020_adr157_venta_centavos",
+      "breakpoints": true
     }
   ]
 }

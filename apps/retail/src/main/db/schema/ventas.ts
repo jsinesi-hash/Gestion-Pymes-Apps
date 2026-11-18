@@ -8,10 +8,10 @@ export const venta_detalle = sqliteTable('venta_detalle', {
   producto_id:     text('producto_id').notNull().references(() => producto.id),
   descripcion:     text('descripcion').notNull(),
   cantidad:        real('cantidad').notNull(),
-  precio_unitario: real('precio_unitario').notNull(),
+  precio_unitario_centavos: integer('precio_unitario_centavos').notNull(), // ADR-157 (PR-C2)
   descuento_linea: real('descuento_linea').notNull().default(0),
   alicuota_iva:            real('alicuota_iva').notNull(),
-  subtotal:                real('subtotal').notNull(),
+  subtotal_centavos:       integer('subtotal_centavos').notNull(), // ADR-157 (PR-C2)
   // ADR-040: nullable para ventas históricas anteriores a multi-presentación
   presentacion_id:         text('presentacion_id').references(() => producto_presentacion.id),
   factor_a_stock_aplicado: real('factor_a_stock_aplicado'),

@@ -30,7 +30,7 @@ export function EvolucionChart({ data, labelActual, labelAnterior }: Props) {
 
   return (
     <ResponsiveContainer width="100%" height={180}>
-      <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+      <LineChart data={data.map(p => ({ label: p.label, actual: p.actual_centavos / 100, anterior: p.anterior_centavos / 100 }))} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
         <XAxis dataKey="label" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
         <YAxis tick={{ fontSize: 10 }} tickFormatter={fmt} width={48} />
         <Tooltip formatter={(v: number) => `$ ${v.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`} />

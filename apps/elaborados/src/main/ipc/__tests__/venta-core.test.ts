@@ -33,7 +33,7 @@ function crearCliente(db: Db, conCuenta?: { limite: number }) {
 function input(cajaId: string, clienteId: string, over: Partial<ConfirmarVentaInput> = {}): ConfirmarVentaInput {
   return {
     caja_id: cajaId, cliente_id: clienteId,
-    subtotal: 1000, descuento_global: 0, importe_iva: 173.55, total: 1000, ajuste_redondeo: 0,
+    subtotal_centavos: 100000, descuento_global: 0, importe_iva_centavos: 17355, total_centavos: 100000, ajuste_redondeo_centavos: 0,
     pagos: [{ medio_pago: 'efectivo', monto_centavos: 100000 }],
     ...over,
   };
@@ -61,7 +61,7 @@ describe('confirmarVenta (core)', () => {
     expect(venta.forma_pago).toBe('efectivo');
     expect(venta.comprobante_id).toBe(comprobante.id);
     expect(comprobante.tipo).toBe('ticket_interno');
-    expect(comprobante.importe_total).toBe(1000);
+    expect(comprobante.importe_total_centavos).toBe(100000);
     expect(aplicarLineas).toHaveBeenCalledTimes(1);
     expect(aplicarLineas.mock.calls[0][1]).toMatchObject({ ventaId: venta.id, esRetoma: false });
 
@@ -84,7 +84,7 @@ describe('confirmarVenta (core)', () => {
   it('calcula el vuelto cuando el efectivo excede lo necesario', () => {
     const { caja, clienteId } = preparar();
     const { venta } = confirmarVenta(db, input(caja.id, clienteId, {
-      total: 800, subtotal: 800, pagos: [{ medio_pago: 'efectivo', monto_centavos: 100000 }],
+      total_centavos: 80000, subtotal_centavos: 80000, pagos: [{ medio_pago: 'efectivo', monto_centavos: 100000 }],
     }), { aplicarLineas: vi.fn() });
     expect(venta.vuelto_centavos).toBe(20000);
   });
@@ -163,7 +163,7 @@ describe('confirmarVenta (core)', () => {
   it('pagos múltiples con recargo y cheque: un movimiento de caja por medio, recargo sumado, forma_pago legado e importe_neto', () => {
     const { caja, clienteId } = preparar();
     const { venta, comprobante } = confirmarVenta(db, input(caja.id, clienteId, {
-      total: 1000, subtotal: 1000, importe_iva: 173.55,
+      total_centavos: 100000, subtotal_centavos: 100000, importe_iva_centavos: 17355,
       pagos: [
         { medio_pago: 'cheque', monto_centavos: 40000, numero_cheque: '123', banco: 'B', titular_cheque: 'T' },
         { medio_pago: 'tarjeta', monto_centavos: 60000, recargo_centavos: 3000 },
@@ -171,7 +171,7 @@ describe('confirmarVenta (core)', () => {
     }), { aplicarLineas: vi.fn() });
 
     expect(venta.forma_pago).toBe('efectivo'); // cheque → efectivo (legado)
-    expect(comprobante.importe_neto).toBeCloseTo(826.45, 2);
+    expect(comprobante.importe_neto_centavos).toBe(82645);
     const movs = db.select().from(schema.movimiento_caja)
       .where(eq(schema.movimiento_caja.referencia_id, venta.id)).all();
     expect(movs).toHaveLength(2);
@@ -188,8 +188,8 @@ describe('confirmarVenta (core)', () => {
     const adminId = db.select({ id: schema.usuario.id }).from(schema.usuario).get()!.id;
     db.insert(schema.venta).values({
       id: ventaId, numero_interno: 'HOLD:abc', fecha: now, cliente_id: clienteId,
-      usuario_id: adminId, caja_id: caja.id, subtotal: 1000, descuento_global: 0,
-      importe_iva: 0, total: 1000, ajuste_redondeo: 0, forma_pago: 'efectivo',
+      usuario_id: adminId, caja_id: caja.id, subtotal_centavos: 100000, descuento_global: 0,
+      importe_iva_centavos: 0, total_centavos: 100000, ajuste_redondeo_centavos: 0, forma_pago: 'efectivo',
       estado: 'en_espera', usuario_creacion_id: adminId, fecha_creacion: now,
       version: 1, origin_id: 'test', sync_state: 'pending', updated_at: now,
     }).run();

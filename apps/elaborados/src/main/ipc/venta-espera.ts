@@ -35,11 +35,11 @@ export function ventaEsperaPausarHandler(db: Db, rawPayload: unknown): { venta_i
 
   return pausarVentaEspera(db, {
     caja_id, cliente_id,
-    subtotal: v.subtotal_centavos / 100,
+    subtotal_centavos: v.subtotal_centavos,
     descuento_global: carrito.descuento_global_pct, // PORCENTAJE (convención de la columna)
-    importe_iva: v.importe_iva_centavos / 100,
-    total: v.total_centavos / 100,
-    ajuste_redondeo: v.ajuste_redondeo_centavos / 100,
+    importe_iva_centavos: v.importe_iva_centavos,
+    total_centavos: v.total_centavos,
+    ajuste_redondeo_centavos: v.ajuste_redondeo_centavos,
     ...(venta_id !== undefined && { venta_id }),
     ...(alias !== undefined && { alias }),
     ...(observaciones !== undefined && { observaciones }),

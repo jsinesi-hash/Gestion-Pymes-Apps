@@ -26,15 +26,15 @@ export type VentaPagoPayload = {
 
 export type SupervisorCredenciales = { nombre_usuario: string; password: string };
 
-/** Totales en pesos, calculados por la app; el core los persiste tal cual (ADR-010, E3a §2). */
+/** Totales en centavos (ADR-157), calculados por la app; el core los persiste tal cual (ADR-010, E3a §2). */
 export type ConfirmarVentaInput = {
   caja_id: string;
   cliente_id: string;
-  subtotal: number;
+  subtotal_centavos: number;
   descuento_global: number;
-  importe_iva: number;
-  total: number;
-  ajuste_redondeo: number;
+  importe_iva_centavos: number;
+  total_centavos: number;
+  ajuste_redondeo_centavos: number;
   pagos: VentaPagoPayload[];
   venta_en_espera_id?: string;
   presupuesto_id?: string | null;

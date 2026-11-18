@@ -53,14 +53,14 @@ function makePayload(
     cliente_id: CF_ID,
     lineas: [{
       producto_id: prodId, descripcion: 'Test',
-      cantidad, precio_unitario: precio,
-      descuento_linea: 0, alicuota_iva: 21, subtotal: total,
+      cantidad, precio_unitario_centavos: Math.round(precio * 100),
+      descuento_linea: 0, alicuota_iva: 21, subtotal_centavos: Math.round(total * 100),
     }],
     descuento_global: 0,
-    subtotal: total,
-    importe_iva: Math.round(total * 21 / 121 * 100) / 100,
-    total,
-    ajuste_redondeo: 0,
+    subtotal_centavos: Math.round(total * 100),
+    importe_iva_centavos: Math.round(total * 100 * 21 / 121),
+    total_centavos: Math.round(total * 100),
+    ajuste_redondeo_centavos: 0,
     pagos: [{ medio_pago: opts.medioPago ?? 'efectivo', monto_centavos: Math.round(total * 100) }],
   };
 }
@@ -80,7 +80,7 @@ describe('detalleVentasHandler', () => {
     expect(r.rows).toHaveLength(2);
     expect(r.page).toBe(1);
     expect(r.totalPages).toBe(1);
-    expect(r.totalImporte).toBeCloseTo(3000, 0);
+    expect(r.totalImporteCentavos).toBe(300000);
   });
 
   it('excluye ventas no confirmadas', () => {
@@ -97,11 +97,11 @@ describe('detalleVentasHandler', () => {
       cliente_id: CF_ID,
       usuario_id: session.id,
       caja_id: caja.id,
-      subtotal: 0,
+      subtotal_centavos: 0,
       descuento_global: 0,
-      importe_iva: 0,
-      total: 0,
-      ajuste_redondeo: 0,
+      importe_iva_centavos: 0,
+      total_centavos: 0,
+      ajuste_redondeo_centavos: 0,
       forma_pago: 'efectivo',
       estado: 'borrador',
       usuario_creacion_id: session.id,
@@ -230,8 +230,8 @@ describe('detalleVentasHandler', () => {
     const payload: VentaConfirmarPayload = {
       caja_id: caja.id, cliente_id: CF_ID,
       lineas: [{ producto_id: prod.id, descripcion: 'Test', cantidad: 1,
-        precio_unitario: total, descuento_linea: 0, alicuota_iva: 21, subtotal: total }],
-      descuento_global: 0, subtotal: total, importe_iva: Math.round(total * 21 / 121 * 100) / 100, total, ajuste_redondeo: 0,
+        precio_unitario_centavos: Math.round(total * 100), descuento_linea: 0, alicuota_iva: 21, subtotal_centavos: Math.round(total * 100) }],
+      descuento_global: 0, subtotal_centavos: Math.round(total * 100), importe_iva_centavos: Math.round(total * 100 * 21 / 121), total_centavos: Math.round(total * 100), ajuste_redondeo_centavos: 0,
       pagos: [
         { medio_pago: 'efectivo', monto_centavos: 100000 },
         { medio_pago: 'tarjeta',  monto_centavos: 100000 },
@@ -257,9 +257,9 @@ describe('detalleVentasHandler', () => {
     expect(row).toHaveProperty('cliente_nombre_completo');
     expect(row).toHaveProperty('vendedor_nombre');
     expect(row).toHaveProperty('medios_pago');
-    expect(row).toHaveProperty('subtotal');
-    expect(row).toHaveProperty('importe_iva');
-    expect(row).toHaveProperty('total');
+    expect(row).toHaveProperty('subtotal_centavos');
+    expect(row).toHaveProperty('importe_iva_centavos');
+    expect(row).toHaveProperty('total_centavos');
   });
 });
 
@@ -294,9 +294,9 @@ describe('reporteVentasDetalleQueryAll', () => {
     expect(row.descripcion).toBe('Test');
     expect(row.categoria_nombre).toBe('Cañería');
     expect(row.cantidad).toBe(3);
-    expect(row.precio_unitario).toBe(500);
-    expect(row.subtotal_linea).toBeCloseTo(1500, 0);
-    expect(row.total_venta).toBeCloseTo(1500, 0);
+    expect(row.precio_unitario_centavos).toBe(50000);
+    expect(row.subtotal_linea_centavos).toBe(150000);
+    expect(row.total_venta_centavos).toBe(150000);
   });
 
   it('respeta filtro de categoria', () => {

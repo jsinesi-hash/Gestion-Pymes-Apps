@@ -115,7 +115,7 @@ describe('venta handlers (Elaborados)', () => {
         pagos: [{ medio_pago: 'efectivo', monto_centavos: 170000 }],
       });
       expect(r.venta.numero_interno).toBe('V-C1-000001');
-      expect(r.venta.total).toBe(1700);
+      expect(r.venta.total_centavos).toBe(170000);
       expect(r.venta.estado).toBe('confirmada');
       expect(r.comprobante.tipo).toBe('ticket_interno');
       expect(r.advertencias).toEqual([]);
@@ -185,7 +185,7 @@ describe('venta handlers (Elaborados)', () => {
         descuento_global_pct: 10,
         pagos: [{ medio_pago: 'efectivo', monto_centavos: 81000 }],
       });
-      expect(r.venta.total).toBe(810);
+      expect(r.venta.total_centavos).toBe(81000);
       expect(r.venta.descuento_global).toBe(10); // porcentaje (convención de la columna, igual que Retail)
       expect(r.lineas[0].descuento_linea_pct).toBe(10);
     });
@@ -283,9 +283,9 @@ describe('venta handlers (Elaborados)', () => {
       const v = valorizarCarrito(productos, opciones, carrito);
       return pausarVentaEspera(db, {
         caja_id: cajaId, cliente_id: CONSUMIDOR_FINAL_ID,
-        subtotal: v.subtotal_centavos / 100, descuento_global: carrito.descuento_global_pct,
-        importe_iva: v.importe_iva_centavos / 100, total: v.total_centavos / 100,
-        ajuste_redondeo: v.ajuste_redondeo_centavos / 100, alias: 'Juan',
+        subtotal_centavos: v.subtotal_centavos, descuento_global: carrito.descuento_global_pct,
+        importe_iva_centavos: v.importe_iva_centavos, total_centavos: v.total_centavos,
+        ajuste_redondeo_centavos: v.ajuste_redondeo_centavos, alias: 'Juan',
       }, { aplicarLineas: (tx, ctx) => guardarLineasElaborados(tx as never, v, ctx) }).venta_id;
     }
     const potes = (c: ReturnType<typeof catalogo>, opcionIds: string[], cantidad = 1) => ({

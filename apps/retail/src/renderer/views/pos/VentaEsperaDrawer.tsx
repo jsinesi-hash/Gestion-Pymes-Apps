@@ -81,7 +81,7 @@ export function VentaEsperaDrawer({ ventas, loading, onRetomar, onDescartar, onC
                   </div>
                 </div>
                 <div className="num" style={{ fontWeight: 700, fontSize: 15, whiteSpace: 'nowrap' }}>
-                  $ {fmt(v.total)}
+                  $ {fmt(v.total_centavos / 100)}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>

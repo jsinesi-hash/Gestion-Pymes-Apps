@@ -43,9 +43,9 @@ describe('venta — caracterización previa a E3a', () => {
       caja_id: cajaId, cliente_id: CF_ID,
       lineas: [{
         producto_id: prodId, descripcion: 'Tornillo', cantidad: 1,
-        precio_unitario: 1000, descuento_linea: 0, alicuota_iva: 21, subtotal: 1000,
+        precio_unitario_centavos: 100000, descuento_linea: 0, alicuota_iva: 21, subtotal_centavos: 100000,
       }],
-      descuento_global: 0, subtotal: 1000, importe_iva: 173.55, total: 1000, ajuste_redondeo: 0,
+      descuento_global: 0, subtotal_centavos: 100000, importe_iva_centavos: 17355, total_centavos: 100000, ajuste_redondeo_centavos: 0,
       pagos: [{ medio_pago: 'efectivo', monto_centavos: 100000 }],
     };
   }
@@ -78,8 +78,8 @@ describe('venta — caracterización previa a E3a', () => {
     const adminId = db.select({ id: schema.usuario.id }).from(schema.usuario).get()!.id;
     db.insert(schema.venta).values({
       id: ventaId, numero_interno: 'HOLD:test', fecha: now, cliente_id: CF_ID,
-      usuario_id: adminId, caja_id: caja.id, subtotal: 1000, descuento_global: 0,
-      importe_iva: 0, total: 1000, ajuste_redondeo: 0, forma_pago: 'efectivo',
+      usuario_id: adminId, caja_id: caja.id, subtotal_centavos: 100000, descuento_global: 0,
+      importe_iva_centavos: 0, total_centavos: 100000, ajuste_redondeo_centavos: 0, forma_pago: 'efectivo',
       estado: 'en_espera', usuario_creacion_id: adminId, fecha_creacion: now,
       version: 1, origin_id: 'test', sync_state: 'pending', updated_at: now,
     }).run();
@@ -104,7 +104,7 @@ describe('venta — caracterización previa a E3a', () => {
     })).toThrow('VENTA_NO_EN_ESPERA');
   });
 
-  it('anular venta legacy sin venta_pago → un egreso por venta.total', () => {
+  it('anular venta legacy sin venta_pago → un egreso por venta.total_centavos', () => {
     const { prod, caja } = prepararProducto();
     const { venta } = ventaConfirmarHandler(db, payload(caja.id, prod.id));
     permitirBorradoFisico(db); // simula una venta anterior a venta_pago (ADR-032)
@@ -116,7 +116,7 @@ describe('venta — caracterización previa a E3a', () => {
       .where(eq(schema.movimiento_caja.referencia_id, venta.id)).all()
       .filter(m => m.tipo === 'egreso');
     expect(egresos).toHaveLength(1);
-    expect(egresos[0].monto_centavos).toBe(100000); // venta.total $1000 → centavos
+    expect(egresos[0].monto_centavos).toBe(100000); // venta.total_centavos
     expect(egresos[0].observaciones).toBe('legacy');
   });
 });

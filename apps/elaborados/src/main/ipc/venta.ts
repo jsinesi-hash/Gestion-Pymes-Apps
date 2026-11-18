@@ -240,13 +240,12 @@ export function ventaConfirmarHandler(db: Db, rawPayload: unknown) {
   let advertencias: AvisoStock[] = [];
   const { venta, comprobante } = confirmarVenta(db, {
     caja_id, cliente_id,
-    // Único punto de conversión centavos → pesos hacia `venta` (columnas legado REAL).
-    subtotal: v.subtotal_centavos / 100,
+    subtotal_centavos: v.subtotal_centavos,
     // Convención de la columna legado `venta.descuento_global` (igual que Retail): PORCENTAJE, no importe.
     descuento_global: carrito.descuento_global_pct,
-    importe_iva: v.importe_iva_centavos / 100,
-    total: v.total_centavos / 100,
-    ajuste_redondeo: v.ajuste_redondeo_centavos / 100,
+    importe_iva_centavos: v.importe_iva_centavos,
+    total_centavos: v.total_centavos,
+    ajuste_redondeo_centavos: v.ajuste_redondeo_centavos,
     pagos,
     ...(supervisor && { supervisor_credenciales: supervisor }),
     ...(venta_en_espera_id !== undefined && { venta_en_espera_id }),

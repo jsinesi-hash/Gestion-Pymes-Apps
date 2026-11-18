@@ -42,7 +42,7 @@ export function PedidosPendientesPanel({ pedidos, pedidoActualId, carritoVacio, 
             <div key={p.id} style={{ border: '1px solid var(--line)', borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                 <strong>{p.alias || 'Sin alias'}</strong>
-                <span className="num">{formatPesos(Math.round(p.total * 100))}</span>
+                <span className="num">{formatPesos(p.total_centavos)}</span>
               </div>
               {p.observaciones && <div style={{ fontSize: 13 }}>{p.observaciones}</div>}
               <div style={{ fontSize: 12, opacity: 0.75, display: 'flex', gap: 8, alignItems: 'center' }}>

@@ -156,7 +156,7 @@ export function cajaCalcularCierreHandler(db: Db, payload: { caja_id: string }):
     }
   }
 
-  const ventas = db.select({ total: schema.venta.total }).from(schema.venta)
+  const ventas = db.select({ total_centavos: schema.venta.total_centavos }).from(schema.venta)
     .where(and(eq(schema.venta.caja_id, payload.caja_id), eq(schema.venta.estado, 'confirmada')))
     .all();
 
@@ -166,8 +166,7 @@ export function cajaCalcularCierreHandler(db: Db, payload: { caja_id: string }):
     por_forma_pago: Array.from(byFP.entries()).map(([forma_pago, data]) => ({ forma_pago, ...data })),
     esperado_efectivo_centavos,
     ventas_count: ventas.length,
-    // venta.total sigue en pesos hasta PR-C2: se convierte por venta para no arrastrar float.
-    total_ventas_centavos: ventas.reduce((s, v) => s + Math.round(v.total * 100), 0),
+    total_ventas_centavos: ventas.reduce((s, v) => s + v.total_centavos, 0),
   };
 }
 

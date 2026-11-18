@@ -18,7 +18,7 @@ export function AbcResumen({ data }: Props) {
   }
 
   const grupos = { A: data.filter(d => d.clase === 'A'), B: data.filter(d => d.clase === 'B'), C: data.filter(d => d.clase === 'C') };
-  const totalMonto = data.reduce((s, d) => s + d.monto_total, 0);
+  const totalMonto = data.reduce((s, d) => s + d.monto_total_centavos, 0);
 
   return (
     <div>
@@ -26,7 +26,7 @@ export function AbcResumen({ data }: Props) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
         {(['A', 'B', 'C'] as const).map(clase => {
           const g = grupos[clase];
-          const rev = g.reduce((s, d) => s + d.monto_total, 0);
+          const rev = g.reduce((s, d) => s + d.monto_total_centavos, 0);
           const pct = totalMonto > 0 ? ((rev / totalMonto) * 100).toFixed(1) : '0';
           return (
             <div key={clase} style={{ borderRadius: 8, padding: '0.65rem', border: `2px solid ${CLASE_COLOR[clase]}`, textAlign: 'center' }}>
@@ -51,7 +51,7 @@ export function AbcResumen({ data }: Props) {
             <span className="text-muted num" style={{ fontSize: '0.7rem' }}>{i + 1}</span>
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.nombre}</span>
             <span className="num" style={{ textAlign: 'right', fontWeight: 700, color: CLASE_COLOR[d.clase] }}>{d.clase}</span>
-            <span className="num" style={{ textAlign: 'right' }}>$ {fmt(d.monto_total)}</span>
+            <span className="num" style={{ textAlign: 'right' }}>$ {fmt(d.monto_total_centavos / 100)}</span>
           </div>
         ))}
         {data.length > 15 && (

@@ -13,10 +13,11 @@ export type PausarPayload = {
   cliente_id: string;
   lineas: LineaPayload[];
   descuento_global: number;
-  subtotal: number;
-  importe_iva: number;
-  total: number;
-  ajuste_redondeo: number;
+  /** ADR-157: importes en centavos. */
+  subtotal_centavos: number;
+  importe_iva_centavos: number;
+  total_centavos: number;
+  ajuste_redondeo_centavos: number;
   alias?: string | undefined;
 };
 
@@ -26,7 +27,7 @@ export type VentaEsperaItem = {
   en_espera_desde: Date | null;
   turno_creacion_id: string | null;
   cliente_id: string;
-  total: number;
+  total_centavos: number;
   count_items: number;
   vencida: boolean;
 };
@@ -36,7 +37,7 @@ export type VentaEsperaLinea = {
   descripcion: string;
   cantidad: number;
   precio_lista_actual_centavos: number;
-  precio_unitario_guardado: number;
+  precio_unitario_guardado_centavos: number;
   descuento_linea_pct: number;
   alicuota_iva: number;
   permite_fraccion: boolean;
@@ -51,7 +52,7 @@ export type VentaEsperaRetomarResult = {
   lineas: VentaEsperaLinea[];
   avisos: {
     stock_caido: Array<{ producto_id: string; nombre: string; stock_disponible: number }>;
-    precio_cambiado: Array<{ producto_id: string; nombre: string; precio_viejo: number; precio_nuevo: number }>;
+    precio_cambiado: Array<{ producto_id: string; nombre: string; precio_viejo_centavos: number; precio_nuevo_centavos: number }>;
   };
 };
 
@@ -76,11 +77,11 @@ export function ventaEsperaPausarHandler(db: Db, rawPayload: unknown): { venta_i
   return pausarVentaEspera(db, {
     caja_id: payload.caja_id,
     cliente_id: payload.cliente_id,
-    subtotal: payload.subtotal,
+    subtotal_centavos: payload.subtotal_centavos,
     descuento_global: payload.descuento_global,
-    importe_iva: payload.importe_iva,
-    total: payload.total,
-    ajuste_redondeo: payload.ajuste_redondeo,
+    importe_iva_centavos: payload.importe_iva_centavos,
+    total_centavos: payload.total_centavos,
+    ajuste_redondeo_centavos: payload.ajuste_redondeo_centavos,
     ...(payload.alias !== undefined && { alias: payload.alias }),
   }, {
     aplicarLineas: (tx, ctx) => {
@@ -91,10 +92,10 @@ export function ventaEsperaPausarHandler(db: Db, rawPayload: unknown): { venta_i
           producto_id: linea.producto_id,
           descripcion: linea.descripcion,
           cantidad: linea.cantidad,
-          precio_unitario: linea.precio_unitario,
+          precio_unitario_centavos: linea.precio_unitario_centavos,
           descuento_linea: linea.descuento_linea,
           alicuota_iva: linea.alicuota_iva,
-          subtotal: linea.subtotal,
+          subtotal_centavos: linea.subtotal_centavos,
           ...ctx.sync,
         }).run();
       }
@@ -146,13 +147,14 @@ export function ventaEsperaRetomarHandler(db: Db, rawPayload: unknown): VentaEsp
       });
     }
 
-    const precioActual = prod.precio_venta_lista;
-    if (Math.abs(precioActual - det.precio_unitario) > 0.001) {
+    // producto.precio_venta_lista sigue en pesos hasta el PR-C3: se compara en centavos.
+    const precioActualCentavos = Math.round(prod.precio_venta_lista * 100);
+    if (precioActualCentavos !== det.precio_unitario_centavos) {
       avisos.precio_cambiado.push({
         producto_id: det.producto_id,
         nombre: prod.nombre_corto,
-        precio_viejo: det.precio_unitario,
-        precio_nuevo: precioActual,
+        precio_viejo_centavos: det.precio_unitario_centavos,
+        precio_nuevo_centavos: precioActualCentavos,
       });
     }
 
@@ -160,8 +162,8 @@ export function ventaEsperaRetomarHandler(db: Db, rawPayload: unknown): VentaEsp
       producto_id: det.producto_id,
       descripcion: det.descripcion,
       cantidad: det.cantidad,
-      precio_lista_actual_centavos: Math.round(precioActual * 100),
-      precio_unitario_guardado: det.precio_unitario,
+      precio_lista_actual_centavos: precioActualCentavos,
+      precio_unitario_guardado_centavos: det.precio_unitario_centavos,
       descuento_linea_pct: det.descuento_linea,
       alicuota_iva: det.alicuota_iva,
       permite_fraccion: prod.permite_fraccion ?? false,

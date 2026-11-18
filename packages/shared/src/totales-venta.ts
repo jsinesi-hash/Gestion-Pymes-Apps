@@ -13,70 +13,71 @@ import { redondearPeso } from './precio.js';
 
 export type LineaTotalesVenta = {
   cantidad: number;
-  /** En pesos, con ajuste de lista y descuento de línea ya aplicados. */
-  precio_unitario: number;
+  /** En centavos (ADR-157), con ajuste de lista y descuento de línea ya aplicados. */
+  precio_unitario_centavos: number;
   /** %, 0-100. Solo se valida el rango: el precio unitario ya lo incluye. */
   descuento_linea: number;
   alicuota_iva: number;
-  /** En pesos. */
-  subtotal: number;
+  /** En centavos. */
+  subtotal_centavos: number;
 };
 
 export type TotalesVentaInput = {
   lineas: LineaTotalesVenta[];
   /** %, 0-100. */
   descuento_global: number;
-  /** Todos en pesos. */
-  subtotal: number;
-  importe_iva: number;
-  total: number;
-  ajuste_redondeo: number;
+  /** Todos en centavos (ADR-157). */
+  subtotal_centavos: number;
+  importe_iva_centavos: number;
+  total_centavos: number;
+  ajuste_redondeo_centavos: number;
 };
 
-/** El IVA lo calcula el renderer en pesos con float sin redondear por línea: se tolera 1 centavo. */
+/** El IVA lo discrimina el renderer sobre el total con decimales: se tolera 1 centavo. */
 const TOLERANCIA_IVA_CENTAVOS = 1.01;
 
-const aCentavos = (pesos: number): number => Math.round(pesos * 100);
 const finito = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);
+const entero = (n: unknown): n is number => finito(n) && Number.isInteger(n);
 const enPorcentaje = (n: unknown): boolean => finito(n) && n >= 0 && n <= 100;
 
 /**
  * Lanza `Error` con uno de estos códigos (el catálogo del renderer los traduce):
  * `DESCUENTO_INVALIDO`, `CANTIDAD_INVALIDA`, `PRECIO_INVALIDO` o `TOTALES_INCONSISTENTES`.
+ * ADR-157: todos los importes llegan en centavos enteros; se comparan exactos (salvo el IVA).
  */
 export function verificarTotalesVenta(input: TotalesVentaInput): void {
   if (!enPorcentaje(input.descuento_global)) throw new Error('DESCUENTO_INVALIDO');
 
   let subtotalCentavos = 0;
-  let ivaPesos = 0;
+  let ivaCentavos = 0;
 
   for (const l of input.lineas) {
     if (!finito(l.cantidad) || l.cantidad <= 0) throw new Error('CANTIDAD_INVALIDA');
-    if (!finito(l.precio_unitario) || l.precio_unitario < 0) throw new Error('PRECIO_INVALIDO');
+    if (!entero(l.precio_unitario_centavos) || l.precio_unitario_centavos < 0) throw new Error('PRECIO_INVALIDO');
     if (!enPorcentaje(l.descuento_linea)) throw new Error('DESCUENTO_INVALIDO');
     if (!finito(l.alicuota_iva) || l.alicuota_iva < 0) throw new Error('TOTALES_INCONSISTENTES');
-    if (!finito(l.subtotal)) throw new Error('TOTALES_INCONSISTENTES');
+    if (!entero(l.subtotal_centavos)) throw new Error('TOTALES_INCONSISTENTES');
 
-    const subtotalLinea = Math.round(aCentavos(l.precio_unitario) * l.cantidad);
-    if (subtotalLinea !== aCentavos(l.subtotal)) throw new Error('TOTALES_INCONSISTENTES');
+    const subtotalLinea = Math.round(l.precio_unitario_centavos * l.cantidad);
+    if (subtotalLinea !== l.subtotal_centavos) throw new Error('TOTALES_INCONSISTENTES');
 
     subtotalCentavos += subtotalLinea;
-    ivaPesos += (subtotalLinea / 100) * l.alicuota_iva / (100 + l.alicuota_iva);
+    ivaCentavos += subtotalLinea * l.alicuota_iva / (100 + l.alicuota_iva);
   }
 
-  for (const n of [input.subtotal, input.importe_iva, input.total, input.ajuste_redondeo]) {
-    if (!finito(n)) throw new Error('TOTALES_INCONSISTENTES');
+  for (const n of [input.subtotal_centavos, input.importe_iva_centavos, input.total_centavos, input.ajuste_redondeo_centavos]) {
+    if (!entero(n)) throw new Error('TOTALES_INCONSISTENTES');
   }
 
-  if (aCentavos(input.subtotal) !== subtotalCentavos) throw new Error('TOTALES_INCONSISTENTES');
+  if (input.subtotal_centavos !== subtotalCentavos) throw new Error('TOTALES_INCONSISTENTES');
 
   // Misma expresión que `resolverPrecio` para el descuento global.
   const conDescuentoGlobal = Math.round(subtotalCentavos * (1 - input.descuento_global / 100));
   const redondeo = redondearPeso(conDescuentoGlobal);
-  if (aCentavos(input.total) !== redondeo.totalCentavos) throw new Error('TOTALES_INCONSISTENTES');
-  if (aCentavos(input.ajuste_redondeo) !== redondeo.ajusteRedondeoCentavos) throw new Error('TOTALES_INCONSISTENTES');
+  if (input.total_centavos !== redondeo.totalCentavos) throw new Error('TOTALES_INCONSISTENTES');
+  if (input.ajuste_redondeo_centavos !== redondeo.ajusteRedondeoCentavos) throw new Error('TOTALES_INCONSISTENTES');
 
-  if (Math.abs(ivaPesos * 100 - input.importe_iva * 100) > TOLERANCIA_IVA_CENTAVOS) {
+  if (Math.abs(ivaCentavos - input.importe_iva_centavos) > TOLERANCIA_IVA_CENTAVOS) {
     throw new Error('TOTALES_INCONSISTENTES');
   }
 }

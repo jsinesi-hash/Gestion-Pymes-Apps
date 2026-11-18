@@ -356,8 +356,8 @@ export function ReporteVentasView() {
                   <td>{row.cliente_nombre_completo}</td>
                   <td>{row.vendedor_nombre}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>{row.medios_pago}</td>
-                  <td className="r"><span className="num">${fmt(row.importe_iva)}</span></td>
-                  <td className="r"><span className="num" style={{ fontWeight: 600 }}>${fmt(row.total)}</span></td>
+                  <td className="r"><span className="num">${fmt(row.importe_iva_centavos / 100)}</span></td>
+                  <td className="r"><span className="num" style={{ fontWeight: 600 }}>${fmt(row.total_centavos / 100)}</span></td>
                 </tr>
               ))}
             </tbody>
@@ -369,7 +369,7 @@ export function ReporteVentasView() {
       {resultado && (
         <div className="table-footer">
           <span>
-            {resultado.total} venta{resultado.total !== 1 ? 's' : ''} · Total: <strong>${fmt(resultado.totalImporte)}</strong>
+            {resultado.total} venta{resultado.total !== 1 ? 's' : ''} · Total: <strong>${fmt(resultado.totalImporteCentavos / 100)}</strong>
           </span>
           {resultado.totalPages > 1 && (
             <div className="pg-btns">

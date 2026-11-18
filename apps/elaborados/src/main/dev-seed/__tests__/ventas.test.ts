@@ -59,7 +59,7 @@ describe('seedVentasDemo', () => {
     const cuenta = db.select().from(schema.cuenta_corriente_cliente)
       .where(eq(schema.cuenta_corriente_cliente.cliente_id, ventaCcc.cliente_id)).get()!;
     expect(cuenta.saldo_centavos).toBe(pagoCcc.monto_centavos);
-    expect(pagoCcc.monto_centavos).toBe(Math.round(ventaCcc.total * 100));
+    expect(pagoCcc.monto_centavos).toBe(ventaCcc.total_centavos);
     expect(cuenta.saldo_centavos).toBeLessThanOrEqual(cuenta.limite_credito_centavos);
 
     expect(stockDe(db, 'Palito')).toBe(palitoAntes - 1);

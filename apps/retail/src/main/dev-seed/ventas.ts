@@ -79,7 +79,10 @@ function procesarVenta(
   db.insert(schema.venta).values({
     id: ventaId, numero_interno: v.numero, fecha,
     cliente_id: clienteId, usuario_id: adminId, caja_id: cajaId,
-    subtotal, descuento_global: v.desc_global, importe_iva, total, ajuste_redondeo,
+    // ADR-157: la venta se guarda en centavos.
+    subtotal_centavos: Math.round(subtotal * 100), descuento_global: v.desc_global,
+    importe_iva_centavos: Math.round(importe_iva * 100), total_centavos: Math.round(total * 100),
+    ajuste_redondeo_centavos: Math.round(ajuste_redondeo * 100),
     forma_pago: v.forma_pago, estado: v.estado,
     ...audit, ...SYNC, updated_at: fecha,
   }).run();
@@ -88,9 +91,9 @@ function procesarVenta(
     const p = prod[l.sku];
     db.insert(schema.venta_detalle).values({
       id: randomUUID(), venta_id: ventaId, producto_id: p.id,
-      descripcion: p.nombre, cantidad: l.cantidad, precio_unitario: p.precio,
+      descripcion: p.nombre, cantidad: l.cantidad, precio_unitario_centavos: Math.round(p.precio * 100),
       descuento_linea: 0, alicuota_iva: 21,
-      subtotal: Math.round(p.precio * l.cantidad * 100) / 100,
+      subtotal_centavos: Math.round(p.precio * l.cantidad * 100),
       ...SYNC, updated_at: fecha,
     }).run();
   }

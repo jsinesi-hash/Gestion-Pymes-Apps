@@ -16,7 +16,7 @@ export function DiaMesChart({ data }: Props) {
 
   return (
     <ResponsiveContainer width="100%" height={150}>
-      <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+      <BarChart data={data.map(d => ({ dia: d.dia, total: d.total_centavos / 100 }))} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
         <XAxis dataKey="dia" tick={{ fontSize: 9 }} interval={4} />
         <YAxis tick={{ fontSize: 9 }} tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : String(v)} width={36} />
         <Tooltip formatter={(v: number) => `$ ${v.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`} labelFormatter={v => `Día ${v}`} />

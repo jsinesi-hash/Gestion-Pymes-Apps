@@ -24,15 +24,12 @@ type Detalle = {
   cliente_documento: string | null;
   cliente_condicion_fiscal: string | null;
   venta_numero_interno: string | null;
-  venta_total: number | null; // pesos (columna venta.total)
+  venta_total_centavos: number | null;
   lineas: LineaDet[];
 };
 
 function pesos(centavos: number | null | undefined): string {
   return ((centavos ?? 0) / 100).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
-}
-function pesosDesde(pesosValor: number | null | undefined): string {
-  return (pesosValor ?? 0).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
 }
 function fmtFecha(v: Detalle['fecha_emision']): string {
   if (!v) return '—';
@@ -104,8 +101,8 @@ export function PresupuestoDetalleModal({ presupuestoId, onClose }: Readonly<{ p
 
             {det.estado === 'convertido' && (
               <div className="alert-warn" style={{ fontSize: 13 }}>
-                Convertido a la venta <strong>{det.venta_numero_interno ?? '—'}</strong> por <strong>{pesosDesde(det.venta_total)}</strong>.
-                {det.venta_total != null && Math.round(det.venta_total * 100) !== det.total_centavos && (
+                Convertido a la venta <strong>{det.venta_numero_interno ?? '—'}</strong> por <strong>{pesos(det.venta_total_centavos)}</strong>.
+                {det.venta_total_centavos != null && det.venta_total_centavos !== det.total_centavos && (
                   <> El total de la venta difiere del cotizado (se editó el carrito al vender).</>
                 )}
               </div>

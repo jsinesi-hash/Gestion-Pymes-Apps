@@ -17,7 +17,7 @@ export function MargenCategoriaChart({ data }: Props) {
     return <div className="text-muted text-xs" style={{ opacity: 0.5 }}>Sin datos</div>;
   }
 
-  const top10 = data.slice(0, 10);
+  const top10 = data.slice(0, 10).map(d => ({ ...d, margen_total: d.margen_total_centavos / 100 }));
 
   return (
     <ResponsiveContainer width="100%" height={Math.max(top10.length * 28, 120)}>

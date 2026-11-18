@@ -36,12 +36,12 @@ function buildTicketHtml(venta: any, detalles: any[]): string {
   });
   const formaPago = venta.forma_pago.charAt(0).toUpperCase() + venta.forma_pago.slice(1);
   const rows = detalles.map((d: any) =>
-    `<tr><td>${d.descripcion} × ${d.cantidad}</td><td align="right">$ ${fmt(d.subtotal)}</td></tr>`
+    `<tr><td>${d.descripcion} × ${d.cantidad}</td><td align="right">$ ${fmt(d.subtotal_centavos / 100)}</td></tr>`
   ).join('');
   const descRow = venta.descuento_global > 0
     ? `<tr><td>Descuento global</td><td align="right">-${venta.descuento_global}%</td></tr>` : '';
-  const ajusteRow = venta.ajuste_redondeo === 0
-    ? '' : `<tr><td>Ajuste redondeo</td><td align="right">$ ${fmt(venta.ajuste_redondeo)}</td></tr>`;
+  const ajusteRow = venta.ajuste_redondeo_centavos === 0
+    ? '' : `<tr><td>Ajuste redondeo</td><td align="right">$ ${fmt(venta.ajuste_redondeo_centavos / 100)}</td></tr>`;
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
     body{font-family:monospace;font-size:12px;width:80mm;margin:0 auto;padding:8px}
     table{width:100%;border-collapse:collapse}td{padding:2px 4px}
@@ -52,7 +52,7 @@ function buildTicketHtml(venta: any, detalles: any[]): string {
   <div class="hdr"><div style="font-size:18px;font-weight:bold">TICKET INTERNO</div>
   <div>${venta.numero_interno}</div><div>${fecha}</div></div>
   <hr/><table>${rows}${descRow}${ajusteRow}
-  <tr class="tot"><td>TOTAL</td><td align="right">$ ${fmt(venta.total)}</td></tr>
+  <tr class="tot"><td>TOTAL</td><td align="right">$ ${fmt(venta.total_centavos / 100)}</td></tr>
   <tr><td>Forma de pago</td><td align="right">${formaPago}</td></tr>
   </table><hr/>
   </body></html>`;
@@ -183,8 +183,8 @@ export function VentaDetalleModal({ ventaId, onClose, onAnulada }: Readonly<Prop
                   <tr key={d.id}>
                     <td>{d.descripcion}</td>
                     <td className="r num">{d.cantidad}</td>
-                    <td className="r num">$ {fmt(d.precio_unitario)}</td>
-                    <td className="r num">$ {fmt(d.subtotal)}</td>
+                    <td className="r num">$ {fmt(d.precio_unitario_centavos / 100)}</td>
+                    <td className="r num">$ {fmt(d.subtotal_centavos / 100)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -198,15 +198,15 @@ export function VentaDetalleModal({ ventaId, onClose, onAnulada }: Readonly<Prop
                 <span className="sv num text-muted">-{venta.descuento_global}%</span>
               </div>
             )}
-            {venta.ajuste_redondeo !== 0 && (
+            {venta.ajuste_redondeo_centavos !== 0 && (
               <div className="srow">
                 <span className="sl text-muted">Ajuste redondeo</span>
-                <span className="sv num text-muted">$ {fmt(venta.ajuste_redondeo)}</span>
+                <span className="sv num text-muted">$ {fmt(venta.ajuste_redondeo_centavos / 100)}</span>
               </div>
             )}
             <div className="srow total">
               <span className="sl">TOTAL</span>
-              <span className="sv num" style={{ color: 'var(--accent)' }}>$ {fmt(venta.total)}</span>
+              <span className="sv num" style={{ color: 'var(--accent)' }}>$ {fmt(venta.total_centavos / 100)}</span>
             </div>
           </div>
         </div>

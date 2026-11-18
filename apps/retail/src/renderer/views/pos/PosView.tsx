@@ -184,7 +184,7 @@ export function PosView() {
               <div key={a.producto_id}>⚠ {a.nombre}: stock disponible {a.stock_disponible}</div>
             ))}
             {avisosRetomar.precio_cambiado.map(a => (
-              <div key={a.producto_id}>⚠ {a.nombre}: precio actualizado a $ {a.precio_nuevo.toLocaleString('es-AR')}</div>
+              <div key={a.producto_id}>⚠ {a.nombre}: precio actualizado a $ {(a.precio_nuevo_centavos / 100).toLocaleString('es-AR')}</div>
             ))}
           </div>
           <button type="button" onClick={clearAvisosRetomar} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 16 }}>✕</button>

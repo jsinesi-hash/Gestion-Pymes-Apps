@@ -37,14 +37,14 @@ export type VentaEsperaItem = {
   en_espera_desde: Date | null;
   turno_creacion_id: string | null;
   cliente_id: string;
-  total: number;
+  total_centavos: number;
   count_items: number;
   vencida: boolean;
 };
 
 export type AvisosRetomar = {
   stock_caido: Array<{ producto_id: string; nombre: string; stock_disponible: number }>;
-  precio_cambiado: Array<{ producto_id: string; nombre: string; precio_viejo: number; precio_nuevo: number }>;
+  precio_cambiado: Array<{ producto_id: string; nombre: string; precio_viejo_centavos: number; precio_nuevo_centavos: number }>;
 };
 
 type ClienteInfo = {
@@ -383,19 +383,20 @@ export function usePosSession() {
         producto_id: l.producto_id,
         descripcion: l.descripcion,
         cantidad: l.cantidad,
-        precio_unitario: lr.precioUnitarioCentavos / 100,
+        precio_unitario_centavos: lr.precioUnitarioCentavos,
         descuento_linea: l.descuentoLineaPct,
         alicuota_iva: l.alicuota_iva,
-        subtotal: lr.subtotalCentavos / 100,
+        subtotal_centavos: lr.subtotalCentavos,
         presentacion_id: l.presentacion_id ?? null,
         factor_a_stock_aplicado: l.factor_a_stock ?? 1.0,
       };
     });
 
-    const importe_iva = lineasPayload.reduce(
-      (sum, l) => sum + l.subtotal * l.alicuota_iva / (100 + l.alicuota_iva),
+    // ADR-157: el payload viaja en centavos; el IVA se redondea al centavo.
+    const importe_iva_centavos = Math.round(lineasPayload.reduce(
+      (sum, l) => sum + l.subtotal_centavos * l.alicuota_iva / (100 + l.alicuota_iva),
       0,
-    );
+    ));
 
     setLoading(true);
     try {
@@ -406,10 +407,10 @@ export function usePosSession() {
         cliente_id: clienteId,
         lineas: lineasPayload,
         descuento_global: descuentoGlobalPct,
-        subtotal: priceResult.subtotalCentavos / 100,
-        importe_iva,
-        total: totalRedondeadoCentavos / 100,
-        ajuste_redondeo: ajusteRedondeoCentavos / 100,
+        subtotal_centavos: priceResult.subtotalCentavos,
+        importe_iva_centavos,
+        total_centavos: totalRedondeadoCentavos,
+        ajuste_redondeo_centavos: ajusteRedondeoCentavos,
         pagos,
         vuelto_centavos,
         ...(ventaEnEsperaId ? { venta_en_espera_id: ventaEnEsperaId } : {}),
@@ -442,17 +443,18 @@ export function usePosSession() {
         producto_id: l.producto_id,
         descripcion: l.descripcion,
         cantidad: l.cantidad,
-        precio_unitario: lr.precioUnitarioCentavos / 100,
+        precio_unitario_centavos: lr.precioUnitarioCentavos,
         descuento_linea: l.descuentoLineaPct,
         alicuota_iva: l.alicuota_iva,
-        subtotal: lr.subtotalCentavos / 100,
+        subtotal_centavos: lr.subtotalCentavos,
       };
     });
 
-    const importe_iva = lineasPayload.reduce(
-      (sum, l) => sum + l.subtotal * l.alicuota_iva / (100 + l.alicuota_iva),
+    // ADR-157: el payload viaja en centavos; el IVA se redondea al centavo.
+    const importe_iva_centavos = Math.round(lineasPayload.reduce(
+      (sum, l) => sum + l.subtotal_centavos * l.alicuota_iva / (100 + l.alicuota_iva),
       0,
-    );
+    ));
 
     setLoading(true);
     setError(null);
@@ -462,10 +464,10 @@ export function usePosSession() {
         cliente_id: clienteId,
         lineas: lineasPayload,
         descuento_global: descuentoGlobalPct,
-        subtotal: priceResult.subtotalCentavos / 100,
-        importe_iva,
-        total: totalCentavos / 100,
-        ajuste_redondeo: ajusteRedondeoCentavos / 100,
+        subtotal_centavos: priceResult.subtotalCentavos,
+        importe_iva_centavos,
+        total_centavos: totalCentavos,
+        ajuste_redondeo_centavos: ajusteRedondeoCentavos,
         alias,
       });
       reset();

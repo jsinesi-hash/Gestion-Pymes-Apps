@@ -79,7 +79,7 @@ export function sembrarVenta(db: Db, usuarioId: string, clienteId: string): stri
     id: ventaId,
     numero_interno: `V-PRESUP-${String(n).padStart(6, '0')}`,
     fecha: now, cliente_id: clienteId, usuario_id: usuarioId, caja_id: cajaId,
-    subtotal: 1000, total: 1000, forma_pago: 'efectivo', estado: 'confirmada',
+    subtotal_centavos: 100000, total_centavos: 100000, forma_pago: 'efectivo', estado: 'confirmada',
     usuario_creacion_id: usuarioId, fecha_creacion: now, ...sync(now),
   }).run();
   return ventaId;

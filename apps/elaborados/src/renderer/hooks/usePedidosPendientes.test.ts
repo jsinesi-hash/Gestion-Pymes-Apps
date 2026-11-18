@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { usePedidosPendientes } from './usePedidosPendientes';
 
-const fila = (id: string) => ({ id, alias: id, observaciones: null, en_espera_desde: new Date(), turno_creacion_id: null, cliente_id: 'c', total: 10, count_items: 1, vencida: false });
+const fila = (id: string) => ({ id, alias: id, observaciones: null, en_espera_desde: new Date(), turno_creacion_id: null, cliente_id: 'c', total_centavos: 1000, count_items: 1, vencida: false });
 
 describe('usePedidosPendientes', () => {
   let listar: ReturnType<typeof vi.fn>;

@@ -37,10 +37,10 @@ function makePayload(
   const total = precio * cantidad;
   return {
     caja_id: cajaId, cliente_id: CF_ID,
-    lineas: [{ producto_id: prodId, descripcion: 'Prod', cantidad, precio_unitario: precio, descuento_linea: 0, alicuota_iva: alicuota, subtotal: total }],
-    descuento_global: 0, subtotal: total,
-    importe_iva: Math.round(total * alicuota / (100 + alicuota) * 100) / 100,
-    total, ajuste_redondeo: 0,
+    lineas: [{ producto_id: prodId, descripcion: 'Prod', cantidad, precio_unitario_centavos: Math.round(precio * 100), descuento_linea: 0, alicuota_iva: alicuota, subtotal_centavos: Math.round(total * 100) }],
+    descuento_global: 0, subtotal_centavos: Math.round(total * 100),
+    importe_iva_centavos: Math.round(total * 100 * alicuota / (100 + alicuota)),
+    total_centavos: Math.round(total * 100), ajuste_redondeo_centavos: 0,
     pagos: [{ medio_pago: 'efectivo', monto_centavos: Math.round(total * 100) }],
   };
 }
@@ -52,9 +52,9 @@ describe('dashboardVentasHandler', () => {
   it('día sin ventas devuelve todos en cero y arrays vacíos', () => {
     loginAsAdmin(db);
     const result = dashboardVentasHandler(db);
-    expect(result.total_dia).toBe(0);
+    expect(result.total_dia_centavos).toBe(0);
     expect(result.count_dia).toBe(0);
-    expect(result.ticket_promedio).toBe(0);
+    expect(result.ticket_promedio_centavos).toBe(0);
     expect(result.por_hora).toHaveLength(0);
     expect(result.top_cantidad).toHaveLength(0);
   });
@@ -68,14 +68,14 @@ describe('dashboardVentasHandler', () => {
     db.insert(schema.venta).values({
       id: generateId(), numero_interno: 'V-C1-999998',
       fecha: hoy, cliente_id: CF_ID, usuario_id: userId, caja_id: caja.id,
-      subtotal: 500, descuento_global: 0, importe_iva: 0, total: 500, ajuste_redondeo: 0,
+      subtotal_centavos: 50000, descuento_global: 0, importe_iva_centavos: 0, total_centavos: 50000, ajuste_redondeo_centavos: 0,
       forma_pago: 'efectivo', estado: 'borrador',
       usuario_creacion_id: userId, fecha_creacion: hoy,
       version: 1, origin_id: 'test', sync_state: 'pending', updated_at: hoy,
     }).run();
     const result = dashboardVentasHandler(db);
     expect(result.count_dia).toBe(1);
-    expect(result.total_dia).toBe(1000);
+    expect(result.total_dia_centavos).toBe(100000);
   });
 
   it('excluye ventas de ayer', () => {
@@ -86,7 +86,7 @@ describe('dashboardVentasHandler', () => {
     db.update(schema.venta).set({ fecha: ayer }).run();
     const result = dashboardVentasHandler(db);
     expect(result.count_dia).toBe(0);
-    expect(result.total_dia).toBe(0);
+    expect(result.total_dia_centavos).toBe(0);
   });
 
   it('ticket_promedio = total / count', () => {
@@ -96,8 +96,8 @@ describe('dashboardVentasHandler', () => {
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 1, 2000));
     const result = dashboardVentasHandler(db);
     expect(result.count_dia).toBe(2);
-    expect(result.total_dia).toBe(3000);
-    expect(result.ticket_promedio).toBeCloseTo(1500, 2);
+    expect(result.total_dia_centavos).toBe(300000);
+    expect(result.ticket_promedio_centavos).toBe(150000);
   });
 
   it('por_hora agrupa correctamente (2 ventas en misma hora = 1 slot)', () => {
@@ -107,7 +107,7 @@ describe('dashboardVentasHandler', () => {
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 1, 200));
     const result = dashboardVentasHandler(db);
     expect(result.por_hora).toHaveLength(1);
-    expect(result.por_hora[0].total).toBeCloseTo(300, 2);
+    expect(result.por_hora[0].total_centavos).toBe(30000);
   });
 
   it('top_cantidad: top 5 ordenado desc por unidades (excluye el 6to)', () => {
@@ -136,7 +136,7 @@ describe('dashboardVentasHandler', () => {
     ventaConfirmarHandler(db, makePayload(caja.id, prod.id, 2, 121, 21));
     const result = dashboardVentasHandler(db);
     expect(result.top_margen).toHaveLength(1);
-    expect(result.top_margen[0].margen_estimado).toBeCloseTo(100, 1);
+    expect(result.top_margen[0].margen_estimado_centavos).toBe(10000);
   });
 });
 

@@ -60,16 +60,16 @@ describe('venta-espera handlers', () => {
         producto_id: prodId,
         descripcion: 'Tornillo M6',
         cantidad,
-        precio_unitario: precio,
+        precio_unitario_centavos: Math.round(precio * 100),
         descuento_linea: 0,
         alicuota_iva: 21,
-        subtotal: total,
+        subtotal_centavos: Math.round(total * 100),
       }],
       descuento_global: 0,
-      subtotal: total,
-      importe_iva: Math.round(total * 21 / 121 * 100) / 100,
-      total,
-      ajuste_redondeo: 0,
+      subtotal_centavos: Math.round(total * 100),
+      importe_iva_centavos: Math.round(total * 100 * 21 / 121),
+      total_centavos: Math.round(total * 100),
+      ajuste_redondeo_centavos: 0,
       alias,
     };
   }
@@ -83,16 +83,16 @@ describe('venta-espera handlers', () => {
         producto_id: prodId,
         descripcion: 'Tornillo M6',
         cantidad,
-        precio_unitario: precio,
+        precio_unitario_centavos: Math.round(precio * 100),
         descuento_linea: 0,
         alicuota_iva: 21,
-        subtotal: total,
+        subtotal_centavos: Math.round(total * 100),
       }],
       descuento_global: 0,
-      subtotal: total,
-      importe_iva: Math.round(total * 21 / 121 * 100) / 100,
-      total,
-      ajuste_redondeo: 0,
+      subtotal_centavos: Math.round(total * 100),
+      importe_iva_centavos: Math.round(total * 100 * 21 / 121),
+      total_centavos: Math.round(total * 100),
+      ajuste_redondeo_centavos: 0,
       pagos: [{ medio_pago: 'efectivo', monto_centavos: Math.round(total * 100) }],
     };
   }
@@ -215,7 +215,7 @@ describe('venta-espera handlers', () => {
 
     const result = ventaEsperaRetomarHandler(db, { venta_id });
     expect(result.avisos.precio_cambiado).toHaveLength(1);
-    expect(result.avisos.precio_cambiado[0].precio_nuevo).toBe(1500);
+    expect(result.avisos.precio_cambiado[0].precio_nuevo_centavos).toBe(150000);
     expect(result.lineas[0].precio_lista_actual_centavos).toBe(150000);
   });
 
@@ -338,23 +338,23 @@ describe('venta-espera handlers', () => {
     }
 
     it('rechaza un total que no coincide con las líneas', () => {
-      rechaza((p) => { p.total = 1; }, 'TOTALES_INCONSISTENTES');
+      rechaza((p) => { p.total_centavos = 100; }, 'TOTALES_INCONSISTENTES');
     });
 
     it('rechaza un subtotal general inconsistente', () => {
-      rechaza((p) => { p.subtotal = 1999; }, 'TOTALES_INCONSISTENTES');
+      rechaza((p) => { p.subtotal_centavos = 199900; }, 'TOTALES_INCONSISTENTES');
     });
 
     it('rechaza el subtotal de una línea que no es precio × cantidad', () => {
-      rechaza((p) => { p.lineas[0]!.subtotal = 1; }, 'TOTALES_INCONSISTENTES');
+      rechaza((p) => { p.lineas[0]!.subtotal_centavos = 100; }, 'TOTALES_INCONSISTENTES');
     });
 
     it('rechaza un IVA inconsistente', () => {
-      rechaza((p) => { p.importe_iva = 0; }, 'TOTALES_INCONSISTENTES');
+      rechaza((p) => { p.importe_iva_centavos = 0; }, 'TOTALES_INCONSISTENTES');
     });
 
     it('rechaza un ajuste de redondeo que no corresponde', () => {
-      rechaza((p) => { p.ajuste_redondeo = 0.5; }, 'TOTALES_INCONSISTENTES');
+      rechaza((p) => { p.ajuste_redondeo_centavos = 50; }, 'TOTALES_INCONSISTENTES');
     });
 
     it('rechaza un descuento global fuera de rango', () => {
@@ -366,7 +366,7 @@ describe('venta-espera handlers', () => {
     });
 
     it('rechaza un precio unitario negativo', () => {
-      rechaza((p) => { p.lineas[0]!.precio_unitario = -5; }, 'PRECIO_INVALIDO');
+      rechaza((p) => { p.lineas[0]!.precio_unitario_centavos = -500; }, 'PRECIO_INVALIDO');
     });
 
     it('acepta un carrito con descuento global y redondeo calculados como el POS', () => {
@@ -375,27 +375,31 @@ describe('venta-espera handlers', () => {
       p.descuento_global = 10;
       const conDescuento = Math.round(Math.round(333.33 * 100) * 3 * (1 - 10 / 100));
       const red = redondearPeso(conDescuento);
-      p.total = red.totalCentavos / 100;
-      p.ajuste_redondeo = red.ajusteRedondeoCentavos / 100;
-      p.subtotal = Math.round(333.33 * 100) * 3 / 100;
-      p.lineas[0]!.subtotal = p.subtotal;
-      p.importe_iva = Math.round(p.subtotal * 21 / 121 * 100) / 100;
+      p.total_centavos = red.totalCentavos;
+      p.ajuste_redondeo_centavos = red.ajusteRedondeoCentavos;
+      p.subtotal_centavos = Math.round(333.33 * 100) * 3;
+      p.lineas[0]!.subtotal_centavos = p.subtotal_centavos;
+      p.importe_iva_centavos = Math.round(p.subtotal_centavos * 21 / 121);
       const r = ventaEsperaPausarHandler(db, p);
       expect(r.venta_id).toBeTruthy();
       expect(contarVentas()).toBe(1);
     });
 
-    it('acepta el IVA sin redondear a centavos (el renderer lo calcula en float)', () => {
+    it('rechaza importes que no son centavos enteros (ADR-157)', () => {
+      rechaza((p) => { p.importe_iva_centavos = (2 * 100000 * 21) / 121; }, 'TOTALES_INCONSISTENTES');
+    });
+
+    it('acepta el IVA truncado en vez de redondeado (a menos de un centavo del exacto)', () => {
       const { prod, caja } = preparar();
       const p = makePausarPayload(caja.id, prod.id, 2, 1000);
-      p.importe_iva = (2 * 1000 * 21) / 121; // float sin redondear, como lo manda el renderer
+      p.importe_iva_centavos = Math.floor((2 * 100000 * 21) / 121);
       expect(() => ventaEsperaPausarHandler(db, p)).not.toThrow();
     });
 
     it('un carrito inconsistente no ocupa un lugar del tope de ventas en espera', () => {
       const { prod, caja } = preparar();
       const mala = makePausarPayload(caja.id, prod.id, 2, 1000);
-      mala.total = 1;
+      mala.total_centavos = 100;
       expect(() => ventaEsperaPausarHandler(db, mala)).toThrow('TOTALES_INCONSISTENTES');
       const buena = makePausarPayload(caja.id, prod.id, 2, 1000);
       expect(() => ventaEsperaPausarHandler(db, buena)).not.toThrow();

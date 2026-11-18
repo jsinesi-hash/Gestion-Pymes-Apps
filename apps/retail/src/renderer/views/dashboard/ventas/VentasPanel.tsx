@@ -33,16 +33,16 @@ export function VentasPanel({ state }: { state: PS<DashboardVentas> }) {
       {!state.loading && !state.error && state.data && (() => {
         const d = state.data;
         const maxTop    = Math.max(...d.top_cantidad.map(t => t.cantidad), 1);
-        const maxMargen = Math.max(...d.top_margen.map(t => t.margen_estimado), 1);
-        const maxHora   = Math.max(...d.por_hora.map(h => h.total), 1);
+        const maxMargen = Math.max(...d.top_margen.map(t => t.margen_estimado_centavos), 1);
+        const maxHora   = Math.max(...d.por_hora.map(h => h.total_centavos), 1);
         return (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
               {[
-                { label: 'Total',  value: `$ ${fmt(d.total_dia)}` },
+                { label: 'Total',  value: `$ ${fmt(d.total_dia_centavos / 100)}` },
                 { label: 'Ventas', value: String(d.count_dia) },
-                { label: 'Ticket', value: `$ ${fmt(d.ticket_promedio)}` },
-                { label: 'IVA',    value: `$ ${fmt(d.importe_iva_dia)}` },
+                { label: 'Ticket', value: `$ ${fmt(d.ticket_promedio_centavos / 100)}` },
+                { label: 'IVA',    value: `$ ${fmt(d.importe_iva_dia_centavos / 100)}` },
               ].map(({ label, value }) => (
                 <div key={label} style={{ background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 8, padding: '0.75rem' }}>
                   <div className="text-muted text-xs" style={{ marginBottom: '0.25rem' }}>{label}</div>
@@ -54,9 +54,9 @@ export function VentasPanel({ state }: { state: PS<DashboardVentas> }) {
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 48, marginBottom: '1.25rem' }}>
               {Array.from({ length: 24 }, (_, hora) => {
                 const entry = d.por_hora.find(h => h.hora === hora);
-                const pct = entry ? Math.max((entry.total / maxHora) * 100, 8) : 8;
+                const pct = entry ? Math.max((entry.total_centavos / maxHora) * 100, 8) : 8;
                 return (
-                  <div key={hora} title={entry ? `${hora}h: $${fmt(entry.total)}` : `${hora}h`}
+                  <div key={hora} title={entry ? `${hora}h: $${fmt(entry.total_centavos / 100)}` : `${hora}h`}
                     style={{ flex: 1, borderRadius: '3px 3px 0 0', background: entry ? 'var(--accent)' : 'var(--line)', height: `${pct}%` }} />
                 );
               })}
@@ -66,7 +66,7 @@ export function VentasPanel({ state }: { state: PS<DashboardVentas> }) {
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
                 {d.por_forma_pago.map(fp => (
                   <span key={fp.forma_pago} style={{ padding: '0.2rem 0.6rem', borderRadius: 999, background: 'var(--surface-2)', border: '1px solid var(--line)', fontSize: '0.8rem' }}>
-                    {fp.forma_pago}: <strong>$ {fmt(fp.total)}</strong>
+                    {fp.forma_pago}: <strong>$ {fmt(fp.total_centavos / 100)}</strong>
                   </span>
                 ))}
               </div>
@@ -91,9 +91,9 @@ export function VentasPanel({ state }: { state: PS<DashboardVentas> }) {
                   <div key={item.producto_id} style={{ marginBottom: '0.35rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 2 }}>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{item.nombre}</span>
-                      <span className="num" style={{ flexShrink: 0, paddingLeft: '0.5rem' }}>$ {fmt(item.margen_estimado)}</span>
+                      <span className="num" style={{ flexShrink: 0, paddingLeft: '0.5rem' }}>$ {fmt(item.margen_estimado_centavos / 100)}</span>
                     </div>
-                    <div style={{ height: 4, borderRadius: 2, background: 'var(--ok)', width: `${(item.margen_estimado / maxMargen) * 100}%` }} />
+                    <div style={{ height: 4, borderRadius: 2, background: 'var(--ok)', width: `${(item.margen_estimado_centavos / maxMargen) * 100}%` }} />
                   </div>
                 ))}
               </div>

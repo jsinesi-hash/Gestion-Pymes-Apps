@@ -17,16 +17,16 @@ const ventaConfirmada = {
   id: 'v-1',
   numero_interno: 'V-C1-000001',
   fecha: new Date('2026-07-14T09:42:00'),
-  total: 4850,
+  total_centavos: 485000,
   forma_pago: 'efectivo',
   estado: 'confirmada',
   descuento_global: 0,
-  ajuste_redondeo: 0,
+  ajuste_redondeo_centavos: 0,
 };
 
 const detallesMock = [
-  { id: 'd-1', descripcion: 'Tornillo 6x1"', cantidad: 50, precio_unitario: 25, subtotal: 1250 },
-  { id: 'd-2', descripcion: 'Pintura blanca 4L', cantidad: 1, precio_unitario: 3600, subtotal: 3600 },
+  { id: 'd-1', descripcion: 'Tornillo 6x1"', cantidad: 50, precio_unitario_centavos: 2500, subtotal_centavos: 125000 },
+  { id: 'd-2', descripcion: 'Pintura blanca 4L', cantidad: 1, precio_unitario_centavos: 360000, subtotal_centavos: 360000 },
 ];
 
 const mockGetOk = vi.fn().mockResolvedValue({

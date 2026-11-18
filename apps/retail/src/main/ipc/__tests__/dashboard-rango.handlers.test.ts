@@ -48,10 +48,10 @@ function makePayload(cajaId: string, prodId: string, cantidad = 1, precio = 1000
   const total = precio * cantidad;
   return {
     caja_id: cajaId, cliente_id: CF_ID,
-    lineas: [{ producto_id: prodId, descripcion: 'Prod', cantidad, precio_unitario: precio, descuento_linea: 0, alicuota_iva: alicuota, subtotal: total }],
-    descuento_global: 0, subtotal: total,
-    importe_iva: Math.round(total * alicuota / (100 + alicuota) * 100) / 100,
-    total, ajuste_redondeo: 0,
+    lineas: [{ producto_id: prodId, descripcion: 'Prod', cantidad, precio_unitario_centavos: Math.round(precio * 100), descuento_linea: 0, alicuota_iva: alicuota, subtotal_centavos: Math.round(total * 100) }],
+    descuento_global: 0, subtotal_centavos: Math.round(total * 100),
+    importe_iva_centavos: Math.round(total * 100 * alicuota / (100 + alicuota)),
+    total_centavos: Math.round(total * 100), ajuste_redondeo_centavos: 0,
     pagos: [{ medio_pago: 'efectivo', monto_centavos: Math.round(total * 100) }],
   };
 }
@@ -66,9 +66,9 @@ describe('dashboardVentasKpisRangoHandler', () => {
     loginAsAdmin(db);
     const { desde, hasta } = todayRange();
     const r = dashboardVentasKpisRangoHandler(db, { desde, hasta, categoria_id: null, producto_id: null });
-    expect(r.total).toBe(0);
+    expect(r.total_centavos).toBe(0);
     expect(r.count).toBe(0);
-    expect(r.ticket_promedio).toBe(0);
+    expect(r.ticket_promedio_centavos).toBe(0);
     expect(r.por_forma_pago).toHaveLength(0);
     expect(r.top_cantidad).toHaveLength(0);
   });
@@ -81,8 +81,8 @@ describe('dashboardVentasKpisRangoHandler', () => {
     const { desde, hasta } = todayRange();
     const r = dashboardVentasKpisRangoHandler(db, { desde, hasta, categoria_id: null, producto_id: null });
     expect(r.count).toBe(2);
-    expect(r.total).toBe(3000);
-    expect(r.ticket_promedio).toBeCloseTo(1500, 2);
+    expect(r.total_centavos).toBe(300000);
+    expect(r.ticket_promedio_centavos).toBe(150000);
   });
 
   it('filtro categoria_id devuelve solo ventas con productos de esa categoría', () => {
@@ -101,14 +101,14 @@ describe('dashboardVentasKpisRangoHandler', () => {
     const { desde, hasta } = todayRange();
     const r = dashboardVentasKpisRangoHandler(db, { desde, hasta, categoria_id: catA.id, producto_id: null });
     expect(r.count).toBe(1);
-    expect(r.total).toBe(500);
+    expect(r.total_centavos).toBe(50000);
   });
 
   it('filtro categoria_id sin ventas devuelve ceros sin error', () => {
     loginAsAdmin(db);
     const { desde, hasta } = todayRange();
     const r = dashboardVentasKpisRangoHandler(db, { desde, hasta, categoria_id: 'cat-inexistente', producto_id: null });
-    expect(r.total).toBe(0);
+    expect(r.total_centavos).toBe(0);
     expect(r.count).toBe(0);
   });
 });
@@ -128,7 +128,7 @@ describe('dashboardVentasEvolucionHandler', () => {
     expect(r).toHaveLength(24);
     expect(r[0].label).toBe('0h');
     expect(r[23].label).toBe('23h');
-    r.forEach(p => { expect(p.actual).toBe(0); expect(p.anterior).toBe(0); });
+    r.forEach(p => { expect(p.actual_centavos).toBe(0); expect(p.anterior_centavos).toBe(0); });
   });
 
   it('venta de hoy aparece en la hora correcta del actual', () => {
@@ -139,8 +139,8 @@ describe('dashboardVentasEvolucionHandler', () => {
     const ayer_d = new Date(desde.getTime() - 86400000);
     const ayer_h = new Date(hasta.getTime() - 86400000);
     const r = dashboardVentasEvolucionHandler(db, { desde, hasta, desde_anterior: ayer_d, hasta_anterior: ayer_h });
-    const totalActual = r.reduce((s, p) => s + p.actual, 0);
-    expect(totalActual).toBeCloseTo(1000, 1);
+    const totalActual = r.reduce((s, p) => s + p.actual_centavos, 0);
+    expect(totalActual).toBe(100000);
   });
 
   it('rango de 7 días → puntos diarios con label Día 1', () => {
@@ -183,7 +183,7 @@ describe('dashboardVentasHeatmapHandler', () => {
     expect(r[0].hora).toBeLessThanOrEqual(23);
     expect(r[0].dia_semana).toBeGreaterThanOrEqual(0);
     expect(r[0].dia_semana).toBeLessThanOrEqual(6);
-    expect(r[0].total).toBeCloseTo(1000, 1);
+    expect(r[0].total_centavos).toBe(100000);
   });
 });
 
@@ -207,7 +207,7 @@ describe('dashboardVentasDiaMesHandler', () => {
     const r = dashboardVentasDiaMesHandler(db, { desde, hasta });
     expect(r).toHaveLength(1);
     expect(r[0].dia).toBe(new Date().getDate());
-    expect(r[0].total).toBeCloseTo(500, 1);
+    expect(r[0].total_centavos).toBe(50000);
   });
 });
 
@@ -232,7 +232,7 @@ describe('dashboardVentasVendedorHandler', () => {
     const r = dashboardVentasVendedorHandler(db, { desde, hasta });
     expect(r).toHaveLength(1);
     expect(r[0].nombre).toBeTruthy();
-    expect(r[0].total).toBeCloseTo(3000, 1);
+    expect(r[0].total_centavos).toBe(300000);
     expect(r[0].count).toBe(2);
   });
 });
@@ -292,7 +292,7 @@ describe('dashboardProductosMargenCategoriaHandler', () => {
     const r = dashboardProductosMargenCategoriaHandler(db, { desde, hasta });
     expect(r).toHaveLength(1);
     expect(r[0].categoria_id).toBe(cat.id);
-    expect(r[0].margen_total).toBeCloseTo(100, 1);
-    expect(r[0].revenue).toBeGreaterThan(0);
+    expect(r[0].margen_total_centavos).toBe(10000);
+    expect(r[0].revenue_centavos).toBeGreaterThan(0);
   });
 });

@@ -16,10 +16,11 @@ export type LineaPayload = {
   producto_id: string;
   descripcion: string;
   cantidad: number;
-  precio_unitario: number;
+  /** ADR-157: centavos. */
+  precio_unitario_centavos: number;
   descuento_linea: number;
   alicuota_iva: number;
-  subtotal: number;
+  subtotal_centavos: number;
   // ADR-040: snapshot at sale time; null for sales before multi-presentación
   presentacion_id?: string | null;
   factor_a_stock_aplicado?: number | null;
@@ -30,10 +31,11 @@ export type VentaConfirmarPayload = {
   cliente_id: string;
   lineas: LineaPayload[];
   descuento_global: number;
-  subtotal: number;
-  importe_iva: number;
-  total: number;
-  ajuste_redondeo: number;
+  /** ADR-157: importes en centavos. */
+  subtotal_centavos: number;
+  importe_iva_centavos: number;
+  total_centavos: number;
+  ajuste_redondeo_centavos: number;
   pagos: VentaPagoPayload[];
   vuelto_centavos?: number | null;
   venta_en_espera_id?: string;
@@ -85,21 +87,21 @@ function validarFactorDeLinea(db: Db, linea: LineaPayload): number {
  * caja, pero se lista con su total y no puede quedar guardada con uno falso.
  */
 export function verificarTotalesDePayload(
-  payload: Pick<VentaConfirmarPayload, 'lineas' | 'descuento_global' | 'subtotal' | 'importe_iva' | 'total' | 'ajuste_redondeo'>,
+  payload: Pick<VentaConfirmarPayload, 'lineas' | 'descuento_global' | 'subtotal_centavos' | 'importe_iva_centavos' | 'total_centavos' | 'ajuste_redondeo_centavos'>,
 ): void {
   verificarTotalesVenta({
     lineas: payload.lineas.map((l) => ({
       cantidad: l.cantidad,
-      precio_unitario: l.precio_unitario,
+      precio_unitario_centavos: l.precio_unitario_centavos,
       descuento_linea: l.descuento_linea,
       alicuota_iva: l.alicuota_iva,
-      subtotal: l.subtotal,
+      subtotal_centavos: l.subtotal_centavos,
     })),
     descuento_global: payload.descuento_global,
-    subtotal: payload.subtotal,
-    importe_iva: payload.importe_iva,
-    total: payload.total,
-    ajuste_redondeo: payload.ajuste_redondeo,
+    subtotal_centavos: payload.subtotal_centavos,
+    importe_iva_centavos: payload.importe_iva_centavos,
+    total_centavos: payload.total_centavos,
+    ajuste_redondeo_centavos: payload.ajuste_redondeo_centavos,
   });
 }
 
@@ -137,7 +139,7 @@ function validarLineasPrevio(db: Db, payload: VentaConfirmarPayload): void {
       const resuelto = getPrecioEnListaHandler(db, { productoId: linea.producto_id, listaId: listaEfectivaId });
       const listaCentavos = Math.round(resuelto.precio_centavos * factor);
       const esperadoCentavos = Math.round(listaCentavos * (1 - linea.descuento_linea / 100));
-      const recibidoCentavos = Math.round(linea.precio_unitario * 100);
+      const recibidoCentavos = linea.precio_unitario_centavos;
       if (esperadoCentavos !== recibidoCentavos) precioDesactualizado = true;
     }
   }
@@ -185,10 +187,10 @@ function aplicarLineasRetail(tx: Tx, payload: VentaConfirmarPayload, ctx: Aplica
       producto_id: linea.producto_id,
       descripcion: linea.descripcion,
       cantidad: linea.cantidad,
-      precio_unitario: linea.precio_unitario,
+      precio_unitario_centavos: linea.precio_unitario_centavos,
       descuento_linea: linea.descuento_linea,
       alicuota_iva: linea.alicuota_iva,
-      subtotal: linea.subtotal,
+      subtotal_centavos: linea.subtotal_centavos,
       presentacion_id: linea.presentacion_id ?? null,
       factor_a_stock_aplicado: factorAplicado,
       ...sync,
@@ -259,11 +261,11 @@ export function ventaConfirmarHandler(db: Db, rawPayload: unknown) {
   const { venta, comprobante } = confirmarVenta(db, {
     caja_id: payload.caja_id,
     cliente_id: payload.cliente_id,
-    subtotal: payload.subtotal,
+    subtotal_centavos: payload.subtotal_centavos,
     descuento_global: payload.descuento_global,
-    importe_iva: payload.importe_iva,
-    total: payload.total,
-    ajuste_redondeo: payload.ajuste_redondeo,
+    importe_iva_centavos: payload.importe_iva_centavos,
+    total_centavos: payload.total_centavos,
+    ajuste_redondeo_centavos: payload.ajuste_redondeo_centavos,
     pagos: payload.pagos,
     ...(payload.venta_en_espera_id !== undefined && { venta_en_espera_id: payload.venta_en_espera_id }),
     ...(payload.presupuesto_id !== undefined && { presupuesto_id: payload.presupuesto_id }),
@@ -372,7 +374,7 @@ export function ventaQueryAll(db: Db, filtros: VentaExportFiltros = {}) {
     cliente_apellido_raw: schema.cliente.apellido,
     cajero_nombre:   schema.usuario.nombre_completo,
     forma_pago:      schema.venta.forma_pago,
-    total:           schema.venta.total,
+    total_centavos:  schema.venta.total_centavos,
     estado:          schema.venta.estado,
   })
     .from(schema.venta)
@@ -409,8 +411,8 @@ export function ventaDetalladoQueryAll(db: Db, filtros: VentaExportFiltros = {})
     sku:             schema.producto.sku,
     descripcion:     schema.venta_detalle.descripcion,
     cantidad:        schema.venta_detalle.cantidad,
-    precio_unitario: schema.venta_detalle.precio_unitario,
-    subtotal:        schema.venta_detalle.subtotal,
+    precio_unitario_centavos: schema.venta_detalle.precio_unitario_centavos,
+    subtotal_centavos:        schema.venta_detalle.subtotal_centavos,
   })
     .from(schema.venta_detalle)
     .innerJoin(schema.venta, eq(schema.venta.id, schema.venta_detalle.venta_id))
