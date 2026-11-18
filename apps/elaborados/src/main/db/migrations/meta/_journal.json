@@ -149,5 +149,12 @@
       "tag": "0020_adr157_venta_centavos",
       "breakpoints": true
     }
+    ,{
+      "idx": 21,
+      "version": "7",
+      "when": 1793037442973,
+      "tag": "0021_adr150_updated_at_segundos",
+      "breakpoints": true
+    }
   ]
 }
