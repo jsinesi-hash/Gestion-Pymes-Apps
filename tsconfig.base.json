@@ -12,6 +12,7 @@
     "paths": {
       "@ferreteria/shared": ["./packages/shared/src/index.ts"],
       "@core/db": ["./packages/core-db/src/index.ts"],
+      "@core/hub": ["./packages/core-hub/src/index.ts"],
       "@core/ui": ["./packages/core-ui/src/index.ts"],
       "@core/main": ["./packages/core-main/src/index.ts"],
       "@core/preload": ["./packages/core-preload/src/index.ts"]

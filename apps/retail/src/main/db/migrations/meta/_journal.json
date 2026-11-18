@@ -436,5 +436,12 @@
       "tag": "0061_adr157_producto_centavos",
       "breakpoints": true
     }
+    ,{
+      "idx": 62,
+      "version": "7",
+      "when": 1795910400000,
+      "tag": "0062_adr150_updated_at_segundos",
+      "breakpoints": true
+    }
   ]
 }
