@@ -45,7 +45,7 @@ export function ProveedoresTabView({ period }: Props) {
   }, [period]);
 
   const maxGasto = rango.data && rango.data.ranking.length > 0
-    ? Math.max(...rango.data.ranking.map(r => r.gasto))
+    ? Math.max(...rango.data.ranking.map(r => r.gasto_centavos))
     : 1;
 
   return (
@@ -79,9 +79,9 @@ export function ProveedoresTabView({ period }: Props) {
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
                 {p.razon_social}
               </span>
-              <span className="num" style={{ flexShrink: 0, paddingLeft: '0.5rem' }}>$ {fmt(p.gasto)}</span>
+              <span className="num" style={{ flexShrink: 0, paddingLeft: '0.5rem' }}>$ {fmt(p.gasto_centavos / 100)}</span>
             </div>
-            <div style={{ height: 4, borderRadius: 2, background: 'var(--accent)', width: `${(p.gasto / maxGasto) * 100}%` }} />
+            <div style={{ height: 4, borderRadius: 2, background: 'var(--accent)', width: `${(p.gasto_centavos / maxGasto) * 100}%` }} />
           </div>
         ))}
       </div>

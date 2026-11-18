@@ -10,7 +10,7 @@ type Db = BetterSQLite3Database<typeof schema>;
 export type ProveedorRankingEntry = {
   proveedor_id: string;
   razon_social: string;
-  gasto: number;
+  gasto_centavos: number;
 };
 
 export type DashboardProveedoresRango = {
@@ -48,7 +48,7 @@ export function dashboardProveedoresRangoHandler(
     .map(r => ({
       proveedor_id: r.proveedor_id,
       razon_social: r.razon_social,
-      gasto: r.gasto_centavos / 100,
+      gasto_centavos: r.gasto_centavos,
     }));
 
   return { ranking };

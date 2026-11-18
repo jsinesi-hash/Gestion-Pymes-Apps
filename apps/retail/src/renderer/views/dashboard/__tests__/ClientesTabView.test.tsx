@@ -14,8 +14,8 @@ const RANGO: DashboardClientesRango = {
 };
 
 const ESTADO: DashboardClientesEstado = {
-  deuda_total: 150000,
-  deuda_vencida: 50000,
+  deuda_total_centavos: 15000000,
+  deuda_vencida_centavos: 5000000,
   clientes_inactivos: 7,
 };
 

@@ -316,7 +316,8 @@ No se puede desactivar el último Supervisor activo. Roles base con `es_sistema 
 >   `venta_detalle`, `comprobante` (ADR-157 PR-C2), `producto` (`precio_*_centavos`) y
 >   `movimiento_stock.costo_unitario_centavos` (ADR-157 PR-C3). **Toda tabla nueva va en centavos.**
 > - **No quedan columnas de dinero en pesos (REAL).** No agregar columnas nuevas de dinero en `real`;
->   los pesos existen solo en los bordes de la UI (al tipear y al mostrar) y en los CSV.
+>   los pesos existen solo en los bordes de la UI (al tipear y al mostrar) y en los CSV. La baranda B5
+>   (`b5-dinero-centavos.test.ts` en cada app) falla ante una columna REAL nueva no declarada como no-dinero.
 >
 > Los porcentajes son `real` en todos lados (`*_pct`, `alicuota_iva`,
 > `ajuste_porcentual`, `descuento_*`) — son porcentajes, no montos.

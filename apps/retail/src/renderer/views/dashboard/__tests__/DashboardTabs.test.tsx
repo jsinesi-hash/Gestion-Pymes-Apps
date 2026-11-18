@@ -73,7 +73,7 @@ beforeEach(() => {
       productosMargenCategoria: vi.fn().mockResolvedValue([]),
       cajaRango:                vi.fn().mockResolvedValue({ turnos: [], por_medio_pago: [], recargo_tarjeta_total_centavos: 0 }),
       clientesRango:            vi.fn().mockResolvedValue({ ranking: [], clientes_nuevos: 0 }),
-      clientesEstado:           vi.fn().mockResolvedValue({ deuda_total: 0, deuda_vencida: 0, clientes_inactivos: 0 }),
+      clientesEstado:           vi.fn().mockResolvedValue({ deuda_total_centavos: 0, deuda_vencida_centavos: 0, clientes_inactivos: 0 }),
       proveedoresRango:         vi.fn().mockResolvedValue({ ranking: [] }),
       proveedoresEstado:        vi.fn().mockResolvedValue({ ocs_pendientes: 0, ocs_sugeridas_sin_resolver: 0 }),
     },

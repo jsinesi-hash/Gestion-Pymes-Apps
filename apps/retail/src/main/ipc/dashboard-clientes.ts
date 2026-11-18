@@ -25,8 +25,8 @@ export type DashboardClientesRango = {
 };
 
 export type DashboardClientesEstado = {
-  deuda_total: number;
-  deuda_vencida: number;
+  deuda_total_centavos: number;
+  deuda_vencida_centavos: number;
   clientes_inactivos: number;
 };
 
@@ -123,8 +123,8 @@ export function dashboardClientesEstadoHandler(db: Db): DashboardClientesEstado 
   const clientes_inactivos = todosActivos.filter(c => !conCompraReciente.has(c.id)).length;
 
   return {
-    deuda_total:   (deudaTotalRow.total ?? 0) / 100,
-    deuda_vencida: (deudaVencidaRow.total ?? 0) / 100,
+    deuda_total_centavos:   deudaTotalRow.total ?? 0,
+    deuda_vencida_centavos: deudaVencidaRow.total ?? 0,
     clientes_inactivos,
   };
 }

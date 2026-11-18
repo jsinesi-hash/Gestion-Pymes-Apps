@@ -217,8 +217,8 @@ export function ctacteQueryAll(db: Db) {
     apellido:        schema.cliente.apellido,
     tipo_documento:  schema.cliente.tipo_documento,
     numero_documento: schema.cliente.numero_documento,
-    saldo:           sql<number>`CAST(${schema.cuenta_corriente_cliente.saldo_centavos} AS REAL) / 100`,
-    limite_credito:  sql<number>`CAST(${schema.cuenta_corriente_cliente.limite_credito_centavos} AS REAL) / 100`,
+    saldo_centavos:          schema.cuenta_corriente_cliente.saldo_centavos,
+    limite_credito_centavos: schema.cuenta_corriente_cliente.limite_credito_centavos,
   })
     .from(schema.cuenta_corriente_cliente)
     .innerJoin(schema.cliente, eq(schema.cuenta_corriente_cliente.cliente_id, schema.cliente.id))
