@@ -44,7 +44,7 @@ function enriquecer(db: Db, filas: { id: string; otroId: string; nota: string | 
     id: schema.producto.id,
     sku: schema.producto.sku,
     nombre_corto: schema.producto.nombre_corto,
-    precio_venta_lista: schema.producto.precio_venta_lista,
+    precio_venta_lista_centavos: schema.producto.precio_venta_lista_centavos,
     activo: schema.producto.activo,
     discontinuado: schema.producto.discontinuado,
     marca_nombre: schema.marca.nombre,
@@ -75,7 +75,7 @@ function enriquecer(db: Db, filas: { id: string; otroId: string; nota: string | 
       });
       base = r.precio_centavos; origen = r.origen;
     } else {
-      base = Math.round((p.precio_venta_lista ?? 0) * 100); origen = 'fallback';
+      base = p.precio_venta_lista_centavos ?? 0; origen = 'fallback';
     }
     out.push({
       id: f.id,

@@ -37,7 +37,7 @@ describe('Referential integrity (FK ON)', () => {
     expect(() => {
       db.prepare(`
         INSERT INTO producto (id, sku, sku_secuencial, nombre_corto, nombre_largo,
-          unidad_venta, precio_costo_promedio, precio_venta_lista,
+          unidad_venta, precio_costo_promedio_centavos, precio_venta_lista_centavos,
           categoria_id, activo, version, origin_id, sync_state, updated_at,
           usuario_creacion_id, fecha_creacion)
         VALUES ('p1','P-0000001-9', 1, 'Tornillo','Tornillo 1"',
@@ -59,7 +59,7 @@ describe('Referential integrity (FK ON)', () => {
     expect(() => {
       db.prepare(`
         INSERT INTO producto (id, sku, sku_secuencial, nombre_corto, nombre_largo,
-          unidad_venta, precio_costo_promedio, precio_venta_lista,
+          unidad_venta, precio_costo_promedio_centavos, precio_venta_lista_centavos,
           categoria_id, activo, version, origin_id, sync_state, updated_at,
           usuario_creacion_id, fecha_creacion)
         VALUES ('p1','P-0000001-9', 1, 'Tornillo','Tornillo 1"',
@@ -93,7 +93,7 @@ describe('Referential integrity (FK ON)', () => {
 
     const insert = db.prepare(`
       INSERT INTO producto (id, sku, sku_secuencial, nombre_corto, nombre_largo,
-        unidad_venta, precio_costo_promedio, precio_venta_lista,
+        unidad_venta, precio_costo_promedio_centavos, precio_venta_lista_centavos,
         categoria_id, activo, version, origin_id, sync_state, updated_at,
         usuario_creacion_id, fecha_creacion)
       VALUES (?, 'P-0000001-9', ?, ?, ?,

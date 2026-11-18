@@ -1,7 +1,7 @@
 ﻿import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { eq, and } from 'drizzle-orm';
-import { generateId, canonicalizarUbicacion, canonicalizarCodigoUbicacion, parseBooleanoImport, leerCsv } from '@ferreteria/shared';
+import { costoPromedioEntrada, generateId, canonicalizarUbicacion, canonicalizarCodigoUbicacion, parseBooleanoImport, leerCsv } from '@ferreteria/shared';
 import { getOriginId, getSession, requirePermission } from '@core/main';
 import * as schema from '../db/schema';
 import { clienteUpsertHandler } from '@core/main';
@@ -56,6 +56,11 @@ function buildRaw(headers: string[], row: string[]): Record<string, string> {
 
 export function syncFields(now: Date) {
   return { version: 1 as const, origin_id: getOriginId(), sync_state: 'pending' as const, updated_at: now };
+}
+
+/** Pesos del CSV a centavos enteros (ADR-157). */
+function aCentavos(pesos: number): number {
+  return Math.round(pesos * 100);
 }
 
 function parseNum(s: string, def = 0): number {
@@ -207,10 +212,11 @@ function validarFilaProducto(
   const skuVal = has('sku') ? get('sku') : '';
   const data: Record<string, unknown> = {
     nombre, categoria_id, impuesto_id,
-    precio_venta_lista: precio,
+    // ADR-157: el CSV viene en pesos; la fila validada ya lleva centavos.
+    precio_venta_lista_centavos: aCentavos(precio),
     unidad_venta: unidadMedida,
     gtin_barcode: codigoBarras || null,
-    costo: parseNum(get('costo')),
+    costo_centavos: aCentavos(parseNum(get('costo'))),
     stock_minimo: parseNum(get('stock_minimo')),
     activo: activoParse.value,
     ...(marca_id !== undefined ? { marca_id } : {}),
@@ -817,7 +823,7 @@ function validarFilaStockInicial(fila: number, get: (name: string) => string, db
 
   return {
     fila, status: 'ok',
-    data: { producto_id: prod.id, cantidad, costo_unitario: parseNum(get('costo_unitario')), observaciones: get('observaciones') || null },
+    data: { producto_id: prod.id, cantidad, costo_unitario_centavos: aCentavos(parseNum(get('costo_unitario'))), observaciones: get('observaciones') || null },
     matchKey: `SKU ${prod.sku}`,
   };
 }
@@ -863,7 +869,7 @@ export function confirmarStockInicial(db: Db, payload: { rows: ImportRowResult[]
   for (const row of payload.rows) {
     if (row.status === 'error' || !row.data) continue;
     try {
-      const { producto_id, cantidad, costo_unitario, observaciones } = row.data as { producto_id: string; cantidad: number; costo_unitario: number; observaciones: string | null };
+      const { producto_id, cantidad, costo_unitario_centavos, observaciones } = row.data as { producto_id: string; cantidad: number; costo_unitario_centavos: number; observaciones: string | null };
       db.transaction(tx => {
         const exist = tx.select({ stock_fisico: schema.existencias.stock_fisico })
           .from(schema.existencias).where(eq(schema.existencias.producto_id, producto_id)).get();
@@ -874,18 +880,18 @@ export function confirmarStockInicial(db: Db, payload: { rows: ImportRowResult[]
         tx.insert(schema.movimiento_stock).values({
           id: generateId(), producto_id, tipo: 'entrada', motivo: 'inicial',
           cantidad, stock_resultante: stockResultante,
-          costo_unitario: costo_unitario || null,
+          costo_unitario_centavos: costo_unitario_centavos || null,
           referencia_tipo: 'importacion', referencia_id: 'importacion-masiva',
           usuario_id: session.userId, fecha: now,
           observaciones: observaciones ?? null,
           ...syncFields(now),
         }).run();
-        if (costo_unitario && costo_unitario > 0) {
-          const prod = tx.select({ precio_costo_promedio: schema.producto.precio_costo_promedio })
+        if (costo_unitario_centavos && costo_unitario_centavos > 0) {
+          const prod = tx.select({ precio_costo_promedio_centavos: schema.producto.precio_costo_promedio_centavos })
             .from(schema.producto).where(eq(schema.producto.id, producto_id)).get();
-          const costoActual = prod?.precio_costo_promedio ?? 0;
-          const nuevoCpp = (stockPrev * costoActual + cantidad * costo_unitario) / stockResultante;
-          tx.update(schema.producto).set({ precio_costo_promedio: nuevoCpp, ...syncFields(now) })
+          const costoActual = prod?.precio_costo_promedio_centavos ?? 0;
+          const nuevoCpp = costoPromedioEntrada(stockPrev, costoActual, cantidad, costo_unitario_centavos);
+          tx.update(schema.producto).set({ precio_costo_promedio_centavos: nuevoCpp, ...syncFields(now) })
             .where(eq(schema.producto.id, producto_id)).run();
         }
       });
@@ -1034,7 +1040,7 @@ export function confirmarProductos(db: Db, payload: { rows: ImportRowResult[] })
       if (row.status === 'ok') {
         const id = generateId();
         const sync = syncFields(now);
-        const costo = (row.data!['costo'] as number) || 0;
+        const costo = (row.data!['costo_centavos'] as number) || 0;
         let skuAsignado = '';
         let stockInicial = (row.data!['stock_inicial'] as number) || 0;
 
@@ -1054,10 +1060,10 @@ export function confirmarProductos(db: Db, payload: { rows: ImportRowResult[] })
             garantia_meses: (row.data!['garantia_meses'] as number | null) ?? null,
             categoria_id: row.data!['categoria_id'] as string,
             impuesto_id: row.data!['impuesto_id'] as string,
-            precio_venta_lista: row.data!['precio_venta_lista'] as number,
+            precio_venta_lista_centavos: row.data!['precio_venta_lista_centavos'] as number,
             unidad_venta: row.data!['unidad_venta'] as string,
             gtin_barcode: (row.data!['gtin_barcode'] as string | null) ?? null,
-            precio_costo_promedio: costo,
+            precio_costo_promedio_centavos: costo,
             marca_id: (row.data!['marca_id'] as string | undefined) ?? null,
             ubicacion_id: (row.data!['ubicacion_id'] as string | undefined) ?? null,
             unidad_compra: (row.data!['unidad_compra'] as string | null | undefined) ?? null,
@@ -1095,7 +1101,7 @@ export function confirmarProductos(db: Db, payload: { rows: ImportRowResult[] })
               motivo: 'inicial',
               cantidad: stockInicial,
               stock_resultante: stockInicial,
-              costo_unitario: costo || null,
+              costo_unitario_centavos: costo || null,
               referencia_tipo: 'importacion',
               referencia_id: 'importacion-masiva',
               usuario_id: session.userId,
@@ -1113,7 +1119,7 @@ export function confirmarProductos(db: Db, payload: { rows: ImportRowResult[] })
               motivo: 'inicial',
               cantidad: 0,
               stock_resultante: 0,
-              costo_unitario: costo,
+              costo_unitario_centavos: costo,
               referencia_tipo: 'importacion',
               referencia_id: 'importacion-masiva',
               usuario_id: session.userId,
@@ -1140,7 +1146,7 @@ export function confirmarProductos(db: Db, payload: { rows: ImportRowResult[] })
             nombre_largo: 'nombre_largo' in row.data!
               ? ((row.data!['nombre_largo'] as string | null) ?? (row.data!['nombre'] as string))
               : (row.data!['nombre'] as string),
-            precio_venta_lista: row.data!['precio_venta_lista'] as number,
+            precio_venta_lista_centavos: row.data!['precio_venta_lista_centavos'] as number,
             activo: (row.data!['activo'] as boolean) ?? true,
             ...('marca_id' in row.data! ? { marca_id: row.data!['marca_id'] as string | null } : {}),
             ...('ubicacion_id' in row.data! ? { ubicacion_id: row.data!['ubicacion_id'] as string | null } : {}),
@@ -1167,7 +1173,7 @@ export function confirmarProductos(db: Db, payload: { rows: ImportRowResult[] })
 
           // Stock inicial: only if stock_actual===0 and stock_inicial>0
           if (stockInicial > 0 && stockActual === 0) {
-            const costo = (row.data!['costo'] as number) || 0;
+            const costo = (row.data!['costo_centavos'] as number) || 0;
             tx.update(schema.existencias)
               .set({ stock_fisico: stockInicial, ultima_fecha_movimiento: now, ...syncFields(now) })
               .where(eq(schema.existencias.producto_id, id)).run();
@@ -1178,7 +1184,7 @@ export function confirmarProductos(db: Db, payload: { rows: ImportRowResult[] })
               motivo: 'inicial',
               cantidad: stockInicial,
               stock_resultante: stockInicial,
-              costo_unitario: costo || null,
+              costo_unitario_centavos: costo || null,
               referencia_tipo: 'importacion',
               referencia_id: 'importacion-masiva',
               usuario_id: session.userId,
@@ -1189,7 +1195,7 @@ export function confirmarProductos(db: Db, payload: { rows: ImportRowResult[] })
             // Update CPP if costo > 0
             if (costo > 0) {
               tx.update(schema.producto)
-                .set({ precio_costo_promedio: costo, ...syncFields(now) })
+                .set({ precio_costo_promedio_centavos: costo, ...syncFields(now) })
                 .where(eq(schema.producto.id, id)).run();
             }
           }

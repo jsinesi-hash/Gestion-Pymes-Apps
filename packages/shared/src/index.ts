@@ -20,7 +20,7 @@ export type {
   ComponentesComerciales,
   CostoNetoResult,
 } from './costo.js';
-export { resolverComponentesComerciales, calcularCostoNeto, costoNeto } from './costo.js';
+export { resolverComponentesComerciales, calcularCostoNeto, costoNeto, costoPromedioEntrada } from './costo.js';
 export * from './export/index.js';
 export { checkDigit, formatSku, parseSku, SkuParseError } from './sku.js';
 export type { UbicacionCanonica } from './ubicacion.js';

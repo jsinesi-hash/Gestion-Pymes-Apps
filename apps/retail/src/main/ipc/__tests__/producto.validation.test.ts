@@ -9,26 +9,32 @@ describe('producto validación (ADR-082)', () => {
   // ("x"/"y") alcanzan para los tests RED de validación.
   it('rechaza nombre_corto vacío', () => {
     const db = setupDb(); loginAsAdmin(db);
-    expect(() => productoCreateHandler(db, { nombre_corto: '', categoria_id: 'x', unidad_venta: 'unidad', impuesto_id: 'y', precio_venta_lista: 10 } as any))
+    expect(() => productoCreateHandler(db, { nombre_corto: '', categoria_id: 'x', unidad_venta: 'unidad', impuesto_id: 'y', precio_venta_lista_centavos: 1000 } as any))
       .toThrow(/VALIDATION:nombre_corto:REQUERIDO/);
   });
 
-  it('rechaza precio_venta_lista no numérico', () => {
+  it('rechaza precio_venta_lista_centavos no numérico', () => {
     const db = setupDb(); loginAsAdmin(db);
-    expect(() => productoCreateHandler(db, { nombre_corto: 'Martillo', categoria_id: 'x', unidad_venta: 'unidad', impuesto_id: 'y', precio_venta_lista: 'caro' } as any))
-      .toThrow(/VALIDATION:precio_venta_lista:TIPO/);
+    expect(() => productoCreateHandler(db, { nombre_corto: 'Martillo', categoria_id: 'x', unidad_venta: 'unidad', impuesto_id: 'y', precio_venta_lista_centavos: 'caro' } as any))
+      .toThrow(/VALIDATION:precio_venta_lista_centavos:TIPO/);
   });
 
   it('rechaza categoria_id faltante', () => {
     const db = setupDb(); loginAsAdmin(db);
-    expect(() => productoCreateHandler(db, { nombre_corto: 'Martillo', unidad_venta: 'unidad', impuesto_id: 'y', precio_venta_lista: 10 } as any))
+    expect(() => productoCreateHandler(db, { nombre_corto: 'Martillo', unidad_venta: 'unidad', impuesto_id: 'y', precio_venta_lista_centavos: 1000 } as any))
       .toThrow(/VALIDATION:categoria_id:(REQUERIDO|TIPO)/);
   });
 
-  it('rechaza precio_venta_lista negativo', () => {
+  it('rechaza precio_venta_lista_centavos negativo', () => {
     const db = setupDb(); loginAsAdmin(db);
-    expect(() => productoCreateHandler(db, { nombre_corto: 'Martillo', categoria_id: 'x', unidad_venta: 'unidad', impuesto_id: 'y', precio_venta_lista: -1 } as any))
-      .toThrow(/VALIDATION:precio_venta_lista:MIN/);
+    expect(() => productoCreateHandler(db, { nombre_corto: 'Martillo', categoria_id: 'x', unidad_venta: 'unidad', impuesto_id: 'y', precio_venta_lista_centavos: -100 } as any))
+      .toThrow(/VALIDATION:precio_venta_lista_centavos:NEGATIVO/);
+  });
+
+  it('rechaza precio_venta_lista_centavos con fracción de centavo (ADR-157)', () => {
+    const db = setupDb(); loginAsAdmin(db);
+    expect(() => productoCreateHandler(db, { nombre_corto: 'Martillo', categoria_id: 'x', unidad_venta: 'unidad', impuesto_id: 'y', precio_venta_lista_centavos: 1500.5 } as any))
+      .toThrow(/VALIDATION:precio_venta_lista_centavos:NO_ENTERO/);
   });
 
   it('update rechaza id faltante', () => {
@@ -37,9 +43,9 @@ describe('producto validación (ADR-082)', () => {
       .toThrow(/VALIDATION:id:(REQUERIDO|TIPO)/);
   });
 
-  it('update rechaza precio_venta_lista no numérico cuando se envía', () => {
+  it('update rechaza precio_venta_lista_centavos no numérico cuando se envía', () => {
     const db = setupDb(); loginAsAdmin(db);
-    expect(() => productoUpdateHandler(db, { id: 'algun-id', precio_venta_lista: 'caro' } as any))
-      .toThrow(/VALIDATION:precio_venta_lista:TIPO/);
+    expect(() => productoUpdateHandler(db, { id: 'algun-id', precio_venta_lista_centavos: 'caro' } as any))
+      .toThrow(/VALIDATION:precio_venta_lista_centavos:TIPO/);
   });
 });

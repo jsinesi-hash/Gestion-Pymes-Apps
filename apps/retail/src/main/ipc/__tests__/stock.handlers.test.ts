@@ -19,7 +19,7 @@ function createTestProduct(db: Db) {
     categoria_id: cat.id,
     impuesto_id: imp.id,
     unidad_venta: 'u',
-    precio_venta_lista: 100,
+    precio_venta_lista_centavos: 10000,
   });
 }
 
@@ -65,19 +65,19 @@ describe('stockEntradaHandler', () => {
     expect(mov.cantidad).toBe(5);
   });
 
-  it('sin costo_unitario el CPP no cambia', () => {
+  it('sin costo_unitario_centavos el CPP no cambia', () => {
     loginAsAdmin(db);
     const p = createTestProduct(db);
     const prod = getProducto(p.id);
-    const cppAntes = prod.precio_costo_promedio;
+    const cppAntes = prod.precio_costo_promedio_centavos;
 
     stockEntradaHandler(db, { producto_id: p.id, cantidad: 10 });
 
     const prodDespues = getProducto(p.id);
-    expect(prodDespues.precio_costo_promedio).toBe(cppAntes);
+    expect(prodDespues.precio_costo_promedio_centavos).toBe(cppAntes);
   });
 
-  it('con costo_unitario recalcula CPP correctamente', () => {
+  it('con costo_unitario_centavos recalcula CPP correctamente', () => {
     loginAsAdmin(db);
     const p = createTestProduct(db);
     db.update(existencias)
@@ -85,32 +85,32 @@ describe('stockEntradaHandler', () => {
       .where(eq(existencias.producto_id, p.id))
       .run();
     db.update(producto)
-      .set({ precio_costo_promedio: 100 })
+      .set({ precio_costo_promedio_centavos: 10000 })
       .where(eq(producto.id, p.id))
       .run();
 
-    stockEntradaHandler(db, { producto_id: p.id, cantidad: 5, costo_unitario: 130 });
+    stockEntradaHandler(db, { producto_id: p.id, cantidad: 5, costo_unitario_centavos: 13000 });
 
     const prodDespues = getProducto(p.id);
     // nuevo_cpp = (10*100 + 5*130) / 15 = (1000 + 650) / 15 = 110
-    expect(prodDespues.precio_costo_promedio).toBeCloseTo(110, 5);
+    expect(prodDespues.precio_costo_promedio_centavos).toBe(11000);
   });
 
   it('multiples entradas acumulan CPP correctamente', () => {
     loginAsAdmin(db);
     const p = createTestProduct(db);
     db.update(existencias).set({ stock_fisico: 0 }).where(eq(existencias.producto_id, p.id)).run();
-    db.update(producto).set({ precio_costo_promedio: 0 }).where(eq(producto.id, p.id)).run();
+    db.update(producto).set({ precio_costo_promedio_centavos: 0 }).where(eq(producto.id, p.id)).run();
 
-    stockEntradaHandler(db, { producto_id: p.id, cantidad: 10, costo_unitario: 100 });
-    stockEntradaHandler(db, { producto_id: p.id, cantidad: 10, costo_unitario: 120 });
-    stockEntradaHandler(db, { producto_id: p.id, cantidad: 10, costo_unitario: 110 });
+    stockEntradaHandler(db, { producto_id: p.id, cantidad: 10, costo_unitario_centavos: 10000 });
+    stockEntradaHandler(db, { producto_id: p.id, cantidad: 10, costo_unitario_centavos: 12000 });
+    stockEntradaHandler(db, { producto_id: p.id, cantidad: 10, costo_unitario_centavos: 11000 });
 
     const prodFinal = getProducto(p.id);
     // cpp1 = (0+10*100)/10 = 100
     // cpp2 = (10*100+10*120)/20 = 110
     // cpp3 = (20*110+10*110)/30 = 110
-    expect(prodFinal.precio_costo_promedio).toBeCloseTo(110, 5);
+    expect(prodFinal.precio_costo_promedio_centavos).toBe(11000);
   });
 
   it('lanza UNAUTHENTICATED sin sesion activa', () => {
@@ -321,7 +321,7 @@ describe('Invariante: Σ cantidad = stock_fisico', () => {
       .where(eq(existencias.producto_id, p.id))
       .run();
 
-    stockEntradaHandler(db, { producto_id: p.id, cantidad: 20, costo_unitario: 100 });
+    stockEntradaHandler(db, { producto_id: p.id, cantidad: 20, costo_unitario_centavos: 10000 });
     stockMermaHandler(db, { producto_id: p.id, cantidad: 3, observaciones: 'roto' });
     stockAjusteHandler(db, { producto_id: p.id, cantidad_contada: 15, observaciones: 'conteo' });
 

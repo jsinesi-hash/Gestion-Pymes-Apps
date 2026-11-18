@@ -58,7 +58,7 @@ beforeEach(() => {
   const imp = db.select().from(schema.impuesto).get()!;
   const prod = productoCreateHandler(db, {
     nombre_corto: 'Tornillo 4x40', categoria_id: cat.id, impuesto_id: imp.id,
-    unidad_venta: 'u', precio_venta_lista: 50000,
+    unidad_venta: 'u', precio_venta_lista_centavos: 5000000,
   });
   productoId = prod.id;
   sku = prod.sku;

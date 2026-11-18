@@ -37,9 +37,9 @@ function crearProducto(db: Db, nombre = 'Tornillo', precio = 1000, costo = 400) 
   const imp = db.select().from(schema.impuesto).where(eq(schema.impuesto.predeterminado, true)).get()!;
   const prod = productoCreateHandler(db, {
     nombre_corto: nombre, categoria_id: cat.id, impuesto_id: imp.id,
-    unidad_venta: 'u', precio_venta_lista: precio,
+    unidad_venta: 'u', precio_venta_lista_centavos: Math.round(precio * 100),
   });
-  db.update(schema.producto).set({ precio_costo_promedio: costo }).where(eq(schema.producto.id, prod.id)).run();
+  db.update(schema.producto).set({ precio_costo_promedio_centavos: Math.round(costo * 100) }).where(eq(schema.producto.id, prod.id)).run();
   stockEntradaHandler(db, { producto_id: prod.id, cantidad: 100 });
   return { prod, cat, imp };
 }
@@ -91,8 +91,8 @@ describe('dashboardVentasKpisRangoHandler', () => {
     const imp = db.select().from(schema.impuesto).where(eq(schema.impuesto.predeterminado, true)).get()!;
     const catA = categoriaCreateHandler(db, { nombre: 'CatA' });
     const catB = categoriaCreateHandler(db, { nombre: 'CatB' });
-    const pA = productoCreateHandler(db, { nombre_corto: 'ProdA', categoria_id: catA.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 500 });
-    const pB = productoCreateHandler(db, { nombre_corto: 'ProdB', categoria_id: catB.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 800 });
+    const pA = productoCreateHandler(db, { nombre_corto: 'ProdA', categoria_id: catA.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 50000 });
+    const pB = productoCreateHandler(db, { nombre_corto: 'ProdB', categoria_id: catB.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 80000 });
     stockEntradaHandler(db, { producto_id: pA.id, cantidad: 10 });
     stockEntradaHandler(db, { producto_id: pB.id, cantidad: 10 });
     const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
@@ -254,8 +254,8 @@ describe('dashboardProductosAbcHandler', () => {
     runCatalogSeed(db);
     const cat = categoriaCreateHandler(db, { nombre: 'C' });
     const imp = db.select().from(schema.impuesto).where(eq(schema.impuesto.predeterminado, true)).get()!;
-    const pGrande = productoCreateHandler(db, { nombre_corto: 'Grande', categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 800 });
-    const pChico  = productoCreateHandler(db, { nombre_corto: 'Chico',  categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 500 });
+    const pGrande = productoCreateHandler(db, { nombre_corto: 'Grande', categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 80000 });
+    const pChico  = productoCreateHandler(db, { nombre_corto: 'Chico',  categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 50000 });
     stockEntradaHandler(db, { producto_id: pGrande.id, cantidad: 100 });
     stockEntradaHandler(db, { producto_id: pChico.id,  cantidad: 100 });
     const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });

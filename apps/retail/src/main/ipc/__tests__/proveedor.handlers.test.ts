@@ -355,7 +355,7 @@ describe('proveedorUpsertHandler — cierre del circuito de costo', () => {
     const imp = db.select().from(schema.impuesto).get()!;
     const prod = productoCreateHandler(db, {
       nombre_corto: 'Amoladora', categoria_id: cat.id, impuesto_id: imp.id,
-      unidad_venta: 'u', precio_venta_lista: 100,
+      unidad_venta: 'u', precio_venta_lista_centavos: 10000,
     });
     const pp = productoProveedorUpsertHandler(db, {
       producto_id: prod.id, proveedor_id: proveedorId, costo_centavos: 5000,

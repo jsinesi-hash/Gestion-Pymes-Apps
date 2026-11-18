@@ -82,7 +82,7 @@ describe('demo-catalog handlers (ADR-062)', () => {
       categoria_id: cat.id,
       unidad_venta: 'unidad',
       impuesto_id: iva.id,
-      precio_venta_lista: 999,
+      precio_venta_lista_centavos: 99900,
     });
 
     const res = demoCatalogVaciarHandler(db);

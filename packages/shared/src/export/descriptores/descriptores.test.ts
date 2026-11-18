@@ -17,7 +17,8 @@ describe('exportStock', () => {
   it('valor total en valorizado multiplica costo por stock', () => {
     const col = exportStock.perfiles.find(p => p.id === 'valorizado')!
       .columnas.find(c => c.label === 'Valor total')!;
-    expect(col.formatoXlsx!(100, { stock_fisico: 3 } as any)).toBe(300);
+    // costo en centavos (ADR-157) × stock → pesos
+    expect(col.formatoXlsx!(10050, { stock_fisico: 3 } as any)).toBe(301.5);
   });
 });
 

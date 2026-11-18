@@ -30,7 +30,7 @@ function crearProducto(db: Db, nombre = 'Tubo', precio = 1000) {
     categoria_id: cat.id,
     impuesto_id: imp.id,
     unidad_venta: 'u',
-    precio_venta_lista: precio,
+    precio_venta_lista_centavos: Math.round(precio * 100),
   });
   stockEntradaHandler(db, { producto_id: prod.id, cantidad: 100 });
   return { prod, cat, imp };

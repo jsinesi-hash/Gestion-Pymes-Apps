@@ -11,7 +11,7 @@ function createTestProduct(db: Db) {
   runCatalogSeed(db);
   const cat = categoriaCreateHandler(db, { nombre: 'T' });
   const imp = db.select().from(schema.impuesto).all()[0];
-  return productoCreateHandler(db, { nombre_corto: 'P', categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 100 });
+  return productoCreateHandler(db, { nombre_corto: 'P', categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 10000 });
 }
 
 describe('existencias validación (ADR-082)', () => {

@@ -37,7 +37,7 @@ describe('applyPendingCambiosProgramados', () => {
       id: productoId, sku: 'P-S-' + productoId.slice(0, 6), sku_secuencial: 1,
       nombre_corto: 'Prod', nombre_largo: 'Prod',
       unidad_venta: 'und', factor_conversion: 1, permite_fraccion: false,
-      precio_costo_promedio: 0, precio_venta_lista: 100,
+      precio_costo_promedio_centavos: 0, precio_venta_lista_centavos: 10000,
       impuesto_id: impId, moneda: 'ARS', categoria_id: catId, activo: true,
       usuario_creacion_id: 'admin', fecha_creacion: now, ...sync,
     }).run();

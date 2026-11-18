@@ -1,5 +1,5 @@
 import { eq, and, isNull } from 'drizzle-orm';
-import { generateId } from '@ferreteria/shared';
+import { generateId, costoPromedioEntrada } from '@ferreteria/shared';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
@@ -11,22 +11,18 @@ type Db = BetterSQLite3Database<typeof schema>;
 function actualizarCppYProveedor(
   tx: Db,
   productoId: string,
-  costoUnitarioPesos: number | null,
   stockPrevio: number,
   cantidadRecibida: number,
-  stockResultante: number,
   proveedorId: string,
   costoRealCentavos: number | null,
   now: Date,
 ): void {
-  if (!costoUnitarioPesos || costoUnitarioPesos <= 0) return;
+  if (!costoRealCentavos || costoRealCentavos <= 0) return;
   const prod = tx.select().from(schema.producto).where(eq(schema.producto.id, productoId)).get();
   if (prod) {
-    const nuevoCpp = stockResultante > 0
-      ? (stockPrevio * prod.precio_costo_promedio + cantidadRecibida * costoUnitarioPesos) / stockResultante
-      : costoUnitarioPesos;
+    const nuevoCpp = costoPromedioEntrada(stockPrevio, prod.precio_costo_promedio_centavos, cantidadRecibida, costoRealCentavos);
     tx.update(schema.producto).set({
-      precio_costo_promedio: nuevoCpp,
+      precio_costo_promedio_centavos: nuevoCpp,
       updated_at: now,
       sync_state: 'pending',
     }).where(eq(schema.producto.id, productoId)).run();
@@ -118,14 +114,13 @@ export function recepcionCrearHandler(db: Db, payload: unknown) {
       if (!ex) continue;
 
       const stockResultante = ex.stock_fisico + item.cantidad_recibida;
-      const costoUnitarioPesos = costoReal != null ? costoReal / 100 : null;
 
       actualizarCppYProveedor(
-        tx, itemOc.producto_id, costoUnitarioPesos,
-        ex.stock_fisico, item.cantidad_recibida, stockResultante,
+        tx, itemOc.producto_id,
+        ex.stock_fisico, item.cantidad_recibida,
         oc.proveedor_id, costoReal, now,
       );
-      if (costoUnitarioPesos != null) productoIdsConCostoDistinto.push(itemOc.producto_id);
+      if (costoReal != null) productoIdsConCostoDistinto.push(itemOc.producto_id);
 
       tx.insert(schema.movimiento_stock).values({
         id:               generateId(),
@@ -134,7 +129,7 @@ export function recepcionCrearHandler(db: Db, payload: unknown) {
         motivo:           'recepcion_compra',
         cantidad:         item.cantidad_recibida,
         stock_resultante: stockResultante,
-        costo_unitario:   costoUnitarioPesos,
+        costo_unitario_centavos: costoReal,
         referencia_tipo:  'recepcion',
         referencia_id:    recepcionId,
         usuario_id:       session.userId,

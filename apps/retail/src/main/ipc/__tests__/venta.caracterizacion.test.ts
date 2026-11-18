@@ -31,7 +31,7 @@ describe('venta — caracterización previa a E3a', () => {
       .where(eq(schema.impuesto.predeterminado, true)).get()!;
     const prod = productoCreateHandler(db, {
       nombre_corto: 'Tornillo', categoria_id: cat.id, impuesto_id: imp.id,
-      unidad_venta: 'u', precio_venta_lista: 1000,
+      unidad_venta: 'u', precio_venta_lista_centavos: 100000,
     });
     stockEntradaHandler(db, { producto_id: prod.id, cantidad: 10 });
     const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });

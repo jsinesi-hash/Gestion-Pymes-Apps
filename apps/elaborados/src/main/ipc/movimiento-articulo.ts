@@ -4,7 +4,7 @@ import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
 import { getOriginId, requirePermission, str, num, optStr, oneOf, requireSession } from '@core/main';
 import * as schema from '../db/schema';
-import { costoPromedioEntrada } from '../domain/costo';
+import { costoPromedioEntrada } from '@ferreteria/shared';
 
 type Db = BetterSQLite3Database<typeof schema>;
 

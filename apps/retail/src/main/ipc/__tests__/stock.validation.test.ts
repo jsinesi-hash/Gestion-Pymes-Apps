@@ -11,7 +11,7 @@ function createTestProduct(db: Db) {
   runCatalogSeed(db);
   const cat = categoriaCreateHandler(db, { nombre: 'T' });
   const imp = db.select().from(schema.impuesto).all()[0];
-  return productoCreateHandler(db, { nombre_corto: 'P', categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 100 });
+  return productoCreateHandler(db, { nombre_corto: 'P', categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 10000 });
 }
 
 describe('stock validación (ADR-082)', () => {
@@ -29,10 +29,10 @@ describe('stock validación (ADR-082)', () => {
       .toThrow(/VALIDATION:producto_id:TIPO/);
   });
 
-  it('entrada rechaza costo_unitario no numérico si está presente', () => {
+  it('entrada rechaza costo_unitario_centavos no numérico si está presente', () => {
     const db = setupDb(); loginAsAdmin(db);
-    expect(() => stockEntradaHandler(db, { producto_id: 'x', cantidad: 5, costo_unitario: 'caro' } as any))
-      .toThrow(/VALIDATION:costo_unitario:TIPO/);
+    expect(() => stockEntradaHandler(db, { producto_id: 'x', cantidad: 5, costo_unitario_centavos: 'caro' } as any))
+      .toThrow(/VALIDATION:costo_unitario_centavos:TIPO/);
   });
 
   it('entrada preserva guard CANTIDAD_INVALIDA para cantidad <= 0', () => {
@@ -44,7 +44,7 @@ describe('stock validación (ADR-082)', () => {
   it('entrada happy path intacto', () => {
     const db = setupDb(); loginAsAdmin(db);
     const p = createTestProduct(db);
-    const mov = stockEntradaHandler(db, { producto_id: p.id, cantidad: 10, costo_unitario: 500 } as any);
+    const mov = stockEntradaHandler(db, { producto_id: p.id, cantidad: 10, costo_unitario_centavos: 50000 } as any);
     expect(mov.cantidad).toBe(10);
     expect(mov.stock_resultante).toBe(10);
   });

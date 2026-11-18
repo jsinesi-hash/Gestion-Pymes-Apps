@@ -7,8 +7,9 @@ type FilaProducto = {
   nombre_corto: string;
   nombre_largo: string | null;
   unidad_venta: string;
-  precio_venta_lista: number;
-  precio_costo_promedio: number;
+  /** Centavos (ADR-157); el archivo muestra pesos. */
+  precio_venta_lista_centavos: number;
+  precio_costo_promedio_centavos: number;
   margen_ganancia: number | null;
   iva_alicuota: number | null;
   stock_fisico: number | null;
@@ -47,10 +48,10 @@ export const exportProductos: DefinicionExport<FilaProducto> = {
       columnas: [
         { campo: 'sku', label: 'SKU' },
         { campo: 'nombre_corto', label: 'Descripción' },
-        { campo: 'precio_venta_lista', label: 'Precio venta',
-          formato: ars, formatoXlsx: (v) => v },
-        { campo: 'precio_costo_promedio', label: 'Precio costo',
-          formato: ars, formatoXlsx: (v) => v },
+        { campo: 'precio_venta_lista_centavos', label: 'Precio venta',
+          formato: (v) => ars(v / 100), formatoXlsx: (v) => v / 100 },
+        { campo: 'precio_costo_promedio_centavos', label: 'Precio costo',
+          formato: (v) => ars(v / 100), formatoXlsx: (v) => v / 100 },
         { campo: 'margen_ganancia', label: 'Margen %',
           formato: (v) => v == null ? '' : `${v.toFixed(2)}%`,
           formatoXlsx: (v) => v ?? 0 },
@@ -72,10 +73,10 @@ export const exportProductos: DefinicionExport<FilaProducto> = {
         { campo: 'stock_maximo', label: 'Stock máx.',
           formato: (v) => v ?? 0, formatoXlsx: (v) => v ?? 0 },
         { campo: 'ubicacion_codigo', label: 'Ubicación', formato: (v) => v ?? '' },
-        { campo: 'precio_venta_lista', label: 'Precio venta',
-          formato: ars, formatoXlsx: (v) => v },
-        { campo: 'precio_costo_promedio', label: 'Precio costo',
-          formato: ars, formatoXlsx: (v) => v },
+        { campo: 'precio_venta_lista_centavos', label: 'Precio venta',
+          formato: (v) => ars(v / 100), formatoXlsx: (v) => v / 100 },
+        { campo: 'precio_costo_promedio_centavos', label: 'Precio costo',
+          formato: (v) => ars(v / 100), formatoXlsx: (v) => v / 100 },
         { campo: 'activo', label: 'Activo', formato: (v) => v ? 'Sí' : 'No' },
       ],
     },
@@ -88,11 +89,11 @@ export const exportProductos: DefinicionExport<FilaProducto> = {
         { campo: 'sku',                   label: 'sku' },
         { campo: 'nombre_corto',          label: 'nombre' },
         { campo: 'unidad_venta',          label: 'unidad_medida' },
-        { campo: 'precio_venta_lista',    label: 'precio_venta',   formato: arsDecimal },
+        { campo: 'precio_venta_lista_centavos', label: 'precio_venta', formato: (v) => arsDecimal(v / 100) },
         { campo: 'iva_alicuota',          label: 'iva_alicuota',   formato: (v) => String(v ?? 0) },
         { campo: 'categoria_nombre',      label: 'rubro',          formato: (v) => v ?? '' },
         { campo: 'gtin_barcode',          label: 'codigo_barras',  formato: (v) => v ?? '' },
-        { campo: 'precio_costo_promedio', label: 'costo',          formato: arsDecimal },
+        { campo: 'precio_costo_promedio_centavos', label: 'costo',   formato: (v) => arsDecimal(v / 100) },
         { campo: 'stock_minimo',          label: 'stock_minimo',   formato: (v) => String(v ?? 0) },
         { campo: 'activo',                label: 'activo',         formato: (v) => String(v) },
       ],

@@ -5,7 +5,7 @@ import { generateId } from '@ferreteria/shared';
 import { reservarSku } from '../catalog/sku';
 export { parseSku } from '@ferreteria/shared';
 import * as schema from '../db/schema';
-import { getSession, getOriginId, str, optStr, num, bool, id as vId, optId } from '@core/main';
+import { getSession, getOriginId, str, optStr, num, centavos, bool, id as vId, optId } from '@core/main';
 import { crearPresentacionDefault } from './presentacion';
 import { esSinonimosHabilitado, expandirTerminos } from '../sinonimos/buscar';
 import { normalizarTermino } from '../sinonimos/normalizar';
@@ -26,11 +26,11 @@ export type CreateProductoPayload = {
   permite_fraccion?: boolean;
   gtin_barcode?: string;
   impuesto_id: string;
-  precio_venta_lista: number;
+  precio_venta_lista_centavos: number;
   stock_minimo?: number;
   stock_maximo?: number;
   ubicacion_id?: string;
-  stock_inicial?: { cantidad: number; costo?: number };
+  stock_inicial?: { cantidad: number; costo_centavos?: number };
 };
 
 export type UpdateProductoPayload = {
@@ -46,7 +46,7 @@ export type UpdateProductoPayload = {
   permite_fraccion?: boolean;
   gtin_barcode?: string;
   impuesto_id?: string;
-  precio_venta_lista?: number;
+  precio_venta_lista_centavos?: number;
   ubicacion_id?: string;
 };
 
@@ -61,7 +61,7 @@ export type ProductoListParams = {
   stock_status?: 'ok' | 'bajo' | 'sin' | 'bajo_sin';
   filterSku?: string;
   filterNombre?: string;
-  sortBy?: 'sku' | 'nombre_corto' | 'precio_venta_lista' | 'stock_fisico' | 'stock_minimo'
+  sortBy?: 'sku' | 'nombre_corto' | 'precio_venta_lista_centavos' | 'stock_fisico' | 'stock_minimo'
     | 'ubicacion_sector' | 'ubicacion_estante' | 'ubicacion_posicion';
   sortDir?: 'asc' | 'desc';
   page: number;
@@ -111,7 +111,7 @@ export function productoCreateHandler(db: Db, payload: unknown) {
   const categoria_id = vId(p['categoria_id'], 'categoria_id');
   const unidad_venta = str(p['unidad_venta'], 'unidad_venta', { max: 30 });
   const impuesto_id = vId(p['impuesto_id'], 'impuesto_id');
-  const precio_venta_lista = num(p['precio_venta_lista'], 'precio_venta_lista', { min: 0 });
+  const precio_venta_lista_centavos = centavos(p['precio_venta_lista_centavos'], 'precio_venta_lista_centavos');
   const nombre_largo = optStr(p['nombre_largo'], 'nombre_largo', 200);
   const marca_id = optId(p['marca_id'], 'marca_id');
   const gtin_barcode = optStr(p['gtin_barcode'], 'gtin_barcode', 20);
@@ -140,12 +140,13 @@ export function productoCreateHandler(db: Db, payload: unknown) {
 
   // PROD-2 (ADR-078): stock inicial opcional en el alta. Si viene con cantidad>0,
   // el movimiento 'inicial' arranca con esa cantidad y (opcional) su costo → CPP.
-  const stock_inicial = p['stock_inicial'] as { cantidad: number; costo?: number } | undefined;
+  const stock_inicial = p['stock_inicial'] as { cantidad: number; costo_centavos?: number } | undefined;
   const stockInicialCantidad = stock_inicial && stock_inicial.cantidad > 0
     ? stock_inicial.cantidad : 0;
-  // Un `costo` en 0 (o negativo) se trata igual que "sin costo informado": el CPP queda en 0.
-  const stockInicialCosto = stockInicialCantidad > 0 && stock_inicial?.costo != null && stock_inicial.costo > 0
-    ? stock_inicial.costo : null;
+  // Un costo en 0 se trata igual que "sin costo informado": el CPP queda en 0.
+  const costoInformado = stock_inicial?.costo_centavos != null
+    ? centavos(stock_inicial.costo_centavos, 'stock_inicial.costo_centavos') : 0;
+  const stockInicialCosto = stockInicialCantidad > 0 && costoInformado > 0 ? costoInformado : null;
 
   db.transaction((tx) => {
     const { sku, secuencial } = reservarSku(tx);
@@ -163,8 +164,8 @@ export function productoCreateHandler(db: Db, payload: unknown) {
       unidad_compra: unidad_compra ?? null,
       factor_conversion,
       permite_fraccion,
-      precio_costo_promedio: stockInicialCosto ?? 0,
-      precio_venta_lista,
+      precio_costo_promedio_centavos: stockInicialCosto ?? 0,
+      precio_venta_lista_centavos,
       impuesto_id,
       moneda: 'ARS',
       categoria_id,
@@ -192,7 +193,7 @@ export function productoCreateHandler(db: Db, payload: unknown) {
       motivo: 'inicial',
       cantidad: stockInicialCantidad,
       stock_resultante: stockInicialCantidad,
-      costo_unitario: stockInicialCosto,
+      costo_unitario_centavos: stockInicialCosto,
       referencia_tipo: 'sistema',
       referencia_id: id,
       usuario_id: session.userId,
@@ -210,7 +211,7 @@ export function productoCreateHandler(db: Db, payload: unknown) {
       .where(eq(schema.lista_precio.activo, true))
       .all();
 
-    const baseCs = Math.round(precio_venta_lista * 100);
+    const baseCs = precio_venta_lista_centavos;
     for (const lista of listasActivas) {
       tx.insert(schema.lista_precio_valor).values({
         id: generateId(),
@@ -236,7 +237,7 @@ export function productoCreateHandler(db: Db, payload: unknown) {
 
 export type QuickCreateProductoPayload = {
   nombre_corto: string;
-  precio_venta_lista: number;
+  precio_venta_lista_centavos: number;
   gtin_barcode?: string;
 };
 
@@ -255,7 +256,7 @@ export function productoQuickCreateHandler(db: Db, payload: QuickCreateProductoP
     categoria_id,
     unidad_venta,
     impuesto_id: impuesto.id,
-    precio_venta_lista: payload.precio_venta_lista,
+    precio_venta_lista_centavos: payload.precio_venta_lista_centavos,
     ...(payload.gtin_barcode ? { gtin_barcode: payload.gtin_barcode } : {}),
   });
 }
@@ -363,7 +364,7 @@ function buildProductoOrderClause(
   const colByStock =
     sortBy === 'stock_fisico'      ? schema.existencias.stock_fisico :
     sortBy === 'stock_minimo'      ? schema.existencias.stock_minimo :
-    sortBy === 'precio_venta_lista'? schema.producto.precio_venta_lista :
+    sortBy === 'precio_venta_lista_centavos' ? schema.producto.precio_venta_lista_centavos :
     colByUbic;
   const col =
     sortBy === 'nombre_corto' ? schema.producto.nombre_corto : colByStock;
@@ -400,7 +401,7 @@ export function productoListHandler(db: Db, params: ProductoListParams) {
       gtin_barcode: schema.producto.gtin_barcode,
       nombre_corto: schema.producto.nombre_corto,
       nombre_largo: schema.producto.nombre_largo,
-      precio_venta_lista: schema.producto.precio_venta_lista,
+      precio_venta_lista_centavos: schema.producto.precio_venta_lista_centavos,
       unidad_venta: schema.producto.unidad_venta,
       activo: schema.producto.activo,
       categoria_id: schema.producto.categoria_id,
@@ -482,8 +483,8 @@ export function productoQueryAll(db: Db, filtros: ProductoExportFiltros) {
     nombre_corto:          schema.producto.nombre_corto,
     nombre_largo:          schema.producto.nombre_largo,
     unidad_venta:          schema.producto.unidad_venta,
-    precio_venta_lista:    schema.producto.precio_venta_lista,
-    precio_costo_promedio: schema.producto.precio_costo_promedio,
+    precio_venta_lista_centavos:    schema.producto.precio_venta_lista_centavos,
+    precio_costo_promedio_centavos: schema.producto.precio_costo_promedio_centavos,
     margen_ganancia:       schema.producto.margen_ganancia,
     activo:                schema.producto.activo,
     stock_fisico:          schema.existencias.stock_fisico,
@@ -540,7 +541,9 @@ export function productoUpdateHandler(db: Db, payload: unknown) {
   if (p['permite_fraccion'] !== undefined) updates.permite_fraccion = bool(p['permite_fraccion'], 'permite_fraccion');
   if (p['gtin_barcode'] !== undefined) updates.gtin_barcode = optStr(p['gtin_barcode'], 'gtin_barcode', 20) ?? null;
   if (p['impuesto_id'] !== undefined) updates.impuesto_id = vId(p['impuesto_id'], 'impuesto_id');
-  if (p['precio_venta_lista'] !== undefined) updates.precio_venta_lista = num(p['precio_venta_lista'], 'precio_venta_lista', { min: 0 });
+  if (p['precio_venta_lista_centavos'] !== undefined) {
+    updates.precio_venta_lista_centavos = centavos(p['precio_venta_lista_centavos'], 'precio_venta_lista_centavos');
+  }
   if (p['ubicacion_id'] !== undefined) updates.ubicacion_id = optId(p['ubicacion_id'], 'ubicacion_id') ?? null;
   // ADR-067: mantener la proyección normalizada en sync cuando cambia el nombre.
   if (updates.nombre_corto !== undefined) {
@@ -635,7 +638,7 @@ export function buscarSimilaresHandler(db: Db, params: BuscarSimilaresParams): C
   const ids = base.map(c => c.producto_id);
   const filas = db.select({
     id: schema.producto.id,
-    precio_venta_lista: schema.producto.precio_venta_lista,
+    precio_venta_lista_centavos: schema.producto.precio_venta_lista_centavos,
     marca_nombre: schema.marca.nombre,
     stock_fisico: schema.existencias.stock_fisico,
   }).from(schema.producto)
@@ -664,7 +667,7 @@ export function buscarSimilaresHandler(db: Db, params: BuscarSimilaresParams): C
       precioBaseCentavos = r.precio_centavos;
       origen = r.origen;
     } else {
-      precioBaseCentavos = Math.round((f?.precio_venta_lista ?? 0) * 100);
+      precioBaseCentavos = f?.precio_venta_lista_centavos ?? 0;
       origen = 'fallback';
     }
     return {

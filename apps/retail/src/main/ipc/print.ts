@@ -14,7 +14,7 @@ export async function printProductLabelHandler(
   // QR y code128 codifican el SKU pelado (ADR-025 + ADR-026). Sin columna codigo_qr.
   await service.printProductLabel({
     codigoQr: producto.sku, nombre: producto.nombre_corto,
-    sku: producto.sku, precio: String(producto.precio_venta_lista),
+    sku: producto.sku, precio: String(producto.precio_venta_lista_centavos / 100),
   }, payload.format ?? 'label');
 }
 

@@ -20,10 +20,10 @@ function buildAuth(isSupervisor: boolean) {
   };
 }
 
-function renderPanel(isSupervisor = true, productoId = 'p1', precioVentaLista = 1000) {
+function renderPanel(isSupervisor = true, productoId = 'p1', precioVentaListaCentavos = 100000) {
   return render(
     <AuthContext.Provider value={buildAuth(isSupervisor)}>
-      <PrecioPanel productoId={productoId} precioVentaLista={precioVentaLista} />
+      <PrecioPanel productoId={productoId} precioVentaListaCentavos={precioVentaListaCentavos} />
     </AuthContext.Provider>
   );
 }
@@ -50,7 +50,7 @@ describe('PrecioPanel', () => {
 
   it('muestra precio fallback calculado cuando no hay vigente', async () => {
     // sin vigentes → fallback: General 0% → $1000.00; Mayorista -10% → $900.00
-    renderPanel(true, 'p1', 1000);
+    renderPanel(true, 'p1', 100000);
     await waitFor(() => expect(screen.getByText('Mayorista')).toBeInTheDocument());
     expect(screen.getByTestId('precio-l1')).toHaveTextContent('1.000');
     expect(screen.getByTestId('precio-l2')).toHaveTextContent('900');
@@ -63,7 +63,7 @@ describe('PrecioPanel', () => {
     mockListVigentes.mockResolvedValue([
       { lista_id: 'l1', precio_centavos: 120000, fecha_desde: '2024-01-01', origen: 'manual', precio_promocion_centavos: null },
     ]);
-    renderPanel(true, 'p1', 1000);
+    renderPanel(true, 'p1', 100000);
     await waitFor(() => expect(screen.getByText('General')).toBeInTheDocument());
     // debe mostrar $1.200,00 (120000 centavos)
     expect(screen.getByTestId('precio-l1')).toHaveTextContent('1.200');
@@ -76,7 +76,7 @@ describe('PrecioPanel', () => {
     mockListVigentes.mockResolvedValue([
       { lista_id: 'l1', precio_centavos: 100000, precio_promocion_centavos: 80000, promo_hasta: '2025-12-31', fecha_desde: '2024-01-01', origen: 'manual' },
     ]);
-    renderPanel(true, 'p1', 1000);
+    renderPanel(true, 'p1', 100000);
     await waitFor(() => expect(screen.getByText('General')).toBeInTheDocument());
     // precio promo en verde
     expect(screen.getByText('$800,00')).toBeInTheDocument();

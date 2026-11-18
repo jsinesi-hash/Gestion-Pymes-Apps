@@ -83,7 +83,8 @@ export function ProductoForm() {
       permite_fraccion: producto.permite_fraccion ?? false,
       gtin_barcode: producto.gtin_barcode ?? '',
       impuesto_id: producto.impuesto_id ?? '',
-      precio_venta_lista: String(producto.precio_venta_lista ?? ''),
+      // El formulario tipea pesos; el producto guarda centavos (ADR-157).
+      precio_venta_lista: producto.precio_venta_lista_centavos != null ? String(producto.precio_venta_lista_centavos / 100) : '',
       stock_minimo: '', stock_maximo: '',
       stock_inicial_cantidad: '', stock_inicial_costo: '',
       ubicacion_id: producto.ubicacion_id ?? '',
@@ -120,7 +121,7 @@ export function ProductoForm() {
     const iniCant = Number(form.stock_inicial_cantidad);
     const iniCosto = form.stock_inicial_costo !== '' ? Number(form.stock_inicial_costo) : undefined;
     const stock_inicial = (!modoEdicion && form.stock_inicial_cantidad !== '' && !Number.isNaN(iniCant) && iniCant > 0)
-      ? { cantidad: iniCant, ...(iniCosto != null && !Number.isNaN(iniCosto) && iniCosto > 0 ? { costo: iniCosto } : {}) }
+      ? { cantidad: iniCant, ...(iniCosto != null && !Number.isNaN(iniCosto) && iniCosto > 0 ? { costo_centavos: Math.round(iniCosto * 100) } : {}) }
       : undefined;
     const payload = {
       nombre_corto: form.nombre_corto,
@@ -134,7 +135,7 @@ export function ProductoForm() {
       permite_fraccion: form.permite_fraccion,
       gtin_barcode: form.gtin_barcode || undefined,
       impuesto_id: form.impuesto_id,
-      precio_venta_lista: Number(form.precio_venta_lista),
+      precio_venta_lista_centavos: Math.round(Number(form.precio_venta_lista) * 100),
       stock_minimo: form.stock_minimo ? Number(form.stock_minimo) : undefined,
       stock_maximo: form.stock_maximo ? Number(form.stock_maximo) : undefined,
       ubicacion_id: form.ubicacion_id || undefined,

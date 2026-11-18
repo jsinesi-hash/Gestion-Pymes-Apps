@@ -29,6 +29,6 @@ describe('AltaExpressModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /crear producto/i }));
     await waitFor(() => expect(onCreado).toHaveBeenCalledWith(expect.objectContaining({ id: 'p1' })));
     expect((globalThis as any).ferreteria.catalogo.producto.quickCreate)
-      .toHaveBeenCalledWith(expect.objectContaining({ nombre_corto: 'Taladro', precio_venta_lista: 1500 }));
+      .toHaveBeenCalledWith(expect.objectContaining({ nombre_corto: 'Taladro', precio_venta_lista_centavos: 150000 }));
   });
 });

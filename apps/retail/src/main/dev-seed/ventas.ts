@@ -151,10 +151,10 @@ export function seedVentas(db: Db, force: boolean): void {
   const todos = db.select({
     id: schema.producto.id,
     sku: schema.producto.sku,
-    precio: schema.producto.precio_venta_lista,
+    precio_centavos: schema.producto.precio_venta_lista_centavos,
     nombre: schema.producto.nombre_corto,
   }).from(schema.producto).all();
-  const prod = Object.fromEntries(todos.map(p => [p.sku, p]));
+  const prod = Object.fromEntries(todos.map(p => [p.sku, { ...p, precio: p.precio_centavos / 100 }]));
 
   const clientes = db.select({ id: schema.cliente.id, doc: schema.cliente.numero_documento })
     .from(schema.cliente).all();

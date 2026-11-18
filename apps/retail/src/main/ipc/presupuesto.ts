@@ -86,7 +86,7 @@ export function computarPresupuesto(
         productoId: l.producto_id, listaId: listaPred.id,
       }).precio_centavos;
     } else {
-      precioCentavos = Math.round(prod.precio_venta_lista * 100);
+      precioCentavos = prod.precio_venta_lista_centavos;
     }
 
     // Factor de presentacion (ADR-040): la presentacion elegida o la default.

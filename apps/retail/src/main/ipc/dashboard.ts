@@ -33,7 +33,7 @@ export type StockAlerta = {
 };
 
 export type DashboardStock = {
-  valor_inventario: number;
+  valor_inventario_centavos: number;
   sin_stock: StockAlerta[];
   bajo_minimo: StockAlerta[];
   sin_movimiento: StockAlerta[];
@@ -105,13 +105,13 @@ export function dashboardVentasHandler(db: Db): DashboardVentas {
   const top_margen = db.select({
     producto_id:     schema.venta_detalle.producto_id,
     nombre:          schema.producto.nombre_corto,
-    margen_estimado_centavos: sql<number>`CAST(ROUND(sum((${schema.venta_detalle.precio_unitario_centavos} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio} * 100.0) * ${schema.venta_detalle.cantidad})) AS INTEGER)`,
+    margen_estimado_centavos: sql<number>`CAST(ROUND(sum((${schema.venta_detalle.precio_unitario_centavos} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio_centavos}) * ${schema.venta_detalle.cantidad})) AS INTEGER)`,
   }).from(schema.venta_detalle)
     .innerJoin(schema.venta, eq(schema.venta_detalle.venta_id, schema.venta.id))
     .innerJoin(schema.producto, eq(schema.venta_detalle.producto_id, schema.producto.id))
     .where(and(baseWhere, vdViva()))
     .groupBy(schema.venta_detalle.producto_id)
-    .orderBy(desc(sql`sum((${schema.venta_detalle.precio_unitario_centavos} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio} * 100.0) * ${schema.venta_detalle.cantidad})`))
+    .orderBy(desc(sql`sum((${schema.venta_detalle.precio_unitario_centavos} / (1.0 + ${schema.venta_detalle.alicuota_iva} / 100.0) - ${schema.producto.precio_costo_promedio_centavos}) * ${schema.venta_detalle.cantidad})`))
     .limit(5).all();
 
   return {
@@ -128,12 +128,12 @@ export function dashboardStockHandler(db: Db): DashboardStock {
   const diasSinMovimiento = Math.trunc(leerParametroNumero(db, 'dashboard_dias_sin_movimiento', 90));
 
   const invRow = db.select({
-    valor: sql<number>`coalesce(sum(${schema.existencias.stock_fisico} * ${schema.producto.precio_costo_promedio}), 0)`,
+    valor: sql<number>`CAST(ROUND(coalesce(sum(${schema.existencias.stock_fisico} * ${schema.producto.precio_costo_promedio_centavos}), 0)) AS INTEGER)`,
   }).from(schema.producto)
     .innerJoin(schema.existencias, eq(schema.existencias.producto_id, schema.producto.id))
     .where(eq(schema.producto.activo, true))
     .get()!;
-  const valor_inventario = invRow.valor ?? 0;
+  const valor_inventario_centavos = invRow.valor ?? 0;
 
   const hace30Dias = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const velocidades = db.select({
@@ -197,7 +197,7 @@ export function dashboardStockHandler(db: Db): DashboardStock {
     })
     .map(toAlerta);
 
-  return { valor_inventario, sin_stock, bajo_minimo, sin_movimiento };
+  return { valor_inventario_centavos, sin_stock, bajo_minimo, sin_movimiento };
 }
 
 export function dashboardCajaHandler(db: Db): DashboardCaja {

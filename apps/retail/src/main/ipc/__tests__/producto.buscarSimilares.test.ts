@@ -16,7 +16,7 @@ function seedProductos(db: Db) {
   const imp = db.select().from(schema.impuesto).all()[0];
   const mk = (nombre_corto: string) => productoCreateHandler(db, {
     nombre_corto, categoria_id: cat.id, impuesto_id: imp.id,
-    unidad_venta: 'unidad', precio_venta_lista: 100,
+    unidad_venta: 'unidad', precio_venta_lista_centavos: 10000,
   });
   return {
     tarugo:   mk('Tarugo plástico 8mm'),

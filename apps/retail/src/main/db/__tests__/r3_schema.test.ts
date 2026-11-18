@@ -32,7 +32,7 @@ function insertProducto(db: Database.Database, id: string, categoriaId = 'cat1')
   insertCategoria(db, categoriaId);
   db.prepare(`
     INSERT INTO producto (id, sku, sku_secuencial, nombre_corto, nombre_largo,
-      unidad_venta, precio_costo_promedio, precio_venta_lista,
+      unidad_venta, precio_costo_promedio_centavos, precio_venta_lista_centavos,
       categoria_id, activo, version, origin_id, sync_state, updated_at,
       usuario_creacion_id, fecha_creacion)
     VALUES ('${id}', 'P-000000${id.slice(-1)}-0', 1, '${id}', 'Producto',

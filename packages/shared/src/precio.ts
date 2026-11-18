@@ -6,7 +6,7 @@
  */
 
 export type LineaPrecioInput = {
-  /** precio_venta_lista × 100, entero. IVA incluido. */
+  /** producto.precio_venta_lista_centavos, entero. IVA incluido. */
   precioListaCentavos: number;
   /** Ajuste efectivo de la lista. Usar ajusteEfectivo(general, override) antes de llamar. */
   ajustePct: number;

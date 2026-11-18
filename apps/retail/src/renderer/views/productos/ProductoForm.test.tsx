@@ -114,7 +114,7 @@ describe('ProductoForm — PROD-2: stock inicial en el alta', () => {
     fireEvent.submit(screen.getByTestId('producto-form'));
     await waitFor(() => expect(mockCreate).toHaveBeenCalled());
     expect(mockCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ stock_inicial: { cantidad: 10, costo: 300 } }),
+      expect.objectContaining({ stock_inicial: { cantidad: 10, costo_centavos: 30000 } }),
     );
   });
 

@@ -115,3 +115,21 @@ export function costoNeto(
 ): CostoNetoResult {
   return calcularCostoNeto(brutoCentavos, resolverComponentesComerciales(override, defaults));
 }
+
+/**
+ * Costo promedio ponderado de una entrada con costo, en centavos enteros (ADR-157; antes vivía en
+ * Elaborados). `(stock · costo + cantidad · costo_entra) / (stock + cantidad)`, redondeado al centavo.
+ * Sin stock previo positivo no hay base para ponderar, y una entrada de cantidad 0 con costo (alta o
+ * importación sin stock) fija el costo: en los dos casos el costo nuevo es el que entra.
+ */
+export function costoPromedioEntrada(
+  stockPrevio: number,
+  costoPromedioPrevioCentavos: number,
+  cantidadEntra: number,
+  costoEntraCentavos: number,
+): number {
+  if (stockPrevio <= 0 || cantidadEntra <= 0) return costoEntraCentavos;
+  const valorPrevio = stockPrevio * costoPromedioPrevioCentavos;
+  const valorEntra = cantidadEntra * costoEntraCentavos;
+  return Math.round((valorPrevio + valorEntra) / (stockPrevio + cantidadEntra));
+}

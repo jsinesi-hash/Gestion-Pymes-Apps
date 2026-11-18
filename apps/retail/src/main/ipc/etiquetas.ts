@@ -37,7 +37,7 @@ export function etiquetasListarProductosHandler(db: Db, params: ListarProductosP
     producto_id:        schema.producto.id,
     sku:                schema.producto.sku,
     nombre:             schema.producto.nombre_corto,
-    precio_venta_lista: schema.producto.precio_venta_lista,
+    precio_venta_lista_centavos: schema.producto.precio_venta_lista_centavos,
     gtin_barcode:       schema.producto.gtin_barcode,
   })
     .from(schema.producto)
@@ -62,7 +62,7 @@ export function etiquetasListarProductosHandler(db: Db, params: ListarProductosP
     producto_id: r.producto_id,
     sku:         r.sku,
     nombre:      r.nombre,
-    precio_venta_lista_centavos: Math.round(r.precio_venta_lista * 100),
+    precio_venta_lista_centavos: r.precio_venta_lista_centavos,
     gtin_barcode: r.gtin_barcode ?? null,
   }));
 }

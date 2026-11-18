@@ -33,7 +33,7 @@ describe('productoQueryAll', () => {
     for (let i = 0; i < 3; i++) {
       productoCreateHandler(db, {
         nombre_corto: `Prod ${i}`, categoria_id: cat.id,
-        impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 100,
+        impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 10000,
       });
     }
     expect(productoQueryAll(db, {}).length).toBe(3);
@@ -43,7 +43,7 @@ describe('productoQueryAll', () => {
     const imp = db.select().from(schema.impuesto).get()!;
     productoCreateHandler(db, {
       nombre_corto: 'Tornillo', categoria_id: cat.id,
-      impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 100,
+      impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 10000,
     });
     const row = productoQueryAll(db, {})[0];
     expect(row.categoria_nombre).toBe('Test');
@@ -54,7 +54,7 @@ describe('productoQueryAll', () => {
     const imp = db.select().from(schema.impuesto).get()!;
     const p = productoCreateHandler(db, {
       nombre_corto: 'Inactivo', categoria_id: cat.id,
-      impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 100,
+      impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 10000,
     });
     db.update(schema.producto).set({ activo: false })
       .where(eq(schema.producto.id, p.id)).run();
@@ -69,7 +69,7 @@ describe('productoQueryAll', () => {
     const imp = db.select().from(schema.impuesto).get()!;
     const p = productoCreateHandler(db, {
       nombre_corto: 'Cinta aisladora', categoria_id: cat.id,
-      impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 100,
+      impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 10000,
       gtin_barcode: '7791234567890',
     });
     const rows = productoQueryAll(db, { busqueda: '123456' });
@@ -83,12 +83,12 @@ describe('stockQueryAll', () => {
     const imp = db.select().from(schema.impuesto).get()!;
     productoCreateHandler(db, {
       nombre_corto: 'Producto A', categoria_id: cat.id,
-      impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 100,
+      impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 10000,
     });
     const rows = stockQueryAll(db, {});
     expect(rows.length).toBeGreaterThanOrEqual(1);
     expect(rows[0]).toHaveProperty('stock_fisico');
-    expect(rows[0]).toHaveProperty('precio_costo_promedio');
+    expect(rows[0]).toHaveProperty('precio_costo_promedio_centavos');
   });
 });
 
@@ -138,7 +138,7 @@ describe('ventaQueryAll', () => {
     const imp = db.select().from(schema.impuesto).get()!;
     const prod = productoCreateHandler(db, {
       nombre_corto: 'Tornillo', categoria_id: cat.id,
-      impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 1000,
+      impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 100000,
     });
     stockEntradaHandler(db, { producto_id: prod.id, cantidad: 10 });
     const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });
@@ -180,7 +180,7 @@ describe('ventaDetalladoQueryAll', () => {
     const imp = db.select().from(schema.impuesto).get()!;
     const prod = productoCreateHandler(db, {
       nombre_corto: 'Tornillo', categoria_id: cat.id,
-      impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 1000,
+      impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 100000,
     });
     stockEntradaHandler(db, { producto_id: prod.id, cantidad: 10 });
     const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 0 });

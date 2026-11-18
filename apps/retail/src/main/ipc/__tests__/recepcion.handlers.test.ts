@@ -37,7 +37,7 @@ beforeEach(() => {
     categoria_id: cat.id,
     impuesto_id: imp.id,
     unidad_venta: 'u',
-    precio_venta_lista: 100,
+    precio_venta_lista_centavos: 10000,
   });
   productoId = prod.id;
 
@@ -135,8 +135,8 @@ describe('recepcionCrearHandler', () => {
     });
     const desProd = db.select().from(schema.producto)
       .where(eq(schema.producto.id, productoId)).get()!;
-    // CPP should update: new cost = 10 pesos (1000 centavos)
-    expect(desProd.precio_costo_promedio).toBeGreaterThan(anteProd.precio_costo_promedio);
+    // CPP should update: new cost = 1000 centavos
+    expect(desProd.precio_costo_promedio_centavos).toBeGreaterThan(anteProd.precio_costo_promedio_centavos);
   });
 
   it('actualiza producto_proveedor.costo_centavos cuando el costo real difiere', () => {

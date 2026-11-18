@@ -17,12 +17,12 @@ const mockMarcaList = vi.fn();
 const PRODUCTS = [
   {
     id: 'p1', sku: 'P-0000001-1', nombre_corto: 'Taladro',
-    precio_venta_lista: 5000, activo: true, stock_fisico: 20,
+    precio_venta_lista_centavos: 500000, activo: true, stock_fisico: 20,
     ubicacion_sector: 'Pasillo A', ubicacion_estante: '01', ubicacion_posicion: '03',
   },
   {
     id: 'p2', sku: 'P-0000002-2', nombre_corto: 'Sierra',
-    precio_venta_lista: 8000, activo: true, stock_fisico: 5,
+    precio_venta_lista_centavos: 800000, activo: true, stock_fisico: 5,
     ubicacion_sector: null, ubicacion_estante: null, ubicacion_posicion: null,
   },
 ];

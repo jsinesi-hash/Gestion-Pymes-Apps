@@ -20,7 +20,7 @@ function makeBase(db: Db): CreateProductoPayload {
   runCatalogSeed(db);
   const cat = categoriaCreateHandler(db, { nombre: 'Test' });
   const imp = db.select().from(schema.impuesto).all()[0];
-  return { nombre_corto: 'Taladro', categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'unidad', precio_venta_lista: 5000 };
+  return { nombre_corto: 'Taladro', categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'unidad', precio_venta_lista_centavos: 500000 };
 }
 
 describe('producto handlers', () => {
@@ -54,7 +54,7 @@ describe('producto handlers', () => {
 
   it('create con stock_inicial setea existencias, movimiento y CPP', () => {
     loginAsAdmin(db);
-    const p = productoCreateHandler(db, { ...makeBase(db), stock_inicial: { cantidad: 10, costo: 300 } });
+    const p = productoCreateHandler(db, { ...makeBase(db), stock_inicial: { cantidad: 10, costo_centavos: 30000 } });
     const ex = db.select().from(schema.existencias).all().find(e => e.producto_id === p.id);
     const mv = db.select().from(schema.movimiento_stock).all().find(m => m.producto_id === p.id);
     const prod = db.select().from(schema.producto).where(eq(schema.producto.id, p.id)).get();
@@ -62,8 +62,8 @@ describe('producto handlers', () => {
     expect(mv?.motivo).toBe('inicial');
     expect(mv?.cantidad).toBe(10);
     expect(mv?.stock_resultante).toBe(10);
-    expect(mv?.costo_unitario).toBe(300);
-    expect(prod?.precio_costo_promedio).toBe(300);
+    expect(mv?.costo_unitario_centavos).toBe(30000);
+    expect(prod?.precio_costo_promedio_centavos).toBe(30000);
   });
 
   it('create con stock_inicial sin costo: stock sí, CPP queda en 0', () => {
@@ -72,7 +72,7 @@ describe('producto handlers', () => {
     const ex = db.select().from(schema.existencias).all().find(e => e.producto_id === p.id);
     const prod = db.select().from(schema.producto).where(eq(schema.producto.id, p.id)).get();
     expect(ex?.stock_fisico).toBe(5);
-    expect(prod?.precio_costo_promedio).toBe(0);
+    expect(prod?.precio_costo_promedio_centavos).toBe(0);
   });
 
   it('create con stock_inicial de cantidad inválida (<=0) no mueve stock ni CPP', () => {
@@ -83,7 +83,7 @@ describe('producto handlers', () => {
     const prod = db.select().from(schema.producto).where(eq(schema.producto.id, p.id)).get();
     expect(ex?.stock_fisico).toBe(0);
     expect(mv?.cantidad).toBe(0);
-    expect(prod?.precio_costo_promedio).toBe(0);
+    expect(prod?.precio_costo_promedio_centavos).toBe(0);
   });
 
   it('nombre_largo por defecto = nombre_corto', () => {
@@ -215,7 +215,7 @@ describe('producto handlers', () => {
       const imp = db.select().from(schema.impuesto).all()[0];
       productoCreateHandler(db, {
         nombre_corto: 'Cinta aisladora', categoria_id: cat.id, impuesto_id: imp.id,
-        unidad_venta: 'u', precio_venta_lista: 100, gtin_barcode: '7791234567890',
+        unidad_venta: 'u', precio_venta_lista_centavos: 10000, gtin_barcode: '7791234567890',
       });
       const res = productoListHandler(db, { busqueda: '123456', page: 1, pageSize: 10 });
       expect(res.items.some((p: any) => p.gtin_barcode === '7791234567890')).toBe(true);
@@ -299,9 +299,9 @@ describe('producto handlers', () => {
       const base = makeBase(db);
       const ubZ = ubicacionCreateHandler(db, { sector: 'Zeta', estante: '09', posicion: '09' });
       const ubA = ubicacionCreateHandler(db, { sector: 'Alfa', estante: '01', posicion: '01' });
-      productoCreateHandler(db, { ...base, nombre_corto: 'Zeta prod', precio_venta_lista: 300, ubicacion_id: ubZ.id });
-      productoCreateHandler(db, { ...base, nombre_corto: 'Alfa prod', precio_venta_lista: 100, ubicacion_id: ubA.id });
-      productoCreateHandler(db, { ...base, nombre_corto: 'Media prod', precio_venta_lista: 200 });
+      productoCreateHandler(db, { ...base, nombre_corto: 'Zeta prod', precio_venta_lista_centavos: 30000, ubicacion_id: ubZ.id });
+      productoCreateHandler(db, { ...base, nombre_corto: 'Alfa prod', precio_venta_lista_centavos: 10000, ubicacion_id: ubA.id });
+      productoCreateHandler(db, { ...base, nombre_corto: 'Media prod', precio_venta_lista_centavos: 20000 });
     }
 
     it('ordena por nombre_corto asc/desc', () => {
@@ -312,10 +312,10 @@ describe('producto handlers', () => {
       expect(desc.items.map(i => i.nombre_corto)).toEqual(['Zeta prod', 'Media prod', 'Alfa prod']);
     });
 
-    it('ordena por precio_venta_lista', () => {
+    it('ordena por precio_venta_lista_centavos', () => {
       seedParaOrdenar();
-      const asc = productoListHandler(db, { sortBy: 'precio_venta_lista', sortDir: 'asc', page: 1, pageSize: 10 });
-      expect(asc.items.map(i => i.precio_venta_lista)).toEqual([100, 200, 300]);
+      const asc = productoListHandler(db, { sortBy: 'precio_venta_lista_centavos', sortDir: 'asc', page: 1, pageSize: 10 });
+      expect(asc.items.map(i => i.precio_venta_lista_centavos)).toEqual([10000, 20000, 30000]);
     });
 
     it('ordena por ubicacion_sector: entre los ubicados, Alfa antes que Zeta', () => {
@@ -463,7 +463,7 @@ describe('producto handlers', () => {
       categoria_id: catId,
       unidad_venta: 'und',
       impuesto_id: imp.id,
-      precio_venta_lista: 100,
+      precio_venta_lista_centavos: 10000,
     });
 
     const lpvRows = db.select().from(schema.lista_precio_valor).all();
@@ -477,9 +477,9 @@ describe('producto handlers', () => {
   describe('productoQuickCreateHandler', () => {
     it('crea el mínimo viable con categoría Sin clasificar, unidad y IVA por defecto', () => {
       const db = setupDb(); runCatalogSeed(db); loginAsAdmin(db);
-      const p = productoQuickCreateHandler(db, { nombre_corto: 'Cosa X', precio_venta_lista: 100 });
+      const p = productoQuickCreateHandler(db, { nombre_corto: 'Cosa X', precio_venta_lista_centavos: 10000 });
       expect(p.sku).toMatch(/^P-\d{7}-\d$/);
-      expect(p.precio_venta_lista).toBe(100);
+      expect(p.precio_venta_lista_centavos).toBe(10000);
       const cat = db.select().from(schema.categoria).where(eq(schema.categoria.id, p.categoria_id)).get()!;
       expect(cat.nombre).toBe('Sin clasificar');
       expect(cat.categoria_padre_id).toBeNull();
@@ -489,8 +489,8 @@ describe('producto handlers', () => {
 
     it('reutiliza la categoría Sin clasificar en altas sucesivas', () => {
       const db = setupDb(); runCatalogSeed(db); loginAsAdmin(db);
-      const a = productoQuickCreateHandler(db, { nombre_corto: 'A', precio_venta_lista: 10 });
-      const b = productoQuickCreateHandler(db, { nombre_corto: 'B', precio_venta_lista: 20 });
+      const a = productoQuickCreateHandler(db, { nombre_corto: 'A', precio_venta_lista_centavos: 1000 });
+      const b = productoQuickCreateHandler(db, { nombre_corto: 'B', precio_venta_lista_centavos: 2000 });
       expect(a.categoria_id).toBe(b.categoria_id);
       const n = db.select().from(schema.categoria).where(eq(schema.categoria.nombre, 'Sin clasificar')).all().length;
       expect(n).toBe(1);
@@ -498,7 +498,7 @@ describe('producto handlers', () => {
 
     it('guarda el gtin cuando se informa', () => {
       const db = setupDb(); runCatalogSeed(db); loginAsAdmin(db);
-      const p = productoQuickCreateHandler(db, { nombre_corto: 'C', precio_venta_lista: 5, gtin_barcode: '7790000000017' });
+      const p = productoQuickCreateHandler(db, { nombre_corto: 'C', precio_venta_lista_centavos: 500, gtin_barcode: '7790000000017' });
       expect(p.gtin_barcode).toBe('7790000000017');
     });
   });

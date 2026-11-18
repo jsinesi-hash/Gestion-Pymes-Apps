@@ -84,7 +84,7 @@ describe('validarProductos', () => {
       nombre_corto: (over.nombre_corto as string) ?? 'Martillo',
       nombre_corto_norm: (over.nombre_corto_norm as string) ?? 'martillo',
       nombre_largo: 'Martillo', unidad_venta: 'u',
-      precio_venta_lista: 1500, precio_costo_promedio: 0,
+      precio_venta_lista_centavos: 150000, precio_costo_promedio_centavos: 0,
       impuesto_id: imp.id, categoria_id: cat.id,
       marca_id: (over.marca_id as string | null) ?? null,
       activo: true, moneda: 'ARS', factor_conversion: 1, permite_fraccion: false,
@@ -160,7 +160,7 @@ describe('validarProductos', () => {
       id: 'prod-1', sku: 'P-0000001-9', sku_secuencial: 1,
       gtin_barcode: '7891234560001',
       nombre_corto: 'Martillo', nombre_largo: 'Martillo',
-      unidad_venta: 'u', precio_venta_lista: 1500, precio_costo_promedio: 0,
+      unidad_venta: 'u', precio_venta_lista_centavos: 150000, precio_costo_promedio_centavos: 0,
       impuesto_id: imp.id, categoria_id: cat.id,
       activo: true, moneda: 'ARS', factor_conversion: 1, permite_fraccion: false,
       usuario_creacion_id: 'admin', fecha_creacion: now, ...sync,
@@ -265,7 +265,7 @@ describe('confirmarProductos', () => {
     const imp = db.select().from(schema.impuesto).get()!;
     return {
       fila: 2, status: 'ok',
-      data: { nombre: 'Tornillo', categoria_id: cat.id, impuesto_id: imp.id, precio_venta_lista: 500, unidad_venta: 'u', gtin_barcode: null, costo: 0, stock_minimo: 0, activo: true, ...overrides },
+      data: { nombre: 'Tornillo', categoria_id: cat.id, impuesto_id: imp.id, precio_venta_lista_centavos: 50000, unidad_venta: 'u', gtin_barcode: null, costo_centavos: 0, stock_minimo: 0, activo: true, ...overrides },
     };
   }
 
@@ -281,10 +281,10 @@ describe('confirmarProductos', () => {
   });
 
   it('aplica stock_minimo y costo al crear', () => {
-    const result = confirmarProductos(db, { rows: [buildValidRow({ stock_minimo: 5, costo: 200 })] });
+    const result = confirmarProductos(db, { rows: [buildValidRow({ stock_minimo: 5, costo_centavos: 20000 })] });
     expect(result.stats.created).toBe(1);
     const prod = db.select().from(schema.producto).get()!;
-    expect(prod.precio_costo_promedio).toBe(200);
+    expect(prod.precio_costo_promedio_centavos).toBe(20000);
     const exist = db.select().from(schema.existencias).where(eq(schema.existencias.producto_id, prod.id)).get();
     expect(exist?.stock_minimo).toBe(5);
   });
@@ -295,13 +295,13 @@ describe('confirmarProductos', () => {
     const prod = db.select().from(schema.producto).get()!;
     const updateRow: import('../importar').ImportRowResult = {
       fila: 2, status: 'update',
-      data: { ...row.data, id: prod.id, precio_venta_lista: 999 },
+      data: { ...row.data, id: prod.id, precio_venta_lista_centavos: 99900 },
       matchKey: `SKU ${prod.sku}`,
     };
     const result = confirmarProductos(db, { rows: [updateRow] });
     expect(result.stats.updated).toBe(1);
     const updated = db.select().from(schema.producto).get()!;
-    expect(updated.precio_venta_lista).toBe(999);
+    expect(updated.precio_venta_lista_centavos).toBe(99900);
   });
 
   it('continúa con siguientes filas si una falla en DB', () => {
@@ -681,7 +681,7 @@ describe('validarStockInicial', () => {
   function crearProducto() {
     const cat = categoriaCreateHandler(db, { nombre: 'Cat' });
     const imp = db.select().from(schema.impuesto).get()!;
-    return productoCreateHandler(db, { nombre_corto: 'P', categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 100 });
+    return productoCreateHandler(db, { nombre_corto: 'P', categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 10000 });
   }
 
   it('ok cuando SKU existe y cantidad es positiva', () => {
@@ -710,7 +710,7 @@ describe('confirmarStockInicial', () => {
   it('crea MovimientoStock inicial y actualiza Existencias', () => {
     const cat = categoriaCreateHandler(db, { nombre: 'Cat' });
     const imp = db.select().from(schema.impuesto).get()!;
-    const prod = productoCreateHandler(db, { nombre_corto: 'P', categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 100 });
+    const prod = productoCreateHandler(db, { nombre_corto: 'P', categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 10000 });
     const csv = `sku,cantidad\n${prod.sku},15`;
     const preview = validarStockInicial(db, { csv });
     const result = confirmarStockInicial(db, { rows: preview.rows });
@@ -727,13 +727,13 @@ describe('confirmarStockInicial', () => {
   it('actualiza precio_costo_promedio con costo promedio ponderado', () => {
     const cat = categoriaCreateHandler(db, { nombre: 'Cat' });
     const imp = db.select().from(schema.impuesto).get()!;
-    const prod = productoCreateHandler(db, { nombre_corto: 'P', categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 100 });
+    const prod = productoCreateHandler(db, { nombre_corto: 'P', categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 10000 });
     const csv = `sku,cantidad,costo_unitario\n${prod.sku},10,500`;
     const preview = validarStockInicial(db, { csv });
     confirmarStockInicial(db, { rows: preview.rows });
-    const producto = db.select({ precio_costo_promedio: schema.producto.precio_costo_promedio }).from(schema.producto).where(eq(schema.producto.id, prod.id)).get();
+    const producto = db.select({ precio_costo_promedio_centavos: schema.producto.precio_costo_promedio_centavos }).from(schema.producto).where(eq(schema.producto.id, prod.id)).get();
     // CPP: (0 * 0 + 10 * 500) / 10 = 500
-    expect(producto?.precio_costo_promedio).toBe(500);
+    expect(producto?.precio_costo_promedio_centavos).toBe(50000);
   });
 });
 
@@ -910,7 +910,7 @@ describe('validarProductos — campos opcionales de stock y texto', () => {
       id: 'prod-upd', sku: 'P-0000001-9', sku_secuencial: 1,
       gtin_barcode: '7890000000001',
       nombre_corto: 'Martillo', nombre_largo: 'Martillo',
-      unidad_venta: 'u', precio_venta_lista: 1500, precio_costo_promedio: 0,
+      unidad_venta: 'u', precio_venta_lista_centavos: 150000, precio_costo_promedio_centavos: 0,
       impuesto_id: imp.id, categoria_id: cat.id,
       activo: true, moneda: 'ARS', factor_conversion: 1, permite_fraccion: false,
       usuario_creacion_id: 'admin', fecha_creacion: now, ...sync,
@@ -951,10 +951,10 @@ describe('confirmarProductos — nuevos campos en INSERT', () => {
         nombre: 'Tornillo',
         categoria_id: cat.id,
         impuesto_id: imp.id,
-        precio_venta_lista: 500,
+        precio_venta_lista_centavos: 50000,
         unidad_venta: 'u',
         gtin_barcode: null,
-        costo: 0,
+        costo_centavos: 0,
         stock_minimo: 0,
         activo: true,
         stock_inicial: 0,
@@ -1003,7 +1003,7 @@ describe('confirmarProductos — nuevos campos en INSERT', () => {
   });
 
   it('crea MovimientoStock inicial y actualiza existencias cuando stock_inicial > 0', () => {
-    const row = buildRowConCampos({ stock_inicial: 50, costo: 0 });
+    const row = buildRowConCampos({ stock_inicial: 50, costo_centavos: 0 });
     confirmarProductos(db, { rows: [row] });
     const prod = db.select().from(schema.producto).get()!;
     const exist = db.select().from(schema.existencias)
@@ -1017,10 +1017,10 @@ describe('confirmarProductos — nuevos campos en INSERT', () => {
   });
 
   it('CPP es igual al costo cuando stock_inicial > 0 y costo > 0', () => {
-    const row = buildRowConCampos({ stock_inicial: 20, costo: 350 });
+    const row = buildRowConCampos({ stock_inicial: 20, costo_centavos: 35000 });
     confirmarProductos(db, { rows: [row] });
     const prod = db.select().from(schema.producto).get()!;
-    expect(prod.precio_costo_promedio).toBe(350);
+    expect(prod.precio_costo_promedio_centavos).toBe(35000);
   });
 
   it('mensaje de resumen incluye info de stock cuando stock_inicial > 0', () => {
@@ -1050,7 +1050,7 @@ describe('confirmarProductos — UPDATE con nuevos campos y stock condicional', 
       id, sku: 'P-0000010-5', sku_secuencial: 10,
       gtin_barcode: gtin,
       nombre_corto: 'Original', nombre_largo: 'Original',
-      unidad_venta: 'u', precio_venta_lista: 100, precio_costo_promedio: 0,
+      unidad_venta: 'u', precio_venta_lista_centavos: 10000, precio_costo_promedio_centavos: 0,
       impuesto_id: imp.id, categoria_id: cat.id,
       activo: true, moneda: 'ARS', factor_conversion: 1, permite_fraccion: false,
       usuario_creacion_id: 'admin', fecha_creacion: now, ...sync,
@@ -1077,10 +1077,10 @@ describe('confirmarProductos — UPDATE con nuevos campos y stock condicional', 
         nombre: 'Actualizado',
         categoria_id: cat.id,
         impuesto_id: imp.id,
-        precio_venta_lista: 200,
+        precio_venta_lista_centavos: 20000,
         unidad_venta: 'u',
         gtin_barcode: null,
-        costo: 0,
+        costo_centavos: 0,
         stock_minimo: 0,
         activo: true,
         stock_inicial: 0,
@@ -1165,10 +1165,10 @@ describe('confirmarProductos — UPDATE con nuevos campos y stock condicional', 
 
   it('actualiza CPP cuando stock_actual=0 y stock_inicial>0 y costo>0', () => {
     const prodId = crearProductoBase('8880000000007');
-    const row = buildUpdateRow(prodId, { stock_inicial: 10, stock_actual: 0, costo: 400 });
+    const row = buildUpdateRow(prodId, { stock_inicial: 10, stock_actual: 0, costo_centavos: 40000 });
     confirmarProductos(db, { rows: [row] });
     const prod = db.select().from(schema.producto).where(eq(schema.producto.id, prodId)).get()!;
-    expect(prod.precio_costo_promedio).toBe(400);
+    expect(prod.precio_costo_promedio_centavos).toBe(40000);
   });
 });
 
@@ -1258,7 +1258,7 @@ describe('confirmarProductos — unidad_compra, factor_conversion, permite_fracc
     const imp = db.select().from(schema.impuesto).get()!;
     return {
       fila: 2, status: 'ok',
-      data: { nombre: 'Tornillo', categoria_id: cat.id, impuesto_id: imp.id, precio_venta_lista: 500, unidad_venta: 'u', gtin_barcode: null, costo: 0, stock_minimo: 0, activo: true, ...overrides },
+      data: { nombre: 'Tornillo', categoria_id: cat.id, impuesto_id: imp.id, precio_venta_lista_centavos: 50000, unidad_venta: 'u', gtin_barcode: null, costo_centavos: 0, stock_minimo: 0, activo: true, ...overrides },
     };
   }
 
@@ -1289,7 +1289,7 @@ describe('confirmarProductos — unidad_compra, factor_conversion, permite_fracc
       id, sku: 'P-0000020-1', sku_secuencial: 20,
       nombre_corto: 'Original', nombre_largo: 'Original',
       unidad_venta: 'u', unidad_compra: null, factor_conversion: 1, permite_fraccion: false,
-      precio_venta_lista: 100, precio_costo_promedio: 0,
+      precio_venta_lista_centavos: 10000, precio_costo_promedio_centavos: 0,
       impuesto_id: imp.id, categoria_id: cat.id,
       activo: true, moneda: 'ARS',
       usuario_creacion_id: 'admin', fecha_creacion: now, ...sync,
@@ -1302,8 +1302,8 @@ describe('confirmarProductos — unidad_compra, factor_conversion, permite_fracc
       fila: 2, status: 'update', matchKey: 'test',
       data: {
         id, nombre: 'Actualizado', categoria_id: cat.id, impuesto_id: imp.id,
-        precio_venta_lista: 200, unidad_venta: 'u', gtin_barcode: null,
-        costo: 0, stock_minimo: 0, activo: true, stock_inicial: 0, stock_actual: 0,
+        precio_venta_lista_centavos: 20000, unidad_venta: 'u', gtin_barcode: null,
+        costo_centavos: 0, stock_minimo: 0, activo: true, stock_inicial: 0, stock_actual: 0,
         unidad_compra: 'bulto', factor_conversion: 6, permite_fraccion: true,
       },
     };
@@ -1570,8 +1570,8 @@ describe('ADR-065 — golden ida-y-vuelta de productos', () => {
     expect(prod.factor_conversion).toBe(6);
     expect(prod.permite_fraccion).toBe(false);
     expect(prod.activo).toBe(true);
-    expect(prod.precio_venta_lista).toBe(5000);
-    expect(prod.precio_costo_promedio).toBe(3000);
+    expect(prod.precio_venta_lista_centavos).toBe(500000);
+    expect(prod.precio_costo_promedio_centavos).toBe(300000);
     expect(prod.marca_id).toBe(marca.id);
     expect(prod.ubicacion_id).toBe(ubic.id);
     expect(prod.impuesto_id).toBe(imp21.id);

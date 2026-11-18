@@ -76,6 +76,19 @@ export async function runStartup(db: Db, opts: StartupOpts = {}): Promise<void> 
     }
   }
 
+  // 2c. ADR-157 (PR-C3): tras pasar el costo promedio a centavos, se reconstruye una sola vez desde
+  //     el libro para que coincida con la proyección (redondeo por entrada). Marcado en
+  //     parametros_sistema; no bloqueante.
+  {
+    const { recalcularCostosPromedioUnaVez } = await import('./catalog/stock-proyeccion');
+    try {
+      const n = recalcularCostosPromedioUnaVez(db);
+      if (n > 0) console.log(`[startup] costo promedio recalculado desde el libro: ${n} productos`);
+    } catch (e) {
+      console.warn('[startup] recálculo del costo promedio falló (no bloqueante):', (e as Error).message);
+    }
+  }
+
   // 3. Seed de auth en CADA arranque. Es idempotente y estrictamente aditivo
   //    (roles solo si no hay ninguno, permisos con onConflictDoNothing, rol_permiso
   //    solo si falta, admin solo si no hay usuarios), asi que correrlo siempre es

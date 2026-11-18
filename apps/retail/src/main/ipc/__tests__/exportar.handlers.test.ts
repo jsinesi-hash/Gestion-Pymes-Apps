@@ -62,7 +62,7 @@ describe('exportarEjecutar — escritura CSV', () => {
     const imp = db.select().from(schema.impuesto).get()!;
     productoCreateHandler(db, {
       nombre_corto: 'Tornillo M6', categoria_id: cat.id,
-      impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 100,
+      impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 10000,
     });
 
     const filePath = path.join(tmpDir, 'productos.csv');

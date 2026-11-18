@@ -17,7 +17,7 @@ type Db = ReturnType<typeof setupDb>;
 
 function makeProducto(
   db: Db,
-  overrides: { nombre_corto?: string; precio_venta_lista?: number } = {},
+  overrides: { nombre_corto?: string; precio_venta_lista_centavos?: number } = {},
 ) {
   runCatalogSeed(db);
   const cat = categoriaCreateHandler(db, { nombre: 'Cat Test' });
@@ -27,7 +27,7 @@ function makeProducto(
     categoria_id: cat.id,
     impuesto_id: imp.id,
     unidad_venta: 'u',
-    precio_venta_lista: overrides.precio_venta_lista ?? 150.5,
+    precio_venta_lista_centavos: overrides.precio_venta_lista_centavos ?? 15050,
   });
 }
 
@@ -61,16 +61,16 @@ describe('etiquetasListarProductosHandler', () => {
     expect(result.map(r => r.nombre)).not.toContain('Inactivo');
   });
 
-  it('convierte precio_venta_lista (real) a centavos enteros', () => {
+  it('devuelve el precio de lista en centavos', () => {
     loginAsAdmin(db);
-    makeProducto(db, { precio_venta_lista: 150.5 });
+    makeProducto(db, { precio_venta_lista_centavos: 15050 });
     const result = etiquetasListarProductosHandler(db, {});
     expect(result[0].precio_venta_lista_centavos).toBe(15050);
   });
 
   it('retorna EtiquetaItem con los campos correctos', () => {
     loginAsAdmin(db);
-    const p = makeProducto(db, { nombre_corto: 'Tornillo', precio_venta_lista: 10 });
+    const p = makeProducto(db, { nombre_corto: 'Tornillo', precio_venta_lista_centavos: 1000 });
     const result = etiquetasListarProductosHandler(db, {});
     expect(result[0].producto_id).toBe(p.id);
     expect(result[0].sku).toBe(p.sku);
@@ -110,8 +110,8 @@ describe('etiquetasListarProductosHandler', () => {
     const cat1 = categoriaCreateHandler(db, { nombre: 'Cat1' });
     const cat2 = categoriaCreateHandler(db, { nombre: 'Cat2' });
     const imp  = db.select().from(schema.impuesto).all()[0];
-    productoCreateHandler(db, { nombre_corto: 'P-Cat1', categoria_id: cat1.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 10 });
-    productoCreateHandler(db, { nombre_corto: 'P-Cat2', categoria_id: cat2.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista: 10 });
+    productoCreateHandler(db, { nombre_corto: 'P-Cat1', categoria_id: cat1.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 1000 });
+    productoCreateHandler(db, { nombre_corto: 'P-Cat2', categoria_id: cat2.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 1000 });
     const result = etiquetasListarProductosHandler(db, { categoriaId: cat1.id });
     expect(result).toHaveLength(1);
     expect(result[0].nombre).toBe('P-Cat1');

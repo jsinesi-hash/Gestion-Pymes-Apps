@@ -71,7 +71,7 @@ async function main() {
   const productos = db.select({
     id:                  schema.producto.id,
     nombre_corto:        schema.producto.nombre_corto,
-    precio_venta_lista:  schema.producto.precio_venta_lista,
+    precio_venta_lista_centavos: schema.producto.precio_venta_lista_centavos,
   }).from(schema.producto).where(eq(schema.producto.activo, true)).all();
 
   const overrides = db.select({
@@ -118,7 +118,7 @@ async function main() {
 
       // Fórmula idéntica a resolverPrecio / addLinea del renderer:
       // Math.round(baseCs * (1 + pct / 100))
-      const baseCs    = Math.round(prod.precio_venta_lista * 100);
+      const baseCs    = prod.precio_venta_lista_centavos;
       const precioCs  = Math.round(baseCs * (1 + pct / 100));
 
       rows.push({
@@ -141,7 +141,7 @@ async function main() {
         lista:         lista.nombre,
         producto:      prod.nombre_corto,
         pct:           hasOverride ? `${pct}% (override)` : `${pct}% (gral)`,
-        precio_pesos:  prod.precio_venta_lista,
+        precio_pesos:  prod.precio_venta_lista_centavos / 100,
         lpv_centavos:  precioCs,
       });
     }

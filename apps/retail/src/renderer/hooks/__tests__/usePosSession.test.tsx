@@ -6,7 +6,7 @@ import { usePosSession } from '../usePosSession';
 const mockCaja = { id: 'c-1', estado: 'abierta', monto_inicial_centavos: 0, usuario_id: 'u-1', fecha_apertura: new Date() };
 const mockLista = { id: 'l-1', nombre: 'General', ajuste_porcentual: 0, predeterminada: true, activo: true };
 const mockImpuesto = { id: 'i-1', alicuota: 21, predeterminado: true };
-const mockProd = { id: 'p-1', nombre_corto: 'Tornillo', activo: true, precio_venta_lista: 1000, impuesto_id: 'i-1', permite_fraccion: false };
+const mockProd = { id: 'p-1', nombre_corto: 'Tornillo', activo: true, precio_venta_lista_centavos: 100000, impuesto_id: 'i-1', permite_fraccion: false };
 const mockEx = { producto_id: 'p-1', stock_fisico: 10 };
 
 function makeFerreteria(overrides: Record<string, unknown> = {}) {

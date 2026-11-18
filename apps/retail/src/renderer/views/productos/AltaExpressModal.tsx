@@ -49,7 +49,7 @@ export function AltaExpressModal({ nombreInicial = '', onCreado, onClose }: Read
     const res = await callIpc(
       () => bridge().catalogo.producto.quickCreate({
         nombre_corto: nombre.trim(),
-        precio_venta_lista: precioNum,
+        precio_venta_lista_centavos: Math.round(precioNum * 100),
         ...(ean.trim() ? { gtin_barcode: ean.trim() } : {}),
       }),
       { success: 'Producto creado' },
