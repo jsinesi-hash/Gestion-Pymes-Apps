@@ -8,6 +8,13 @@
       "when": 1795910400000,
       "tag": "0000_hub_almacen",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1795996800000,
+      "tag": "0001_hub_terminales",
+      "breakpoints": true
     }
   ]
 }

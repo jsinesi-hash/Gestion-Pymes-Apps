@@ -10,6 +10,7 @@
     "dist:full": "pnpm rebuild:electron && pnpm dist",
     "smoke": "node scripts/smoke-packaged.cjs",
     "typecheck": "tsc --noEmit",
+    "hub": "node scripts/hub.cjs",
     "test": "pnpm run typecheck && vitest run && node scripts/test-node.cjs --serial",
     "rebuild:electron": "electron-rebuild -f -w better-sqlite3",
     "rebuild:node": "node -e \"require('child_process').execSync('npx prebuild-install --runtime node --target ' + process.version.slice(1), {stdio:'inherit'})\"",

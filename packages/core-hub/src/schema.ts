@@ -43,3 +43,27 @@ export const hub_conflicto = sqliteTable('hub_conflicto', {
   fecha:          integer('fecha').notNull(),
   resuelto:       integer('resuelto', { mode: 'boolean' }).notNull().default(false),
 });
+
+/**
+ * Terminales emparejadas (ADR-150 §2). El hub asigna el `origin_id` y guarda solo el hash de la
+ * credencial; revocar una terminal la deja sin acceso sin borrar su historia.
+ */
+export const hub_terminal = sqliteTable('hub_terminal', {
+  origin_id:         text('origin_id').primaryKey(),
+  nombre:            text('nombre').notNull(),
+  credencial_hash:   text('credencial_hash').notNull().unique(),
+  emparejada_en:     integer('emparejada_en').notNull(),
+  revocada_en:       integer('revocada_en'),
+  ultimo_contacto:   integer('ultimo_contacto'),
+  version_protocolo: integer('version_protocolo'),
+  version_esquema:   integer('version_esquema'),
+});
+
+/** Códigos de emparejamiento de un solo uso, con vencimiento. Se guarda el hash, no el código. */
+export const hub_codigo = sqliteTable('hub_codigo', {
+  codigo_hash: text('codigo_hash').primaryKey(),
+  creado_en:   integer('creado_en').notNull(),
+  vence_en:    integer('vence_en').notNull(),
+  usado_en:    integer('usado_en'),
+  origin_id:   text('origin_id'),
+});
