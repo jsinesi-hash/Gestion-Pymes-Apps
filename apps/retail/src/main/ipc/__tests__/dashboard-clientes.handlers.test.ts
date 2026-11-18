@@ -107,26 +107,26 @@ describe('dashboardClientesEstadoHandler', () => {
   it('sin CCC devuelve todo en cero', () => {
     loginAsAdmin(db);
     const r = dashboardClientesEstadoHandler(db);
-    expect(r.deuda_total).toBe(0);
-    expect(r.deuda_vencida).toBe(0);
+    expect(r.deuda_total_centavos).toBe(0);
+    expect(r.deuda_vencida_centavos).toBe(0);
     expect(r.clientes_inactivos).toBe(0);
   });
 
-  it('deuda_total suma saldo de CCCs activas con saldo positivo', () => {
+  it('deuda_total_centavos suma saldo de CCCs activas con saldo positivo', () => {
     loginAsAdmin(db);
     crearClienteConCCC(db, 'A', 150000, 5);  // $1500 con mov hace 5 días
     crearClienteConCCC(db, 'B', 50000, 5);   // $500  con mov hace 5 días
     const r = dashboardClientesEstadoHandler(db);
-    expect(r.deuda_total).toBeCloseTo(2000, 0);
+    expect(r.deuda_total_centavos).toBe(200000);
   });
 
-  it('deuda_vencida solo incluye CCCs con fecha_ultimo_movimiento más antigua que cc_dias_vencimiento (30)', () => {
+  it('deuda_vencida_centavos solo incluye CCCs con fecha_ultimo_movimiento más antigua que cc_dias_vencimiento (30)', () => {
     loginAsAdmin(db);
     crearClienteConCCC(db, 'Reciente',  100000, 10); // mov hace 10 días → no vencido
     crearClienteConCCC(db, 'Vencido',   200000, 40); // mov hace 40 días → vencido (param=30)
     const r = dashboardClientesEstadoHandler(db);
-    expect(r.deuda_total).toBeCloseTo(3000, 0);
-    expect(r.deuda_vencida).toBeCloseTo(2000, 0);
+    expect(r.deuda_total_centavos).toBe(300000);
+    expect(r.deuda_vencida_centavos).toBe(200000);
   });
 
   it('clientes_inactivos excluye clientes con compra reciente', () => {

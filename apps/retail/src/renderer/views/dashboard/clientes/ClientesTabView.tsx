@@ -53,12 +53,12 @@ export function ClientesTabView({ period }: Props) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}>
         <KpiCard
           label="Deuda total"
-          value={estado.data ? `$ ${fmt(estado.data.deuda_total)}` : '—'}
+          value={estado.data ? `$ ${fmt(estado.data.deuda_total_centavos / 100)}` : '—'}
           hoy
         />
         <KpiCard
           label="Deuda vencida"
-          value={estado.data ? `$ ${fmt(estado.data.deuda_vencida)}` : '—'}
+          value={estado.data ? `$ ${fmt(estado.data.deuda_vencida_centavos / 100)}` : '—'}
           hoy
         />
         <KpiCard

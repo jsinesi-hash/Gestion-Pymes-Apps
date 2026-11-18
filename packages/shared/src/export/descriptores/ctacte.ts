@@ -6,8 +6,9 @@ type FilaCtaCte = {
   apellido: string;
   tipo_documento: string;
   numero_documento: string;
-  saldo: number;
-  limite_credito: number;
+  /** Centavos (ADR-157); el archivo muestra pesos. */
+  saldo_centavos: number;
+  limite_credito_centavos: number;
 };
 
 export const exportCtaCte: DefinicionExport<FilaCtaCte> = {
@@ -24,8 +25,8 @@ export const exportCtaCte: DefinicionExport<FilaCtaCte> = {
         { campo: 'apellido',         label: 'Apellido' },
         { campo: 'tipo_documento',   label: 'Tipo doc.' },
         { campo: 'numero_documento', label: 'Documento' },
-        { campo: 'saldo',            label: 'Saldo',          formato: ars, formatoXlsx: (v) => v },
-        { campo: 'limite_credito',   label: 'Límite crédito', formato: (v: number) => v === 0 ? 'Sin límite' : ars(v), formatoXlsx: (v) => v },
+        { campo: 'saldo_centavos',   label: 'Saldo',          formato: (v) => ars(v / 100), formatoXlsx: (v) => v / 100 },
+        { campo: 'limite_credito_centavos', label: 'Límite crédito', formato: (v: number) => v === 0 ? 'Sin límite' : ars(v / 100), formatoXlsx: (v) => v / 100 },
       ],
     },
   ],

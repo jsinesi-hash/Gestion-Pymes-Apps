@@ -12,7 +12,7 @@ const vdViva = () => isNull(schema.venta_detalle.deleted_at);
 type Db = BetterSQLite3Database<typeof schema>;
 
 export type TopCantidad = { producto_id: string; nombre: string; cantidad: number };
-/** ADR-157: margen en centavos (el costo del producto se convierte ×100 hasta el PR-C3). */
+/** ADR-157: margen en centavos (precio y costo del producto, ambos en centavos). */
 export type TopMargen = { producto_id: string; nombre: string; margen_estimado_centavos: number };
 
 // ADR-157: montos en centavos.

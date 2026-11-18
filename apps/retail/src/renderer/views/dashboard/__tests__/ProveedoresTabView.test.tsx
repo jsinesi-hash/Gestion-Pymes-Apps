@@ -7,8 +7,8 @@ import { calcPeriod } from '../hooks/usePeriod';
 
 const RANGO: DashboardProveedoresRango = {
   ranking: [
-    { proveedor_id: 'p1', razon_social: 'Distribuidora Central', gasto: 150000 },
-    { proveedor_id: 'p2', razon_social: 'Mayorista Norte',       gasto: 80000 },
+    { proveedor_id: 'p1', razon_social: 'Distribuidora Central', gasto_centavos: 15000000 },
+    { proveedor_id: 'p2', razon_social: 'Mayorista Norte',       gasto_centavos: 8000000 },
   ],
 };
 
