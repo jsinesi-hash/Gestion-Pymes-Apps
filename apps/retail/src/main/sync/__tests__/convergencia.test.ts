@@ -5,11 +5,11 @@ import os from 'node:os';
 import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import type https from 'node:https';
-import { eq, is } from 'drizzle-orm';
+import { and, eq, is } from 'drizzle-orm';
 import { getTableConfig, SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { createDb } from '@core/db';
 import {
-  abrirAlmacenHub, abrirTerminales, crearServidorHub, generarCertificado, PROTOCOLO_VERSION, versionEsquema,
+  abrirAlmacenHub, abrirCoordinacion, abrirTerminales, crearServidorHub, generarCertificado, PROTOCOLO_VERSION, versionEsquema,
   type AlmacenHub,
 } from '@core/hub';
 import {
@@ -33,6 +33,8 @@ import { opcionesSyncRetail } from '../proyecciones';
 // baja el snapshot. Después venden y cargan stock sin verse entre sí. Al sincronizar, las dos y el hub
 // tienen las mismas filas, el stock y el costo proyectados son los mismos en las tres bases y una
 // edición concurrente del mismo producto termina con un ganador y una entrada en el log de conflictos.
+// F2 PR5: el hub da el permiso de coordinadora a una sola, reparte bloques de SKU sin superponerse y la
+// coordinadora avisa el stock que quedó negativo por ventas concurrentes.
 type Db = ReturnType<typeof setupDb>;
 const registro = registroSyncRetail();
 const MIGRACIONES = path.resolve(__dirname, '../../db/migrations');
@@ -94,7 +96,7 @@ describe('convergencia de dos terminales de Retail con el hub', () => {
     const terminales = abrirTerminales(hubSqlite);
     const cert = generarCertificado({ nombre: 'hub-retail', dias: 30 });
     const versiones = { protocolo: PROTOCOLO_VERSION, esquema: versionEsquema(MIGRACIONES) };
-    server = crearServidorHub({ almacen, terminales, tls: cert, versiones });
+    server = crearServidorHub({ almacen, terminales, coordinacion: abrirCoordinacion(hubSqlite), tls: cert, versiones });
     await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
     const url = `127.0.0.1:${(server.address() as AddressInfo).port}`;
 
@@ -185,5 +187,48 @@ describe('convergencia de dos terminales de Retail con el hub', () => {
     expect(nombre(b)).toBe(nombre(a));
     const lww = almacen.conflictos().filter((c) => c.tipo === 'lww');
     expect(lww.map((c) => c.tabla)).toEqual(['producto']);
+  });
+
+  it('coordinadora, bloques de SKU y alerta de stock negativo por ventas concurrentes', async () => {
+    // El permiso es de una sola: la primera que lo pidió (A) y B no lo obtiene mientras A lo renueva.
+    // (El mismo proceso hace de las dos terminales: el estado vale justo después de cada sync.)
+    expect((await syncA.sincronizarAhora()).coordinadora).toBe(true);
+    expect((await syncB.sincronizarAhora()).coordinadora).toBe(false);
+
+    // Cada una da de alta un producto con un SKU de su bloque: no se repiten.
+    const imp = a.select().from(schema.impuesto).where(eq(schema.impuesto.predeterminado, true)).get()!;
+    const cat = a.select().from(schema.categoria).get()!;
+    const alta = (db: Db, nombre: string) => productoCreateHandler(db, { nombre_corto: nombre, categoria_id: cat.id, impuesto_id: imp.id, unidad_venta: 'u', precio_venta_lista_centavos: 1_000 });
+    const enA = como('C1', () => alta(a, 'Destornillador'));
+    const enB = como('C2', () => alta(b, 'Llave'));
+    expect(enA.sku).not.toBe(enB.sku);
+    const bloques = new Map(hubSqlite.prepare("select origin_id, desde, hasta from hub_bloque where serie = 'sku'").all()
+      .map((f) => { const x = f as { origin_id: string; desde: number; hasta: number }; return [x.origin_id, x] as const; }));
+    const dentro = (p: { sku_secuencial: number }, o: string) => p.sku_secuencial >= bloques.get(o)!.desde && p.sku_secuencial <= bloques.get(o)!.hasta;
+    expect(dentro(a.select().from(schema.producto).where(eq(schema.producto.id, enA.id)).get()!, 'C1')).toBe(true);
+    expect(dentro(b.select().from(schema.producto).where(eq(schema.producto.id, enB.id)).get()!, 'C2')).toBe(true);
+    // El bloque de B empieza después de todo lo que ya existía (incluido lo que bajó del hub).
+    expect(bloques.get('C2')!.desde).toBeGreaterThan(bloques.get('C1')!.hasta);
+
+    // Ventas concurrentes: cada una ve 15 y vende 10. Al juntarlas, el stock queda en −5.
+    const cajaDe = (db: Db, origen: string) => db.select().from(schema.caja)
+      .where(and(eq(schema.caja.estado, 'abierta'), eq(schema.caja.origin_id, origen))).get()!.id;
+    como('C1', () => vender(a, cajaDe(a, 'C1'), 10));
+    como('C2', () => vender(b, cajaDe(b, 'C2'), 10));
+    for (let vuelta = 0; vuelta < 2; vuelta++) {
+      await syncA.sincronizarAhora();
+      await syncB.sincronizarAhora();
+    }
+    const stock = (db: Db) => db.select().from(schema.existencias).where(eq(schema.existencias.producto_id, productoId)).get()!.stock_fisico;
+    expect([stock(a), stock(b)]).toEqual([-5, -5]);
+    // La coordinadora avisa una sola vez; la otra no genera avisos.
+    const avisos = (db: Db) => db.select().from(schema.aviso).where(eq(schema.aviso.origen_tipo, 'stock_negativo')).all();
+    expect(avisos(a).map((x) => x.origen_id)).toEqual([productoId]);
+    expect(avisos(b)).toEqual([]);
+    await syncA.sincronizarAhora();
+    expect(avisos(a)).toHaveLength(1);
+    // Y ninguna vende ese producto hasta corregirlo.
+    expect(() => como('C1', () => vender(a, cajaDe(a, 'C1'), 1))).toThrow('STOCK_INSUFICIENTE');
+    expect(() => como('C2', () => vender(b, cajaDe(b, 'C2'), 1))).toThrow('STOCK_INSUFICIENTE');
   });
 });

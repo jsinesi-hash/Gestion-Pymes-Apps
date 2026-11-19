@@ -16,11 +16,13 @@ function montar(permisos: string[] = ['usuario.administrar']) {
   );
 }
 
-const standalone = { modo: 'standalone', origin_id: 'C1', hub: null, sync: null };
+const standalone = { modo: 'standalone', origin_id: 'C1', hub: null, sync: null, coordinadora: true, series: [] };
 const distribuido = {
   modo: 'distribuido', origin_id: 'C2',
   hub: { url: 'https://192.168.0.10:7443', huella: 'AA:BB', nombre: 'Caja 2', emparejado_en: 1 },
   sync: { enLinea: true, ultimoError: null, ultimoPushMs: 1_700_000_000_000, ultimoPullMs: null, pendientes: 3, cursor: 10, desfasajeMs: 90_000, relojDesfasado: true, versionesHub: null },
+  coordinadora: false,
+  series: [{ serie: 'sku', disponibles: 0 }],
 };
 
 afterEach(() => { delete (globalThis as any).appDePrueba; vi.restoreAllMocks(); logout.mockClear(); });
@@ -95,6 +97,9 @@ describe('ConfigSincronizacion', () => {
     expect(screen.getByText('En línea')).toBeInTheDocument();
     expect(screen.getByText('3')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('difiere 90 s del hub');
+    // F2 PR5: si coordina y cuántos códigos de producto le quedan (sin bloque, no puede dar de alta).
+    expect(screen.getByTestId('sync-coordinadora')).toHaveTextContent('No (corre en otra terminal)');
+    expect(screen.getByTestId('sync-serie-sku')).toHaveTextContent('0 — esperando un bloque del hub');
 
     fireEvent.click(screen.getByRole('button', { name: 'Desemparejar' }));
     expect(await screen.findByRole('status')).toHaveTextContent('Terminal desemparejada');

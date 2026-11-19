@@ -9,6 +9,7 @@ import type { AddressInfo } from 'node:net';
 import type { RegistroSync } from '@core/db';
 import { abrirAlmacenHub } from './almacen';
 import { abrirTerminales } from './terminales';
+import { abrirCoordinacion } from './coordinacion';
 import { generarCertificado, huellaDe } from './certificado';
 import { crearServidorHub } from './servidor';
 import { PROTOCOLO_VERSION, versionEsquema } from './protocolo';
@@ -51,7 +52,7 @@ function abrirBase(o: OpcionesHub) {
   fs.mkdirSync(o.carpeta, { recursive: true });
   const sqlite = new Database(path.join(o.carpeta, 'hub.db'));
   const almacen = abrirAlmacenHub(sqlite, { schema: o.schema, registro: o.registro, migracionesApp: o.migracionesApp });
-  return { sqlite, almacen, terminales: abrirTerminales(sqlite) };
+  return { sqlite, almacen, terminales: abrirTerminales(sqlite), coordinacion: abrirCoordinacion(sqlite) };
 }
 
 /** Lee el certificado de la carpeta o, la primera vez, lo genera; la clave queda solo para el dueño. */
@@ -95,10 +96,10 @@ export async function ejecutarComandoHub(argv: readonly string[], o: OpcionesHub
   const [comando = 'iniciar', ...resto] = argv;
 
   if (comando === 'iniciar') {
-    const { sqlite, almacen, terminales } = abrirBase(o);
+    const { sqlite, almacen, terminales, coordinacion } = abrirBase(o);
     const tls = certificado(o);
     const versiones = { protocolo: PROTOCOLO_VERSION, esquema: versionEsquema(o.migracionesApp) };
-    const server = crearServidorHub({ almacen, terminales, tls, versiones, registrar: (m) => escribir(`[hub] ${m}`) });
+    const server = crearServidorHub({ almacen, terminales, coordinacion, tls, versiones, registrar: (m) => escribir(`[hub] ${m}`) });
     const puerto = Number(opcion(resto, 'puerto') ?? process.env['GESTION_HUB_PUERTO'] ?? PUERTO_POR_DEFECTO);
     const host = opcion(resto, 'host') ?? '0.0.0.0';
     await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(puerto, host, resolve); });
@@ -113,7 +114,7 @@ export async function ejecutarComandoHub(argv: readonly string[], o: OpcionesHub
     };
   }
 
-  const { sqlite, terminales } = abrirBase(o);
+  const { sqlite, terminales, coordinacion } = abrirBase(o);
   try {
     if (comando === 'codigo') {
       const { codigo, vence_en } = terminales.generarCodigo();
@@ -128,6 +129,7 @@ export async function ejecutarComandoHub(argv: readonly string[], o: OpcionesHub
       const origin = resto[0];
       if (!origin) throw new Error('FALTA_ORIGIN_ID');
       terminales.revocar(origin);
+      coordinacion.soltarCoordinadora(origin);
       escribir(`Terminal ${origin} revocada.`);
     } else if (comando === 'huella') {
       escribir(certificado(o).huella);

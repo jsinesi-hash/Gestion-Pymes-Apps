@@ -1,19 +1,23 @@
-// Servidor HTTPS del hub (ADR-150 §1, §2, §8, §9 y §10; ADR-158 §3). Sin framework: seis rutas con JSON.
+// Servidor HTTPS del hub (ADR-150 §1, §2, §8, §9 y §10; ADR-158 §3; ADR-152 §2 y ADR-154 §2). Sin
+// framework: ocho rutas con JSON.
 // Toda ruta salvo emparejar exige la credencial de la terminal, y el origin_id de un push sale de esa
 // credencial, nunca del cuerpo: una terminal no puede hacerse pasar por otra.
 import https from 'node:https';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { AlmacenHub } from './almacen';
 import type { RegistroTerminales } from './terminales';
+import type { CoordinacionHub } from './coordinacion';
 import {
   CABECERA_ESQUEMA, CABECERA_PROTOCOLO, RUTAS, versionesCompatibles,
-  type PedidoEmparejar, type PedidoPush, type PedidoSemilla, type Versiones,
+  type PedidoBloque, type PedidoEmparejar, type PedidoPush, type PedidoSemilla, type Versiones,
 } from './protocolo';
 import type { CambioEntrante } from './almacen';
 
 export interface OpcionesServidor {
   readonly almacen: AlmacenHub;
   readonly terminales: RegistroTerminales;
+  /** Permiso de coordinadora y bloques de correlativos (ADR-152 §2, ADR-154 §2). */
+  readonly coordinacion: CoordinacionHub;
   readonly tls: { readonly certPem: string; readonly keyPem: string };
   readonly versiones: Versiones;
   /** Tope del cuerpo de un pedido (la semilla de una base entera es el pedido más grande). */
@@ -33,7 +37,7 @@ class ErrorHttp extends Error {
 }
 
 /** Errores de dominio del almacén y del emparejamiento que son culpa del pedido, no del hub. */
-const ERRORES_DEL_PEDIDO = /^(HUB_NO_VACIO|TABLA_NO_SINCRONIZA|COLUMNA_DESCONOCIDA|CAMBIO_INVALIDO|LOTE_FK_ROTA|CODIGO_INVALIDO|CODIGO_USADO|CODIGO_VENCIDO)/;
+const ERRORES_DEL_PEDIDO = /^(HUB_NO_VACIO|TABLA_NO_SINCRONIZA|COLUMNA_DESCONOCIDA|CAMBIO_INVALIDO|LOTE_FK_ROTA|BLOQUE_INVALIDO|CODIGO_INVALIDO|CODIGO_USADO|CODIGO_VENCIDO)/;
 
 export function crearServidorHub(opts: OpcionesServidor): https.Server {
   const limite = opts.limiteCuerpoBytes ?? LIMITE_CUERPO;
@@ -135,6 +139,13 @@ export function crearServidorHub(opts: OpcionesServidor): https.Server {
       const rechazados = opts.almacen.aplicarLote(origen, partes).filter((r) => r.estado !== 'aplicado');
       registrar(`semilla de ${origen}: ${partes.length} filas, ${rechazados.length} rechazadas`);
       return responder(res, 200, { recibidos: partes.length, cursor: opts.almacen.ultimoCursor(), rechazados });
+    }
+    if (ruta === `POST ${RUTAS.coordinadora}`) return responder(res, 200, { ...opts.coordinacion.pedirCoordinadora(origen) });
+    if (ruta === `POST ${RUTAS.bloque}`) {
+      const p = (await leerCuerpo(req)) as Partial<PedidoBloque>;
+      const b = opts.coordinacion.asignarBloque(String(p.serie ?? ''), origen, { minimo: Number(p.minimo), tamano: Number(p.tamano) });
+      registrar(`bloque ${b.serie} ${b.desde}-${b.hasta} para ${origen}`);
+      return responder(res, 200, { ...b });
     }
     if (ruta === `GET ${RUTAS.snapshot}`) return responder(res, 200, { ...opts.almacen.snapshot() });
     if (ruta === `GET ${RUTAS.estado}`) {

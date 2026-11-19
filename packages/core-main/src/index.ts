@@ -58,4 +58,5 @@ export * from './sync/programar';
 export * from './sync/arranque';
 export * from './sync/hub-guardado';
 export * from './sync/terminal-sync';
+export * from './sync/coordinacion';
 export * from './ipc/sync';

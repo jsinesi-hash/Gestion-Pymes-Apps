@@ -98,7 +98,7 @@ Cada PR: rama propia desde `main`, TDD (rojo → verde), suite completa en serie
 - **Desemparejar** pide el permiso de administración y avisa si quedan cambios sin subir.
 - **UI mínima:** Configuración → «Sincronización» (estado, último contacto, pendientes, emparejar y desemparejar), con ruta, NAV y crumb en las dos apps, y política IPC para cada canal nuevo.
 
-### PR5 — Coordinadora, bloques de SKU y alertas (ADR-152 §2, ADR-154 §2, ADR-153 §4)
+### PR5 — Coordinadora, bloques de SKU y alertas (ADR-152 §2, ADR-154 §2, ADR-153 §4) — hecho (2026-11-19)
 - **Coordinadora:**
   - el hub otorga un permiso con vencimiento de pocos minutos (`hub_permiso_coordinadora`);
   - la terminal lo renueva mientras está conectada y, si se desconecta, lo toma otra al vencer;

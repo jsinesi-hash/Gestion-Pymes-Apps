@@ -6,13 +6,17 @@ import os from 'node:os';
 import { desinstalarTriggersSync, instalarTriggersSync, type RegistroSync } from '@core/db';
 import { PROTOCOLO_VERSION, RUTAS, versionEsquema, type Versiones } from '@core/hub';
 import { clearSession } from '../auth/session';
-import { aplicarConfigTerminal, getModoTerminal, getOriginId } from '../context';
+import { aplicarConfigTerminal, esTerminalCoordinadora, getModoTerminal, getOriginId, setCoordinadoraHasta } from '../context';
 import { diferenciasDeCuentaCorriente } from '../ctacte-proyeccion';
 import { guardarConfigTerminal } from '../terminal';
 import { bajarSnapshot, cargarSnapshot, escribirCursor, filasDeSemilla, sondearHub, subirSemilla } from './arranque';
 import { crearClienteSync, cuerpo, type CambioAplicado, type ClienteSync, type DbSync, type EstadoSync } from './cliente';
+import {
+  crearCoordinacionTerminal, disponiblesDeSerie, liberarSeries, prepararSeriesDistribuido,
+  type CoordinacionTerminal, type SerieBloques,
+} from './coordinacion';
 import { borrarHub, guardarHub, leerHub, type DatosHub, type DepsHubGuardado } from './hub-guardado';
-import { programarSync } from './programar';
+import { programarSync, type ExtrasProgramarSync } from './programar';
 import { crearTransporteHttps, type OpcionesTransporte, type TransporteHub } from './transporte';
 
 export interface OpcionesSyncTerminal {
@@ -26,6 +30,10 @@ export interface OpcionesSyncTerminal {
   readonly alAplicar?: (aplicados: readonly CambioAplicado[]) => void;
   /** Diferencias de saldos propias de la app (stock, costo): la semilla no sube con diferencias. */
   readonly integridad?: () => string[];
+  /** Series de correlativos que en modo distribuido van por bloques del hub (ADR-154 §2; Retail: el SKU). */
+  readonly series?: readonly SerieBloques[];
+  /** Tarea coordinada después de cada pull (ADR-153 §4): las alertas de la app. */
+  readonly despuesDelPull?: () => unknown;
 }
 
 /** Dependencias con efectos afuera de la base; los tests las reemplazan. */
@@ -35,7 +43,7 @@ export interface DepsSyncTerminal {
   readonly respaldar: () => Promise<unknown>;
   readonly crearTransporte?: (o: OpcionesTransporte) => TransporteHub;
   readonly sondear?: typeof sondearHub;
-  readonly programar?: (cliente: ClienteSync) => { detener(): void };
+  readonly programar?: (cliente: ClienteSync, extras: ExtrasProgramarSync) => { detener(): void };
   readonly log?: (mensaje: string) => void;
 }
 
@@ -45,6 +53,10 @@ export interface EstadoTerminalSync {
   readonly hub: Omit<DatosHub, 'certPem' | 'origin_id'> | null;
   /** null = sin cliente (standalone, o distribuido sin datos del hub legibles). */
   readonly sync: EstadoSync | null;
+  /** ¿Corre las tareas coordinadas? (standalone: siempre; distribuido: con el permiso del hub, ADR-152 §2). */
+  readonly coordinadora: boolean;
+  /** Números disponibles por serie; null = sin tope (standalone). */
+  readonly series: readonly { serie: string; disponibles: number | null }[];
 }
 
 export interface ResultadoEmparejar {
@@ -71,11 +83,12 @@ export function crearSyncTerminal(db: DbSync, o: OpcionesSyncTerminal, deps: Dep
   const guardado: DepsHubGuardado = { safeStorage: deps.safeStorage, carpeta: o.carpetaDatos };
   const crearTransporte = deps.crearTransporte ?? crearTransporteHttps;
   const sondear = deps.sondear ?? sondearHub;
-  const programar = deps.programar ?? ((c: ClienteSync) => programarSync(c));
+  const programar = deps.programar ?? ((c: ClienteSync, extras: ExtrasProgramarSync) => programarSync(c, extras));
+  const series = o.series ?? [];
   let versiones: Versiones | null = null;
   const versionesApp = () => (versiones ??= { protocolo: PROTOCOLO_VERSION, esquema: versionEsquema(o.migrationsFolder) });
 
-  let activo: { cliente: ClienteSync; transporte: TransporteHub; tareas: { detener(): void } } | null = null;
+  let activo: { cliente: ClienteSync; coordinacion: CoordinacionTerminal; transporte: TransporteHub; tareas: { detener(): void } } | null = null;
 
   const pendientes = () => (sqlite.prepare('SELECT count(*) AS n FROM "sync_outbox" WHERE "enviado_en" IS NULL').get() as { n: number }).n;
 
@@ -87,6 +100,7 @@ export function crearSyncTerminal(db: DbSync, o: OpcionesSyncTerminal, deps: Dep
     activo?.tareas.detener();
     activo?.transporte.cerrar();
     activo = null;
+    setCoordinadoraHasta(0);
   }
 
   function iniciar(): boolean {
@@ -103,13 +117,20 @@ export function crearSyncTerminal(db: DbSync, o: OpcionesSyncTerminal, deps: Dep
     }
     // Idempotente: los triggers se instalan al emparejar; reinstalarlos cubre una base restaurada a mano.
     instalarTriggersSync(sqlite, o.schema, o.registro);
+    // Una serie sin tope en modo distribuido (terminal emparejada antes de usar bloques) espera su primer
+    // bloque: numerar por su cuenta podría repetir números de otra terminal.
+    prepararSeriesDistribuido(sqlite, series.filter((s) => disponiblesDeSerie(sqlite, s.serie) === null));
     const transporte = transporteDe(hub.datos, hub.credencial);
     const cliente = crearClienteSync(db, {
       schema: o.schema, registro: o.registro, transporte,
       ...(o.alAplicar ? { alAplicar: o.alAplicar } : {}),
       avisarDesfasaje: (ms) => deps.log?.(`[sync] el reloj de la terminal difiere ${Math.round(ms / 1000)} s del hub`),
     });
-    activo = { cliente, transporte, tareas: programar(cliente) };
+    const coordinacion = crearCoordinacionTerminal(sqlite, transporte, series);
+    activo = {
+      cliente, coordinacion, transporte,
+      tareas: programar(cliente, { coordinacion, ...(o.despuesDelPull ? { despuesDelPull: o.despuesDelPull } : {}) }),
+    };
     return true;
   }
 
@@ -179,6 +200,8 @@ export function crearSyncTerminal(db: DbSync, o: OpcionesSyncTerminal, deps: Dep
     }
 
     guardarHub(guardado, datos, credencial);
+    // Desde ahora los correlativos por bloques salen del hub: hasta recibir el primero, no hay números.
+    prepararSeriesDistribuido(sqlite, series);
     const config = { origin_id, modo: 'distribuido' as const };
     guardarConfigTerminal(o.carpetaDatos, config);
     aplicarConfigTerminal(config);
@@ -197,6 +220,7 @@ export function crearSyncTerminal(db: DbSync, o: OpcionesSyncTerminal, deps: Dep
     desinstalarTriggersSync(sqlite, o.schema, o.registro);
     sqlite.prepare('DELETE FROM "sync_outbox"').run();
     borrarHub(guardado);
+    liberarSeries(sqlite, series);
     const config = { origin_id: getOriginId(), modo: 'standalone' as const };
     guardarConfigTerminal(o.carpetaDatos, config);
     aplicarConfigTerminal(config);
@@ -232,6 +256,8 @@ export function crearSyncTerminal(db: DbSync, o: OpcionesSyncTerminal, deps: Dep
       origin_id: getOriginId(),
       hub: hub ? { url: hub.datos.url, huella: hub.datos.huella, nombre: hub.datos.nombre, emparejado_en: hub.datos.emparejado_en } : null,
       sync: activo?.cliente.estado() ?? null,
+      coordinadora: esTerminalCoordinadora(),
+      series: series.map((s) => ({ serie: s.serie, disponibles: disponiblesDeSerie(sqlite, s.serie) })),
     };
   }
 
@@ -246,6 +272,9 @@ export function crearSyncTerminal(db: DbSync, o: OpcionesSyncTerminal, deps: Dep
     async sincronizarAhora() {
       if (!activo) throw new Error('TERMINAL_NO_EMPAREJADA');
       await activo.cliente.sincronizar();
+      await activo.coordinacion.renovar();
+      await activo.coordinacion.revisarBloques();
+      if (o.despuesDelPull && esTerminalCoordinadora()) await o.despuesDelPull();
       return estado();
     },
     desemparejar,

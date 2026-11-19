@@ -12,6 +12,9 @@ const ayuda: React.CSSProperties = { fontSize: 12, color: 'var(--ink-3)', margin
 const fila: React.CSSProperties = { display: 'flex', gap: 8, fontSize: 13, padding: '4px 0' };
 const etiqueta: React.CSSProperties = { width: 170, color: 'var(--ink-3)', flexShrink: 0 };
 
+/** Nombre visible de cada serie de correlativos por bloques (ADR-154 §2). */
+const NOMBRE_SERIE: Record<string, string> = { sku: 'Códigos de producto' };
+
 function hora(ms: number | null | undefined): string {
   if (!ms) return '—';
   return new Intl.DateTimeFormat('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date(ms));
@@ -116,6 +119,14 @@ export function ConfigSincronizacion() {
             <span>{!s ? 'Sin cliente de sync' : s.enLinea === null ? 'Todavía sin contacto' : s.enLinea ? 'En línea' : 'Sin conexión (la terminal sigue operando)'}</span></div>
           <div style={fila}><span style={etiqueta}>Último contacto</span><span>{hora(ultimoContacto)}</span></div>
           <div style={fila}><span style={etiqueta}>Cambios sin subir</span><span>{s?.pendientes ?? '—'}</span></div>
+          <div style={fila}><span style={etiqueta}>Terminal coordinadora</span>
+            <span data-testid="sync-coordinadora">{estado.coordinadora ? 'Sí (corre las tareas programadas y las alertas)' : 'No (corre en otra terminal)'}</span></div>
+          {(estado.series ?? []).map((se) => (
+            <div key={se.serie} style={fila}><span style={etiqueta}>{NOMBRE_SERIE[se.serie] ?? se.serie}</span>
+              <span data-testid={`sync-serie-${se.serie}`}>
+                {se.disponibles === null ? 'Sin tope' : se.disponibles === 0 ? '0 — esperando un bloque del hub' : `${se.disponibles} disponibles`}
+              </span></div>
+          ))}
           {s?.ultimoError && s.enLinea !== false && (
             <div className="alert-danger" role="alert" style={{ marginTop: 8 }}>{traducirError(s.ultimoError).mensaje}</div>
           )}

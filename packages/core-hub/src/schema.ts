@@ -67,3 +67,19 @@ export const hub_codigo = sqliteTable('hub_codigo', {
   usado_en:    integer('usado_en'),
   origin_id:   text('origin_id'),
 });
+
+/** Permiso de terminal coordinadora (ADR-152 §2): una sola fila, con vencimiento. */
+export const hub_coordinadora = sqliteTable('hub_coordinadora', {
+  id:          integer('id').primaryKey(),
+  origin_id:   text('origin_id').notNull(),
+  vence_en_ms: integer('vence_en_ms').notNull(),
+});
+
+/** Bloques de correlativos repartidos por serie (ADR-154 §2), p. ej. el SKU de Retail. */
+export const hub_bloque = sqliteTable('hub_bloque', {
+  serie:       text('serie').notNull(),
+  desde:       integer('desde').notNull(),
+  hasta:       integer('hasta').notNull(),
+  origin_id:   text('origin_id').notNull(),
+  asignado_en: integer('asignado_en').notNull(),
+}, (t) => [primaryKey({ columns: [t.serie, t.desde] })]);
