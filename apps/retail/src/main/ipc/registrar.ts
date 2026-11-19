@@ -1,5 +1,5 @@
 import type { IpcMain } from 'electron';
-import { registerCoreHandlers, ipcConPoliticas } from '@core/main';
+import { registerCoreHandlers, ipcConPoliticas, type OpcionesSyncTerminal } from '@core/main';
 import { POLITICAS_CANALES_RETAIL } from './politicas-canales';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import type { IPrintService } from '../../print/types';
@@ -55,6 +55,8 @@ export type RegistrarRetailDeps = {
   printService: IPrintService;
   reconstruirMenu: () => void;
   app: Parameters<typeof registerActualizacionHandlers>[2];
+  /** Modo distribuido (F2 PR4); los tests de permisos no lo pasan. */
+  sync?: OpcionesSyncTerminal;
 };
 
 /**
@@ -73,6 +75,7 @@ export function registrarHandlersRetail(ipcMain: IpcMain, db: Db, deps: Registra
     caja: { onCajaCerrada: avisoCierreCaja },
     proveedor: proveedorHooksRetail,
     imprimirHtml: (h) => deps.printService.printRawHtml(h),
+    ...(deps.sync ? { sync: deps.sync } : {}),
   });
   registerDialogRetailHandlers(ipc);
 

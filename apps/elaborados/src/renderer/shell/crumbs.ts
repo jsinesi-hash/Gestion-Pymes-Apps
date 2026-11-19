@@ -21,4 +21,5 @@ export const CRUMBS_ELABORADOS: Seccion[] = [
   { grupo: 'Sistema', base: '/config/backup-restore', baseLabel: 'Backup/Restore' },
   { grupo: 'Sistema', base: '/config/datos-demo', baseLabel: 'Datos demo' },
   { grupo: 'Sistema', base: '/config/smtp', baseLabel: 'Email / SMTP' },
+  { grupo: 'Sistema', base: '/config/sincronizacion', baseLabel: 'Sincronización' },
 ];

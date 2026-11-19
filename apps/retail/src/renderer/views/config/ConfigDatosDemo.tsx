@@ -16,6 +16,8 @@ export function ConfigDatosDemo() {
   const [busy, setBusy]       = useState(false);
   const [error, setError]     = useState<string | null>(null);
   const [ok, setOk]           = useState<string | null>(null);
+  // F2 PR4: en modo distribuido no hay borrados físicos (ADR-150 §7): «Vaciar» no se ofrece.
+  const [distribuido, setDistribuido] = useState(false);
 
   const cargarEstado = useCallback(async () => {
     try {
@@ -27,6 +29,9 @@ export function ConfigDatosDemo() {
   }, []);
 
   useEffect(() => { cargarEstado(); }, [cargarEstado]);
+  useEffect(() => {
+    Promise.resolve().then(() => bridge().sync.estado()).then((e) => setDistribuido(e.modo === 'distribuido')).catch(() => setDistribuido(false));
+  }, []);
 
   async function handleCargar() {
     setBusy(true); setError(null); setOk(null);
@@ -91,14 +96,16 @@ export function ConfigDatosDemo() {
         >
           {busy ? 'Procesando…' : 'Cargar catálogo demo'}
         </button>
-        <button
-          className="btn-danger"
-          onClick={handleVaciar}
-          disabled={busy || !estado?.hayDemo}
-          style={{ opacity: (busy || !estado?.hayDemo) ? .6 : 1, cursor: (busy || !estado?.hayDemo) ? 'not-allowed' : 'pointer' }}
-        >
-          Vaciar catálogo demo
-        </button>
+        {!distribuido && (
+          <button
+            className="btn-danger"
+            onClick={handleVaciar}
+            disabled={busy || !estado?.hayDemo}
+            style={{ opacity: (busy || !estado?.hayDemo) ? .6 : 1, cursor: (busy || !estado?.hayDemo) ? 'not-allowed' : 'pointer' }}
+          >
+            Vaciar catálogo demo
+          </button>
+        )}
       </div>
 
       {error && (

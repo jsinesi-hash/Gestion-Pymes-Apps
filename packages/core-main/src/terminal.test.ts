@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { cargarConfigTerminal, iniciarTerminal } from './terminal';
-import { getOriginId, setOriginId } from './context';
+import { cargarConfigTerminal, guardarConfigTerminal, iniciarTerminal } from './terminal';
+import { getModoTerminal, getOriginId, setModoTerminal, setOriginId } from './context';
 
 // Revisión 2026-10-20 (P2): `config.ts` (load + write de config.json) estaba duplicado en Retail y
 // Elaborados, y el origin_id se aplicaba en otro paso (P0). Ahora es una sola función del núcleo.
@@ -16,7 +16,7 @@ beforeEach(() => {
   aviso = vi.spyOn(console, 'warn').mockImplementation(() => {});
   setOriginId('C1');
 });
-afterEach(() => { aviso.mockRestore(); setOriginId('C1'); fs.rmSync(dir, { recursive: true, force: true }); });
+afterEach(() => { aviso.mockRestore(); setOriginId('C1'); setModoTerminal('standalone'); fs.rmSync(dir, { recursive: true, force: true }); });
 
 describe('cargarConfigTerminal', () => {
   it('sin config.json crea uno con el origin_id por defecto (C1)', () => {
@@ -56,8 +56,14 @@ describe('iniciarTerminal', () => {
     expect(JSON.parse(fs.readFileSync(archivo(), 'utf8'))).toEqual({ origin_id: 'C4', modo: 'standalone' });
   });
 
-  it('un modo que esta versión no soporta lanza MODO_TERMINAL_NO_SOPORTADO', () => {
-    fs.writeFileSync(archivo(), JSON.stringify({ origin_id: 'C4', modo: 'distribuido' }));
+  it('una terminal emparejada arranca en modo distribuido con el origin_id que le dio el hub', () => {
+    guardarConfigTerminal(dir, { origin_id: 'C2', modo: 'distribuido' });
+    expect(iniciarTerminal(dir)).toEqual({ origin_id: 'C2', modo: 'distribuido' });
+    expect([getOriginId(), getModoTerminal()]).toEqual(['C2', 'distribuido']);
+  });
+
+  it('un modo desconocido lanza MODO_TERMINAL_NO_SOPORTADO', () => {
+    fs.writeFileSync(archivo(), JSON.stringify({ origin_id: 'C4', modo: 'nube' }));
     expect(() => iniciarTerminal(dir)).toThrow('MODO_TERMINAL_NO_SOPORTADO');
     expect(getOriginId()).toBe('C1');
   });

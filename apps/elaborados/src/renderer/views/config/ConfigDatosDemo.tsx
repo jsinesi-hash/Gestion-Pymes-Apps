@@ -12,6 +12,8 @@ export function ConfigDatosDemo() {
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
   const [confirmando, setConfirmando] = useState(false);
+  // F2 PR4: en modo distribuido no hay borrados físicos (ADR-150 §7): «Vaciar» no se ofrece.
+  const [distribuido, setDistribuido] = useState(false);
 
   const cargarEstado = useCallback(async () => {
     try {
@@ -22,6 +24,9 @@ export function ConfigDatosDemo() {
   }, []);
 
   useEffect(() => { void cargarEstado(); }, [cargarEstado]);
+  useEffect(() => {
+    Promise.resolve().then(() => bridge().sync.estado()).then((e) => setDistribuido(e.modo === 'distribuido')).catch(() => setDistribuido(false));
+  }, []);
 
   async function handleCargar() {
     setBusy(true); setError(null); setOk(null);
@@ -80,7 +85,7 @@ export function ConfigDatosDemo() {
         <button type="button" className="btn-primary" disabled={busy || !estado || estado.hayCatalogo} onClick={handleCargar}>
           Cargar catálogo demo
         </button>
-        {!confirmando && (
+        {!confirmando && !distribuido && (
           <button type="button" className="btn-secondary" disabled={busy || !estado?.hayDemo} onClick={() => setConfirmando(true)}>
             Vaciar datos demo
           </button>

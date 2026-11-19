@@ -88,7 +88,7 @@ Cada PR: rama propia desde `main`, TDD (rojo → verde), suite completa en serie
   - El stock proyectado es el mismo en las tres bases.
   - Una edición concurrente del mismo producto termina en un ganador y una entrada en el log.
 
-### PR4 — Emparejar la terminal, arranque y modo distribuido (ADR-150 §2 y §10, ADR-156, análisis §4)
+### PR4 — Emparejar la terminal, arranque y modo distribuido (ADR-150 §2 y §10, ADR-156, análisis §4) — hecho (2026-11-19)
 - **Emparejar:** la terminal recibe la URL del hub, el código y la confirmación de la huella. Guarda `origin_id` y `modo: distribuido` en `config.json`, y la credencial en `safeStorage`.
 - **Activación:** `aplicarConfigTerminal` acepta `distribuido`; al arrancar en ese modo se instalan los triggers de sync y empieza el cliente.
 - **Arranque:**

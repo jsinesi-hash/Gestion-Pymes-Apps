@@ -23,9 +23,8 @@ export function aplicarConfigTerminal(config: { origin_id: string; modo?: ModoTe
     throw new Error(`TERMINAL_INVALIDA: origin_id "${config.origin_id}" (esperado 1-8 caracteres alfanuméricos, ej. C1)`);
   }
   const modo = config.modo ?? 'standalone';
-  // ADR-156 (F1 PR8): en esta versión no hay hub ni sincronización: solo standalone.
   if (!MODOS_SOPORTADOS.includes(modo)) {
-    throw new Error(`MODO_TERMINAL_NO_SOPORTADO: modo "${String(modo)}" (esta versión solo funciona en modo standalone)`);
+    throw new Error(`MODO_TERMINAL_NO_SOPORTADO: modo "${String(modo)}" (esperado standalone o distribuido)`);
   }
   setOriginId(id);
   setModoTerminal(modo);
@@ -36,7 +35,8 @@ export function aplicarConfigTerminal(config: { origin_id: string; modo?: ModoTe
 /** `standalone`: una sola terminal, sin hub. `distribuido`: varias terminales que sincronizan (F2). */
 export type ModoTerminal = 'standalone' | 'distribuido';
 
-const MODOS_SOPORTADOS: readonly ModoTerminal[] = ['standalone'];
+// F2 PR4: el modo distribuido arranca el cliente de sync contra el hub emparejado.
+const MODOS_SOPORTADOS: readonly ModoTerminal[] = ['standalone', 'distribuido'];
 
 let _modo: ModoTerminal = 'standalone';
 

@@ -18,6 +18,9 @@ import { registerDialogHandlers } from './ipc/dialog';
 import { registerMenuHandlers } from './ipc/menu';
 import { registerSistemaHandlers } from './ipc/sistema';
 import { registerSmtpHandlers } from './ipc/smtp';
+import { registerSyncHandlers } from './ipc/sync';
+import type { OpcionesSyncTerminal } from './sync/terminal-sync';
+import type { DbSync } from './sync/cliente';
 import { crearEnviadorSmtpReal } from './correo/enviador-smtp';
 import { registerVentaListByCajaHandler } from './venta/listar-por-caja';
 import { registerPrintHtmlHandler, type ImpresorHtml } from './ipc/print';
@@ -37,6 +40,11 @@ export type CoreHandlersOpts = {
    * Configuración → Email / SMTP (ADR-142); la recuperación solo se ofrece si está completo. Override para pruebas.
    */
   enviadorCorreo?: EnviadorCorreo;
+  /**
+   * Modo distribuido (F2 PR4): esquema, registro de sync y proyecciones de la app. Sin esto los canales
+   * `sync:*` existen pero responden SYNC_NO_CONFIGURADO (los tests de permisos no lo pasan).
+   */
+  sync?: OpcionesSyncTerminal;
 };
 
 /** Registra TODOS los canales IPC universales. Lo llama el main/index.ts de cada app. */
@@ -57,6 +65,7 @@ export function registerCoreHandlers(ipcMain: IpcMain, db: BetterSQLite3Database
   registerMenuHandlers(ipcMain, opts.reconstruirMenu);
   registerSistemaHandlers(ipcMain);
   registerSmtpHandlers(ipcMain, db);
+  registerSyncHandlers(ipcMain, db as unknown as DbSync, opts.sync);
   registerExportarHandlers(ipcMain, db, crearExportarEjecutar([...EXPORTADORES_CORE, ...(opts.exportadores ?? [])]));
   if (opts.imprimirHtml) registerPrintHtmlHandler(ipcMain, opts.imprimirHtml);
 }

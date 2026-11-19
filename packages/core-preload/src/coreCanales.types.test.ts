@@ -50,3 +50,21 @@ describe('CoreBridgeApi', () => {
     expect(invocados).toEqual(['auth:whoami']);
   });
 });
+
+describe('coreCanales — sync (F2 PR4)', () => {
+  it('cada método invoca su canal sync:* con el payload', async () => {
+    const invocados: unknown[][] = [];
+    const api = coreCanales(async (...a) => { invocados.push(a); return null; });
+    await api.sync.estado();
+    await api.sync.sondear({ url: 'hub.local' });
+    await api.sync.emparejar({ url: 'hub.local', codigo: 'ABCD-EFGH', huella: 'AA' });
+    await api.sync.sincronizar();
+    await api.sync.desemparejar({ forzar: true });
+    await api.sync.rebajarSnapshot();
+    expect(invocados).toEqual([
+      ['sync:estado'], ['sync:sondear', { url: 'hub.local' }],
+      ['sync:emparejar', { url: 'hub.local', codigo: 'ABCD-EFGH', huella: 'AA' }], ['sync:sincronizar'],
+      ['sync:desemparejar', { forzar: true }], ['sync:rebajarSnapshot', undefined],
+    ]);
+  });
+});

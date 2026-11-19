@@ -13,10 +13,11 @@ describe('modo de la terminal', () => {
     expect(esTerminalCoordinadora()).toBe(true);
   });
 
-  it('en esta versión solo se acepta standalone: otro modo en config.json lanza y no cambia nada', () => {
-    expect(() => aplicarConfigTerminal({ origin_id: 'C1', modo: 'distribuido' })).toThrow('MODO_TERMINAL_NO_SOPORTADO');
+  it('acepta standalone y distribuido (F2 PR4); otro modo en config.json lanza y no cambia nada', () => {
     expect(() => aplicarConfigTerminal({ origin_id: 'C1', modo: 'otro' as never })).toThrow('MODO_TERMINAL_NO_SOPORTADO');
     expect(getModoTerminal()).toBe('standalone');
+    aplicarConfigTerminal({ origin_id: 'C1', modo: 'distribuido' });
+    expect(getModoTerminal()).toBe('distribuido');
   });
 
   it('una terminal en modo distribuido no es coordinadora hasta que el hub le dé el permiso (F2)', () => {

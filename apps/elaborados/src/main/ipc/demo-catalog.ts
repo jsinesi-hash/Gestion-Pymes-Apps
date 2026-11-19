@@ -1,6 +1,6 @@
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { getSession } from '@core/main';
+import { getModoTerminal, getSession } from '@core/main';
 import * as schema from '../db/schema';
 import { runDemoHeladeriaSeed } from '../catalog/demo-heladeria';
 import { estadoDemo, vaciarDemo, type EstadoDemo } from '../catalog/demo-registro';
@@ -31,6 +31,8 @@ export function demoHeladeriaSeedHandler(db: Db): { cargado: boolean; yaHabiaCat
 /** Falla con `DEMO_EN_USO:<claves>` si algo demo ya tiene ventas, compras, movimientos, producciones o recetas propias. */
 export function demoVaciarHandler(db: Db): { eliminados: number; estado: EstadoDemo } {
   requireAdmin();
+  // ADR-150 §7 (F2 PR4): vaciar borra filas físicamente; en modo distribuido no hay borrados físicos.
+  if (getModoTerminal() === 'distribuido') throw new Error('DEMO_VACIAR_NO_DISPONIBLE_EN_DISTRIBUIDO');
   const r = vaciarDemo(db);
   return { eliminados: r.articulos + r.productos, estado: estadoDemo(db) };
 }

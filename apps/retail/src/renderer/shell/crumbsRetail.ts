@@ -57,6 +57,7 @@ export const CRUMBS_RETAIL: readonly Seccion[] = [
   { grupo: 'Sistema', base: '/config/funcionalidades', baseLabel: 'Funcionalidades' },
   { grupo: 'Sistema', base: '/config/backup-restore', baseLabel: 'Backup/Restore' },
   { grupo: 'Sistema', base: '/config/smtp', baseLabel: 'Email / SMTP' },
+  { grupo: 'Sistema', base: '/config/sincronizacion', baseLabel: 'Sincronización' },
   { grupo: 'Sistema', base: '/config/datos-demo', baseLabel: 'Datos demo' },
 ];
 

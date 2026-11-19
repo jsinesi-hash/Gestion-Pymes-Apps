@@ -4,6 +4,7 @@ import { setupDb, loginAsAdmin, clearSession, permitirBorradoFisico } from '../.
 import { runCatalogSeedElaborados } from '../../catalog/seed';
 import { articuloCreateHandler } from '../articulo';
 import { movimientoArticuloCreateHandler } from '../movimiento-articulo';
+import { setModoTerminal } from '@core/main';
 import {
   demoHeladeriaSeedHandler, demoEstadoHandler, demoVaciarHandler, registerDemoCatalogHandlers,
 } from '../demo-catalog';
@@ -45,6 +46,18 @@ describe('demo-catalog handlers', () => {
     expect(r.eliminados).toBeGreaterThan(0);
     expect(r.estado).toMatchObject({ hayCatalogo: false, hayDemo: false });
     expect(db.select().from(schema.articulo).all().map((a) => a.id)).toEqual([propio.id]);
+  });
+
+  it('en modo distribuido no se vacía (no hay borrados físicos, F2 PR4)', () => {
+    loginAsAdmin(db);
+    demoHeladeriaSeedHandler(db);
+    setModoTerminal('distribuido');
+    try {
+      expect(() => demoVaciarHandler(db)).toThrow('DEMO_VACIAR_NO_DISPONIBLE_EN_DISTRIBUIDO');
+    } finally {
+      setModoTerminal('standalone');
+    }
+    expect(demoEstadoHandler(db).hayDemo).toBe(true);
   });
 
   it('vaciar con uso real → DEMO_EN_USO y el estado lo informa', () => {

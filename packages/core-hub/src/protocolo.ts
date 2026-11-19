@@ -33,6 +33,7 @@ export const RUTAS = {
   push: '/v1/push',
   pull: '/v1/pull',
   snapshot: '/v1/snapshot',
+  semilla: '/v1/semilla',
   estado: '/v1/estado',
 } as const;
 
@@ -49,5 +50,12 @@ export interface PedidoPush { readonly cambios: readonly CambioEntrante[] }
 export interface RespuestaPush extends ConHora { readonly resultados: ResultadoCambio[] }
 export interface RespuestaPull extends ConHora { readonly cambios: CambioRegistrado[]; readonly hasta: number; readonly hayMas: boolean }
 export type RespuestaSnapshot = ConHora & Snapshot;
+/**
+ * Semilla de la primera terminal (ADR-150 §10): su base entera, en partes. El hub las junta y las aplica
+ * en un solo lote al recibir `fin` (las FK se verifican sobre el total). `inicio` descarta partes
+ * anteriores de un intento cortado. Solo se acepta con el hub vacío.
+ */
+export interface PedidoSemilla { readonly cambios: readonly CambioEntrante[]; readonly inicio?: boolean; readonly fin?: boolean }
+export interface RespuestaSemilla extends ConHora { readonly recibidos: number; readonly cursor: number; readonly rechazados?: ResultadoCambio[] }
 export interface RespuestaEstado extends ConHora { readonly origin_id: string; readonly cursor: number; readonly versiones: Versiones }
 export interface RespuestaError extends Partial<ConHora> { readonly error: string; readonly versiones?: Versiones }

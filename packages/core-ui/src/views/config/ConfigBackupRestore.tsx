@@ -35,6 +35,8 @@ export function ConfigBackupRestore() {
   const [cantCand, setCantCand]         = useState('10');
   const [piso, setPiso]                 = useState('3');
   const [sizeMb, setSizeMb]             = useState('0');
+  // F2 PR4: en modo distribuido restaurar es volver a bajar la base del hub, no un archivo local.
+  const [distribuido, setDistribuido]   = useState(false);
 
   const cargarParametros = useCallback(async () => {
     const destino = await bridge().parametros.get({ clave: 'backup_destino_local' });
@@ -78,6 +80,9 @@ export function ConfigBackupRestore() {
   useEffect(() => { cargarParametros(); }, [cargarParametros]);
   useEffect(() => { cargarBackups(); }, [cargarBackups]);
   useEffect(() => { evaluarDep(); }, [evaluarDep]);
+  useEffect(() => {
+    Promise.resolve().then(() => bridge().sync.estado()).then((e) => setDistribuido(e.modo === 'distribuido')).catch(() => setDistribuido(false));
+  }, []);
 
   async function handleExaminarCarpeta() {
     const ruta = await bridge().dialog.seleccionarCarpeta();
@@ -248,9 +253,15 @@ export function ConfigBackupRestore() {
         >
           {creando ? 'Creando backup…' : 'Crear backup ahora'}
         </button>
-        <button className="btn-secondary" onClick={() => setShowWizard(true)}>
-          Restaurar desde archivo…
-        </button>
+        {distribuido ? (
+          <span style={{ fontSize: 13, color: 'var(--ink-3)', alignSelf: 'center' }}>
+            Esta terminal sincroniza con un hub: para restaurarla, volvé a bajar la base desde Sincronización.
+          </span>
+        ) : (
+          <button className="btn-secondary" onClick={() => setShowWizard(true)}>
+            Restaurar desde archivo…
+          </button>
+        )}
       </div>
 
       {/* Feedback */}

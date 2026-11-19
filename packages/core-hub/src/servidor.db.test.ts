@@ -143,3 +143,56 @@ describe('servidor HTTPS del hub', () => {
     await expect(pedir('GET', '/v1/estado', { certConfiable: { certPem: cert.certPem, huella: 'AA:BB' } })).rejects.toThrow('HUELLA_DISTINTA');
   });
 });
+
+// ADR-150 §10: la primera terminal sube su base en partes; el hub las aplica juntas al recibir la última.
+describe('semilla de la primera terminal', () => {
+  const cert = generarCertificado({ nombre: 'hub-semilla', dias: 30 });
+  let server: https.Server;
+  let terminales: RegistroTerminales;
+  let base: string;
+
+  function pedir(metodo: string, ruta: string, credencial: string, cuerpo?: unknown): Promise<Resp> {
+    const datos = cuerpo === undefined ? undefined : JSON.stringify(cuerpo);
+    return new Promise((resolve, reject) => {
+      const req = https.request(`${base}${ruta}`, {
+        method: metodo, agent: false, ca: cert.certPem,
+        checkServerIdentity: (_h, c) => (c.fingerprint256 === cert.huella ? undefined : new Error('HUELLA_DISTINTA')),
+        headers: { 'content-type': 'application/json', 'x-protocolo': '1', 'x-esquema': '5', authorization: `Bearer ${credencial}` },
+      }, (res) => {
+        let s = '';
+        res.on('data', (d) => { s += d; });
+        res.on('end', () => resolve({ status: res.statusCode!, body: s ? JSON.parse(s) : {} }));
+      });
+      req.on('error', reject);
+      if (datos !== undefined) req.write(datos);
+      req.end();
+    });
+  }
+
+  beforeAll(async () => {
+    const sqlite = new Database(':memory:');
+    const almacen = abrirAlmacenHub(sqlite, { schema: esquemaPrueba, registro: registroPrueba, migracionesApp: MIGRACIONES });
+    terminales = abrirTerminales(sqlite);
+    server = crearServidorHub({ almacen, terminales, tls: cert, versiones: VERSIONES });
+    await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
+    base = `https://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  });
+  afterAll(() => new Promise<void>((r) => server.close(() => r())));
+
+  it('junta las partes (el hijo puede llegar antes que el padre) y rechaza una segunda semilla', async () => {
+    const { codigo } = terminales.generarCodigo();
+    const { credencial } = terminales.emparejar(codigo, { nombre: 'Caja 1', origin_id_propuesto: 'C1' });
+    const sync = { version: 1, origin_id: 'C1', sync_state: 'synced', updated_at: 100 };
+    const hijo = { tabla: 'articulo', fila: { id: 'a1', marca_id: 'm1', nombre: 'Pinza', ...sync } };
+    const padre = { tabla: 'marca', fila: { id: 'm1', nombre: 'Stanley', activo: 1, ...sync } };
+    // Un intento cortado queda descartado por la parte con `inicio`.
+    expect((await pedir('POST', '/v1/semilla', credencial, { cambios: [padre], inicio: true })).body).toMatchObject({ recibidos: 1, cursor: 0 });
+    expect((await pedir('POST', '/v1/semilla', credencial, { cambios: [hijo], inicio: true })).body).toMatchObject({ recibidos: 1 });
+    const fin = await pedir('POST', '/v1/semilla', credencial, { cambios: [padre], fin: true });
+    expect(fin.status).toBe(200);
+    expect(fin.body).toMatchObject({ recibidos: 2, cursor: 2, rechazados: [] });
+
+    const otra = await pedir('POST', '/v1/semilla', credencial, { cambios: [padre], inicio: true, fin: true });
+    expect(otra).toMatchObject({ status: 422, body: { error: 'HUB_NO_VACIO' } });
+  });
+});

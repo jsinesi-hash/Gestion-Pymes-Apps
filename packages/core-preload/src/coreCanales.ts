@@ -7,6 +7,18 @@ export type Invoke = (canal: string, ...args: unknown[]) => Promise<any>;
  */
 export type CoreBridgeApi = ReturnType<typeof coreCanales>;
 
+/** Estado de Configuración → Sincronización (F2 PR4). */
+export interface EstadoSyncTerminal {
+  modo: 'standalone' | 'distribuido';
+  origin_id: string;
+  hub: { url: string; huella: string; nombre: string; emparejado_en: number } | null;
+  sync: {
+    enLinea: boolean | null; ultimoError: string | null; ultimoPushMs: number | null; ultimoPullMs: number | null;
+    pendientes: number; cursor: number; desfasajeMs: number | null; relojDesfasado: boolean;
+    versionesHub: { protocolo: number; esquema: number } | null;
+  } | null;
+}
+
 export function coreCanales(invoke: Invoke) {
   return {
     getVersion: () => invoke('app:version'),
@@ -121,6 +133,17 @@ export function coreCanales(invoke: Invoke) {
         invoke('smtp:setConfig', p),
       setPassword: (p: { password: string }): Promise<void> => invoke('smtp:setPassword', p),
       probar: (): Promise<{ ok: boolean; error?: string }> => invoke('smtp:probar'),
+    },
+    // F2 PR4: modo distribuido (Configuración → Sincronización). El estado lo ve cualquier sesión; el
+    // resto pide administración de usuarios. La credencial y el certificado nunca vuelven al renderer.
+    sync: {
+      estado: (): Promise<EstadoSyncTerminal> => invoke('sync:estado'),
+      sondear: (p: { url: string }): Promise<{ url: string; huella: string }> => invoke('sync:sondear', p),
+      emparejar: (p: { url: string; codigo: string; huella: string; nombre?: string }): Promise<{ origin_id: string; arranque: 'semilla' | 'snapshot'; filas: number }> =>
+        invoke('sync:emparejar', p),
+      sincronizar: (): Promise<EstadoSyncTerminal> => invoke('sync:sincronizar'),
+      desemparejar: (p?: { forzar?: boolean }): Promise<void> => invoke('sync:desemparejar', p),
+      rebajarSnapshot: (p?: { forzar?: boolean }): Promise<{ filas: number }> => invoke('sync:rebajarSnapshot', p),
     },
     print: { html: (h: string) => invoke('print:html', h) },
     exportar: { ejecutar: (req: ExportRequest): Promise<void> => invoke('exportar:ejecutar', req) },

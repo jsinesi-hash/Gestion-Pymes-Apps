@@ -86,6 +86,15 @@ export const POLITICAS_CANALES_CORE: PoliticasCanales = {
   'restore:validar': 'permiso:backup.restaurar',
   'restore:ejecutar': 'permiso:backup.restaurar',
 
+  // Sincronización (F2 PR4): el estado lo ve cualquiera con sesión (indicador); emparejar, desemparejar
+  // y volver a bajar la base son de administración.
+  'sync:estado': 'sesion',
+  'sync:sondear': 'permiso:usuario.administrar',
+  'sync:emparejar': 'permiso:usuario.administrar',
+  'sync:sincronizar': 'permiso:usuario.administrar',
+  'sync:desemparejar': 'permiso:usuario.administrar',
+  'sync:rebajarSnapshot': 'permiso:usuario.administrar',
+
   // El permiso fino (básico o supervisor) lo decide el handler según la entidad y el perfil.
   'exportar:ejecutar': 'permiso:export.basico',
 };
