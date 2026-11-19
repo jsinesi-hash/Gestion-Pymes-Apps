@@ -10,7 +10,7 @@ F2 agrega el **hub** y lo conecta con las terminales en la red del local: el pro
 
 1. **El hub vive dentro de cada app.** Una librería genérica nueva, `@core/hub` (`packages/core-hub`, solo Node), más un punto de entrada en cada app (`apps/<app>/src/hub/`) que le pasa su esquema compuesto, sus migraciones y su registro de sync. Va en el mismo instalador y corre con el mismo `electron.exe` en modo Node (`ELECTRON_RUN_AS_NODE=1`, el mismo NMV de `better-sqlite3`). Hub y terminales salen de la misma versión.
 2. **Multiplataforma:** el hub tiene que poder correr como servicio en **Windows, Linux y macOS**. El proceso del hub no depende del sistema operativo; lo que cambia es cómo se registra el servicio: `systemd` en Linux, `launchd` en macOS y un wrapper de servicio en Windows.
-3. **HTTPS con certificado autofirmado** en la red local, como dice ADR-150 §1. El hub lo genera al instalarse y la terminal fija su huella al emparejarse. Suma la dependencia `selfsigned`, solo en `@core/hub`, porque Node no genera certificados X.509 por sí solo.
+3. **HTTPS con certificado autofirmado** en la red local, como dice ADR-150 §1. El hub lo genera al instalarse y la terminal fija su huella al emparejarse. **Corrección del PR2 (decisión del usuario):** se genera con `node:crypto`, sin la dependencia `selfsigned`.
 4. **La caja compartida (ADR-155 §3 a §5) pasa a F3.**
 
 Estas decisiones se registran como **ADR-158** en el PR1.
@@ -48,7 +48,7 @@ Cada PR: rama propia desde `main`, TDD (rojo → verde), suite completa en serie
 - Tests de contrato contra los esquemas reales de Retail y de Elaborados.
 - Docs: ADR-158 (decisiones de arriba).
 
-### PR2 — Servidor HTTPS del hub (ADR-150 §1, §2, §8 y §9)
+### PR2 — Servidor HTTPS del hub (ADR-150 §1, §2, §8 y §9) — hecho (2026-11-18)
 - Servidor con `node:https`, sin framework. Endpoints versionados:
   - `POST /v1/emparejar`, `POST /v1/push`, `GET /v1/pull?desde=N`, `GET /v1/snapshot` y `GET /v1/estado`.
 - **Certificado:** autofirmado, generado con `selfsigned` en el primer arranque y guardado en la carpeta de datos del hub. La huella SHA-256 se muestra para emparejar.
