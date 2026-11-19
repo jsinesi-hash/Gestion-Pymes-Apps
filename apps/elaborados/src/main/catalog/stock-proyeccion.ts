@@ -12,16 +12,18 @@ const EPS = 1e-6;
  * Stock de un artículo proyectado desde su libro (ADR-151 §4). El libro de Elaborados guarda la
  * cantidad con su signo. Punto de corte: el último movimiento con motivo `conteo`, cuyo
  * `stock_resultante` es la cantidad contada (la pantalla de conteo pide el stock nuevo y manda la
- * diferencia contra el stock local). Orden: fecha y, a igual fecha, orden de llegada. El stock
+ * diferencia contra el stock local). Orden: fecha y, a igual fecha, la terminal
+ * (`origin_id`) y el orden de llegada dentro de ella, para que sea el mismo en todos los nodos (F2 PR3). El stock
  * negativo (artículos sin `bloquea_sin_stock`) se proyecta tal cual.
  */
 export function proyectarStock(db: Db, articuloId: string): number {
-  const conteo = db.all<{ stock_resultante: number; fecha: number; orden: number }>(sql`
-    select stock_resultante, fecha, rowid as orden from movimiento_articulo
+  const conteo = db.all<{ stock_resultante: number; fecha: number; origen: string; orden: number }>(sql`
+    select stock_resultante, fecha, origin_id as origen, rowid as orden from movimiento_articulo
     where articulo_id = ${articuloId} and motivo = 'conteo'
-    order by fecha desc, rowid desc limit 1`)[0];
+    order by fecha desc, origin_id desc, rowid desc limit 1`)[0];
   const posteriores = conteo
-    ? sql`and (fecha > ${conteo.fecha} or (fecha = ${conteo.fecha} and rowid > ${conteo.orden}))`
+    ? sql`and (fecha > ${conteo.fecha} or (fecha = ${conteo.fecha} and (origin_id > ${conteo.origen}
+        or (origin_id = ${conteo.origen} and rowid > ${conteo.orden}))))`
     : sql``;
   const suma = db.all<{ total: number | null }>(sql`
     select sum(cantidad) as total from movimiento_articulo
@@ -48,7 +50,7 @@ const MOTIVOS_CON_COSTO = new Set(['compra', 'produccion_alta']);
 export function proyectarCostoPromedio(db: Db, articuloId: string): number {
   const movs = db.all<{ motivo: string; cantidad: number; stock_resultante: number; costo_unitario_centavos: number | null }>(sql`
     select motivo, cantidad, stock_resultante, costo_unitario_centavos from movimiento_articulo
-    where articulo_id = ${articuloId} order by fecha, rowid`);
+    where articulo_id = ${articuloId} order by fecha, origin_id, rowid`);
   let stock = 0;
   let costo = 0;
   for (const m of movs) {

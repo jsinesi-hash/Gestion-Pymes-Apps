@@ -318,6 +318,9 @@ importers:
       '@core/db':
         specifier: workspace:*
         version: link:../core-db
+      '@core/hub':
+        specifier: workspace:*
+        version: link:../core-hub
       '@ferreteria/shared':
         specifier: workspace:*
         version: link:../shared

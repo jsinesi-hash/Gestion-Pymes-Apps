@@ -64,7 +64,7 @@ Cada PR: rama propia desde `main`, TDD (rojo → verde), suite completa en serie
   - la carpeta de datos se aísla con una variable de entorno, como `GESTION_USER_DATA_DIR`.
 - Tests: servidor en un puerto libre dentro del proceso; emparejar, autenticar, revocar y la compatibilidad de versiones.
 
-### PR3 — Cliente de sync en la terminal (ADR-150 §4, §6 y §9; ADR-151 §2)
+### PR3 — Cliente de sync en la terminal (ADR-150 §4, §6 y §9; ADR-151 §2) — hecho (2026-11-19)
 - `@core/main`, inyectado por la app.
 - **Push:**
   - lotes del `sync_outbox` en orden local;
