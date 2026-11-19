@@ -5,6 +5,7 @@ import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import type * as schema from '@core/db';
 import type { RestoreValidationResult } from '@ferreteria/shared';
 import { getSession } from '../auth/session';
+import { getModoTerminal } from '../context';
 import { validarBackup, ejecutarRestoreAtomico } from '../backup/restore-engine';
 import { RestoreSwapError, rutaDeBaseDeDatos } from '../backup/swap-bd';
 
@@ -44,6 +45,9 @@ export async function restoreEjecutarHandler(
   opts: RestoreOpts,
 ): Promise<{ row_counts_antes: Record<string, number>; row_counts_despues: Record<string, number> }> {
   const session = requireSupervisor();
+  // ADR-150 §10: en modo distribuido restaurar es volver a bajar el snapshot del hub; un backup local
+  // pisaría la base con datos que el hub no conoce.
+  if (getModoTerminal() === 'distribuido') throw new Error('RESTORE_LOCAL_NO_DISPONIBLE_EN_DISTRIBUIDO');
 
   let resultado;
   try {

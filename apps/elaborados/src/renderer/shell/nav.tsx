@@ -98,6 +98,7 @@ export const NAV_ELABORADOS: NavGroup[] = [
       { label: 'Backup/Restore', to: '/config/backup-restore', icon: SVG_BACKUP, permiso: 'backup.crear' },
       { label: 'Datos demo', to: '/config/datos-demo', icon: SVG_SISTEMA, permiso: 'usuario.administrar' },
       { label: 'Email / SMTP', to: '/config/smtp', icon: SVG_SISTEMA, permiso: 'config.fiscal' },
+      { label: 'Sincronización', to: '/config/sincronizacion', icon: SVG_SISTEMA, permiso: 'usuario.administrar' },
     ],
   },
 ];

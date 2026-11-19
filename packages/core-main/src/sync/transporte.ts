@@ -15,7 +15,7 @@ export interface RespuestaHub {
 
 /** Lo que el cliente de sync necesita del hub. Los tests lo reemplazan por uno en memoria. */
 export interface TransporteHub {
-  pedir(metodo: 'GET' | 'POST', ruta: string, cuerpo?: unknown): Promise<RespuestaHub>;
+  pedir(metodo: 'GET' | 'POST', ruta: string, cuerpo?: unknown, opciones?: { readonly timeoutMs?: number }): Promise<RespuestaHub>;
   cerrar(): void;
 }
 
@@ -25,7 +25,8 @@ export interface OpcionesTransporte {
   /** Certificado del hub guardado al emparejar (PEM) y su huella SHA-256. */
   readonly certPem: string;
   readonly huella: string;
-  readonly credencial: string;
+  /** Sin credencial solo sirve para emparejar (la única ruta que no la pide). */
+  readonly credencial?: string;
   readonly versiones: Versiones;
   readonly timeoutMs?: number;
 }
@@ -39,7 +40,7 @@ export function crearTransporteHttps(o: OpcionesTransporte): TransporteHub {
   // Agente propio por hub: el global reusa sockets ya verificados contra otro certificado.
   const agente = new https.Agent({ keepAlive: true, maxSockets: 2, ca: o.certPem, checkServerIdentity });
   return {
-    pedir(metodo, ruta, cuerpo) {
+    pedir(metodo, ruta, cuerpo, opciones) {
       const datos = cuerpo === undefined ? undefined : JSON.stringify(cuerpo);
       return new Promise<RespuestaHub>((resolve, reject) => {
         const enviadoMs = Date.now();
@@ -48,10 +49,10 @@ export function crearTransporteHttps(o: OpcionesTransporte): TransporteHub {
           agent: agente,
           ca: o.certPem,
           checkServerIdentity,
-          timeout: o.timeoutMs ?? TIMEOUT_POR_DEFECTO_MS,
+          timeout: opciones?.timeoutMs ?? o.timeoutMs ?? TIMEOUT_POR_DEFECTO_MS,
           headers: {
             'content-type': 'application/json',
-            authorization: `Bearer ${o.credencial}`,
+            ...(o.credencial ? { authorization: `Bearer ${o.credencial}` } : {}),
             [CABECERA_PROTOCOLO]: String(o.versiones.protocolo),
             [CABECERA_ESQUEMA]: String(o.versiones.esquema),
             ...(datos === undefined ? {} : { 'content-length': Buffer.byteLength(datos) }),

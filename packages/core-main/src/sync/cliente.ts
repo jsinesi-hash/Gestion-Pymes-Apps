@@ -72,7 +72,7 @@ const UMBRAL_DESFASAJE_MS = 60_000;
 /** Lo ya enviado se conserva unos días para diagnóstico y después se purga. */
 const RETENCION_ENVIADOS_S = 7 * 24 * 3600;
 
-interface TablaCliente {
+export interface TablaCliente {
   readonly nombre: string;
   readonly tipo: 'maestro' | 'libro';
   readonly datos: ReadonlySet<string>;
@@ -82,7 +82,8 @@ interface TablaCliente {
 const q = (n: string) => `"${n}"`;
 const segundos = () => Math.floor(Date.now() / 1000);
 
-function tablasDelCliente(schema: Record<string, unknown>, registro: RegistroSync): Map<string, TablaCliente> {
+/** Tablas que sincronizan, con las columnas que viajan (también lo usa el arranque). */
+export function tablasDelCliente(schema: Record<string, unknown>, registro: RegistroSync): Map<string, TablaCliente> {
   const out = new Map<string, TablaCliente>();
   for (const v of Object.values(schema)) {
     if (!is(v, SQLiteTable)) continue;
@@ -101,11 +102,14 @@ function tablasDelCliente(schema: Record<string, unknown>, registro: RegistroSyn
 }
 
 /** Traduce la respuesta del hub: 200 devuelve el cuerpo; el resto, un error con código. */
-function cuerpo(r: RespuestaHub): Record<string, unknown> {
+export function cuerpo(r: RespuestaHub): Record<string, unknown> {
   if (r.status === 200) return r.body;
   const detalle = typeof r.body['error'] === 'string' ? r.body['error'] : '';
   if (r.status === 401) throw new Error('HUB_NO_AUTORIZADO');
   if (r.status === 409) throw Object.assign(new Error('VERSION_INCOMPATIBLE'), { versiones: r.body['versiones'] });
+  // Un rechazo del pedido con código del hub (código de emparejamiento, lote inválido, demasiados
+  // intentos) se propaga con ese código, para que la pantalla lo traduzca.
+  if ((r.status === 422 || r.status === 429) && /^[A-Z_]+/.test(detalle)) throw new Error(detalle);
   throw new Error(`HUB_ERROR: ${r.status} ${detalle}`.trim());
 }
 

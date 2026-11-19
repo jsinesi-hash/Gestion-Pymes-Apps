@@ -3,9 +3,10 @@
 // Corre dentro de la transacción de la página, con el interruptor de aplicación encendido.
 import { eq } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import type { CambioAplicado } from '@core/main';
+import type { CambioAplicado, OpcionesSyncTerminal } from '@core/main';
 import * as schema from '../db/schema';
-import { recalcularCostoPromedio, recalcularStock } from '../catalog/stock-proyeccion';
+import { diferenciasDeCostoPromedio, diferenciasDeStock, recalcularCostoPromedio, recalcularStock } from '../catalog/stock-proyeccion';
+import { registroSyncRetail } from '../db/registro-sync';
 
 type Db = BetterSQLite3Database<typeof schema>;
 
@@ -31,5 +32,22 @@ export function proyeccionesRetail(db: Db): (aplicados: readonly CambioAplicado[
         recalcularStock(db, id);
       }
     }
+  };
+}
+
+/** Diferencias de saldos de Retail (ADR-151 §6): la semilla no sube con stock o costo que no coinciden con su libro. */
+export function integridadRetail(db: Db): string[] {
+  return [
+    ...diferenciasDeStock(db).map((d) => `stock:${d.producto_id}`),
+    ...diferenciasDeCostoPromedio(db).map((d) => `costo:${d.producto_id}`),
+  ];
+}
+
+/** Lo que el modo distribuido de la terminal necesita de Retail (F2 PR4). */
+export function opcionesSyncRetail(db: Db, o: { migrationsFolder: string; carpetaDatos: string }): OpcionesSyncTerminal {
+  return {
+    schema, registro: registroSyncRetail(), ...o,
+    alAplicar: proyeccionesRetail(db),
+    integridad: () => integridadRetail(db),
   };
 }

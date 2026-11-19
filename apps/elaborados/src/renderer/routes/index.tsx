@@ -17,6 +17,7 @@ import {
   RolesPermisosView,
   ConfigBackupRestore,
   ConfigSmtp,
+  ConfigSincronizacion,
   ErrorDeRuta,
 } from '@core/ui';
 import { ElaboradosShell } from '../shell/ElaboradosShell';
@@ -82,6 +83,7 @@ export const routes: RouteObject[] = [
       { path: 'config/backup-restore', element: <ConfigBackupRestore /> },
       { path: 'config/datos-demo', element: <ConfigDatosDemo /> },
       { path: 'config/smtp', element: <ConfigSmtp /> },
+      { path: 'config/sincronizacion', element: <ConfigSincronizacion /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

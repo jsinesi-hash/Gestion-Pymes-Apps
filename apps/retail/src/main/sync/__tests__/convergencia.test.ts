@@ -1,18 +1,20 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Database from 'better-sqlite3';
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import type https from 'node:https';
 import { eq, is } from 'drizzle-orm';
 import { getTableConfig, SQLiteTable } from 'drizzle-orm/sqlite-core';
-import { createDb, instalarTriggersSync } from '@core/db';
+import { createDb } from '@core/db';
 import {
   abrirAlmacenHub, abrirTerminales, crearServidorHub, generarCertificado, PROTOCOLO_VERSION, versionEsquema,
-  type AlmacenHub, type CambioEntrante,
+  type AlmacenHub,
 } from '@core/hub';
 import {
-  cajaAbrirHandler, crearClienteSync, crearTransporteHttps, setOriginId, CLAVE_CURSOR,
-  type ClienteSync, type TransporteHub,
+  cajaAbrirHandler, crearSyncTerminal, getModoTerminal, setModoTerminal, setOriginId,
+  type SyncTerminal,
 } from '@core/main';
 import * as schema from '../../db/schema';
 import { registroSyncRetail } from '../../db/registro-sync';
@@ -23,12 +25,14 @@ import { productoCreateHandler, productoUpdateHandler } from '../../ipc/producto
 import { stockEntradaHandler } from '../../ipc/stock';
 import { ventaConfirmarHandler } from '../../ipc/venta';
 import { proyectarCostoPromedio, proyectarStock } from '../../catalog/stock-proyeccion';
-import { proyeccionesRetail } from '../proyecciones';
+import { opcionesSyncRetail } from '../proyecciones';
 
-// Convergencia (F2 PR3, ADR-150 y ADR-151): un hub HTTPS en el proceso y dos terminales de Retail que
-// venden y cargan stock sin verse entre sí. Al sincronizar, las dos y el hub tienen las mismas filas,
-// el stock y el costo proyectados son los mismos en las tres bases y una edición concurrente del mismo
-// producto termina con un ganador y una entrada en el log de conflictos.
+// Convergencia (F2 PR3 y PR4, ADR-150 y ADR-151): un hub HTTPS en el proceso y dos terminales de Retail.
+// Arrancan como en una instalación real: la primera se empareja (leyendo la huella del certificado) y
+// sube su base como semilla; la segunda es una instalación nueva, con su propio seed, que se empareja y
+// baja el snapshot. Después venden y cargan stock sin verse entre sí. Al sincronizar, las dos y el hub
+// tienen las mismas filas, el stock y el costo proyectados son los mismos en las tres bases y una
+// edición concurrente del mismo producto termina con un ganador y una entrada en el log de conflictos.
 type Db = ReturnType<typeof setupDb>;
 const registro = registroSyncRetail();
 const MIGRACIONES = path.resolve(__dirname, '../../db/migrations');
@@ -61,9 +65,9 @@ describe('convergencia de dos terminales de Retail con el hub', () => {
   let almacen: AlmacenHub;
   let hubSqlite: Database.Database;
   let server: https.Server;
-  let syncA: ClienteSync;
-  let syncB: ClienteSync;
-  const transportes: TransporteHub[] = [];
+  let syncA: SyncTerminal;
+  let syncB: SyncTerminal;
+  const carpetas: string[] = [];
   let productoId = '';
 
   function como<T>(origen: string, fn: () => T): T {
@@ -85,39 +89,48 @@ describe('convergencia de dos terminales de Retail con el hub', () => {
       stock_inicial: { cantidad: 10, costo_centavos: 10_000 },
     }).id;
 
-    // Hub con su certificado; la semilla de la primera terminal y la copia para la segunda son el
-    // arranque de F2 PR4, acá simulado: las dos parten de la misma base y del cursor de la semilla.
     hubSqlite = new Database(':memory:');
     almacen = abrirAlmacenHub(hubSqlite, { schema, registro, migracionesApp: MIGRACIONES });
     const terminales = abrirTerminales(hubSqlite);
-    const semilla: CambioEntrante[] = tablasSync.flatMap((t) => filas(sqliteDe(a), t).map((fila) => ({ tabla: t, fila })));
-    expect(almacen.aplicarLote('C1', semilla).filter((r) => r.estado !== 'aplicado')).toEqual([]);
-    b = createDb(new Database(sqliteDe(a).serialize()), schema).db as unknown as Db;
-    const cursor = String(almacen.ultimoCursor());
-    for (const db of [a, b]) {
-      instalarTriggersSync(sqliteDe(db), schema, registro);
-      sqliteDe(db).prepare(`insert into parametros_sistema (clave, valor, tipo) values (?, ?, 'number')`).run(CLAVE_CURSOR, cursor);
-    }
-
     const cert = generarCertificado({ nombre: 'hub-retail', dias: 30 });
     const versiones = { protocolo: PROTOCOLO_VERSION, esquema: versionEsquema(MIGRACIONES) };
     server = crearServidorHub({ almacen, terminales, tls: cert, versiones });
     await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
-    const url = `https://127.0.0.1:${(server.address() as AddressInfo).port}`;
-    const sync = (db: Db, origen: string) => {
-      const { codigo } = terminales.generarCodigo();
-      const { credencial } = terminales.emparejar(codigo, { nombre: `Caja ${origen}`, origin_id_propuesto: origen });
-      const transporte = crearTransporteHttps({ url, certPem: cert.certPem, huella: cert.huella, credencial, versiones });
-      transportes.push(transporte);
-      return crearClienteSync(db, { schema, registro, transporte, alAplicar: proyeccionesRetail(db) });
+    const url = `127.0.0.1:${(server.address() as AddressInfo).port}`;
+
+    const terminal = (db: Db): SyncTerminal => {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'convergencia-retail-'));
+      carpetas.push(dir);
+      return crearSyncTerminal(db as never, opcionesSyncRetail(db, { migrationsFolder: MIGRACIONES, carpetaDatos: dir }), {
+        safeStorage: { isEncryptionAvailable: () => true, encryptString: (t) => Buffer.from(t), decryptString: (b) => b.toString() },
+        respaldar: async () => undefined,
+        programar: () => ({ detener() {} }), // el test sincroniza a mano
+      });
     };
-    syncA = sync(a, 'C1');
-    syncB = sync(b, 'C2');
+
+    // Primera terminal: lee la huella del hub (la que el usuario compara) y sube su base como semilla.
+    syncA = terminal(a);
+    const { huella } = await syncA.sondear(url);
+    expect(huella).toBe(cert.huella);
+    expect(await syncA.emparejar({ url, codigo: terminales.generarCodigo().codigo, huella })).toMatchObject({ origin_id: 'C1', arranque: 'semilla' });
+
+    // Segunda terminal: una instalación nueva con su propio seed (UUID aleatorios); el mismo proceso
+    // hace de las dos, así que el modo vuelve a standalone para emparejarla.
+    setModoTerminal('standalone');
+    b = setupDb();
+    runCatalogSeed(b);
+    syncB = terminal(b);
+    expect(await syncB.emparejar({ url, codigo: terminales.generarCodigo().codigo, huella })).toMatchObject({ origin_id: 'C2', arranque: 'snapshot' });
+    expect(getModoTerminal()).toBe('distribuido');
+    // Bajar el snapshot cerró la sesión: los usuarios ahora son los del hub (los mismos que en A).
+    loginAsAdmin(a);
   });
   afterAll(async () => {
-    for (const t of transportes) t.cerrar();
+    for (const s of [syncA, syncB]) s?.detener();
     await new Promise<void>((r) => server.close(() => r()));
     setOriginId('C1');
+    setModoTerminal('standalone');
+    for (const d of carpetas) fs.rmSync(d, { recursive: true, force: true });
   });
 
   const vender = (db: Db, cajaId: string, cantidad: number) => ventaConfirmarHandler(db, {
@@ -144,10 +157,10 @@ describe('convergencia de dos terminales de Retail con el hub', () => {
 
     // Dos vueltas: cada una sube lo suyo y baja lo del otro (y los ganadores reemitidos).
     for (let vuelta = 0; vuelta < 2; vuelta++) {
-      await syncA.sincronizar();
-      await syncB.sincronizar();
+      await syncA.sincronizarAhora();
+      await syncB.sincronizarAhora();
     }
-    expect([syncA.estado().pendientes, syncB.estado().pendientes]).toEqual([0, 0]);
+    expect([syncA.estado().sync?.pendientes, syncB.estado().sync?.pendientes]).toEqual([0, 0]);
 
     // Mismas filas en las dos terminales y en el hub, tabla por tabla.
     const snap = new Map(almacen.snapshot().tablas.map((t) => [t.tabla, t.filas]));

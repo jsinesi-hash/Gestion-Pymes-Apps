@@ -27,6 +27,11 @@ export function cargarConfigTerminal(userDataDir: string): TerminalConfig {
   return config;
 }
 
+/** Escribe `<userData>/config.json` (al emparejar o desemparejar la terminal). */
+export function guardarConfigTerminal(userDataDir: string, config: TerminalConfig): void {
+  fs.writeFileSync(path.join(userDataDir, 'config.json'), JSON.stringify(config, null, 2), 'utf-8');
+}
+
 /**
  * Carga la config de la terminal y aplica su `origin_id` al contexto del main (P0, ADR-115).
  * Debe llamarse al arrancar, antes de `runStartup` y de registrar handlers.

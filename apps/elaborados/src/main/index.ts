@@ -10,7 +10,8 @@ if (started) app.quit();
 
 import { db } from './db/client';
 import { runStartup } from './startup';
-import { activarFirmaBackup, activarLockoutPersistente, activarRegistroErrores, aplicarSeguridadVentana, crearImpresorHtml, iniciarTerminal, registrarErroresNoCapturados } from '@core/main';
+import { activarFirmaBackup, activarLockoutPersistente, activarRegistroErrores, aplicarSeguridadVentana, crearImpresorHtml, iniciarTerminal, iniciarSyncTerminal, registrarErroresNoCapturados } from '@core/main';
+import { opcionesSyncElaborados } from './sync/proyecciones';
 import { registrarHandlersElaborados } from './ipc/registrar';
 
 async function createWindow(): Promise<void> {
@@ -23,7 +24,10 @@ async function createWindow(): Promise<void> {
   registrarHandlersElaborados(ipcMain, db, {
     migrationsFolder: path.join(__dirname, 'migrations'),
     imprimirHtml: crearImpresorHtml(() => new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false, contextIsolation: true } })),
+    sync: opcionesSyncElaborados(db, { migrationsFolder: path.join(__dirname, 'migrations'), carpetaDatos: app.getPath('userData') }),
   });
+  // F2 PR4: una terminal emparejada (modo distribuido) enciende el cliente de sync contra su hub.
+  iniciarSyncTerminal();
 
   const win = new BrowserWindow({
     width: 1280,

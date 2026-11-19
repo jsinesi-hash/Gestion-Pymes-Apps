@@ -1,4 +1,4 @@
-// Servidor HTTPS del hub (ADR-150 §1, §2, §8 y §9; ADR-158 §3). Sin framework: cinco rutas con JSON.
+// Servidor HTTPS del hub (ADR-150 §1, §2, §8, §9 y §10; ADR-158 §3). Sin framework: seis rutas con JSON.
 // Toda ruta salvo emparejar exige la credencial de la terminal, y el origin_id de un push sale de esa
 // credencial, nunca del cuerpo: una terminal no puede hacerse pasar por otra.
 import https from 'node:https';
@@ -7,8 +7,9 @@ import type { AlmacenHub } from './almacen';
 import type { RegistroTerminales } from './terminales';
 import {
   CABECERA_ESQUEMA, CABECERA_PROTOCOLO, RUTAS, versionesCompatibles,
-  type PedidoEmparejar, type PedidoPush, type Versiones,
+  type PedidoEmparejar, type PedidoPush, type PedidoSemilla, type Versiones,
 } from './protocolo';
+import type { CambioEntrante } from './almacen';
 
 export interface OpcionesServidor {
   readonly almacen: AlmacenHub;
@@ -32,13 +33,15 @@ class ErrorHttp extends Error {
 }
 
 /** Errores de dominio del almacén y del emparejamiento que son culpa del pedido, no del hub. */
-const ERRORES_DEL_PEDIDO = /^(TABLA_NO_SINCRONIZA|COLUMNA_DESCONOCIDA|CAMBIO_INVALIDO|LOTE_FK_ROTA|CODIGO_INVALIDO|CODIGO_USADO|CODIGO_VENCIDO)/;
+const ERRORES_DEL_PEDIDO = /^(HUB_NO_VACIO|TABLA_NO_SINCRONIZA|COLUMNA_DESCONOCIDA|CAMBIO_INVALIDO|LOTE_FK_ROTA|CODIGO_INVALIDO|CODIGO_USADO|CODIGO_VENCIDO)/;
 
 export function crearServidorHub(opts: OpcionesServidor): https.Server {
   const limite = opts.limiteCuerpoBytes ?? LIMITE_CUERPO;
   const maxIntentos = opts.maxIntentosEmparejar ?? 10;
   const fallidos = new Map<string, number[]>(); // dirección → instantes de intentos fallidos
   const registrar = opts.registrar ?? (() => {});
+  // Partes de la semilla recibidas, por terminal, hasta que llega la última (ADR-150 §10).
+  const semillas = new Map<string, CambioEntrante[]>();
 
   function responder(res: ServerResponse, status: number, cuerpo: Record<string, unknown>): void {
     const datos = JSON.stringify({ ...cuerpo, hora_hub_ms: Date.now() });
@@ -117,6 +120,21 @@ export function crearServidorHub(opts: OpcionesServidor): https.Server {
       const desde = Math.max(0, Math.trunc(Number(url.searchParams.get('desde') ?? 0)) || 0);
       const pedido = Math.trunc(Number(url.searchParams.get('limite') ?? PAGINA_POR_DEFECTO)) || PAGINA_POR_DEFECTO;
       return responder(res, 200, { ...opts.almacen.cambiosDesde(desde, Math.min(Math.max(pedido, 1), PAGINA_MAXIMA)) });
+    }
+    if (ruta === `POST ${RUTAS.semilla}`) {
+      const p = (await leerCuerpo(req)) as Partial<PedidoSemilla>;
+      if (!Array.isArray(p.cambios)) throw new ErrorHttp(400, 'CAMBIOS_FALTANTES');
+      if (opts.almacen.ultimoCursor() !== 0) { semillas.delete(origen); throw new ErrorHttp(422, 'HUB_NO_VACIO'); }
+      const partes = p.inicio === true ? [] : (semillas.get(origen) ?? []);
+      for (const c of p.cambios) partes.push(c);
+      if (p.fin !== true) {
+        semillas.set(origen, partes);
+        return responder(res, 200, { recibidos: partes.length, cursor: 0 });
+      }
+      semillas.delete(origen);
+      const rechazados = opts.almacen.aplicarLote(origen, partes).filter((r) => r.estado !== 'aplicado');
+      registrar(`semilla de ${origen}: ${partes.length} filas, ${rechazados.length} rechazadas`);
+      return responder(res, 200, { recibidos: partes.length, cursor: opts.almacen.ultimoCursor(), rechazados });
     }
     if (ruta === `GET ${RUTAS.snapshot}`) return responder(res, 200, { ...opts.almacen.snapshot() });
     if (ruta === `GET ${RUTAS.estado}`) {

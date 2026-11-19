@@ -55,3 +55,7 @@ export * from './userdata-aislado';
 export * from './sync/transporte';
 export * from './sync/cliente';
 export * from './sync/programar';
+export * from './sync/arranque';
+export * from './sync/hub-guardado';
+export * from './sync/terminal-sync';
+export * from './ipc/sync';

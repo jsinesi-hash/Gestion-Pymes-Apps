@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema';
-import { getSession } from '@core/main';
+import { getModoTerminal, getSession } from '@core/main';
 import {
   runDemoCatalogSeed,
   vaciarCatalogoDemo,
@@ -64,6 +64,8 @@ export type DemoCatalogVaciarResult = {
 
 export function demoCatalogVaciarHandler(db: Db): DemoCatalogVaciarResult {
   requireAdmin();
+  // ADR-150 §7 (F2 PR4): vaciar borra filas físicamente; en modo distribuido no hay borrados físicos.
+  if (getModoTerminal() === 'distribuido') throw new Error('DEMO_VACIAR_NO_DISPONIBLE_EN_DISTRIBUIDO');
   const eliminados = vaciarCatalogoDemo(db);
   return { eliminados, estado: demoCatalogEstadoHandler(db) };
 }

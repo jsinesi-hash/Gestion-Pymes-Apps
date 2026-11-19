@@ -18,7 +18,8 @@ import { drenarReintentos } from './agenda/worker-reintentos';
 import { applyPendingCambiosProgramados } from './scheduler/precios';
 import { ElectronPrintService } from '../print/ElectronPrintService';
 import { installAppMenu } from './menu/appMenu';
-import { getSession, aplicarSeguridadVentana, iniciarTerminal, programarTareaSegura, ejecutarTareaUnica, registrarErroresNoCapturados } from '@core/main';
+import { getSession, aplicarSeguridadVentana, iniciarTerminal, iniciarSyncTerminal, programarTareaSegura, ejecutarTareaUnica, registrarErroresNoCapturados } from '@core/main';
+import { opcionesSyncRetail } from './sync/proyecciones';
 
 async function createWindow(): Promise<void> {
   // Revisión 2026-10-20 (P0): errores no capturados al log (no cortan el proceso en plena venta).
@@ -40,7 +41,10 @@ async function createWindow(): Promise<void> {
     printService,
     reconstruirMenu: () => reconstruirMenu(),
     app,
+    sync: opcionesSyncRetail(db, { migrationsFolder: path.join(__dirname, 'migrations'), carpetaDatos: app.getPath('userData') }),
   });
+  // F2 PR4: una terminal emparejada (modo distribuido) enciende el cliente de sync contra su hub.
+  iniciarSyncTerminal();
 
   // ADR-047: catch-up de agenda al abrir (materializa rutinas vencidas mientras estuvo cerrada).
   // ADR-152: escribe tablas que sincronizan (eventos de agenda): tarea coordinada.

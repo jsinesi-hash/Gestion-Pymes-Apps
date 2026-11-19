@@ -9,6 +9,7 @@ import {
   demoCatalogVaciarHandler,
 } from '../demo-catalog';
 import { productoCreateHandler } from '../producto';
+import { setModoTerminal } from '@core/main';
 
 // El seeder demo necesita el catálogo base (IVA/categorías/marcas/unidades).
 function setup() {
@@ -103,5 +104,16 @@ describe('demo-catalog handlers (ADR-062)', () => {
     expect(() => demoCatalogCargarHandler(db)).toThrow('UNAUTHENTICATED');
     expect(() => demoCatalogVaciarHandler(db)).toThrow('UNAUTHENTICATED');
     expect(() => demoCatalogEstadoHandler(db)).toThrow('UNAUTHENTICATED');
+  });
+
+  it('en modo distribuido no se vacía (no hay borrados físicos, F2 PR4)', () => {
+    demoCatalogCargarHandler(db);
+    setModoTerminal('distribuido');
+    try {
+      expect(() => demoCatalogVaciarHandler(db)).toThrow('DEMO_VACIAR_NO_DISPONIBLE_EN_DISTRIBUIDO');
+    } finally {
+      setModoTerminal('standalone');
+    }
+    expect(demoCatalogEstadoHandler(db).productosDemo).toBe(15);
   });
 });

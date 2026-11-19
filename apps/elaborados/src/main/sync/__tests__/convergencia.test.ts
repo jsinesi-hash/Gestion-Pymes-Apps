@@ -1,30 +1,35 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Database from 'better-sqlite3';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import type https from 'node:https';
 import { eq, is } from 'drizzle-orm';
 import { getTableConfig, SQLiteTable } from 'drizzle-orm/sqlite-core';
-import { createDb, instalarTriggersSync } from '@core/db';
+import { createDb } from '@core/db';
 import {
   abrirAlmacenHub, abrirTerminales, crearServidorHub, generarCertificado, PROTOCOLO_VERSION, versionEsquema,
-  type AlmacenHub, type CambioEntrante,
+  type AlmacenHub,
 } from '@core/hub';
 import {
-  cajaAbrirHandler, crearClienteSync, crearTransporteHttps, setOriginId, CLAVE_CURSOR,
-  type ClienteSync, type TransporteHub,
+  cajaAbrirHandler, crearSyncTerminal, setModoTerminal, setOriginId,
+  type SyncTerminal,
 } from '@core/main';
 import * as schema from '../../db/schema';
 import { registroSyncElaborados } from '../../db/registro-sync';
 import { setupDb, loginAsAdmin, clearSession, MIGRATIONS_DIR } from '../../__tests__/helpers';
-import { CONSUMIDOR_FINAL_ID } from '../../catalog/seed';
+import { CONSUMIDOR_FINAL_ID, runCatalogSeedElaborados } from '../../catalog/seed';
 import { catalogo } from '../../ipc/__tests__/ventaFixtures';
 import { movimientoArticuloCreateHandler } from '../../ipc/movimiento-articulo';
 import { ventaConfirmarHandler } from '../../ipc/venta';
 import { proyectarCostoPromedio, proyectarStock } from '../../catalog/stock-proyeccion';
-import { proyeccionesElaborados } from '../proyecciones';
+import { opcionesSyncElaborados } from '../proyecciones';
 
-// Convergencia (F2 PR3) con el esquema de Elaborados: dos terminales compran y venden el mismo artículo
-// sin verse; al sincronizar, las dos y el hub tienen las mismas filas y el mismo stock y costo proyectados.
+// Convergencia (F2 PR3 y PR4) con el esquema de Elaborados: la primera terminal se empareja y sube su base;
+// la segunda, una instalación nueva con su propio seed, se empareja y baja el snapshot. Después compran y
+// venden el mismo artículo sin verse; al sincronizar, las dos y el hub tienen las mismas filas y el mismo
+// stock y costo proyectados.
 type Db = ReturnType<typeof setupDb>;
 const registro = registroSyncElaborados();
 const tablasSync = Object.entries(registro).filter(([, e]) => e.tipo !== 'local').map(([t]) => t).sort();
@@ -51,9 +56,9 @@ describe('convergencia de dos terminales de Elaborados con el hub', () => {
   let almacen: AlmacenHub;
   let hubSqlite: Database.Database;
   let server: https.Server;
-  let syncA: ClienteSync;
-  let syncB: ClienteSync;
-  const transportes: TransporteHub[] = [];
+  let syncA: SyncTerminal;
+  let syncB: SyncTerminal;
+  const carpetas: string[] = [];
   let c: ReturnType<typeof catalogo>;
 
   function como<T>(origen: string, fn: () => T): T {
@@ -72,34 +77,42 @@ describe('convergencia de dos terminales de Elaborados con el hub', () => {
     hubSqlite = new Database(':memory:');
     almacen = abrirAlmacenHub(hubSqlite, { schema, registro, migracionesApp: MIGRATIONS_DIR });
     const terminales = abrirTerminales(hubSqlite);
-    const semilla: CambioEntrante[] = tablasSync.flatMap((t) => filas(sqliteDe(a), t).map((fila) => ({ tabla: t, fila })));
-    expect(almacen.aplicarLote('C1', semilla).filter((r) => r.estado !== 'aplicado')).toEqual([]);
-    b = createDb(new Database(sqliteDe(a).serialize()), schema).db as unknown as Db;
-    const cursor = String(almacen.ultimoCursor());
-    for (const db of [a, b]) {
-      instalarTriggersSync(sqliteDe(db), schema, registro);
-      sqliteDe(db).prepare(`insert into parametros_sistema (clave, valor, tipo) values (?, ?, 'number')`).run(CLAVE_CURSOR, cursor);
-    }
-
     const cert = generarCertificado({ nombre: 'hub-elaborados', dias: 30 });
     const versiones = { protocolo: PROTOCOLO_VERSION, esquema: versionEsquema(MIGRATIONS_DIR) };
     server = crearServidorHub({ almacen, terminales, tls: cert, versiones });
     await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
-    const url = `https://127.0.0.1:${(server.address() as AddressInfo).port}`;
-    const sync = (db: Db, origen: string) => {
-      const { codigo } = terminales.generarCodigo();
-      const { credencial } = terminales.emparejar(codigo, { nombre: `Caja ${origen}`, origin_id_propuesto: origen });
-      const transporte = crearTransporteHttps({ url, certPem: cert.certPem, huella: cert.huella, credencial, versiones });
-      transportes.push(transporte);
-      return crearClienteSync(db, { schema, registro, transporte, alAplicar: proyeccionesElaborados(db) });
+    const url = `127.0.0.1:${(server.address() as AddressInfo).port}`;
+
+    const terminal = (db: Db): SyncTerminal => {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'convergencia-elaborados-'));
+      carpetas.push(dir);
+      return crearSyncTerminal(db as never, opcionesSyncElaborados(db, { migrationsFolder: MIGRATIONS_DIR, carpetaDatos: dir }), {
+        safeStorage: { isEncryptionAvailable: () => true, encryptString: (t) => Buffer.from(t), decryptString: (b) => b.toString() },
+        respaldar: async () => undefined,
+        programar: () => ({ detener() {} }), // el test sincroniza a mano
+      });
     };
-    syncA = sync(a, 'C1');
-    syncB = sync(b, 'C2');
+
+    syncA = terminal(a);
+    const { huella } = await syncA.sondear(url);
+    expect(huella).toBe(cert.huella);
+    expect(await syncA.emparejar({ url, codigo: terminales.generarCodigo().codigo, huella })).toMatchObject({ origin_id: 'C1', arranque: 'semilla' });
+
+    // Una instalación nueva con su propio seed; el mismo proceso hace de las dos terminales.
+    setModoTerminal('standalone');
+    b = setupDb();
+    runCatalogSeedElaborados(b);
+    syncB = terminal(b);
+    expect(await syncB.emparejar({ url, codigo: terminales.generarCodigo().codigo, huella })).toMatchObject({ origin_id: 'C2', arranque: 'snapshot' });
+    // Bajar el snapshot cerró la sesión: los usuarios ahora son los del hub (los mismos que en A).
+    loginAsAdmin(a);
   });
   afterAll(async () => {
-    for (const t of transportes) t.cerrar();
+    for (const s of [syncA, syncB]) s?.detener();
     await new Promise<void>((r) => server.close(() => r()));
     setOriginId('C1');
+    setModoTerminal('standalone');
+    for (const d of carpetas) fs.rmSync(d, { recursive: true, force: true });
   });
 
   it('compran y venden el mismo artículo por separado; al sincronizar, las tres bases coinciden', async () => {
@@ -116,10 +129,10 @@ describe('convergencia de dos terminales de Elaborados con el hub', () => {
     como('C2', () => operar(b, 3, 300));
 
     for (let vuelta = 0; vuelta < 2; vuelta++) {
-      await syncA.sincronizar();
-      await syncB.sincronizar();
+      await syncA.sincronizarAhora();
+      await syncB.sincronizarAhora();
     }
-    expect([syncA.estado().pendientes, syncB.estado().pendientes]).toEqual([0, 0]);
+    expect([syncA.estado().sync?.pendientes, syncB.estado().sync?.pendientes]).toEqual([0, 0]);
 
     const snap = new Map(almacen.snapshot().tablas.map((t) => [t.tabla, t.filas]));
     for (const t of tablasSync) {
