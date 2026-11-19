@@ -52,3 +52,6 @@ export * from './ctacte-proyeccion';
 export * from './configuracion';
 export * from './ids';
 export * from './userdata-aislado';
+export * from './sync/transporte';
+export * from './sync/cliente';
+export * from './sync/programar';

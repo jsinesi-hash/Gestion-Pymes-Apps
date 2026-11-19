@@ -21,17 +21,19 @@ const EFECTO = sql`case ${schema.movimiento_stock.tipo}
 /**
  * Stock proyectado desde el libro (ADR-151 §4): el último conteo (`ajuste_conteo`, cuyo
  * `stock_resultante` es la cantidad contada) más los movimientos posteriores a él. Sin conteos,
- * la suma de todo el libro. El orden es la fecha del movimiento y, a igual fecha, el orden de
- * llegada: un movimiento de otra terminal fechado antes del conteo no lo modifica, porque el
- * conteo físico ya lo incluía.
+ * la suma de todo el libro. El orden es la fecha del movimiento y, a igual fecha, la terminal
+ * (`origin_id`) y el orden de llegada dentro de ella: así es el mismo en todos los nodos, porque
+ * cada uno recibe los movimientos de otra terminal en otro momento (F2 PR3). Un movimiento de otra
+ * terminal fechado antes del conteo no lo modifica, porque el conteo físico ya lo incluía.
  */
 export function proyectarStock(db: Db, productoId: string): number {
-  const conteo = db.all<{ stock_resultante: number; fecha: number; orden: number }>(sql`
-    select stock_resultante, fecha, rowid as orden from movimiento_stock
+  const conteo = db.all<{ stock_resultante: number; fecha: number; origen: string; orden: number }>(sql`
+    select stock_resultante, fecha, origin_id as origen, rowid as orden from movimiento_stock
     where producto_id = ${productoId} and motivo = 'ajuste_conteo'
-    order by fecha desc, rowid desc limit 1`)[0];
+    order by fecha desc, origin_id desc, rowid desc limit 1`)[0];
   const posteriores = conteo
-    ? sql`and (fecha > ${conteo.fecha} or (fecha = ${conteo.fecha} and rowid > ${conteo.orden}))`
+    ? sql`and (fecha > ${conteo.fecha} or (fecha = ${conteo.fecha} and (origin_id > ${conteo.origen}
+        or (origin_id = ${conteo.origen} and rowid > ${conteo.orden}))))`
     : sql``;
   const suma = db.all<{ total: number | null }>(sql`
     select sum(${EFECTO}) as total from movimiento_stock
@@ -76,7 +78,7 @@ const MOTIVOS_CON_COSTO = new Set(['inicial', 'entrada_manual', 'recepcion_compr
 export function proyectarCostoPromedio(db: Db, productoId: string): number {
   const movs = db.all<{ tipo: string; motivo: string; cantidad: number; stock_resultante: number; costo_unitario_centavos: number | null }>(sql`
     select tipo, motivo, cantidad, stock_resultante, costo_unitario_centavos from movimiento_stock
-    where producto_id = ${productoId} order by fecha, rowid`);
+    where producto_id = ${productoId} order by fecha, origin_id, rowid`);
   let stock = 0;
   let costo = 0;
   for (const m of movs) {

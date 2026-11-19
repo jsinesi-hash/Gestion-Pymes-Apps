@@ -7,6 +7,7 @@ export default defineConfig({
     alias: {
       '@ferreteria/shared': path.resolve(__dirname, '../shared/src/index.ts'),
       '@core/db': path.resolve(__dirname, '../core-db/src/index.ts'),
+      '@core/hub': path.resolve(__dirname, '../core-hub/src/index.ts'),
     },
   },
   test: {
