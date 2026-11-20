@@ -48,11 +48,19 @@ export function getModoTerminal(): ModoTerminal {
   return _modo;
 }
 
+// Hasta cuándo (hora local, ms) vale el permiso de coordinadora que otorgó el hub (ADR-152 §2, F2 PR5).
+let _coordinadoraHastaMs = 0;
+
+/** Lo fija la renovación del permiso (`sync/coordinacion.ts`); 0 = sin permiso. */
+export function setCoordinadoraHasta(ms: number): void {
+  _coordinadoraHastaMs = ms;
+}
+
 /**
  * ¿Esta terminal corre las tareas coordinadas (las que escriben tablas que sincronizan)? En
- * standalone, siempre. En distribuido, solo con el permiso vigente que otorga el hub (F2): hasta
- * entonces, no.
+ * standalone, siempre. En distribuido, solo mientras tenga vigente el permiso que otorga el hub: si
+ * deja de renovarlo (sin conexión), deja de serlo sola antes de que el hub se lo dé a otra.
  */
-export function esTerminalCoordinadora(): boolean {
-  return _modo === 'standalone';
+export function esTerminalCoordinadora(ahoraMs: number = Date.now()): boolean {
+  return _modo === 'standalone' || ahoraMs < _coordinadoraHastaMs;
 }

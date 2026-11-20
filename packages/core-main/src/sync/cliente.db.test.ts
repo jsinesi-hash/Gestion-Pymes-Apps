@@ -5,7 +5,7 @@ import * as schema from '@core/db';
 import { createDb, instalarTriggersSync, registroSyncCore } from '@core/db';
 import { RUTAS, type CambioEntrante, type CambioRegistrado, type ResultadoCambio } from '@core/hub';
 import { setupCoreDb, loginAsAdmin, clearSession } from '../testing/helpers';
-import { setOriginId } from '../context';
+import { setCoordinadoraHasta, setModoTerminal, setOriginId } from '../context';
 import { tareasRegistradas } from '../tareas';
 import { clienteUpsertHandler, ctacteRegistrarSaldoInicialHandler } from '../index';
 import { crearClienteSync, CLAVE_CURSOR, type ClienteSync } from './cliente';
@@ -258,6 +258,37 @@ describe('cliente de sync de la terminal', () => {
       expect(log).not.toHaveBeenCalled();
     } finally {
       prog.detener();
+    }
+  });
+
+  it('programarSync (F2 PR5): renueva el permiso y revisa los bloques; las alertas corren solo en la coordinadora', async () => {
+    const falso = { sincronizar: vi.fn(async () => ({})), pushSiHayPendientes: vi.fn(async () => ({})) } as unknown as ClienteSync;
+    const coordinacion = { renovar: vi.fn(async () => true), revisarBloques: vi.fn(async () => undefined) };
+    const alertas = vi.fn();
+    setModoTerminal('distribuido');
+    setCoordinadoraHasta(0);
+    const opciones = { intervaloPushMs: 60_000, intervaloPullMs: 60_000, intervaloCoordinacionMs: 60_000, coordinacion, despuesDelPull: alertas };
+    let prog = programarSync(falso, opciones);
+    try {
+      await new Promise((r) => setTimeout(r, 20));
+      expect(tareasRegistradas()).toEqual(expect.arrayContaining([
+        { nombre: 'sync:coordinacion', tipo: 'local' }, { nombre: 'sync:alertas', tipo: 'coordinada' },
+      ]));
+      expect(coordinacion.renovar).toHaveBeenCalledTimes(1);
+      expect(coordinacion.revisarBloques).toHaveBeenCalledTimes(1);
+      expect(alertas).not.toHaveBeenCalled(); // sin el permiso del hub
+    } finally {
+      prog.detener();
+    }
+    setCoordinadoraHasta(Date.now() + 60_000);
+    prog = programarSync(falso, opciones);
+    try {
+      await new Promise((r) => setTimeout(r, 20));
+      expect(alertas).toHaveBeenCalledTimes(1);
+    } finally {
+      prog.detener();
+      setModoTerminal('standalone');
+      setCoordinadoraHasta(0);
     }
   });
 });

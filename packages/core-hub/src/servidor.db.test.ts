@@ -5,6 +5,7 @@ import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { abrirAlmacenHub } from './almacen';
 import { abrirTerminales, type RegistroTerminales } from './terminales';
+import { abrirCoordinacion } from './coordinacion';
 import { generarCertificado } from './certificado';
 import { crearServidorHub } from './servidor';
 import { esquemaPrueba, registroPrueba } from './__fixtures__/esquema';
@@ -66,7 +67,7 @@ describe('servidor HTTPS del hub', () => {
     const sqlite = new Database(':memory:');
     const almacen = abrirAlmacenHub(sqlite, { schema: esquemaPrueba, registro: registroPrueba, migracionesApp: MIGRACIONES });
     terminales = abrirTerminales(sqlite);
-    server = crearServidorHub({ almacen, terminales, tls: cert, versiones: VERSIONES, limiteCuerpoBytes: 64 * 1024 });
+    server = crearServidorHub({ almacen, terminales, coordinacion: abrirCoordinacion(sqlite), tls: cert, versiones: VERSIONES, limiteCuerpoBytes: 64 * 1024 });
     await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
     base = `https://127.0.0.1:${(server.address() as AddressInfo).port}`;
   });
@@ -130,6 +131,23 @@ describe('servidor HTTPS del hub', () => {
     expect((await pedir('GET', '/v1/otra', { credencial: t.credencial })).status).toBe(404);
   });
 
+  it('coordinadora y bloques: el permiso es de una sola terminal y los bloques no se superponen', async () => {
+    const a = await emparejar('Caja A');
+    const b = await emparejar('Caja B');
+    const pa = await pedir('POST', '/v1/coordinadora', { credencial: a.credencial });
+    expect(pa).toMatchObject({ status: 200, body: { coordinadora: true, origin_id: a.origin_id } });
+    expect((pa.body['vigencia_ms'] as number)).toBeGreaterThan(0);
+    expect((await pedir('POST', '/v1/coordinadora', { credencial: b.credencial })).body).toMatchObject({ coordinadora: false, origin_id: a.origin_id });
+
+    const ba = await pedir('POST', '/v1/bloque', { credencial: a.credencial, cuerpo: { serie: 'sku', minimo: 100, tamano: 50 } });
+    expect(ba).toMatchObject({ status: 200, body: { serie: 'sku', desde: 100, hasta: 149 } });
+    expect((await pedir('POST', '/v1/bloque', { credencial: b.credencial, cuerpo: { serie: 'sku', minimo: 1, tamano: 50 } })).body)
+      .toMatchObject({ desde: 150, hasta: 199 });
+    expect(await pedir('POST', '/v1/bloque', { credencial: b.credencial, cuerpo: { serie: 'sku', minimo: 1, tamano: -1 } }))
+      .toMatchObject({ status: 422, body: { error: 'BLOQUE_INVALIDO' } });
+    expect((await pedir('POST', '/v1/coordinadora')).status).toBe(401);
+  });
+
   it('limita los intentos fallidos de emparejar (fuerza bruta del código): 429', async () => {
     let ultimo = 0;
     for (let i = 0; i < 12; i++) ultimo = (await pedir('POST', '/v1/emparejar', { cuerpo: { codigo: 'ZZZZ-ZZZZ', nombre: 'x' } })).status;
@@ -173,7 +191,7 @@ describe('semilla de la primera terminal', () => {
     const sqlite = new Database(':memory:');
     const almacen = abrirAlmacenHub(sqlite, { schema: esquemaPrueba, registro: registroPrueba, migracionesApp: MIGRACIONES });
     terminales = abrirTerminales(sqlite);
-    server = crearServidorHub({ almacen, terminales, tls: cert, versiones: VERSIONES });
+    server = crearServidorHub({ almacen, terminales, coordinacion: abrirCoordinacion(sqlite), tls: cert, versiones: VERSIONES });
     await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
     base = `https://127.0.0.1:${(server.address() as AddressInfo).port}`;
   });

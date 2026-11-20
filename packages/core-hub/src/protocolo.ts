@@ -34,6 +34,8 @@ export const RUTAS = {
   pull: '/v1/pull',
   snapshot: '/v1/snapshot',
   semilla: '/v1/semilla',
+  coordinadora: '/v1/coordinadora',
+  bloque: '/v1/bloque',
   estado: '/v1/estado',
 } as const;
 
@@ -57,5 +59,10 @@ export type RespuestaSnapshot = ConHora & Snapshot;
  */
 export interface PedidoSemilla { readonly cambios: readonly CambioEntrante[]; readonly inicio?: boolean; readonly fin?: boolean }
 export interface RespuestaSemilla extends ConHora { readonly recibidos: number; readonly cursor: number; readonly rechazados?: ResultadoCambio[] }
+/** ADR-152 §2: pedir o renovar el permiso de coordinadora (sin cuerpo; la terminal sale de la credencial). */
+export interface RespuestaCoordinadora extends ConHora { readonly coordinadora: boolean; readonly origin_id: string; readonly vigencia_ms: number }
+/** ADR-154 §2: el próximo bloque de correlativos de una serie. `minimo` = el próximo número que la terminal sabe libre. */
+export interface PedidoBloque { readonly serie: string; readonly minimo: number; readonly tamano: number }
+export interface RespuestaBloque extends ConHora { readonly serie: string; readonly desde: number; readonly hasta: number }
 export interface RespuestaEstado extends ConHora { readonly origin_id: string; readonly cursor: number; readonly versiones: Versiones }
 export interface RespuestaError extends Partial<ConHora> { readonly error: string; readonly versiones?: Versiones }

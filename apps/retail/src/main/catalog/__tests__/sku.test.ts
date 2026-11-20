@@ -38,4 +38,14 @@ describe('reservarSku', () => {
     expect(() => db.transaction((tx) => reservarSku(tx))).toThrow('SKU_SIN_BLOQUE');
     expect(param('sku_proximo_secuencial')).toBe('1002');
   });
+
+  it('al agotar el bloque sigue con el siguiente que el hub dio por adelantado (F2 PR5)', () => {
+    fijar('sku_proximo_secuencial', '1001');
+    fijar('sku_bloque_hasta', '1001');
+    fijar('sku_bloque_siguiente', '3000-3999');
+    expect(db.transaction((tx) => reservarSku(tx)).secuencial).toBe(1001);
+    const siguiente = db.transaction((tx) => reservarSku(tx));
+    expect(siguiente).toMatchObject({ secuencial: 3000, sku: expect.stringMatching(/^P-0003000-\d$/) });
+    expect([param('sku_proximo_secuencial'), param('sku_bloque_hasta'), param('sku_bloque_siguiente')]).toEqual(['3001', '3999', undefined]);
+  });
 });

@@ -9,7 +9,7 @@ import { eq, is } from 'drizzle-orm';
 import { getTableConfig, SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { createDb } from '@core/db';
 import {
-  abrirAlmacenHub, abrirTerminales, crearServidorHub, generarCertificado, PROTOCOLO_VERSION, versionEsquema,
+  abrirAlmacenHub, abrirCoordinacion, abrirTerminales, crearServidorHub, generarCertificado, PROTOCOLO_VERSION, versionEsquema,
   type AlmacenHub,
 } from '@core/hub';
 import {
@@ -79,7 +79,7 @@ describe('convergencia de dos terminales de Elaborados con el hub', () => {
     const terminales = abrirTerminales(hubSqlite);
     const cert = generarCertificado({ nombre: 'hub-elaborados', dias: 30 });
     const versiones = { protocolo: PROTOCOLO_VERSION, esquema: versionEsquema(MIGRATIONS_DIR) };
-    server = crearServidorHub({ almacen, terminales, tls: cert, versiones });
+    server = crearServidorHub({ almacen, terminales, coordinacion: abrirCoordinacion(hubSqlite), tls: cert, versiones });
     await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
     const url = `127.0.0.1:${(server.address() as AddressInfo).port}`;
 

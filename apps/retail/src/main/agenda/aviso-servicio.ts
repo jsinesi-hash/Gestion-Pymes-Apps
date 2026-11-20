@@ -1,4 +1,4 @@
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, isNull, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { generateId } from '@ferreteria/shared';
 import * as schema from '../db/schema';
@@ -18,7 +18,8 @@ export interface ComandoAviso {
   titulo: string;
   cuerpo: string;
   datos?: unknown;
-  destinatario: { tipo: 'usuario' | 'rol'; id?: string | undefined; rol?: string | undefined };
+  /** `permiso` (ADR-146): los usuarios activos cuyo rol activo tiene ese permiso; no depende del nombre del rol. */
+  destinatario: { tipo: 'usuario' | 'rol' | 'permiso'; id?: string | undefined; rol?: string | undefined; permiso?: string | undefined };
   canales?: Canal[];              // default ['in_app']
   dedupe_clave?: string | null;   // idempotencia (ADR-003)
   severidad?: 'normal' | 'alerta';   // ADR-048: default 'normal'
@@ -35,7 +36,7 @@ const FLAG_EMAIL_POR_ORIGEN: Record<string, string> = {
 // ADR-155 §1: los notif_* son configuración del negocio; el acceso único sabe dónde viven.
 const leerFlag = (db: Db | Tx, clave: string): boolean => leerFlagConfig(db, clave);
 
-/** Expande rol->usuarios activos; usuario->[ese usuario]. Congela el contacto (email). */
+/** Expande rol o permiso->usuarios activos; usuario->[ese usuario]. Congela el contacto (email). */
 function resolverDestinatarios(
   db: Db | Tx,
   dest: ComandoAviso['destinatario'],
@@ -44,6 +45,16 @@ function resolverDestinatarios(
     if (!dest.id) return [];
     const u = db.select().from(schema.usuario).where(eq(schema.usuario.id, dest.id)).get();
     return u ? [{ id: u.id, email: u.email ?? null }] : [];
+  }
+  if (dest.tipo === 'permiso') {
+    if (!dest.permiso) return [];
+    return db.select({ id: schema.usuario.id, email: schema.usuario.email }).from(schema.usuario)
+      .innerJoin(schema.rol, eq(schema.rol.id, schema.usuario.rol_id))
+      .innerJoin(schema.rol_permiso, and(eq(schema.rol_permiso.rol_id, schema.rol.id), isNull(schema.rol_permiso.deleted_at)))
+      .innerJoin(schema.permiso, eq(schema.permiso.id, schema.rol_permiso.permiso_id))
+      .where(and(eq(schema.usuario.activo, true), eq(schema.rol.activo, true), eq(schema.permiso.codigo, dest.permiso)))
+      .orderBy(schema.usuario.nombre_usuario)
+      .all().map((u) => ({ id: u.id, email: u.email ?? null }));
   }
   // Match del nombre de rol case-insensitive: el seed crea 'SUPERVISOR'/'OPERADOR' en
   // mayusculas, pero los destinatarios (parametros, ADR-048) pueden venir en minusculas.

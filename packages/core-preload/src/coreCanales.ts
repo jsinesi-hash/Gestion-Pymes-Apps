@@ -17,6 +17,10 @@ export interface EstadoSyncTerminal {
     pendientes: number; cursor: number; desfasajeMs: number | null; relojDesfasado: boolean;
     versionesHub: { protocolo: number; esquema: number } | null;
   } | null;
+  /** F2 PR5 (ADR-152 §2): ¿corre las tareas coordinadas? */
+  coordinadora: boolean;
+  /** F2 PR5 (ADR-154 §2): números disponibles por serie (null = sin tope, standalone). */
+  series: { serie: string; disponibles: number | null }[];
 }
 
 export function coreCanales(invoke: Invoke) {

@@ -8,13 +8,14 @@ import * as schema from '@core/db';
 import { registroSyncCore } from '@core/db';
 import { RUTAS, type CambioEntrante, type CambioRegistrado } from '@core/hub';
 import { setupCoreDb, loginAsAdmin, clearSession } from '../testing/helpers';
-import { getModoTerminal, getOriginId, setModoTerminal, setOriginId } from '../context';
+import { esTerminalCoordinadora, getModoTerminal, getOriginId, setCoordinadoraHasta, setModoTerminal, setOriginId } from '../context';
 import { getSession } from '../auth/session';
 import { restoreEjecutarHandler } from '../ipc/restore';
 import { clienteUpsertHandler, ctacteRegistrarSaldoInicialHandler } from '../index';
 import { CLAVE_CURSOR } from './cliente';
-import { crearSyncTerminal, type DepsSyncTerminal, type SyncTerminal } from './terminal-sync';
+import { crearSyncTerminal, type DepsSyncTerminal, type OpcionesSyncTerminal, type SyncTerminal } from './terminal-sync';
 import { leerHub } from './hub-guardado';
+import type { ExtrasProgramarSync } from './programar';
 import type { OpcionesTransporte, RespuestaHub, TransporteHub } from './transporte';
 
 // Modo distribuido de la terminal (F2 PR4, ADR-150 §2 y §10): emparejar, semilla de la primera
@@ -30,6 +31,8 @@ function hubEnMemoria() {
     log: [] as CambioRegistrado[],
     origenes: new Map<string, string>(), // credencial → origin_id
     semilla: [] as CambioEntrante[],
+    coordinadora: null as string | null,
+    ultimoBloque: 0,
     crearTransporte(o: OpcionesTransporte): TransporteHub {
       return {
         async pedir(_metodo, ruta, cuerpo) {
@@ -52,6 +55,16 @@ function hubEnMemoria() {
           const origen = h.origenes.get(o.credencial ?? '');
           if (!origen) return resp(401, { error: 'NO_AUTORIZADO' });
           if (ruta === RUTAS.estado) return resp(200, { origin_id: origen, cursor: h.log.length });
+          if (ruta === RUTAS.coordinadora) {
+            h.coordinadora ??= origen;
+            return resp(200, { coordinadora: h.coordinadora === origen, origin_id: h.coordinadora, vigencia_ms: 120_000 });
+          }
+          if (ruta === RUTAS.bloque) {
+            const p = cuerpo as { serie: string; minimo: number; tamano: number };
+            const desde = Math.max(h.ultimoBloque + 1, p.minimo);
+            h.ultimoBloque = desde + p.tamano - 1;
+            return resp(200, { serie: p.serie, desde, hasta: h.ultimoBloque });
+          }
           if (ruta === RUTAS.semilla) {
             const p = cuerpo as { cambios: CambioEntrante[]; inicio?: boolean; fin?: boolean };
             if (h.log.length) return resp(422, { error: 'HUB_NO_VACIO' });
@@ -100,7 +113,7 @@ describe('modo distribuido de la terminal', () => {
   let hub: ReturnType<typeof hubEnMemoria>;
   let migraciones: string;
   const carpetas: string[] = [];
-  let tareas: { detener: ReturnType<typeof vi.fn> }[];
+  let tareas: { detener: ReturnType<typeof vi.fn>; extras: ExtrasProgramarSync }[];
 
   function carpeta(): string {
     const d = fs.mkdtempSync(path.join(os.tmpdir(), 'terminal-sync-'));
@@ -108,13 +121,13 @@ describe('modo distribuido de la terminal', () => {
     return d;
   }
 
-  function terminal(db: Db, dir: string, extra: Partial<DepsSyncTerminal> = {}): { s: SyncTerminal; respaldar: ReturnType<typeof vi.fn> } {
+  function terminal(db: Db, dir: string, extra: Partial<DepsSyncTerminal> = {}, opciones: Partial<OpcionesSyncTerminal> = {}): { s: SyncTerminal; respaldar: ReturnType<typeof vi.fn> } {
     const respaldar = vi.fn(async () => undefined);
-    const s = crearSyncTerminal(db, { schema, registro, migrationsFolder: migraciones, carpetaDatos: dir }, {
+    const s = crearSyncTerminal(db, { schema, registro, migrationsFolder: migraciones, carpetaDatos: dir, ...opciones }, {
       safeStorage, respaldar,
       crearTransporte: (o) => hub.crearTransporte(o),
       sondear: async (url) => ({ url: `https://${url}:7443`, certPem: 'PEM DEL HUB', huella: HUELLA }),
-      programar: () => { const t = { detener: vi.fn() }; tareas.push(t); return t; },
+      programar: (_c, extras) => { const t = { detener: vi.fn(), extras }; tareas.push(t); return t; },
       ...extra,
     });
     return { s, respaldar };
@@ -137,6 +150,7 @@ describe('modo distribuido de la terminal', () => {
   afterEach(() => {
     setOriginId('C1');
     setModoTerminal('standalone');
+    setCoordinadoraHasta(0);
     clearSession();
     for (const d of carpetas.splice(0)) fs.rmSync(d, { recursive: true, force: true });
   });
@@ -293,6 +307,43 @@ describe('modo distribuido de la terminal', () => {
     expect(tareas).toHaveLength(2);
     altaCliente(a, 'Beto');
     expect(pendientes(a)).toBe(0);
+  });
+
+  it('coordinadora y bloques: al emparejar la serie espera su bloque; la coordinadora corre las alertas', async () => {
+    const a = setupCoreDb();
+    clearSession();
+    loginAsAdmin(a);
+    sqliteDe(a).prepare("insert into parametros_sistema (clave, valor, tipo) values ('prueba_proximo_secuencial', '40', 'number')").run();
+    const alertas = vi.fn();
+    const dir = carpeta();
+    const { s } = terminal(a, dir, {}, {
+      series: [{ serie: 'prueba', tamano: 500, ultimoUsado: () => 39 }],
+      despuesDelPull: alertas,
+    });
+    await s.emparejar({ url: 'hub.local', codigo: CODIGO, huella: HUELLA });
+    // Hasta recibir el primer bloque del hub no hay números (podrían repetirse en otra terminal).
+    expect(s.estado()).toMatchObject({ coordinadora: false, series: [{ serie: 'prueba', disponibles: 0 }] });
+    expect(tareas[0]!.extras.coordinacion).toBeDefined();
+    expect(tareas[0]!.extras.despuesDelPull).toBe(alertas);
+
+    const e = await s.sincronizarAhora();
+    expect(e).toMatchObject({ coordinadora: true, series: [{ serie: 'prueba', disponibles: 500 }] });
+    expect(esTerminalCoordinadora()).toBe(true);
+    expect(alertas).toHaveBeenCalledTimes(1);
+
+    // Al desemparejar deja de ser coordinadora y la serie vuelve a no tener tope.
+    await s.desemparejar({ forzar: true });
+    expect(s.estado()).toMatchObject({ modo: 'standalone', series: [{ serie: 'prueba', disponibles: null }] });
+    setModoTerminal('distribuido');
+    expect(esTerminalCoordinadora()).toBe(false);
+  });
+
+  it('una terminal emparejada antes de usar bloques espera el primero al arrancar (no numera por su cuenta)', async () => {
+    const { a, dir } = await primeraTerminal();
+    sqliteDe(a).prepare("insert into parametros_sistema (clave, valor, tipo) values ('prueba_proximo_secuencial', '7', 'number')").run();
+    const s = terminal(a, dir, {}, { series: [{ serie: 'prueba' }] }).s;
+    expect(s.iniciar()).toBe(true);
+    expect(s.estado().series).toEqual([{ serie: 'prueba', disponibles: 0 }]);
   });
 
   it('sin safeStorage no empareja ni toca el hub', async () => {

@@ -6,7 +6,7 @@ import path from 'node:path';
 import { app, safeStorage } from 'electron';
 import type { IpcMain } from 'electron';
 import { crearBackup } from '../backup/engine';
-import { getModoTerminal, getOriginId } from '../context';
+import { esTerminalCoordinadora, getModoTerminal, getOriginId } from '../context';
 import type { DbSync } from '../sync/cliente';
 import { crearSyncTerminal, type DepsSyncTerminal, type EstadoTerminalSync, type OpcionesSyncTerminal, type SyncTerminal } from '../sync/terminal-sync';
 
@@ -47,7 +47,7 @@ export function registerSyncHandlers(ipcMain: IpcMain, db: DbSync, o?: OpcionesS
     instancia = crearSyncTerminal(db, o, deps ?? depsElectron(db, o));
   }
   ipcMain.handle('sync:estado', async (): Promise<EstadoTerminalSync> =>
-    instancia?.estado() ?? { modo: getModoTerminal(), origin_id: getOriginId(), hub: null, sync: null });
+    instancia?.estado() ?? { modo: getModoTerminal(), origin_id: getOriginId(), hub: null, sync: null, coordinadora: esTerminalCoordinadora(), series: [] });
   ipcMain.handle('sync:sondear', async (_e, p: { url: string }) => requerir().sondear(String(p?.url ?? '')));
   ipcMain.handle('sync:emparejar', async (_e, p: { url: string; codigo: string; huella: string; nombre?: string }) =>
     requerir().emparejar({
