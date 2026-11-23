@@ -38,7 +38,13 @@ const config: ForgeConfig = {
     icon: path.join(__dirname, 'assets/icon'),  // electron-packager agrega .ico/.icns automáticamente
     // Manual de usuario (HTML): viaja fuera del asar, en Resources/guias/. El main lo
     // localiza vía process.resourcesPath (ver src/main/menu/appMenu.ts:resolveManualPath).
-    extraResource: ['../../docs/Documentacion/Usuario/guias'],
+    // Geo-cache (provincias/localidades) para el seed de geografía del primer arranque: va en
+    // Resources/geo-cache/ (ver src/main/startup.ts). Va acá y no en `extraResources` de
+    // electron-builder porque `scripts/dist.cjs` usa --prepackaged y builder no las copia (ADR-111).
+    extraResource: [
+      '../../docs/Documentacion/Usuario/guias',
+      path.join(__dirname, '..', '..', 'packages', 'core-main', 'geo-cache'),
+    ],
     asar: {
       // migrate() lee los archivos de migración en runtime; no pueden estar comprimidos.
       // better-sqlite3 es un native module binario; tampoco puede ir comprimido.

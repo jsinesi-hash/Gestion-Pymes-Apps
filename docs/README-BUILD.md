@@ -8,6 +8,7 @@
 | `pnpm test` | Correr todos los tests (renderer + main process) |
 | `pnpm seed:base` | Sembrar datos base en la DB de producción (primer arranque manual) |
 | `pnpm dist` | Empaquetar → `dist/Ferretería-Setup-<version>.exe` |
+| `pnpm smoke` | Humo del instalador: lo extrae, revisa el contenido (geo-cache, guías, `app-update.yml`, sin `.db`) y arranca `ferreteria.exe` con datos temporales (ADR-111) |
 | `pnpm release` | Empaquetar y publicar en GitHub Releases (feed de auto-update) |
 
 > Todos los comandos se ejecutan desde `packages/client/` salvo `pnpm install` (raíz del monorepo).
@@ -26,11 +27,16 @@ pnpm dist
 # → dist/Ferretería-Setup-<version>.exe
 # → dist/latest.yml          (feed de auto-update)
 # → dist/Ferretería-Setup-<version>.exe.blockmap
+
+# 4. Humo del instalador (no instala nada ni toca la BD real)
+pnpm smoke
+# → HUMO: OK
 ```
 
 ## Checklist pre-release
 
 - [ ] Tests en verde: `pnpm test`
+- [ ] Humo del instalador en verde: `pnpm smoke` (después de `pnpm dist`)
 - [ ] Versión actualizada en `packages/client/package.json` (campo `"version"`)
 - [ ] Branch correcto: parche sale de `release/1.0.x`, feature de `main` (ver ADR-042)
 - [ ] Tag git creado: `git tag v<version>`
