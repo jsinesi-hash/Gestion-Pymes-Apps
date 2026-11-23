@@ -253,6 +253,11 @@ export function abrirAlmacenHub(sqlite: BetterSqlite3.Database, opts: OpcionesAl
       }
       const guardada = sinProyectadas(t, leerFila(t, id)!);
       resultado = { estado: 'aplicado', seq: registrarCambio(t, id, version, origen, updated_at, guardada, ahora) };
+      // Concurrente que gana (F2 PR7): otra terminal escribió la fila y esta no lo había visto (su versión no
+      // es mayor). La que se pierde es la que estaba en el hub, y también va al log para el Supervisor.
+      if (actual && ultimo && ultimo.origin_id !== origen && version <= ultimo.version) {
+        conflicto('lww', t, id, origen, fila, sinProyectadas(t, actual), 'GANO_EL_ENTRANTE', ahora);
+      }
     }
     stMarcarRecibido.run(t.nombre, id, version, origen, resultado.estado, resultado.seq ?? null);
     return resultado;

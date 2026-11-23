@@ -9,6 +9,18 @@ export interface NotasVersion {
  * Al preparar un release nuevo, agregar acá la entrada de esa versión.
  */
 export const CHANGELOG: Record<string, NotasVersion> = {
+  '2.0.0-beta': {
+    titulo: 'Novedades de la versión 2.0.0 (beta)',
+    notas: [
+      'Varias cajas con los mismos datos: una PC del local hace de servidor y las demás cajas comparten productos, stock, clientes y ventas con ella.',
+      'Si se corta la red, cada caja sigue vendiendo; al volver la conexión se ponen al día solas.',
+      'Configuración → Sincronización: emparejar la caja con el servidor (confirmando la huella del certificado) y ver el estado de la conexión.',
+      '«Servidor en esta PC»: instala el servidor para que arranque con la PC y genera los códigos para emparejar cada caja.',
+      'Si dos cajas venden a la vez lo último que quedaba y el stock queda negativo, avisa una sola vez, y ese producto no se vende hasta corregirlo.',
+      'Cada caja da de alta productos con sus propios códigos, sin repetirse entre cajas.',
+      'Versión de prueba: conviene usarla primero en un local con una sola caja de respaldo.',
+    ],
+  },
   '1.2.0': {
     titulo: 'Novedades de la versión 1.2.0',
     notas: [

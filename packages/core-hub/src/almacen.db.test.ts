@@ -52,6 +52,24 @@ describe('almacén del hub', () => {
     expect(cambios[0]!.fila).toMatchObject({ nombre: 'Stanley Tools' });
   });
 
+  it('maestro: si el cambio concurrente que llega después es el más nuevo, gana, y el que pierde también va al log', () => {
+    // Hallazgo de la prueba de punta a punta (F2 PR7): las dos terminales editaron la misma fila sin
+    // conexión; llegó primero la edición más vieja y la nueva la pisaba sin dejar rastro.
+    hub.aplicarLote('C1', [marca('m1', 'Stanley', 1, 100)]);
+    hub.aplicarLote('C1', [marca('m1', 'De A', 2, 200)]);
+    const [r] = hub.aplicarLote('C2', [marca('m1', 'De B', 2, 300)]); // C2 no vio la versión 2 de C1
+    expect(r).toMatchObject({ estado: 'aplicado' });
+    expect(fila('marca', 'm1')).toMatchObject({ nombre: 'De B' });
+    const [c] = hub.conflictos();
+    expect(c).toMatchObject({ tipo: 'lww', tabla: 'marca', fila_id: 'm1', origin_id: 'C2', detalle: 'GANO_EL_ENTRANTE' });
+    expect(JSON.parse(c!.fila_entrante)).toMatchObject({ nombre: 'De B' });
+    expect(JSON.parse(c!.fila_actual!)).toMatchObject({ nombre: 'De A' }); // la edición que se perdió
+
+    // Un cambio que ya había visto el anterior (versión mayor) no es concurrente: no es conflicto.
+    hub.aplicarLote('C1', [marca('m1', 'De A otra vez', 3, 400)]);
+    expect(hub.conflictos()).toHaveLength(1);
+  });
+
   it('maestro: otra copia idéntica de una fila que ya llegó no es cambio ni conflicto', () => {
     hub.aplicarLote('C1', [marca('m1', 'Genérica', 1, 100)]);
     const [r] = hub.aplicarLote('C2', [marca('m1', 'Genérica', 1, 90)]);

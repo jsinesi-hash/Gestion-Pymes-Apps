@@ -118,7 +118,7 @@ Cada PR: rama propia desde `main`, TDD (rojo → verde), suite completa en serie
 - **Instalador:** ofrece «esta PC también es el servidor» (ADR-156 §1).
 - **Verificación:** en Windows, en este equipo. En Linux y macOS **no se puede verificar acá**: queda escrito qué probar en un equipo real.
 
-### PR7 — Prueba de punta a punta y 2.0.0-beta
+### PR7 — Prueba de punta a punta y 2.0.0-beta — hecho (2026-11-23)
 - Un hub y dos instancias de Retail en este equipo, con carpetas de datos aisladas:
   - emparejar las dos;
   - vender en una y ver el stock en la otra;
@@ -156,8 +156,8 @@ pnpm integridad:saldos <copia de la base>
 
 ## Aceptación
 
-- [ ] PR1–PR7 mergeados, cada uno con la suite completa en verde y su cierre documental.
-- [ ] Dos terminales y un hub convergen en las mismas filas y en los mismos saldos proyectados, también después de un corte.
-- [ ] Una terminal no se puede hacer pasar por otra: credencial propia, revocable, con huella fijada.
-- [ ] Standalone sin cambios: misma suite y misma app sin emparejar.
-- [ ] El hub se registra como servicio en Windows (verificado acá) y tiene la definición para Linux y macOS (sin verificar acá, anotado).
+- [x] PR1–PR7 mergeados, cada uno con la suite completa en verde y su cierre documental.
+- [x] Dos terminales y un hub convergen en las mismas filas y en los mismos saldos proyectados, también después de un corte.
+- [x] Una terminal no se puede hacer pasar por otra: credencial propia, revocable, con huella fijada.
+- [x] Standalone sin cambios: misma suite y misma app sin emparejar.
+- [x] El hub se registra como servicio en Windows (verificado acá) y tiene la definición para Linux y macOS (sin verificar acá, anotado).
