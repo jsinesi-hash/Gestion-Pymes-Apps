@@ -50,10 +50,10 @@ describe('runSeed', () => {
     expect(nombres).toContain('SUPERVISOR');
   });
 
-  it('crea 35 permisos', () => {
+  it('crea 36 permisos', () => {
     runSeed(db);
     const permisos = db.select().from(schema.permiso).all();
-    expect(permisos).toHaveLength(35);
+    expect(permisos).toHaveLength(36);
   });
 
   it('OPERADOR tiene exactamente 18 permisos', () => {
@@ -63,11 +63,11 @@ describe('runSeed', () => {
     expect(rp).toHaveLength(18);
   });
 
-  it('SUPERVISOR tiene exactamente 35 permisos', () => {
+  it('SUPERVISOR tiene exactamente 36 permisos', () => {
     runSeed(db);
     const supervisor = db.select().from(schema.rol).all().find(r => r.nombre === 'SUPERVISOR')!;
     const rp = db.select().from(schema.rol_permiso).all().filter(rp => rp.rol_id === supervisor.id);
-    expect(rp).toHaveLength(35);
+    expect(rp).toHaveLength(36);
   });
 
   it('crea usuario admin inicial', () => {
@@ -83,7 +83,7 @@ describe('runSeed', () => {
     const roles = db.select().from(schema.rol).all();
     expect(roles).toHaveLength(2);
     const permisos = db.select().from(schema.permiso).all();
-    expect(permisos).toHaveLength(35);
+    expect(permisos).toHaveLength(36);
     const usuarios = db.select().from(schema.usuario).all();
     expect(usuarios).toHaveLength(1);
   });

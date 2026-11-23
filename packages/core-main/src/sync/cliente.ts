@@ -4,7 +4,7 @@
 import type * as BetterSqlite3 from 'better-sqlite3';
 import { is } from 'drizzle-orm';
 import { getTableConfig, SQLiteTable } from 'drizzle-orm/sqlite-core';
-import { aplicandoCambiosRecibidos, type RegistroSync } from '@core/db';
+import { aplicandoCambiosRecibidos, columnasQueNoViajan, type RegistroSync } from '@core/db';
 import { RUTAS, type CambioRegistrado, type ResultadoCambio, type Versiones } from '@core/hub';
 import { recalcularSaldoCuentaCorriente } from '../ctacte-proyeccion';
 import type { RespuestaHub, TransporteHub } from './transporte';
@@ -48,6 +48,8 @@ export interface EstadoSync {
   readonly relojDesfasado: boolean;
   /** Las versiones del hub cuando rechazó las de esta terminal (ADR-150 §8). */
   readonly versionesHub: Versiones | null;
+  /** F3 PR1: cambios bajados del hub que esperan (chocan con una fila local o les falta una referencia). */
+  readonly recibidosEnEspera: number;
 }
 
 export interface ResultadoPush { readonly enviados: number; readonly conflictos: number }
@@ -90,7 +92,8 @@ export function tablasDelCliente(schema: Record<string, unknown>, registro: Regi
     const cfg = getTableConfig(v);
     const entrada = registro[cfg.name];
     if (entrada?.tipo !== 'maestro' && entrada?.tipo !== 'libro') continue;
-    const proyectadas = new Set(entrada.proyectadas ?? []);
+    // Proyectadas y locales (F3 PR1): no viajan y el pull no las pisa.
+    const proyectadas = columnasQueNoViajan(entrada);
     out.set(cfg.name, {
       nombre: cfg.name,
       tipo: entrada.tipo,
@@ -200,6 +203,8 @@ export function crearClienteSync(db: DbSync, o: OpcionesClienteSync): ClienteSyn
     perdio: 'synced',
     unicidad: 'conflict',
     integridad: 'conflict',
+    // F3 PR1: su referencia todavía no está en el hub. Entra sola; al bajar, la fila vuelve a `synced`.
+    en_espera: 'conflict',
   };
 
   async function pushInterno(): Promise<ResultadoPush> {
@@ -280,6 +285,123 @@ export function crearClienteSync(db: DbSync, o: OpcionesClienteSync): ClienteSyn
     for (const id of cuentas) recalcularSaldoCuentaCorriente(db, id);
   }
 
+  // ── Cambios recibidos que esperan (F3 PR1, ADR-159) ─────────────────────────────────────────────
+  // Un cambio que choca con un índice único local (la fila que el hub rechazó por unicidad sigue acá con
+  // el mismo valor) o que apunta a una fila que espera no corta el pull: se aparta y el cursor avanza.
+  const DESHACER = Symbol('DESHACER');
+  type MotivoEspera = 'unicidad' | 'referencia';
+
+  function esUnicidad(e: unknown): boolean {
+    return ((e as { code?: string }).code ?? '') === 'SQLITE_CONSTRAINT_UNIQUE';
+  }
+
+  /** Filas con una referencia rota (FK diferidas) en esas tablas, como `tabla\0id`. */
+  function referenciasRotas(nombres: Iterable<string>): Set<string> {
+    const out = new Set<string>();
+    for (const n of new Set(nombres)) {
+      if (!tablas.has(n)) continue;
+      for (const f of sqlite.prepare(`PRAGMA foreign_key_check(${q(n)})`).all() as { table: string; rowid: number }[]) {
+        const r = sqlite.prepare(`SELECT "id" FROM ${q(f.table)} WHERE rowid = ?`).get(f.rowid) as { id: string } | undefined;
+        if (r) out.add(`${f.table}\0${r.id}`);
+      }
+    }
+    return out;
+  }
+
+  /** Aplica un cambio en un savepoint: un choque de unicidad lo deshace y devuelve 'unicidad'. */
+  function aplicarOApartar(c: CambioRegistrado): CambioAplicado | null | 'unicidad' {
+    try {
+      return sqlite.transaction(() => aplicarCambio(c))();
+    } catch (e) {
+      if (esUnicidad(e)) return 'unicidad';
+      throw e;
+    }
+  }
+
+  function apartar(c: CambioRegistrado, motivo: MotivoEspera): void {
+    preparar(
+      'INSERT OR IGNORE INTO "sync_recibido_en_espera" ("seq", "tabla", "fila_id", "cambio", "motivo", "recibido_en") VALUES (?, ?, ?, ?, ?, ?)',
+    ).run(c.seq, c.tabla, c.fila_id, JSON.stringify(c), motivo, segundos());
+  }
+
+  /** Reintenta lo apartado (en orden del hub) mientras alguno entre; lo que entra se suma a `aplicados`. */
+  function reintentarApartados(aplicados: CambioAplicado[]): void {
+    for (let avanzo = true; avanzo;) {
+      avanzo = false;
+      const apartados = preparar('SELECT "id", "cambio" FROM "sync_recibido_en_espera" ORDER BY "seq"').all() as { id: number; cambio: string }[];
+      for (const p of apartados) {
+        const c = JSON.parse(p.cambio) as CambioRegistrado;
+        let entro: CambioAplicado | null = null;
+        try {
+          sqlite.transaction(() => {
+            entro = aplicarCambio(c);
+            if (referenciasRotas([c.tabla]).has(`${c.tabla}\0${c.fila_id}`)) throw DESHACER;
+          })();
+        } catch (e) {
+          if (e === DESHACER || esUnicidad(e)) continue;
+          throw e;
+        }
+        preparar('DELETE FROM "sync_recibido_en_espera" WHERE "id" = ?').run(p.id);
+        if (entro) { aplicados.push(entro); descartarApartadosViejos(c); }
+        avanzo = true;
+      }
+    }
+  }
+
+  /** Entró una versión de la fila: lo apartado de esa misma fila es más viejo y ya no debe aplicarse. */
+  function descartarApartadosViejos(c: CambioRegistrado): void {
+    preparar('DELETE FROM "sync_recibido_en_espera" WHERE "tabla" = ? AND "fila_id" = ? AND "seq" < ?').run(c.tabla, c.fila_id, c.seq);
+  }
+
+  const recibidosEnEspera = () => (preparar('SELECT count(*) AS n FROM "sync_recibido_en_espera"').get() as { n: number }).n;
+
+  /**
+   * Aplica una página del pull en una transacción (con el interruptor de captura) y avanza el cursor. Las FK
+   * se verifican al cerrar (el hijo puede llegar antes que el padre); si queda una referencia rota, se
+   * deshace y se vuelve a aplicar con esos cambios apartados.
+   */
+  function aplicarPagina(cambios: readonly CambioRegistrado[], hasta: number): number {
+    const porReferencia = new Set<number>();
+    for (let verificar = false; ;) {
+      let rotas: Set<string> | null = null;
+      try {
+        return aplicandoCambiosRecibidos(sqlite, () => {
+          // El orden del hub respeta el de cada terminal, pero una página puede traer el hijo antes
+          // que el padre (reemisiones): las FK se verifican al cerrar la página.
+          sqlite.pragma('defer_foreign_keys = ON');
+          const aplicados: CambioAplicado[] = [];
+          cambios.forEach((c, i) => {
+            if (porReferencia.has(i)) return apartar(c, 'referencia');
+            const a = aplicarOApartar(c);
+            if (a === 'unicidad') apartar(c, 'unicidad');
+            else if (a) { aplicados.push(a); descartarApartadosViejos(c); }
+          });
+          if (verificar) {
+            const r = referenciasRotas(cambios.map((c) => c.tabla));
+            if (r.size > 0) { rotas = r; throw DESHACER; }
+          }
+          reintentarApartados(aplicados);
+          recalcularNucleo(aplicados);
+          if (aplicados.length) o.alAplicar?.(aplicados);
+          escribirParametro(CLAVE_CURSOR, String(hasta), 'Último cambio del hub aplicado en esta terminal (ADR-150 §4).');
+          return aplicados.length;
+        });
+      } catch (e) {
+        if (e === DESHACER && rotas) {
+          const r: Set<string> = rotas;
+          const antes = porReferencia.size;
+          cambios.forEach((c, i) => { if (r.has(`${c.tabla}\0${c.fila_id}`)) porReferencia.add(i); });
+          if (porReferencia.size === antes) throw new Error('PULL_FK_ROTA');
+          continue;
+        }
+        const codigo = (e as { code?: string }).code ?? '';
+        if (!codigo.startsWith('SQLITE_CONSTRAINT_FOREIGNKEY')) throw e;
+        if (verificar) throw new Error('PULL_FK_ROTA');
+        verificar = true; // camino lento: buscar qué cambios dejan la referencia rota
+      }
+    }
+  }
+
   async function pullInterno(): Promise<ResultadoPull> {
     let cursor = leerCursor();
     let recibidos = 0;
@@ -289,26 +411,7 @@ export function crearClienteSync(db: DbSync, o: OpcionesClienteSync): ClienteSyn
       const cambios = r['cambios'] as CambioRegistrado[] | undefined;
       const hasta = r['hasta'];
       if (!Array.isArray(cambios) || typeof hasta !== 'number') throw new Error('HUB_RESPUESTA_INVALIDA: pull');
-      try {
-        aplicandoCambiosRecibidos(sqlite, () => {
-          // El orden del hub respeta el de cada terminal, pero una página puede traer el hijo antes
-          // que el padre (reemisiones): las FK se verifican al cerrar la página.
-          sqlite.pragma('defer_foreign_keys = ON');
-          const aplicados: CambioAplicado[] = [];
-          for (const c of cambios) {
-            const a = aplicarCambio(c);
-            if (a) aplicados.push(a);
-          }
-          recalcularNucleo(aplicados);
-          if (aplicados.length) o.alAplicar?.(aplicados);
-          escribirParametro(CLAVE_CURSOR, String(hasta), 'Último cambio del hub aplicado en esta terminal (ADR-150 §4).');
-          aplicadosTotal += aplicados.length;
-        });
-      } catch (e) {
-        const codigo = (e as { code?: string }).code ?? '';
-        if (codigo.startsWith('SQLITE_CONSTRAINT_FOREIGNKEY')) throw new Error('PULL_FK_ROTA');
-        throw e;
-      }
+      aplicadosTotal += aplicarPagina(cambios, hasta);
       recibidos += cambios.length;
       cursor = hasta;
       if (r['hayMas'] !== true) break;
@@ -337,6 +440,7 @@ export function crearClienteSync(db: DbSync, o: OpcionesClienteSync): ClienteSyn
       desfasajeMs,
       relojDesfasado: desfasajeMs !== null && Math.abs(desfasajeMs) > umbral,
       versionesHub,
+      recibidosEnEspera: recibidosEnEspera(),
     }),
   };
 }

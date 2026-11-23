@@ -7,6 +7,7 @@ import { app, safeStorage } from 'electron';
 import type { IpcMain } from 'electron';
 import { crearBackup } from '../backup/engine';
 import { esTerminalCoordinadora, getModoTerminal, getOriginId } from '../context';
+import { getSessionData } from '../auth/session';
 import type { DbSync } from '../sync/cliente';
 import { crearHubLocal, depsHubLocalSistema, type DepsHubLocal, type OpcionesHubLocal } from '../sync/hub-local';
 import { crearSyncTerminal, type DepsSyncTerminal, type EstadoTerminalSync, type OpcionesSyncTerminal, type SyncTerminal } from '../sync/terminal-sync';
@@ -58,6 +59,21 @@ export function registerSyncHandlers(ipcMain: IpcMain, db: DbSync, o?: OpcionesS
   ipcMain.handle('sync:sincronizar', async () => requerir().sincronizarAhora());
   ipcMain.handle('sync:desemparejar', async (_e, p?: { forzar?: boolean }) => requerir().desemparejar({ forzar: p?.forzar === true }));
   ipcMain.handle('sync:rebajarSnapshot', async (_e, p?: { forzar?: boolean }) => requerir().rebajarSnapshot({ forzar: p?.forzar === true }));
+  // F3 PR1 (ADR-159): conflictos del hub (permiso `sync.conflictos`) y cajas emparejadas (sesión).
+  ipcMain.handle('sync:conflictos', async (_e, p?: { pendientes?: boolean; tipo?: string; antesDeId?: number; limite?: number }) =>
+    requerir().conflictos().listar({
+      pendientes: p?.pendientes === true,
+      ...(p?.tipo === 'lww' || p?.tipo === 'unicidad' || p?.tipo === 'integridad' ? { tipo: p.tipo } : {}),
+      ...(Number.isInteger(p?.antesDeId) ? { antesDeId: p!.antesDeId! } : {}),
+      ...(Number.isInteger(p?.limite) ? { limite: p!.limite! } : {}),
+    }));
+  ipcMain.handle('sync:resolverConflicto', async (_e, p: { id: number; resolucion: string }) => {
+    const resolucion = p?.resolucion === 'recuperado' ? 'recuperado' : p?.resolucion === 'revisado' ? 'revisado' : null;
+    if (!resolucion || !Number.isInteger(p?.id)) throw new Error('RESOLUCION_NO_VALIDA');
+    // Quién resolvió: el usuario de la sesión (el hub le agrega la caja de la credencial).
+    return requerir().conflictos().resolver(p.id, resolucion, getSessionData()?.nombreCompleto ?? 'sin sesión');
+  });
+  ipcMain.handle('sync:terminales', async () => requerir().conflictos().terminales());
 }
 
 /**

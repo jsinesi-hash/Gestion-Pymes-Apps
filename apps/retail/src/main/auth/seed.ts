@@ -51,6 +51,7 @@ export const PERMISOS: readonly PermisoDef[] = [
   { codigo: 'cliente.baja',              modulo: 'cuentas' },
   { codigo: 'caja.autorizar_diferencia', modulo: 'caja' },
   { codigo: 'ctacte.autorizar_exceso',   modulo: 'cuentas' },
+  { codigo: 'sync.conflictos',           modulo: 'admin' }, // F3 PR1 (ADR-159)
 ] as const;
 
 export const OPERADOR_PERMISOS: Set<string> = new Set([

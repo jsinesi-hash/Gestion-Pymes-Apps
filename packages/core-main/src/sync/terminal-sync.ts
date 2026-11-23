@@ -10,7 +10,8 @@ import { aplicarConfigTerminal, esTerminalCoordinadora, getModoTerminal, getOrig
 import { diferenciasDeCuentaCorriente } from '../ctacte-proyeccion';
 import { guardarConfigTerminal } from '../terminal';
 import { bajarSnapshot, cargarSnapshot, escribirCursor, filasDeSemilla, sondearHub, subirSemilla } from './arranque';
-import { crearClienteSync, cuerpo, type CambioAplicado, type ClienteSync, type DbSync, type EstadoSync } from './cliente';
+import { crearClienteSync, cuerpo, tablasDelCliente, type CambioAplicado, type ClienteSync, type DbSync, type EstadoSync } from './cliente';
+import { crearConflictosTerminal, type ConflictosTerminal } from './conflictos';
 import {
   crearCoordinacionTerminal, disponiblesDeSerie, liberarSeries, prepararSeriesDistribuido,
   type CoordinacionTerminal, type SerieBloques,
@@ -76,6 +77,8 @@ export interface SyncTerminal {
   desemparejar(p?: { forzar?: boolean }): Promise<void>;
   rebajarSnapshot(p?: { forzar?: boolean }): Promise<{ filas: number }>;
   estado(): EstadoTerminalSync;
+  /** F3 PR1 (ADR-159): conflictos del hub y cajas emparejadas. Exigen la terminal emparejada y en marcha. */
+  conflictos(): ConflictosTerminal;
 }
 
 export function crearSyncTerminal(db: DbSync, o: OpcionesSyncTerminal, deps: DepsSyncTerminal): SyncTerminal {
@@ -88,7 +91,9 @@ export function crearSyncTerminal(db: DbSync, o: OpcionesSyncTerminal, deps: Dep
   let versiones: Versiones | null = null;
   const versionesApp = () => (versiones ??= { protocolo: PROTOCOLO_VERSION, esquema: versionEsquema(o.migrationsFolder) });
 
-  let activo: { cliente: ClienteSync; coordinacion: CoordinacionTerminal; transporte: TransporteHub; tareas: { detener(): void } } | null = null;
+  let activo: {
+    cliente: ClienteSync; coordinacion: CoordinacionTerminal; conflictos: ConflictosTerminal; transporte: TransporteHub; tareas: { detener(): void };
+  } | null = null;
 
   const pendientes = () => (sqlite.prepare('SELECT count(*) AS n FROM "sync_outbox" WHERE "enviado_en" IS NULL').get() as { n: number }).n;
 
@@ -127,8 +132,9 @@ export function crearSyncTerminal(db: DbSync, o: OpcionesSyncTerminal, deps: Dep
       avisarDesfasaje: (ms) => deps.log?.(`[sync] el reloj de la terminal difiere ${Math.round(ms / 1000)} s del hub`),
     });
     const coordinacion = crearCoordinacionTerminal(sqlite, transporte, series);
+    const conflictos = crearConflictosTerminal(sqlite, transporte, tablasDelCliente(o.schema, o.registro));
     activo = {
-      cliente, coordinacion, transporte,
+      cliente, coordinacion, conflictos, transporte,
       tareas: programar(cliente, { coordinacion, ...(o.despuesDelPull ? { despuesDelPull: o.despuesDelPull } : {}) }),
     };
     return true;
@@ -280,5 +286,9 @@ export function crearSyncTerminal(db: DbSync, o: OpcionesSyncTerminal, deps: Dep
     desemparejar,
     rebajarSnapshot,
     estado,
+    conflictos() {
+      if (!activo) throw new Error('TERMINAL_NO_EMPAREJADA');
+      return activo.conflictos;
+    },
   };
 }

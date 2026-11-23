@@ -47,6 +47,7 @@ export const ETIQUETA_PERMISO: Record<string, string> = {
   'cliente.baja': 'Dar de baja clientes',
   'caja.autorizar_diferencia': 'Autorizar cierre de caja con diferencia',
   'ctacte.autorizar_exceso': 'Autorizar ventas sobre el límite de crédito',
+  'sync.conflictos': 'Revisar y resolver conflictos de sincronización',
   'compra.anular': 'Anular compras',
   'produccion.anular': 'Anular producciones',
 };

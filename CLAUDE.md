@@ -668,16 +668,16 @@ Leyenda: ✔ permitido · ✱ con autorización del Supervisor · — no permiti
 ### Permisos reales
 
 **Fuente de verdad: `PERMISOS` y `OPERADOR_PERMISOS` en `apps/retail/src/main/auth/seed.ts`.**
-Son **35 permisos**, **18 de ellos al Operador**. El Supervisor los tiene todos.
-(Elaborados: los 16 del core + 9 propios en `apps/elaborados/src/main/auth/seed.ts`.)
+Son **36 permisos**, **18 de ellos al Operador**. El Supervisor los tiene todos.
+(Elaborados: los 17 del core + 9 propios en `apps/elaborados/src/main/auth/seed.ts`.)
 
 > **Desde ADR-092 (Elaborados E1), el seed de permisos está partido core + app.**
-> `runSeed(db, opts: { permisos, operador })` (`@core/main`) siembra primero `PERMISOS_CORE` (16
+> `runSeed(db, opts: { permisos, operador })` (`@core/main`) siembra primero `PERMISOS_CORE` (17
 > permisos universales — ventas, caja, cta-cte, dashboard, admin, export, proveedores y, desde
-> ADR-146, `cliente.baja`/`caja.autorizar_diferencia`/`ctacte.autorizar_exceso`) y `OPERADOR_PERMISOS_CORE`,
+> ADR-146, `cliente.baja`/`caja.autorizar_diferencia`/`ctacte.autorizar_exceso`; desde ADR-159, `sync.conflictos`) y `OPERADOR_PERMISOS_CORE`,
 > y les suma `[...opts.permisos]`/`[...opts.operador]` deduplicando por `codigo`. Retail delega:
 > `runSeed(db) { runSeedCore(db, { permisos: PERMISOS, operador: [...OPERADOR_PERMISOS] }) }`, y la
-> tabla de abajo (los 35 de Retail) **ya incluye** los 16 del core — no son una lista aparte. Cada
+> tabla de abajo (los 36 de Retail) **ya incluye** los 17 del core — no son una lista aparte. Cada
 > app nueva pasa su propia lista de permisos de dominio; si no tiene ninguno todavía, `{ permisos: [],
 > operador: [] }` alcanza (caso de Elaborados en E1). **Al agregar un permiso universal** (lo
 > necesitan o lo necesitarán todas las apps) va a `PERMISOS_CORE`/`OPERADOR_PERMISOS_CORE`
@@ -721,6 +721,7 @@ Son **35 permisos**, **18 de ellos al Operador**. El Supervisor los tiene todos.
 | `admin` | `config.fiscal` | — |
 | `admin` | `backup.crear` | — |
 | `admin` | `backup.restaurar` | — |
+| `admin` | `sync.conflictos` | — |
 
 Los 16 primeros son el seed de R1. Después se sumaron: `export.basico`,
 `export.supervisor`, `proveedor.gestionar`, `backup.crear`, `backup.restaurar`; ADR-045

@@ -111,6 +111,39 @@ describe('servidor HTTPS del hub', () => {
     expect(typeof estado.body['hora_hub_ms']).toBe('number');
   });
 
+  it('conflictos y terminales (F3 PR1): listar, resolver y ver las cajas emparejadas', async () => {
+    const a = await emparejar();
+    const b = await emparejar();
+    const marca = (origen: string, id: string, nombre: string, version: number, updated_at: number) =>
+      ({ tabla: 'marca', fila: { id, nombre, activo: 1, version, origin_id: origen, sync_state: 'pending', updated_at } });
+    await pedir('POST', '/v1/push', { credencial: a.credencial, cuerpo: { cambios: [marca(a.origin_id, 'c1', 'Irimo', 1, 500)] } });
+    const perdio = await pedir('POST', '/v1/push', { credencial: b.credencial, cuerpo: { cambios: [marca(b.origin_id, 'c1', 'IRIMO', 1, 400)] } });
+    expect(perdio.body['resultados']).toMatchObject([{ estado: 'perdio' }]);
+
+    const lista = await pedir('GET', '/v1/conflictos?pendientes=1&limite=10', { credencial: a.credencial });
+    expect(lista.status).toBe(200);
+    expect(lista.body).toMatchObject({ hayMas: false, enEspera: 0, conflictos: [{ tipo: 'lww', fila_id: 'c1', origin_id: b.origin_id }] });
+    const id = (lista.body['conflictos'] as { id: number }[])[0]!.id;
+
+    const mal = await pedir('POST', '/v1/conflictos/resolver', { credencial: a.credencial, cuerpo: { id, resolucion: 'inventada', por: 'admin' } });
+    expect(mal).toMatchObject({ status: 422, body: { error: 'RESOLUCION_NO_VALIDA' } });
+    const ok = await pedir('POST', '/v1/conflictos/resolver', { credencial: a.credencial, cuerpo: { id, resolucion: 'revisado', por: 'admin' } });
+    expect(ok.status).toBe(200);
+    // Quién resolvió lleva la caja desde la que se hizo (la de la credencial), no la que diga el cuerpo.
+    expect(ok.body['conflicto']).toMatchObject({ resuelto: 1, resolucion: 'revisado', resuelto_por: `admin (${a.origin_id})` });
+    expect((await pedir('POST', '/v1/conflictos/resolver', { credencial: a.credencial, cuerpo: { id, resolucion: 'revisado', por: 'admin' } })).body)
+      .toMatchObject({ error: 'CONFLICTO_YA_RESUELTO' });
+    expect((await pedir('GET', '/v1/conflictos?pendientes=1', { credencial: a.credencial })).body['conflictos']).toEqual([]);
+
+    const cajas = await pedir('GET', '/v1/terminales', { credencial: b.credencial });
+    expect(cajas.status).toBe(200);
+    const lista2 = cajas.body['terminales'] as { origin_id: string; ultimo_contacto: number | null; version_protocolo: number | null }[];
+    expect(lista2.map((t) => t.origin_id)).toEqual(expect.arrayContaining([a.origin_id, b.origin_id]));
+    expect(lista2.find((t) => t.origin_id === b.origin_id)).toMatchObject({ version_protocolo: VERSIONES.protocolo });
+    // Sin la credencial no se ve nada.
+    expect((await pedir('GET', '/v1/conflictos')).status).toBe(401);
+  });
+
   it('acepta la versión del hub y la anterior; otra es 409 con las versiones del hub', async () => {
     const t = await emparejar();
     expect((await pedir('GET', '/v1/estado', { credencial: t.credencial, versiones: { protocolo: 1, esquema: 4 } })).status).toBe(200);

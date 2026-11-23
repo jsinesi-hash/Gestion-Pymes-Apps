@@ -13,8 +13,9 @@ describe('B2 — registro de sync de Retail', () => {
   it('las tablas que no sincronizan son exactamente las documentadas', () => {
     // geo = catálogo de referencia; parametros_sistema = clave-valor (PR7 de F1 separa lo del
     // negocio); aviso = outbox local (ADR-047 §10); recuperacion_password = códigos locales (ADR-137);
-    // sync_outbox/sync_aplicando = cola de cambios e interruptor de la terminal (ADR-150).
+    // sync_outbox/sync_aplicando = cola de cambios e interruptor de la terminal (ADR-150);
+    // sync_recibido_en_espera = lo que bajó del hub y todavía no se puede aplicar (ADR-159).
     const locales = Object.entries(registroSyncRetail()).filter(([, e]) => e.tipo === 'local').map(([t]) => t).sort();
-    expect(locales).toEqual(['aviso', 'departamento', 'localidad', 'parametros_sistema', 'provincia', 'recuperacion_password', 'sync_aplicando', 'sync_outbox']);
+    expect(locales).toEqual(['aviso', 'departamento', 'localidad', 'parametros_sistema', 'provincia', 'recuperacion_password', 'sync_aplicando', 'sync_outbox', 'sync_recibido_en_espera']);
   });
 });

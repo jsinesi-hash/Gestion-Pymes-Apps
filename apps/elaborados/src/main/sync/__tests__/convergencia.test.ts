@@ -7,7 +7,7 @@ import type { AddressInfo } from 'node:net';
 import type https from 'node:https';
 import { eq, is } from 'drizzle-orm';
 import { getTableConfig, SQLiteTable } from 'drizzle-orm/sqlite-core';
-import { createDb } from '@core/db';
+import { columnasQueNoViajan, createDb } from '@core/db';
 import {
   abrirAlmacenHub, abrirCoordinacion, abrirTerminales, crearServidorHub, generarCertificado, PROTOCOLO_VERSION, versionEsquema,
   type AlmacenHub,
@@ -37,7 +37,7 @@ const COLUMNAS = new Map(Object.values(schema).filter((v) => is(v, SQLiteTable))
   .map((v) => getTableConfig(v as SQLiteTable)).map((c) => [c.name, c.columns.map((col) => col.name)]));
 
 function filas(sqlite: Database.Database, tabla: string): Record<string, unknown>[] {
-  const proyectadas = new Set(registro[tabla]!.proyectadas ?? []);
+  const proyectadas = columnasQueNoViajan(registro[tabla]!); // y las locales (F3 PR1): el último acceso es de cada caja
   const cols = COLUMNAS.get(tabla)!.filter((c) => !proyectadas.has(c));
   return sqlite.prepare(`select ${cols.map((c) => `"${c}"`).join(', ')} from "${tabla}" order by id`).all() as Record<string, unknown>[];
 }

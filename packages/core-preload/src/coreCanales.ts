@@ -16,11 +16,44 @@ export interface EstadoSyncTerminal {
     enLinea: boolean | null; ultimoError: string | null; ultimoPushMs: number | null; ultimoPullMs: number | null;
     pendientes: number; cursor: number; desfasajeMs: number | null; relojDesfasado: boolean;
     versionesHub: { protocolo: number; esquema: number } | null;
+    /** F3 PR1: cambios bajados del hub que esperan (chocan con una fila local o les falta una referencia). */
+    recibidosEnEspera: number;
   } | null;
   /** F2 PR5 (ADR-152 §2): ¿corre las tareas coordinadas? */
   coordinadora: boolean;
   /** F2 PR5 (ADR-154 §2): números disponibles por serie (null = sin tope, standalone). */
   series: { serie: string; disponibles: number | null }[];
+}
+
+/** F3 PR1 (ADR-159): un conflicto del hub, con las dos versiones de la fila. */
+export interface ConflictoSync {
+  id: number;
+  tipo: 'lww' | 'unicidad' | 'integridad';
+  tabla: string;
+  fila_id: string;
+  /** Caja del cambio que entró. */
+  origin_id: string;
+  fila_entrante: Record<string, unknown>;
+  fila_actual: Record<string, unknown> | null;
+  detalle: string | null;
+  fecha: number;
+  resuelto: number;
+  resolucion: 'revisado' | 'recuperado' | 'corregido' | null;
+  resuelto_por: string | null;
+  resuelto_en: number | null;
+  perdida: 'entrante' | 'actual' | null;
+  recuperable: boolean;
+}
+
+/** F3 PR1: una caja emparejada con el hub. */
+export interface CajaDelHub {
+  origin_id: string;
+  nombre: string;
+  emparejada_en: number;
+  revocada_en: number | null;
+  ultimo_contacto: number | null;
+  version_protocolo: number | null;
+  version_esquema: number | null;
 }
 
 /** «Usar esta PC como servidor» (F2 PR6): el hub de la app instalado como servicio en esta PC. */
@@ -159,6 +192,12 @@ export function coreCanales(invoke: Invoke) {
       sincronizar: (): Promise<EstadoSyncTerminal> => invoke('sync:sincronizar'),
       desemparejar: (p?: { forzar?: boolean }): Promise<void> => invoke('sync:desemparejar', p),
       rebajarSnapshot: (p?: { forzar?: boolean }): Promise<{ filas: number }> => invoke('sync:rebajarSnapshot', p),
+      // F3 PR1 (ADR-159): conflictos (permiso `sync.conflictos`) y cajas emparejadas.
+      conflictos: (p?: { pendientes?: boolean; tipo?: ConflictoSync['tipo']; antesDeId?: number; limite?: number }):
+        Promise<{ conflictos: ConflictoSync[]; hayMas: boolean; enEspera: number }> => invoke('sync:conflictos', p),
+      resolverConflicto: (p: { id: number; resolucion: 'revisado' | 'recuperado' }): Promise<ConflictoSync> =>
+        invoke('sync:resolverConflicto', p),
+      terminales: (): Promise<CajaDelHub[]> => invoke('sync:terminales'),
     },
     // «Usar esta PC como servidor» (F2 PR6).
     hubLocal: {

@@ -10,12 +10,20 @@ import { CAMPOS_SYNC } from './sync-fields';
  * - `local`: estado de la terminal; no sincroniza (geo de referencia, outbox de avisos, códigos de
  *   recuperación, parámetros hasta que F1 separe los del negocio).
  * `proyectadas`: columnas de una tabla `maestro` que no viajan y se recalculan desde su libro (ADR-151).
+ * `locales`: columnas de una tabla `maestro` que no viajan y son de cada terminal (F3 PR1, ADR-159): el
+ * último acceso de un usuario cambia en cada caja donde entra y no es un dato del negocio.
  */
 export type TipoSync = 'maestro' | 'libro' | 'local';
 
 export interface EntradaSync {
   readonly tipo: TipoSync;
   readonly proyectadas?: readonly string[];
+  readonly locales?: readonly string[];
+}
+
+/** Columnas de una tabla que no viajan al hub ni se pisan al bajar: proyectadas y locales. */
+export function columnasQueNoViajan(entrada: EntradaSync): Set<string> {
+  return new Set([...(entrada.proyectadas ?? []), ...(entrada.locales ?? [])]);
 }
 
 export type RegistroSync = Readonly<Record<string, EntradaSync>>;
@@ -36,7 +44,8 @@ export function combinarRegistros(...registros: RegistroSync[]): RegistroSync {
  * Devuelve los problemas del registro frente al esquema compuesto de una app (vacío = OK). Puro:
  * recorre el objeto de esquema que la app le pasa a Drizzle e ignora lo que no es tabla.
  * Problemas: `sin_registro:<t>`, `registro_sin_tabla:<t>`, `sin_campos_sync:<t>` (maestro/libro sin
- * id texto + campos de sync), `proyectada_inexistente:<t>.<col>`, `proyectada_fuera_de_maestro:<t>`.
+ * id texto + campos de sync), `proyectada_inexistente:<t>.<col>`, `proyectada_fuera_de_maestro:<t>` y los
+ * equivalentes de `locales` (`local_inexistente`, `local_fuera_de_maestro`, `local_y_proyectada`).
  */
 export function verificarRegistroSync(schema: Record<string, unknown>, registro: RegistroSync): string[] {
   const problemas: string[] = [];
@@ -59,6 +68,13 @@ export function verificarRegistroSync(schema: Record<string, unknown>, registro:
       if (entrada.tipo !== 'maestro') problemas.push(`proyectada_fuera_de_maestro:${cfg.name}`);
       else for (const c of entrada.proyectadas) if (!cols.has(c)) problemas.push(`proyectada_inexistente:${cfg.name}.${c}`);
     }
+    if (entrada.locales?.length) {
+      if (entrada.tipo !== 'maestro') problemas.push(`local_fuera_de_maestro:${cfg.name}`);
+      else for (const c of entrada.locales) {
+        if (!cols.has(c)) problemas.push(`local_inexistente:${cfg.name}.${c}`);
+        else if (entrada.proyectadas?.includes(c)) problemas.push(`local_y_proyectada:${cfg.name}.${c}`);
+      }
+    }
   }
   for (const tabla of Object.keys(registro)) if (!vistas.has(tabla)) problemas.push(`registro_sin_tabla:${tabla}`);
   return problemas.sort();
@@ -77,6 +93,7 @@ export function registroSyncCore(): RegistroSync {
     // sync — cola de cambios e interruptor de aplicación: estado de la terminal (ADR-150 §4 y §6).
     sync_outbox: { tipo: 'local' },
     sync_aplicando: { tipo: 'local' },
+    sync_recibido_en_espera: { tipo: 'local' },
     // geo — catálogo de referencia sembrado en cada instalación (ADR-024).
     provincia: { tipo: 'local' },
     departamento: { tipo: 'local' },
@@ -86,7 +103,7 @@ export function registroSyncCore(): RegistroSync {
     permiso: { tipo: 'maestro' },
     rol_permiso: { tipo: 'maestro' },
     rol_permiso_override: { tipo: 'maestro' },
-    usuario: { tipo: 'maestro' },
+    usuario: { tipo: 'maestro', locales: ['ultimo_acceso'] },
     usuario_preferencias: { tipo: 'maestro' },
     recuperacion_password: { tipo: 'local' }, // códigos de un solo uso (ADR-137)
     // personas, fiscal, precios
