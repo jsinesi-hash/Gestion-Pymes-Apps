@@ -8,6 +8,7 @@ import type { IpcMain } from 'electron';
 import { crearBackup } from '../backup/engine';
 import { esTerminalCoordinadora, getModoTerminal, getOriginId } from '../context';
 import type { DbSync } from '../sync/cliente';
+import { crearHubLocal, depsHubLocalSistema, type DepsHubLocal, type OpcionesHubLocal } from '../sync/hub-local';
 import { crearSyncTerminal, type DepsSyncTerminal, type EstadoTerminalSync, type OpcionesSyncTerminal, type SyncTerminal } from '../sync/terminal-sync';
 
 let instancia: SyncTerminal | null = null;
@@ -57,4 +58,17 @@ export function registerSyncHandlers(ipcMain: IpcMain, db: DbSync, o?: OpcionesS
   ipcMain.handle('sync:sincronizar', async () => requerir().sincronizarAhora());
   ipcMain.handle('sync:desemparejar', async (_e, p?: { forzar?: boolean }) => requerir().desemparejar({ forzar: p?.forzar === true }));
   ipcMain.handle('sync:rebajarSnapshot', async (_e, p?: { forzar?: boolean }) => requerir().rebajarSnapshot({ forzar: p?.forzar === true }));
+}
+
+/**
+ * «Usar esta PC como servidor» (F2 PR6): instalar el hub de la app como servicio, ver si está en marcha y
+ * generar códigos. Sin la configuración de la app los canales existen y responden HUB_LOCAL_NO_CONFIGURADO.
+ */
+export function registerHubLocalHandlers(ipcMain: IpcMain, o?: OpcionesHubLocal, deps?: DepsHubLocal): void {
+  const hub = o ? crearHubLocal(o, deps ?? depsHubLocalSistema(o.id)) : null;
+  const requerirHub = () => { if (!hub) throw new Error('HUB_LOCAL_NO_CONFIGURADO'); return hub; };
+  ipcMain.handle('hubLocal:estado', async () => requerirHub().estado());
+  ipcMain.handle('hubLocal:instalar', async () => requerirHub().instalar());
+  ipcMain.handle('hubLocal:desinstalar', async () => requerirHub().desinstalar());
+  ipcMain.handle('hubLocal:codigo', async () => requerirHub().codigo());
 }

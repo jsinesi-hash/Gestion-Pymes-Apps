@@ -10,6 +10,11 @@ export default defineConfig({
           src: 'src/main/db/migrations/*',
           dest: 'migrations',
         },
+        // F2 PR6: las migraciones propias del hub, para la entrada del hub (`cli.js`) en el build.
+        {
+          src: '../../packages/core-hub/migrations/*',
+          dest: 'hub-migrations',
+        },
       ],
     }),
   ],

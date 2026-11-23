@@ -14,6 +14,10 @@ export type { CoordinacionHub, PermisoCoordinadora, BloqueAsignado, BloqueHub } 
 export { crearServidorHub } from './servidor';
 export type { OpcionesServidor } from './servidor';
 export * from './protocolo';
-export { ejecutarComandoHub, carpetaDatosPorDefecto, PUERTO_POR_DEFECTO } from './arranque';
+export { ejecutarComandoHub, carpetaDatosPorDefecto, generarCodigoHub, huellaGuardada, PUERTO_POR_DEFECTO } from './arranque';
+export { definicionServicio, prepararServicio, escribirArchivoServicio } from './servicio';
+export type {
+  DatosServicio, DefinicionServicio, ServicioPreparado, ArchivoServicio, ComandoServicio, PlataformaServicio,
+} from './servicio';
 export type { OpcionesHub, HubEnMarcha } from './arranque';
 export { hub_cambio, hub_recibido, hub_conflicto, hub_terminal, hub_codigo, hub_coordinadora, hub_bloque } from './schema';

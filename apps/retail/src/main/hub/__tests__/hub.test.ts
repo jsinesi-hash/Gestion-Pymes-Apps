@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import https from 'node:https';
 import { ejecutarComandoHub, versionEsquema, PROTOCOLO_VERSION, type HubEnMarcha } from '@core/hub';
-import { opcionesHub, MIGRACIONES_APP } from '../opciones';
+import { opcionesHub, MIGRACIONES_APP, hubLocalRetail, servicioDesdeConsola } from '../opciones';
 
 // El hub de Retail arranca con el esquema y las migraciones reales de la app (F2 PR2, ADR-158).
 describe('hub de Retail', () => {
@@ -37,5 +37,15 @@ describe('hub de Retail', () => {
     expect(r.status).toBe(200);
     expect(r.body).toMatchObject({ origin_id: 'C1', versiones: { protocolo: PROTOCOLO_VERSION, esquema } });
     expect(esquema).toBe(JSON.parse(fs.readFileSync(path.join(MIGRACIONES_APP, 'meta', '_journal.json'), 'utf8')).entries.length);
+  });
+
+  it('F2 PR6: el servicio lanza el ejecutable de la app con la entrada del hub del build', () => {
+    const o = hubLocalRetail(path.join('C:', 'app', '.vite', 'build'));
+    expect(o).toMatchObject({ id: 'ferreteria-client', nombre: 'Ferretería', ejecutable: process.execPath });
+    expect(o.args).toEqual([path.join('C:', 'app', '.vite', 'build', 'cli.js')]);
+    expect(o.opcionesHub('X:\\hub').carpeta).toBe('X:\\hub');
+    // Desde la consola: solo con la entrada del build (el código fuente necesita tsx).
+    expect(servicioDesdeConsola('C:\\app\\.vite\\build\\cli.js')).toMatchObject({ id: 'ferreteria-client', args: ['C:\\app\\.vite\\build\\cli.js'] });
+    expect(servicioDesdeConsola('C:\\repo\\src\\main\\hub\\cli.ts')).toBeUndefined();
   });
 });

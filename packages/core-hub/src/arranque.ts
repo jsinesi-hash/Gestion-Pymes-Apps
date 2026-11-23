@@ -13,6 +13,11 @@ import { abrirCoordinacion } from './coordinacion';
 import { generarCertificado, huellaDe } from './certificado';
 import { crearServidorHub } from './servidor';
 import { PROTOCOLO_VERSION, versionEsquema } from './protocolo';
+import { spawnSync } from 'node:child_process';
+import {
+  definicionServicio, escribirArchivoServicio, prepararServicio,
+  type DatosServicio, type PlataformaServicio,
+} from './servicio';
 
 export const PUERTO_POR_DEFECTO = 7443;
 const VIGENCIA_CERTIFICADO_DIAS = 3650;
@@ -24,6 +29,12 @@ export interface OpcionesHub {
   readonly registro: RegistroSync;
   readonly migracionesApp: string;
   readonly carpeta: string;
+  /** Migraciones propias del hub; empaquetado, la app las copia junto a la entrada del hub (F2 PR6). */
+  readonly migracionesHub?: string;
+  /** Cómo se registra como servicio del sistema operativo (F2 PR6): `instalar-servicio`. */
+  readonly servicio?: Omit<DatosServicio, 'carpeta' | 'puerto'> & { readonly plataforma?: PlataformaServicio };
+  /** Corre el script de instalación del servicio y devuelve su código de salida (los tests lo reemplazan). */
+  readonly ejecutarScript?: (ruta: string) => number;
   readonly escribir?: (linea: string) => void;
 }
 
@@ -35,7 +46,9 @@ export interface HubEnMarcha {
 
 /**
  * Carpeta de datos del hub según el sistema operativo, o `GESTION_HUB_DIR` si está definida (desarrollo,
- * servicio con otra ruta). Nunca la carpeta de datos de la terminal: el hub tiene su propia base.
+ * otra ruta). Nunca la carpeta de datos de la terminal: el hub tiene su propia base. En Windows es
+ * ProgramData (F2 PR6): el servicio corre como SYSTEM, que no tiene el AppData del usuario, y la consola
+ * y la app tienen que abrir la misma base. En Linux y macOS, la del usuario (el servicio corre como él).
  */
 export function carpetaDatosPorDefecto(
   app: string,
@@ -43,16 +56,49 @@ export function carpetaDatosPorDefecto(
 ): string {
   if (entorno.env['GESTION_HUB_DIR']) return entorno.env['GESTION_HUB_DIR'];
   const nombre = `${app}-hub`;
-  if (entorno.platform === 'win32') return path.join(entorno.env['APPDATA'] ?? path.join(entorno.home, 'AppData', 'Roaming'), nombre);
-  if (entorno.platform === 'darwin') return path.join(entorno.home, 'Library', 'Application Support', nombre);
-  return path.join(entorno.env['XDG_CONFIG_HOME'] ?? path.join(entorno.home, '.config'), nombre);
+  if (entorno.platform === 'win32') return path.win32.join(entorno.env['ProgramData'] ?? 'C:\\ProgramData', nombre);
+  if (entorno.platform === 'darwin') return path.posix.join(entorno.home, 'Library', 'Application Support', nombre);
+  return path.posix.join(entorno.env['XDG_CONFIG_HOME'] ?? path.posix.join(entorno.home, '.config'), nombre);
 }
 
 function abrirBase(o: OpcionesHub) {
   fs.mkdirSync(o.carpeta, { recursive: true });
   const sqlite = new Database(path.join(o.carpeta, 'hub.db'));
-  const almacen = abrirAlmacenHub(sqlite, { schema: o.schema, registro: o.registro, migracionesApp: o.migracionesApp });
+  const almacen = abrirAlmacenHub(sqlite, {
+    schema: o.schema, registro: o.registro, migracionesApp: o.migracionesApp,
+    ...(o.migracionesHub ? { migracionesHub: o.migracionesHub } : {}),
+  });
   return { sqlite, almacen, terminales: abrirTerminales(sqlite), coordinacion: abrirCoordinacion(sqlite) };
+}
+
+/** Un código de emparejamiento nuevo (lo pide la pantalla de la app en la PC servidor). */
+export function generarCodigoHub(o: OpcionesHub): { codigo: string; vence_en: number } {
+  const { sqlite, terminales } = abrirBase(o);
+  try { return terminales.generarCodigo(); } finally { sqlite.close(); }
+}
+
+/** La huella del certificado del hub, o null si todavía no se generó (el hub nunca arrancó en esta carpeta). */
+export function huellaGuardada(carpeta: string): string | null {
+  const ruta = path.join(carpeta, 'hub-cert.pem');
+  return fs.existsSync(ruta) ? huellaDe(fs.readFileSync(ruta, 'utf8')) : null;
+}
+
+/** Corre el script como el usuario actual: `instalar-servicio` se usa desde una consola de administrador. */
+function ejecutarScriptDirecto(ruta: string): number {
+  const r = process.platform === 'win32'
+    ? spawnSync('cmd.exe', ['/c', ruta], { stdio: 'inherit' })
+    : spawnSync('/bin/sh', [ruta], { stdio: 'inherit' });
+  return r.status ?? 1;
+}
+
+function servicio(o: OpcionesHub, accion: 'instalar' | 'desinstalar', puerto: number): void {
+  if (!o.servicio) throw new Error('SERVICIO_NO_CONFIGURADO');
+  const { plataforma = process.platform as PlataformaServicio, ...datos } = o.servicio;
+  const def = definicionServicio(plataforma, { ...datos, carpeta: o.carpeta, puerto });
+  const prep = prepararServicio(plataforma, def, accion, path.join(o.carpeta, 'servicio'));
+  for (const a of [...prep.escribir, prep.script]) escribirArchivoServicio(a);
+  const codigo = (o.ejecutarScript ?? ejecutarScriptDirecto)(prep.script.ruta);
+  if (codigo !== 0) throw new Error(`SERVICIO_FALLO: ${accion} (código ${codigo})`);
 }
 
 /** Lee el certificado de la carpeta o, la primera vez, lo genera; la clave queda solo para el dueño. */
@@ -90,6 +136,8 @@ function fecha(s: number | null): string {
  * - `terminales`: lista las terminales emparejadas.
  * - `revocar <origin_id>`: deja a esa terminal sin acceso.
  * - `huella`: muestra la huella del certificado, para confirmarla al emparejar.
+ * - `instalar-servicio [--puerto N]` / `desinstalar-servicio`: registra o quita el hub como servicio del
+ *   sistema operativo (F2 PR6). Se corre desde una consola de administrador; la app lo hace con elevación.
  */
 export async function ejecutarComandoHub(argv: readonly string[], o: OpcionesHub): Promise<HubEnMarcha | undefined> {
   const escribir = o.escribir ?? ((l: string) => console.log(l));
@@ -133,6 +181,10 @@ export async function ejecutarComandoHub(argv: readonly string[], o: OpcionesHub
       escribir(`Terminal ${origin} revocada.`);
     } else if (comando === 'huella') {
       escribir(certificado(o).huella);
+    } else if (comando === 'instalar-servicio' || comando === 'desinstalar-servicio') {
+      const accion = comando === 'instalar-servicio' ? 'instalar' : 'desinstalar';
+      servicio(o, accion, Number(opcion(resto, 'puerto') ?? PUERTO_POR_DEFECTO));
+      escribir(accion === 'instalar' ? `Hub instalado como servicio (carpeta ${o.carpeta}).` : 'Servicio del hub desinstalado.');
     } else {
       throw new Error(`COMANDO_DESCONOCIDO: ${comando}`);
     }

@@ -20,6 +20,7 @@ import { ElectronPrintService } from '../print/ElectronPrintService';
 import { installAppMenu } from './menu/appMenu';
 import { getSession, aplicarSeguridadVentana, iniciarTerminal, iniciarSyncTerminal, programarTareaSegura, ejecutarTareaUnica, registrarErroresNoCapturados } from '@core/main';
 import { opcionesSyncRetail } from './sync/proyecciones';
+import { hubLocalRetail } from './hub/opciones';
 
 async function createWindow(): Promise<void> {
   // Revisión 2026-10-20 (P0): errores no capturados al log (no cortan el proceso en plena venta).
@@ -42,6 +43,8 @@ async function createWindow(): Promise<void> {
     reconstruirMenu: () => reconstruirMenu(),
     app,
     sync: opcionesSyncRetail(db, { migrationsFolder: path.join(__dirname, 'migrations'), carpetaDatos: app.getPath('userData') }),
+    // F2 PR6: «Usar esta PC como servidor» (el hub de Retail como servicio del sistema operativo).
+    hubLocal: hubLocalRetail(),
   });
   // F2 PR4: una terminal emparejada (modo distribuido) enciende el cliente de sync contra su hub.
   iniciarSyncTerminal();

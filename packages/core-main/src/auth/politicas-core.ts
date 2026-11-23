@@ -94,6 +94,11 @@ export const POLITICAS_CANALES_CORE: PoliticasCanales = {
   'sync:sincronizar': 'permiso:usuario.administrar',
   'sync:desemparejar': 'permiso:usuario.administrar',
   'sync:rebajarSnapshot': 'permiso:usuario.administrar',
+  // «Usar esta PC como servidor» (F2 PR6): instala un servicio del sistema operativo y genera códigos.
+  'hubLocal:estado': 'permiso:usuario.administrar',
+  'hubLocal:instalar': 'permiso:usuario.administrar',
+  'hubLocal:desinstalar': 'permiso:usuario.administrar',
+  'hubLocal:codigo': 'permiso:usuario.administrar',
 
   // El permiso fino (básico o supervisor) lo decide el handler según la entidad y el perfil.
   'exportar:ejecutar': 'permiso:export.basico',

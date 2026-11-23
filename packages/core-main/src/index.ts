@@ -59,4 +59,5 @@ export * from './sync/arranque';
 export * from './sync/hub-guardado';
 export * from './sync/terminal-sync';
 export * from './sync/coordinacion';
+export * from './sync/hub-local';
 export * from './ipc/sync';

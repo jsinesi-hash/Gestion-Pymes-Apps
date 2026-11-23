@@ -67,4 +67,14 @@ describe('coreCanales — sync (F2 PR4)', () => {
       ['sync:desemparejar', { forzar: true }], ['sync:rebajarSnapshot', undefined],
     ]);
   });
+
+  it('hubLocal (F2 PR6): estado, instalar, desinstalar y código invocan sus canales', async () => {
+    const invocados: unknown[][] = [];
+    const api = coreCanales(async (...a) => { invocados.push(a); return null; });
+    await api.hubLocal.estado();
+    await api.hubLocal.instalar();
+    await api.hubLocal.desinstalar();
+    await api.hubLocal.codigo();
+    expect(invocados).toEqual([['hubLocal:estado'], ['hubLocal:instalar'], ['hubLocal:desinstalar'], ['hubLocal:codigo']]);
+  });
 });

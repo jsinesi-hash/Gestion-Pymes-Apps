@@ -109,7 +109,7 @@ Cada PR: rama propia desde `main`, TDD (rojo → verde), suite completa en serie
 - **Alertas:** una tarea coordinada detecta stock negativo y clientes sobre el límite después del pull, y genera un aviso deduplicado por producto o cliente. Los destinatarios van por permiso (ADR-146).
 - **Stock negativo visible:** el POS no vende un producto con stock negativo (ADR-153 §5).
 
-### PR6 — El hub como servicio en Windows, Linux y macOS (ADR-156 §1, decisión 2)
+### PR6 — El hub como servicio en Windows, Linux y macOS (ADR-156 §1, decisión 2) — hecho (2026-11-23)
 - Comando del hub `instalar-servicio` / `desinstalar-servicio`, que genera la definición del sistema operativo desde una plantilla:
   - **Linux:** unidad de `systemd`;
   - **macOS:** `LaunchDaemon` de `launchd`;
