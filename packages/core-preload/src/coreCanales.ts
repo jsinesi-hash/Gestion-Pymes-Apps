@@ -23,6 +23,17 @@ export interface EstadoSyncTerminal {
   series: { serie: string; disponibles: number | null }[];
 }
 
+/** «Usar esta PC como servidor» (F2 PR6): el hub de la app instalado como servicio en esta PC. */
+export interface EstadoHubLocal {
+  plataforma: 'win32' | 'linux' | 'darwin';
+  carpeta: string;
+  puerto: number;
+  instalado: boolean;
+  enMarcha: boolean;
+  huella: string | null;
+  direcciones: string[];
+}
+
 export function coreCanales(invoke: Invoke) {
   return {
     getVersion: () => invoke('app:version'),
@@ -148,6 +159,13 @@ export function coreCanales(invoke: Invoke) {
       sincronizar: (): Promise<EstadoSyncTerminal> => invoke('sync:sincronizar'),
       desemparejar: (p?: { forzar?: boolean }): Promise<void> => invoke('sync:desemparejar', p),
       rebajarSnapshot: (p?: { forzar?: boolean }): Promise<{ filas: number }> => invoke('sync:rebajarSnapshot', p),
+    },
+    // «Usar esta PC como servidor» (F2 PR6).
+    hubLocal: {
+      estado: (): Promise<EstadoHubLocal> => invoke('hubLocal:estado'),
+      instalar: (): Promise<EstadoHubLocal> => invoke('hubLocal:instalar'),
+      desinstalar: (): Promise<EstadoHubLocal> => invoke('hubLocal:desinstalar'),
+      codigo: (): Promise<{ codigo: string; vence_en: number }> => invoke('hubLocal:codigo'),
     },
     print: { html: (h: string) => invoke('print:html', h) },
     exportar: { ejecutar: (req: ExportRequest): Promise<void> => invoke('exportar:ejecutar', req) },

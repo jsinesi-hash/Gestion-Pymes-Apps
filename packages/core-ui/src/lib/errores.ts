@@ -83,6 +83,9 @@ const CODIGOS: Record<string, Formateador> = {
   INTEGRIDAD_SALDOS: msg('Hay saldos (stock, costo o cuenta corriente) que no coinciden con sus movimientos. Avisá a soporte antes de subir esta base al hub.'),
   CAMBIOS_SIN_SUBIR: (args) => ({ mensaje: `Hay ${args[0]?.trim() ?? 'algunos'} cambios de esta terminal que todavía no subieron al hub y se perderían. Conectá la terminal y sincronizá, o confirmá para seguir igual.` }),
   SYNC_NO_CONFIGURADO: msg('Esta versión no tiene la sincronización configurada. Avisá a soporte.'),
+  HUB_LOCAL_NO_CONFIGURADO: msg('Esta versión no puede instalar el servidor. Avisá a soporte.'),
+  HUB_SERVICIO_NO_INSTALADO: msg('El servidor no quedó instalado. Si el sistema pidió permiso de administrador, hay que aceptarlo; si se repite, avisá a soporte.'),
+  HUB_SERVICIO_SIGUE_INSTALADO: msg('El servidor sigue instalado. Si el sistema pidió permiso de administrador, hay que aceptarlo.'),
   TOTALES_INCONSISTENTES: msg('Los importes de la venta no coinciden con sus líneas. Revisá el carrito y volvé a intentar.'),
   PRECIO_INVALIDO: msg('Hay una línea con un precio inválido. Revisá el carrito.'),
   CUENTA_BLOQUEADA: (args) => {

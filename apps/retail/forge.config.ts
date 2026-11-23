@@ -40,12 +40,17 @@ const config: ForgeConfig = {
     extraModules: ['better-sqlite3'],
   },
   makers: [
-    new MakerZIP({}, ['win32']),
+    // F2 PR6 (ADR-158 §2): el hub corre en Windows, Linux y macOS. Un zip por plataforma, sin makers
+    // nuevos (cada uno se arma en su sistema operativo).
+    new MakerZIP({}, ['win32', 'linux', 'darwin']),
   ],
   plugins: [
     new VitePlugin({
       build: [
         { entry: 'src/main/index.ts',    config: 'vite.main.config.mts',    target: 'main' },
+        // F2 PR6: la entrada del hub (`cli.js`), al lado del main; la corre el ejecutable de la app en
+        // modo Node (`ELECTRON_RUN_AS_NODE=1`) cuando esta PC es el servidor.
+        { entry: 'src/main/hub/cli.ts',  config: 'vite.main.config.mts',    target: 'main' },
         { entry: 'src/preload/index.ts', config: 'vite.preload.config.ts', target: 'preload' },
       ],
       renderer: [

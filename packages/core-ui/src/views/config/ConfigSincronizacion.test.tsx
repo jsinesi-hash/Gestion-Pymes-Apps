@@ -27,6 +27,44 @@ const distribuido = {
 
 afterEach(() => { delete (globalThis as any).appDePrueba; vi.restoreAllMocks(); logout.mockClear(); });
 
+// F2 PR6 (ADR-156 §1): «Usar esta PC como servidor».
+describe('ConfigSincronizacion — servidor en esta PC', () => {
+  const sinInstalar = { plataforma: 'win32', carpeta: 'C:\\ProgramData\\x-hub', puerto: 7443, instalado: false, enMarcha: false, huella: null, direcciones: ['192.168.0.10'] };
+  const enMarcha = { ...sinInstalar, instalado: true, enMarcha: true, huella: 'AA:BB:CC' };
+
+  it('sin la configuración de la app no muestra la sección', async () => {
+    (globalThis as any).appDePrueba = { sync: { estado: vi.fn().mockResolvedValue(standalone) } };
+    montar();
+    await screen.findByLabelText('Dirección del hub');
+    expect(screen.queryByRole('region', { name: 'Servidor en esta PC' })).toBeNull();
+  });
+
+  it('instala el servidor confirmando antes (pide permiso de administrador y abre el puerto)', async () => {
+    const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const hubLocal = { estado: vi.fn().mockResolvedValue(sinInstalar), instalar: vi.fn().mockResolvedValue(enMarcha), desinstalar: vi.fn(), codigo: vi.fn() };
+    (globalThis as any).appDePrueba = { sync: { estado: vi.fn().mockResolvedValue(standalone) }, hubLocal };
+    montar();
+    const seccion = await screen.findByRole('region', { name: 'Servidor en esta PC' });
+    expect(seccion).toHaveTextContent('No instalado');
+    fireEvent.click(screen.getByRole('button', { name: 'Instalar el servidor en esta PC' }));
+    expect(confirmar.mock.calls[0]![0]).toMatch(/administrador/);
+    expect(await screen.findByText('En marcha')).toBeInTheDocument();
+    expect(hubLocal.instalar).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('status')).toHaveTextContent('Servidor instalado');
+  });
+
+  it('en marcha: muestra las direcciones y la huella, y genera un código de emparejamiento', async () => {
+    const hubLocal = { estado: vi.fn().mockResolvedValue(enMarcha), instalar: vi.fn(), desinstalar: vi.fn(), codigo: vi.fn().mockResolvedValue({ codigo: 'WXYZ-2345', vence_en: 1_900_000_000 }) };
+    (globalThis as any).appDePrueba = { sync: { estado: vi.fn().mockResolvedValue(standalone) }, hubLocal };
+    montar();
+    const seccion = await screen.findByRole('region', { name: 'Servidor en esta PC' });
+    expect(seccion).toHaveTextContent('192.168.0.10');
+    expect(seccion).toHaveTextContent('AA:BB:CC');
+    fireEvent.click(screen.getByRole('button', { name: 'Generar código de emparejamiento' }));
+    expect(await screen.findByTestId('codigo-hub')).toHaveTextContent('WXYZ-2345');
+  });
+});
+
 describe('ConfigSincronizacion', () => {
   it('sin permiso de administración no muestra nada', () => {
     (globalThis as any).appDePrueba = { sync: { estado: vi.fn() } };

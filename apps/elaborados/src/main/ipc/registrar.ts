@@ -1,6 +1,6 @@
 import type { IpcMain } from 'electron';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { registerCoreHandlers, ipcConPoliticas, type ImpresorHtml, type OpcionesSyncTerminal } from '@core/main';
+import { registerCoreHandlers, ipcConPoliticas, type ImpresorHtml, type OpcionesHubLocal, type OpcionesSyncTerminal } from '@core/main';
 import type * as schema from '../db/schema';
 import { navegacionElaborados } from '../../common/navegacion';
 import { EXPORTADORES_REPORTES } from '../reportes/exportadores';
@@ -27,6 +27,8 @@ export type RegistrarElaboradosDeps = {
   imprimirHtml: ImpresorHtml;
   /** Modo distribuido (F2 PR4); los tests de permisos no lo pasan. */
   sync?: OpcionesSyncTerminal;
+  /** «Usar esta PC como servidor» (F2 PR6); los tests de permisos no lo pasan. */
+  hubLocal?: OpcionesHubLocal;
 };
 
 /**
@@ -42,6 +44,7 @@ export function registrarHandlersElaborados(ipcMain: IpcMain, db: Db, deps: Regi
     exportadores: EXPORTADORES_REPORTES,
     imprimirHtml: deps.imprimirHtml,
     ...(deps.sync ? { sync: deps.sync } : {}),
+    ...(deps.hubLocal ? { hubLocal: deps.hubLocal } : {}),
   });
   registerArticuloHandlers(ipc, db);
   registerMovimientoArticuloHandlers(ipc, db);

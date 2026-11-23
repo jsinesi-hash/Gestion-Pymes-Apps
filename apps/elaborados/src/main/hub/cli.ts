@@ -2,9 +2,10 @@
 // Lo lanza `scripts/hub.cjs` con `ELECTRON_RUN_AS_NODE=1`; el servicio del sistema operativo (F2 PR6)
 // ejecuta `iniciar`. La carpeta de datos se puede pisar con GESTION_HUB_DIR.
 import { ejecutarComandoHub } from '@core/hub';
-import { opcionesHub } from './opciones';
+import { opcionesHub, servicioDesdeConsola } from './opciones';
 
-ejecutarComandoHub(process.argv.slice(2), opcionesHub()).catch((e: unknown) => {
+const servicio = servicioDesdeConsola();
+ejecutarComandoHub(process.argv.slice(2), { ...opcionesHub(), ...(servicio ? { servicio } : {}) }).catch((e: unknown) => {
   console.error(`[hub] ${e instanceof Error ? e.message : String(e)}`);
   process.exit(1);
 });

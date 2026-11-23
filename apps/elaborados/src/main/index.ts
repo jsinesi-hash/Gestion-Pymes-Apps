@@ -12,6 +12,7 @@ import { db } from './db/client';
 import { runStartup } from './startup';
 import { activarFirmaBackup, activarLockoutPersistente, activarRegistroErrores, aplicarSeguridadVentana, crearImpresorHtml, iniciarTerminal, iniciarSyncTerminal, registrarErroresNoCapturados } from '@core/main';
 import { opcionesSyncElaborados } from './sync/proyecciones';
+import { hubLocalElaborados } from './hub/opciones';
 import { registrarHandlersElaborados } from './ipc/registrar';
 
 async function createWindow(): Promise<void> {
@@ -25,6 +26,8 @@ async function createWindow(): Promise<void> {
     migrationsFolder: path.join(__dirname, 'migrations'),
     imprimirHtml: crearImpresorHtml(() => new BrowserWindow({ show: false, webPreferences: { nodeIntegration: false, contextIsolation: true } })),
     sync: opcionesSyncElaborados(db, { migrationsFolder: path.join(__dirname, 'migrations'), carpetaDatos: app.getPath('userData') }),
+    // F2 PR6: «Usar esta PC como servidor» (el hub de Elaborados como servicio del sistema operativo).
+    hubLocal: hubLocalElaborados(),
   });
   // F2 PR4: una terminal emparejada (modo distribuido) enciende el cliente de sync contra su hub.
   iniciarSyncTerminal();

@@ -18,8 +18,9 @@ import { registerDialogHandlers } from './ipc/dialog';
 import { registerMenuHandlers } from './ipc/menu';
 import { registerSistemaHandlers } from './ipc/sistema';
 import { registerSmtpHandlers } from './ipc/smtp';
-import { registerSyncHandlers } from './ipc/sync';
+import { registerHubLocalHandlers, registerSyncHandlers } from './ipc/sync';
 import type { OpcionesSyncTerminal } from './sync/terminal-sync';
+import type { OpcionesHubLocal } from './sync/hub-local';
 import type { DbSync } from './sync/cliente';
 import { crearEnviadorSmtpReal } from './correo/enviador-smtp';
 import { registerVentaListByCajaHandler } from './venta/listar-por-caja';
@@ -45,6 +46,8 @@ export type CoreHandlersOpts = {
    * `sync:*` existen pero responden SYNC_NO_CONFIGURADO (los tests de permisos no lo pasan).
    */
   sync?: OpcionesSyncTerminal;
+  /** «Usar esta PC como servidor» (F2 PR6): cómo se lanza el hub de la app. Sin esto, HUB_LOCAL_NO_CONFIGURADO. */
+  hubLocal?: OpcionesHubLocal;
 };
 
 /** Registra TODOS los canales IPC universales. Lo llama el main/index.ts de cada app. */
@@ -66,6 +69,7 @@ export function registerCoreHandlers(ipcMain: IpcMain, db: BetterSQLite3Database
   registerSistemaHandlers(ipcMain);
   registerSmtpHandlers(ipcMain, db);
   registerSyncHandlers(ipcMain, db as unknown as DbSync, opts.sync);
+  registerHubLocalHandlers(ipcMain, opts.hubLocal);
   registerExportarHandlers(ipcMain, db, crearExportarEjecutar([...EXPORTADORES_CORE, ...(opts.exportadores ?? [])]));
   if (opts.imprimirHtml) registerPrintHtmlHandler(ipcMain, opts.imprimirHtml);
 }

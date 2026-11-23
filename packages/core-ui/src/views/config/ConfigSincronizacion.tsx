@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { EstadoSyncTerminal } from '@core/preload';
+import type { EstadoHubLocal, EstadoSyncTerminal } from '@core/preload';
 import { useAuth } from '../../auth/AuthContext';
 import { bridge } from '../../bridge';
 import { traducirError } from '../../lib/errores';
@@ -180,6 +180,99 @@ export function ConfigSincronizacion() {
           )}
         </section>
       )}
+      <ServidorEnEstaPC />
     </div>
+  );
+}
+
+/**
+ * F2 PR6 (ADR-156 §1): «Usar esta PC como servidor». Instala el hub de la app como servicio del sistema
+ * operativo (arranca con la PC; en Windows pide permiso de administrador y abre el puerto en el firewall),
+ * muestra si está en marcha, las direcciones de la PC para las otras cajas y la huella, y genera códigos.
+ * Si la app no lo configura, la sección no aparece.
+ */
+function ServidorEnEstaPC() {
+  const [estado, setEstado] = useState<EstadoHubLocal | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [ocupado, setOcupado] = useState(false);
+  const [codigo, setCodigo] = useState<{ codigo: string; vence_en: number } | null>(null);
+
+  const cargar = useCallback(async () => {
+    const api = bridge().hubLocal;
+    if (!api) return;
+    try { setEstado(await api.estado()); } catch { setEstado(null); }
+  }, []);
+
+  useEffect(() => {
+    void cargar();
+    const t = setInterval(() => { void cargar(); }, 5000);
+    return () => clearInterval(t);
+  }, [cargar]);
+
+  if (!estado) return null;
+
+  async function accion(fn: () => Promise<void>) {
+    setErr(null); setMsg(null); setOcupado(true);
+    try { await fn(); } catch (e) { setErr(traducirError(e).mensaje); } finally { setOcupado(false); }
+  }
+
+  const instalar = () => void accion(async () => {
+    const aviso = estado.plataforma === 'win32'
+      ? 'Se va a instalar el servidor (hub) en esta PC: arranca solo con la PC, aunque nadie inicie sesión. Windows te va a pedir permiso de administrador y se abre el puerto en el firewall. ¿Seguir?'
+      : 'Se va a instalar el servidor (hub) en esta PC: arranca solo con la PC. El sistema te va a pedir la contraseña de administrador. ¿Seguir?';
+    if (!window.confirm(aviso)) return;
+    setEstado(await bridge().hubLocal.instalar());
+    setMsg('Servidor instalado. Ahora generá un código y emparejá cada caja (también esta) con una de las direcciones de abajo.');
+  });
+
+  const desinstalar = () => void accion(async () => {
+    if (!window.confirm('El servidor deja de correr en esta PC y las cajas emparejadas no van a poder sincronizar. Los datos del hub no se borran. ¿Seguir?')) return;
+    setEstado(await bridge().hubLocal.desinstalar());
+    setCodigo(null);
+    setMsg('Servidor desinstalado.');
+  });
+
+  const generar = () => void accion(async () => { setCodigo(await bridge().hubLocal.codigo()); });
+
+  const estadoTexto = !estado.instalado ? 'No instalado' : estado.enMarcha ? 'En marcha' : 'Instalado, todavía no responde';
+
+  return (
+    <section className="panel" style={{ padding: '1rem', maxWidth: 640 }} aria-label="Servidor en esta PC">
+      <h3 style={{ margin: '0 0 8px', fontSize: '1rem', fontWeight: 700 }}>Servidor en esta PC</h3>
+      <p style={{ margin: '0 0 8px', fontSize: 13 }}>
+        Una PC del local hace de servidor (hub): guarda la base compartida y las cajas sincronizan contra ella. Conviene que
+        sea una que quede siempre encendida.
+      </p>
+      {msg && <div className="alert-ok" role="status">{msg}</div>}
+      {err && <div className="alert-danger" role="alert">{err}</div>}
+      <div style={fila}><span style={etiqueta}>Estado</span><strong>{estadoTexto}</strong></div>
+      {estado.instalado && (
+        <>
+          <div style={fila}><span style={etiqueta}>Direcciones de esta PC</span>
+            <span>{estado.direcciones.length ? estado.direcciones.join(' · ') : '—'}</span></div>
+          <div style={fila}><span style={etiqueta}>Puerto</span><span>{estado.puerto}</span></div>
+          <div style={fila}><span style={etiqueta}>Huella del certificado</span>
+            <code style={{ fontSize: 11, wordBreak: 'break-all' }}>{estado.huella ?? '—'}</code></div>
+          <div style={ayuda}>En cada caja: Configuración → Sincronización, la dirección de esta PC y el código. La huella tiene que coincidir.</div>
+        </>
+      )}
+      {codigo && (
+        <div style={{ ...fila, marginTop: 8 }}><span style={etiqueta}>Código de emparejamiento</span>
+          <span><strong data-testid="codigo-hub" style={{ fontSize: 16, letterSpacing: 1 }}>{codigo.codigo}</strong>
+            <span style={{ ...ayuda, marginLeft: 8 }}>un solo uso, vence {hora(codigo.vence_en * 1000)}</span></span></div>
+      )}
+      <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+        {!estado.instalado && (
+          <button type="button" className="btn-primary" onClick={instalar} disabled={ocupado}>Instalar el servidor en esta PC</button>
+        )}
+        {estado.instalado && (
+          <>
+            <button type="button" className="btn-primary" onClick={generar} disabled={ocupado || !estado.enMarcha}>Generar código de emparejamiento</button>
+            <button type="button" className="btn-secondary" onClick={desinstalar} disabled={ocupado}>Desinstalar el servidor</button>
+          </>
+        )}
+      </div>
+    </section>
   );
 }
