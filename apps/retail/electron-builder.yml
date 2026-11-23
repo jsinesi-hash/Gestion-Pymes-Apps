@@ -32,10 +32,8 @@ nsis:
   # Macros customInit/customUnInstall para cerrar la app antes de instalar/desinstalar
   include: scripts/nsis/custom.nsh
 
-# Geo cache bundled en extraResources para primer arranque offline
-extraResources:
-  - from: ../../packages/core-main/geo-cache/
-    to: geo-cache/
+# NOTA: la geo-cache NO va en extraResources: con --prepackaged electron-builder no las copia.
+# La mete electron-forge en resources/geo-cache (packagerConfig.extraResource, ADR-111).
 # NOTA: app-update.yml (feed de electron-updater) NO se inyecta acá. Con el flujo
 # --prepackaged, dist.cjs lo copia a resources/ del paquete de forge antes de
 # empaquetar (ver scripts/dist.cjs) — así es verificable y garantizado.

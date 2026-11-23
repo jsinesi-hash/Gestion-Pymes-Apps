@@ -8,6 +8,7 @@
     "make": "electron-forge make",
     "dist": "node scripts/dist.cjs",
     "dist:full": "pnpm rebuild:electron && pnpm dist",
+    "smoke": "node scripts/smoke-packaged.cjs",
     "release": "node scripts/dist.cjs --publish always",
     "typecheck": "tsc --noEmit",
     "hub": "node scripts/hub.cjs",

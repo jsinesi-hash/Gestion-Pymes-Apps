@@ -118,7 +118,7 @@ export async function runStartup(db: Db, opts: StartupOpts = {}): Promise<void> 
     if (!resolvedCache) {
       const { app } = await import('electron');
       resolvedCache = app.isPackaged
-        ? path.join(process.resourcesPath, 'geo-cache')  // producción: bundled en extraResources
+        ? path.join(process.resourcesPath, 'geo-cache')  // producción: la copia forge (packagerConfig.extraResource)
         // dev: __dirname = apps/retail/.vite/build → el geo-cache vive en @core/main
         : path.resolve(__dirname, '../../../../packages/core-main/geo-cache');
     }
