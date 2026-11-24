@@ -10,7 +10,7 @@ export type { RegistroTerminales, TerminalHub } from './terminales';
 export { generarCertificado, huellaDe } from './certificado';
 export type { CertificadoHub, OpcionesCertificado } from './certificado';
 export { abrirCoordinacion, VIGENCIA_COORDINADORA_MS } from './coordinacion';
-export type { CoordinacionHub, PermisoCoordinadora, BloqueAsignado, BloqueHub } from './coordinacion';
+export type { CoordinacionHub, PermisoCoordinadora, BloqueAsignado, BloqueHub, AperturaCajaCompartida, CierreCajaCompartida, TurnoCompartido } from './coordinacion';
 export { crearServidorHub } from './servidor';
 export type { OpcionesServidor } from './servidor';
 export * from './protocolo';
@@ -20,4 +20,4 @@ export type {
   DatosServicio, DefinicionServicio, ServicioPreparado, ArchivoServicio, ComandoServicio, PlataformaServicio,
 } from './servicio';
 export type { OpcionesHub, HubEnMarcha } from './arranque';
-export { hub_cambio, hub_recibido, hub_conflicto, hub_en_espera, hub_terminal, hub_codigo, hub_coordinadora, hub_bloque } from './schema';
+export { hub_cambio, hub_recibido, hub_conflicto, hub_en_espera, hub_terminal, hub_codigo, hub_coordinadora, hub_bloque, hub_caja_compartida } from './schema';

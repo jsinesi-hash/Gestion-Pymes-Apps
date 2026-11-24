@@ -12,6 +12,8 @@ import { parametrosGetHandler } from './parametros';
 
 import { requireSession } from '../auth/guard';
 import { leerParametroNumero } from '../configuracion';
+import { modoCaja, type CajaCompartidaTerminal } from '../sync/caja-compartida';
+import { syncTerminalActiva } from './sync';
 type Db = BetterSQLite3Database<typeof schema>;
 
 export type CajaRow = typeof schema.caja.$inferSelect;
@@ -32,6 +34,11 @@ export type CajaHooks = { onCajaCerrada?: OnCajaCerrada };
 
 export function cajaGetActivaHandler(db: Db) {
   const session = requireSession();
+  // F3 PR4 (ADR-155 §3): en caja compartida, la activa es el turno abierto del negocio, no el del usuario.
+  if (modoCaja(db) === 'compartida') {
+    return db.select().from(schema.caja).where(eq(schema.caja.estado, 'abierta'))
+      .orderBy(desc(schema.caja.fecha_apertura)).get() ?? null;
+  }
   return db.select().from(schema.caja)
     .where(and(
       eq(schema.caja.usuario_id, session.userId),
@@ -43,6 +50,7 @@ export function cajaGetActivaHandler(db: Db) {
 export function cajaAbrirHandler(
   db: Db,
   payload: unknown,
+  opts: { id?: string } = {},
 ) {
   const session = requireSession();
   const p = (payload ?? {}) as Record<string, unknown>;
@@ -57,9 +65,14 @@ export function cajaAbrirHandler(
     ))
     .get();
   if (existing) throw new Error('ALREADY_OPEN');
+  // F3 PR4: en caja compartida hay un solo turno abierto en el negocio (de cualquier usuario).
+  if (modoCaja(db) === 'compartida' && db.select({ id: schema.caja.id }).from(schema.caja).where(eq(schema.caja.estado, 'abierta')).get()) {
+    throw new Error('CAJA_COMPARTIDA_YA_ABIERTA');
+  }
 
   const now = new Date();
-  const id = generateId();
+  // En caja compartida el id lo reservó antes el hub (`opts.id`).
+  const id = opts.id ?? generateId();
   db.insert(schema.caja).values({
     id,
     usuario_id: session.userId,
@@ -253,13 +266,64 @@ export function cajaArqueosQueryAll(db: Db) {
   return rows.map((r, i) => ({ turno: i + 1, ...r }));
 }
 
+/** El turno compartido del hub, o error si la caja no puede hablar con el hub (ADR-155 §4). */
+function cajaCompartida(): CajaCompartidaTerminal {
+  try {
+    const t = syncTerminalActiva();
+    if (t) return t.cajaCompartida();
+  } catch { /* terminal sin cliente de sync en marcha */ }
+  throw new Error('CAJA_COMPARTIDA_SIN_CONEXION');
+}
+
+/** Sube enseguida el turno abierto o cerrado, para que las otras cajas lo vean (best-effort). */
+function subirYa(): void {
+  void syncTerminalActiva()?.sincronizarAhora().catch(() => undefined);
+}
+
+/**
+ * F3 PR4 (ADR-155 §4): abrir un turno compartido exige conexión. El hub reserva el turno antes de escribirlo
+ * acá; si la escritura falla, se libera.
+ */
+export async function cajaAbrirCompartidaHandler(db: Db, payload: unknown, cc: CajaCompartidaTerminal = cajaCompartida()) {
+  requireSession();
+  if (db.select({ id: schema.caja.id }).from(schema.caja).where(eq(schema.caja.estado, 'abierta')).get()) {
+    throw new Error('CAJA_COMPARTIDA_YA_ABIERTA');
+  }
+  const id = generateId();
+  await cc.reservar(id);
+  try {
+    return cajaAbrirHandler(db, payload, { id });
+  } catch (e) {
+    await cc.liberar(id).catch(() => undefined);
+    throw e;
+  }
+}
+
+/** F3 PR4: cerrar un turno compartido exige conexión; después del cierre se libera en el hub. */
+export async function cajaCerrarCompartidaHandler(db: Db, payload: unknown, hooks: CajaHooks = {}, cc: CajaCompartidaTerminal = cajaCompartida()) {
+  const cajaId = vId((payload as Record<string, unknown> | null)?.['caja_id'], 'caja_id');
+  const turno = await cc.actual();
+  if (turno && turno.caja_id !== cajaId) throw new Error('CAJA_COMPARTIDA_OTRO_TURNO');
+  const result = cajaCerrarHandler(db, payload, hooks);
+  // Si se corta acá, el hub queda con el turno: la próxima apertura ve que esta caja ya lo cerró y lo libera.
+  await cc.liberar(cajaId).catch((e) => console.error('[caja-compartida] no se liberó el turno en el hub', e));
+  return result;
+}
+
 export function registerCajaHandlers(ipcMain: IpcMain, db: Db, hooks: CajaHooks = {}): void {
   ipcMain.handle('caja:getActiva',        async ()       => cajaGetActivaHandler(db));
-  ipcMain.handle('caja:abrir',            async (_e, p)  => cajaAbrirHandler(db, p));
+  ipcMain.handle('caja:abrir', async (_e, p) => {
+    if (modoCaja(db) !== 'compartida') return cajaAbrirHandler(db, p);
+    const r = await cajaAbrirCompartidaHandler(db, p);
+    subirYa();
+    return r;
+  });
   ipcMain.handle('caja:addMovimiento',    async (_e, p)  => cajaAddMovimientoHandler(db, p));
   ipcMain.handle('caja:calcularCierre',   async (_e, p)  => cajaCalcularCierreHandler(db, p));
   ipcMain.handle('caja:cerrar', async (_e, p) => {
-    const result = cajaCerrarHandler(db, p, hooks);
+    const compartida = modoCaja(db) === 'compartida';
+    const result = compartida ? await cajaCerrarCompartidaHandler(db, p, hooks) : cajaCerrarHandler(db, p, hooks);
+    if (compartida) subirYa();
     const autoHabilitado = parametrosGetHandler(db, { clave: 'backup_auto_habilitado' });
     const destino = parametrosGetHandler(db, { clave: 'backup_destino_local' });
     if (autoHabilitado === 'true' && destino) {

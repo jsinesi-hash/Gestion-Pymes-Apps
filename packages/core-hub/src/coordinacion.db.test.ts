@@ -63,4 +63,25 @@ describe('coordinación del hub', () => {
     expect(() => coord.asignarBloque('sku', 'C1', { minimo: 1, tamano: 1_000_000 })).toThrow('BLOQUE_INVALIDO');
     expect(() => coord.asignarBloque('sku', 'C1', { minimo: 0, tamano: 10 })).toThrow('BLOQUE_INVALIDO');
   });
+
+  // F3 PR4 (ADR-155 §3 y §4): un solo turno de caja compartida abierto en el negocio.
+  it('caja compartida: abre la primera; otra caja no abre un segundo turno; repetir es idempotente', () => {
+    expect(coord.abrirCajaCompartida('caja-1', 'C1', T0)).toEqual({ abierta: true, caja_id: 'caja-1', origin_id: 'C1' });
+    expect(coord.abrirCajaCompartida('caja-2', 'C2', T0 + 1)).toEqual({ abierta: false, caja_id: 'caja-1', origin_id: 'C1' });
+    expect(coord.abrirCajaCompartida('caja-1', 'C1', T0 + 2)).toEqual({ abierta: true, caja_id: 'caja-1', origin_id: 'C1' });
+    expect(coord.cajaCompartida()).toEqual({ caja_id: 'caja-1', origin_id: 'C1', abierta_en_ms: T0 });
+  });
+
+  it('caja compartida: se cierra solo el turno abierto; después se puede abrir otro', () => {
+    coord.abrirCajaCompartida('caja-1', 'C1', T0);
+    expect(coord.cerrarCajaCompartida('caja-2')).toEqual({ cerrada: false, caja_id: 'caja-1' });
+    expect(coord.cerrarCajaCompartida('caja-1')).toEqual({ cerrada: true, caja_id: null });
+    expect(coord.cerrarCajaCompartida('caja-1')).toEqual({ cerrada: true, caja_id: null }); // sin turno: no hay nada que cerrar
+    expect(coord.cajaCompartida()).toBeNull();
+    expect(coord.abrirCajaCompartida('caja-2', 'C2', T0 + 5)).toMatchObject({ abierta: true, caja_id: 'caja-2' });
+  });
+
+  it('caja compartida: un id inválido se rechaza', () => {
+    expect(() => coord.abrirCajaCompartida('', 'C1', T0)).toThrow('CAJA_INVALIDA');
+  });
 });

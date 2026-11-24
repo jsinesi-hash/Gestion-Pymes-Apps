@@ -9,7 +9,7 @@ import { getOriginId } from './context';
  * terminal, en `parametros_sistema` (correlativos, bloque de SKU, backups, SMTP, estado del seed).
  * Todo acceso pasa por acá: quien lee no tiene que saber en qué tabla está cada clave.
  */
-type DbConfig = Pick<BetterSQLite3Database<typeof schema>, 'select' | 'insert' | 'update'>;
+export type DbConfig = Pick<BetterSQLite3Database<typeof schema>, 'select' | 'insert' | 'update'>;
 
 /** Claves del negocio que lee el núcleo. Cada app declara las suyas (baranda de PR7). */
 export const CLAVES_NEGOCIO_CORE = [

@@ -99,6 +99,9 @@ export const POLITICAS_CANALES_CORE: PoliticasCanales = {
   'sync:resolverConflicto': 'permiso:sync.conflictos',
   'sync:descartarAlta': 'permiso:sync.conflictos',
   'sync:terminales': 'sesion',
+  // F3 PR4 (ADR-155 §1): el modo de caja lo ve cualquier sesión y lo cambia quien administra.
+  'sync:cajaModo': 'sesion',
+  'sync:setCajaModo': 'permiso:usuario.administrar',
   // «Usar esta PC como servidor» (F2 PR6): instala un servicio del sistema operativo y genera códigos.
   'hubLocal:estado': 'permiso:usuario.administrar',
   'hubLocal:instalar': 'permiso:usuario.administrar',

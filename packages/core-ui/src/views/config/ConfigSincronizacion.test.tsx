@@ -65,6 +65,44 @@ describe('ConfigSincronizacion — servidor en esta PC', () => {
   });
 });
 
+describe('ConfigSincronizacion — modo de caja (F3 PR4)', () => {
+  it('emparejada: muestra el modo y lo cambia a compartida', async () => {
+    const setCajaModo = vi.fn().mockResolvedValue({ modo: 'compartida', disponible: true });
+    (globalThis as any).appDePrueba = { sync: {
+      estado: vi.fn().mockResolvedValue(distribuido), terminales: vi.fn().mockResolvedValue([]),
+      cajaModo: vi.fn().mockResolvedValue({ modo: 'por_terminal', disponible: true }), setCajaModo,
+    } };
+    montar();
+    const seccion = await screen.findByRole('region', { name: 'Caja del negocio' });
+    const porTerminal = within(seccion).getByRole('radio', { name: /Una caja por terminal/ });
+    await waitFor(() => expect(porTerminal).toBeChecked());
+    fireEvent.click(within(seccion).getByRole('radio', { name: /Una caja compartida/ }));
+    fireEvent.click(within(seccion).getByRole('button', { name: 'Guardar el modo de caja' }));
+    await waitFor(() => expect(setCajaModo).toHaveBeenCalledWith({ modo: 'compartida' }));
+    expect(await within(seccion).findByRole('status')).toHaveTextContent(/compartida/);
+  });
+
+  it('con cajas abiertas, el error se muestra traducido', async () => {
+    (globalThis as any).appDePrueba = { sync: {
+      estado: vi.fn().mockResolvedValue(distribuido), terminales: vi.fn().mockResolvedValue([]),
+      cajaModo: vi.fn().mockResolvedValue({ modo: 'por_terminal', disponible: true }),
+      setCajaModo: vi.fn().mockRejectedValue(new Error('CAJA_MODO_CON_CAJAS_ABIERTAS')),
+    } };
+    montar();
+    const seccion = await screen.findByRole('region', { name: 'Caja del negocio' });
+    fireEvent.click(within(seccion).getByRole('radio', { name: /Una caja compartida/ }));
+    fireEvent.click(within(seccion).getByRole('button', { name: 'Guardar el modo de caja' }));
+    expect(await within(seccion).findByRole('alert')).toHaveTextContent(/no puede haber cajas abiertas/);
+  });
+
+  it('sin emparejar no se ofrece (ADR-155 §6)', async () => {
+    (globalThis as any).appDePrueba = { sync: { estado: vi.fn().mockResolvedValue(standalone), cajaModo: vi.fn() } };
+    montar();
+    await screen.findByLabelText('Dirección del hub');
+    expect(screen.queryByRole('region', { name: 'Caja del negocio' })).toBeNull();
+  });
+});
+
 describe('ConfigSincronizacion — cajas del hub (F3 PR3)', () => {
   it('emparejada: lista las cajas con su último contacto y versión, y marca cuál es esta', async () => {
     const terminales = vi.fn().mockResolvedValue([

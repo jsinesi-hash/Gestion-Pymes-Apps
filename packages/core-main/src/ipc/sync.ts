@@ -7,7 +7,9 @@ import { app, safeStorage } from 'electron';
 import type { IpcMain } from 'electron';
 import { crearBackup } from '../backup/engine';
 import { esTerminalCoordinadora, getModoTerminal, getOriginId } from '../context';
-import { getSessionData } from '../auth/session';
+import { getSession, getSessionData } from '../auth/session';
+import { escribirParametro, leerParametro, type DbConfig } from '../configuracion';
+import { modoCaja } from '../sync/caja-compartida';
 import type { DbSync } from '../sync/cliente';
 import { crearHubLocal, depsHubLocalSistema, type DepsHubLocal, type OpcionesHubLocal } from '../sync/hub-local';
 import { crearSyncTerminal, type DepsSyncTerminal, type EstadoTerminalSync, type OpcionesSyncTerminal, type SyncTerminal } from '../sync/terminal-sync';
@@ -78,6 +80,24 @@ export function registerSyncHandlers(ipcMain: IpcMain, db: DbSync, o?: OpcionesS
     await requerir().conflictos().descartarAlta(p.id);
   });
   ipcMain.handle('sync:terminales', async () => requerir().conflictos().terminales());
+  // F3 PR4 (ADR-155 §1 y §6): modo de caja del negocio. Solo en modo distribuido, sin cajas abiertas en el
+  // negocio (ni acá ni en el hub) y con conexión.
+  ipcMain.handle('sync:cajaModo', async () => ({
+    modo: modoCaja(db as unknown as DbConfig),
+    disponible: getModoTerminal() === 'distribuido',
+  }));
+  ipcMain.handle('sync:setCajaModo', async (_e, p: { modo?: string }) => {
+    const modo = p?.modo === 'compartida' ? 'compartida' : p?.modo === 'por_terminal' ? 'por_terminal' : null;
+    if (!modo) throw new Error('CAJA_MODO_INVALIDO');
+    if (getModoTerminal() !== 'distribuido') throw new Error('CAJA_COMPARTIDA_SOLO_DISTRIBUIDO');
+    const abiertas = (db.$client.prepare('SELECT count(*) AS n FROM "caja" WHERE "estado" = \'abierta\'').get() as { n: number }).n;
+    const turno = await requerir().cajaCompartida().actual();
+    if (abiertas > 0 || turno) throw new Error('CAJA_MODO_CON_CAJAS_ABIERTAS');
+    const cfg = db as unknown as DbConfig;
+    if (leerParametro(cfg, 'caja_modo') !== modo) escribirParametro(cfg, 'caja_modo', modo, getSession()?.userId);
+    void requerir().sincronizarAhora().catch(() => undefined);
+    return { modo, disponible: true };
+  });
 }
 
 /**
