@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import Database from 'better-sqlite3';
 import { is } from 'drizzle-orm';
 import { getTableConfig, SQLiteTable } from 'drizzle-orm/sqlite-core';
-import { instalarTriggersSync } from '@core/db';
+import { columnasQueNoViajan, instalarTriggersSync } from '@core/db';
 import { abrirAlmacenHub, type CambioEntrante } from '@core/hub';
 import { cajaAbrirHandler } from '@core/main';
 import * as schema from '../db/schema';
@@ -21,7 +21,7 @@ const COLUMNAS = new Map(Object.values(schema).filter((v) => is(v, SQLiteTable))
   .map((v) => getTableConfig(v as SQLiteTable)).map((c) => [c.name, c.columns.map((col) => col.name)]));
 
 function filas(sqlite: Database.Database, tabla: string): Record<string, unknown>[] {
-  const proyectadas = new Set(registro[tabla]!.proyectadas ?? []);
+  const proyectadas = columnasQueNoViajan(registro[tabla]!); // y las locales (F3 PR1)
   const cols = COLUMNAS.get(tabla)!.filter((c) => !proyectadas.has(c) && c !== 'sync_state');
   return sqlite.prepare(`select ${cols.map((c) => `"${c}"`).join(', ')} from "${tabla}" order by id`).all() as Record<string, unknown>[];
 }

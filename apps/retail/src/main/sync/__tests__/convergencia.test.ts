@@ -7,7 +7,7 @@ import type { AddressInfo } from 'node:net';
 import type https from 'node:https';
 import { and, eq, is } from 'drizzle-orm';
 import { getTableConfig, SQLiteTable } from 'drizzle-orm/sqlite-core';
-import { createDb } from '@core/db';
+import { aplicandoCambiosRecibidos, columnasQueNoViajan, createDb } from '@core/db';
 import {
   abrirAlmacenHub, abrirCoordinacion, abrirTerminales, crearServidorHub, generarCertificado, PROTOCOLO_VERSION, versionEsquema,
   type AlmacenHub,
@@ -22,6 +22,7 @@ import { setupDb, loginAsAdmin, clearSession } from '../../ipc/__tests__/helpers
 import { runCatalogSeed } from '../../catalog/seed';
 import { categoriaCreateHandler } from '../../ipc/categoria';
 import { productoCreateHandler, productoUpdateHandler } from '../../ipc/producto';
+import { marcaCreateHandler, marcaUpdateHandler } from '../../ipc/marca';
 import { stockEntradaHandler } from '../../ipc/stock';
 import { ventaConfirmarHandler } from '../../ipc/venta';
 import { proyectarCostoPromedio, proyectarStock } from '../../catalog/stock-proyeccion';
@@ -44,8 +45,8 @@ const COLUMNAS = new Map(Object.values(schema).filter((v) => is(v, SQLiteTable))
   .map((v) => getTableConfig(v as SQLiteTable)).map((c) => [c.name, c.columns.map((col) => col.name)]));
 
 function columnasQueViajan(tabla: string): string[] {
-  const proyectadas = new Set(registro[tabla]!.proyectadas ?? []);
-  return COLUMNAS.get(tabla)!.filter((c) => !proyectadas.has(c));
+  const noViajan = columnasQueNoViajan(registro[tabla]!);
+  return COLUMNAS.get(tabla)!.filter((c) => !noViajan.has(c));
 }
 function filas(sqlite: Database.Database, tabla: string): Record<string, unknown>[] {
   return sqlite.prepare(`select ${columnasQueViajan(tabla).map((c) => `"${c}"`).join(', ')} from "${tabla}" order by id`).all() as Record<string, unknown>[];
@@ -230,5 +231,102 @@ describe('convergencia de dos terminales de Retail con el hub', () => {
     // Y ninguna vende ese producto hasta corregirlo.
     expect(() => como('C1', () => vender(a, cajaDe(a, 'C1'), 1))).toThrow('STOCK_INSUFICIENTE');
     expect(() => como('C2', () => vender(b, cajaDe(b, 'C2'), 1))).toThrow('STOCK_INSUFICIENTE');
+  });
+
+  it('entrar con el mismo usuario en las dos no genera conflictos: el último acceso es de cada caja (F3 PR1)', async () => {
+    const antes = almacen.conflictos().length;
+    const acceso = (db: Db) => db.select().from(schema.usuario).where(eq(schema.usuario.nombre_usuario, 'admin')).get()!.ultimo_acceso;
+    // Un acceso viejo en las dos (sin encolar): el ingreso de abajo lo cambia de verdad.
+    for (const db of [a, b]) {
+      aplicandoCambiosRecibidos(sqliteDe(db), () => sqliteDe(db).prepare(`update "usuario" set "ultimo_acceso" = 1 where "nombre_usuario" = 'admin'`).run());
+    }
+    como('C1', () => { clearSession(); loginAsAdmin(a); });
+    como('C2', () => { clearSession(); loginAsAdmin(b); });
+    expect([syncA.estado().sync?.pendientes, syncB.estado().sync?.pendientes]).toEqual([0, 0]);
+    for (let vuelta = 0; vuelta < 2; vuelta++) {
+      await syncA.sincronizarAhora();
+      await syncB.sincronizarAhora();
+    }
+    expect(almacen.conflictos().slice(antes)).toEqual([]);
+    // Cada caja conserva su propio último acceso: el pull no lo pisa.
+    expect(acceso(a)!.getTime()).toBeGreaterThan(1000);
+    expect(acceso(b)!.getTime()).toBeGreaterThan(1000);
+    loginAsAdmin(a);
+  });
+
+  it('conflictos desde una caja (F3 PR1): se listan, «Recuperar» devuelve la versión perdida y se ven las cajas', async () => {
+    // El primer test dejó un lww en `producto` (las dos editaron el nombre de la pinza sin verse).
+    const nombre = (db: Db) => db.select().from(schema.producto).where(eq(schema.producto.id, productoId)).get()!.nombre_corto;
+    const { conflictos } = await syncA.conflictos().listar({ pendientes: true, tipo: 'lww' });
+    const c = conflictos.find((x) => x.tabla === 'producto' && x.fila_id === productoId)!;
+    expect(c).toMatchObject({ recuperable: true, resuelto: 0 });
+    const perdida = String((c.perdida === 'actual' ? c.fila_actual : c.fila_entrante)!['nombre_corto']);
+    expect(perdida).not.toBe(nombre(a));
+
+    const resuelto = await como('C1', () => syncA.conflictos().resolver(c.id, 'recuperado', 'Administrador'));
+    expect(resuelto).toMatchObject({ resuelto: 1, resolucion: 'recuperado', resuelto_por: 'Administrador (C1)' });
+    for (let vuelta = 0; vuelta < 2; vuelta++) {
+      await syncA.sincronizarAhora();
+      await syncB.sincronizarAhora();
+    }
+    expect([nombre(a), nombre(b)]).toEqual([perdida, perdida]);
+    expect((await syncB.conflictos().listar({ pendientes: true, tipo: 'lww' })).conflictos.filter((x) => x.tabla === 'producto')).toEqual([]);
+
+    const cajas = await syncB.conflictos().terminales();
+    expect(cajas.map((t) => t.origin_id).sort()).toEqual(['C1', 'C2']);
+  });
+
+  it('una marca repetida sin conexión no frena a la caja: lo que depende de ella espera y entra al renombrarla (F3 PR1)', async () => {
+    const imp = a.select().from(schema.impuesto).where(eq(schema.impuesto.predeterminado, true)).get()!;
+    const categoria = a.select().from(schema.categoria).get()!.id;
+    const enA = como('C1', () => marcaCreateHandler(a, { nombre: 'Irwin F3' }));
+    const enB = como('C2', () => marcaCreateHandler(b, { nombre: 'Irwin F3' }));
+    await syncA.sincronizarAhora();
+    await syncB.sincronizarAhora(); // la de B choca con el índice único: conflicto de unicidad
+    const { conflictos } = await syncA.conflictos().listar({ pendientes: true, tipo: 'unicidad' });
+    expect(conflictos.map((x) => x.fila_id)).toEqual([enB.id]);
+
+    // B sigue trabajando: un producto de su marca. Antes el lote entero se rechazaba (LOTE_FK_ROTA).
+    const llave = como('C2', () => productoCreateHandler(b, {
+      nombre_corto: 'Llave Irwin', categoria_id: categoria, marca_id: enB.id, impuesto_id: imp.id, unidad_venta: 'u',
+      precio_venta_lista_centavos: 50_000,
+    }));
+    // Y A, uno de la suya: al bajar a B apunta a una marca que B todavía no pudo guardar.
+    const pinza = como('C1', () => productoCreateHandler(a, {
+      nombre_corto: 'Pinza Irwin', categoria_id: categoria, marca_id: enA.id, impuesto_id: imp.id, unidad_venta: 'u',
+      precio_venta_lista_centavos: 60_000,
+    }));
+    await syncA.sincronizarAhora();
+    await syncB.sincronizarAhora();
+    expect(syncB.estado().sync).toMatchObject({ pendientes: 0, ultimoError: null });
+    expect((await syncB.conflictos().listar({})).enEspera).toBeGreaterThan(0);
+    // B apartó la marca de A (choca con la suya), el producto de A (le falta esa marca) y lo que cuelga del
+    // producto (existencias, movimiento inicial, precio), sin cortar el pull.
+    expect(syncB.estado().sync!.recibidosEnEspera).toBeGreaterThanOrEqual(2);
+    const enB_ = (id: string) => b.select().from(schema.producto).where(eq(schema.producto.id, id)).get();
+    expect(enB_(pinza.id)).toBeUndefined();
+    // Mientras, A renombra la suya: en B entra esa versión y la vieja que había quedado apartada no la pisa.
+    como('C1', () => marcaUpdateHandler(a, { id: enA.id, nombre: 'Irwin A' }));
+    await syncA.sincronizarAhora();
+    await syncB.sincronizarAhora();
+    const enHub = () => almacen.snapshot().tablas.find((t) => t.tabla === 'producto')!.filas.some((p) => p['id'] === llave.id);
+    expect(enHub()).toBe(false);
+
+    // El Supervisor la renombra en B: entra la marca, detrás el producto, y el conflicto se resuelve solo.
+    como('C2', () => marcaUpdateHandler(b, { id: enB.id, nombre: 'Irwin F3 (B)' }));
+    for (let vuelta = 0; vuelta < 2; vuelta++) {
+      await syncB.sincronizarAhora();
+      await syncA.sincronizarAhora();
+    }
+    expect(enHub()).toBe(true);
+    expect(a.select().from(schema.producto).where(eq(schema.producto.id, llave.id)).get()).toMatchObject({ marca_id: enB.id });
+    // En B entró lo apartado: la marca de A y su producto.
+    expect(syncB.estado().sync!.recibidosEnEspera).toBe(0);
+    expect(b.select().from(schema.marca).where(eq(schema.marca.id, enA.id)).get()).toMatchObject({ nombre: 'Irwin A' });
+    expect(enB_(pinza.id)).toMatchObject({ marca_id: enA.id });
+    expect((await syncA.conflictos().listar({})).enEspera).toBe(0);
+    const [u] = (await syncA.conflictos().listar({ tipo: 'unicidad' })).conflictos;
+    expect(u).toMatchObject({ fila_id: enB.id, resuelto: 1, resolucion: 'corregido', resuelto_por: 'C2' });
+    expect(enA.id).not.toBe(enB.id);
   });
 });

@@ -68,7 +68,7 @@ describe('auth IPC handlers', () => {
       const result = loginHandler(db, { nombreUsuario: 'admin', password: 'admin1234' });
       expect(result.id).toBeDefined();
       expect(result.nombreCompleto).toBe('Administrador');
-      expect(result.permisos).toHaveLength(35);
+      expect(result.permisos).toHaveLength(36);
       expect(result.preferencias.tema).toBe('claro');
     });
 

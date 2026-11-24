@@ -7,7 +7,7 @@
 import type * as BetterSqlite3 from 'better-sqlite3';
 import { is } from 'drizzle-orm';
 import { getTableConfig, SQLiteTable } from 'drizzle-orm/sqlite-core';
-import type { RegistroSync } from './registro-sync';
+import { columnasQueNoViajan, type RegistroSync } from './registro-sync';
 
 const q = (nombre: string) => `"${nombre}"`;
 
@@ -19,7 +19,7 @@ const NO_SON_CAMBIO = new Set(['version', 'sync_state', 'updated_at']);
 
 interface TablaCaptura {
   nombre: string;
-  datos: string[]; // columnas que viajan (todas menos las proyectadas)
+  datos: string[]; // columnas que viajan (todas menos las proyectadas y las locales)
 }
 
 function tablasCaptura(schema: Record<string, unknown>, registro: RegistroSync): TablaCaptura[] {
@@ -31,8 +31,8 @@ function tablasCaptura(schema: Record<string, unknown>, registro: RegistroSync):
     if (entrada?.tipo !== 'maestro' && entrada?.tipo !== 'libro') continue;
     const cols = cfg.columns.map((c) => c.name);
     if (!cols.includes('id')) throw new Error(`TRIGGER_SIN_ID: ${cfg.name}`);
-    const proyectadas = new Set(entrada.proyectadas ?? []);
-    out.push({ nombre: cfg.name, datos: cols.filter((c) => !proyectadas.has(c)) });
+    const noViajan = columnasQueNoViajan(entrada);
+    out.push({ nombre: cfg.name, datos: cols.filter((c) => !noViajan.has(c)) });
   }
   return out.sort((a, b) => a.nombre.localeCompare(b.nombre));
 }

@@ -3,7 +3,7 @@ import Database from 'better-sqlite3';
 import path from 'node:path';
 import { eq, is } from 'drizzle-orm';
 import { getTableConfig, SQLiteTable } from 'drizzle-orm/sqlite-core';
-import { instalarTriggersSync } from '@core/db';
+import { columnasQueNoViajan, instalarTriggersSync } from '@core/db';
 import { abrirAlmacenHub, type CambioEntrante } from '@core/hub';
 import { cajaAbrirHandler } from '@core/main';
 import * as schema from '../schema';
@@ -29,7 +29,7 @@ const COLUMNAS = new Map(Object.values(schema).filter((v) => is(v, SQLiteTable))
   .map((v) => getTableConfig(v as SQLiteTable)).map((c) => [c.name, c.columns.map((col) => col.name)]));
 
 function columnasQueViajan(_sqlite: Database.Database, tabla: string): string[] {
-  const proyectadas = new Set(registro[tabla]!.proyectadas ?? []);
+  const proyectadas = columnasQueNoViajan(registro[tabla]!); // y las locales (F3 PR1)
   return COLUMNAS.get(tabla)!.filter((c) => !proyectadas.has(c) && c !== 'sync_state');
 }
 

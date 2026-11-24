@@ -26,3 +26,19 @@ export const sync_outbox = sqliteTable('sync_outbox', {
 export const sync_aplicando = sqliteTable('sync_aplicando', {
   id: integer('id').primaryKey(),
 });
+
+/**
+ * Cambios recibidos del hub que esta terminal todavía no puede aplicar (F3 PR1, ADR-159): chocan con un
+ * índice único (una fila local que el hub rechazó por unicidad tiene el mismo valor) o apuntan a una fila
+ * que todavía espera. El pull los aparta y avanza el cursor, en vez de cortarse; se reintentan después de
+ * cada pull y entran solos cuando se corrige la fila local. Tabla `local`: no sincroniza.
+ */
+export const sync_recibido_en_espera = sqliteTable('sync_recibido_en_espera', {
+  id:          integer('id').primaryKey({ autoIncrement: true }),
+  seq:         integer('seq').notNull(), // número de secuencia del hub (para no apartarlo dos veces)
+  tabla:       text('tabla').notNull(),
+  fila_id:     text('fila_id').notNull(),
+  cambio:      text('cambio').notNull(), // el cambio registrado del hub, en JSON
+  motivo:      text('motivo', { enum: ['unicidad', 'referencia'] }).notNull(),
+  recibido_en: integer('recibido_en').notNull(),
+});

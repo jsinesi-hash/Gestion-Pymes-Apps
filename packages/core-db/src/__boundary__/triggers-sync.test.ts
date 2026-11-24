@@ -12,11 +12,11 @@ const sync = {
   updated_at: integer('updated_at', { mode: 'timestamp' }).notNull(),
 };
 const zona = sqliteTable('zona', { id: text('id').primaryKey() });
-const saldo = sqliteTable('saldo', { id: text('id').primaryKey(), nombre: text('nombre'), stock: integer('stock'), ...sync });
+const saldo = sqliteTable('saldo', { id: text('id').primaryKey(), nombre: text('nombre'), stock: integer('stock'), visto: integer('visto'), ...sync });
 const mov = sqliteTable('mov', { id: text('id').primaryKey(), cantidad: integer('cantidad'), ...sync });
 const registro: RegistroSync = {
   zona: { tipo: 'local' },
-  saldo: { tipo: 'maestro', proyectadas: ['stock'] },
+  saldo: { tipo: 'maestro', proyectadas: ['stock'], locales: ['visto'] },
   mov: { tipo: 'libro' },
 };
 const schema = { zona, saldo, mov };
@@ -52,6 +52,12 @@ describe('triggersSync', () => {
     for (const c of ['stock', 'version', 'sync_state', 'updated_at']) {
       expect(updSaldo).not.toContain(`OLD."${c}" IS NOT`);
     }
+  });
+
+  it('las columnas locales tampoco viajan ni cuentan como cambio (F3 PR1)', () => {
+    const sentencias = triggersSync(schema, registro);
+    expect(sentencias.find((s) => s.includes('"sync_ins_saldo"'))).not.toContain(`'visto'`);
+    expect(sentencias.find((s) => s.includes('"sync_upd_saldo"'))).not.toContain('OLD."visto" IS NOT');
   });
 
   it('sube la versión si el handler no la subió y marca pending', () => {

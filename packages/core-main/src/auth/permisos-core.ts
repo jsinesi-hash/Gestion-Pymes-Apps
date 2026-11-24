@@ -19,6 +19,8 @@ export const PERMISOS_CORE: readonly PermisoDef[] = [
   { codigo: 'cliente.baja',              modulo: 'cuentas' },
   { codigo: 'caja.autorizar_diferencia', modulo: 'caja' },
   { codigo: 'ctacte.autorizar_exceso',   modulo: 'cuentas' },
+  // F3 PR1 (ADR-159): revisar y resolver los conflictos de sincronización. Solo Supervisor.
+  { codigo: 'sync.conflictos',           modulo: 'admin' },
 ];
 
 export const OPERADOR_PERMISOS_CORE: readonly string[] = [

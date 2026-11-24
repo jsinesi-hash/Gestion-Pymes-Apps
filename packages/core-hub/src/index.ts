@@ -3,7 +3,7 @@
 export { abrirAlmacenHub } from './almacen';
 export type {
   AlmacenHub, OpcionesAlmacen, CambioEntrante, ResultadoCambio, EstadoCambio,
-  CambioRegistrado, PaginaCambios, Snapshot, ConflictoHub,
+  CambioRegistrado, PaginaCambios, Snapshot, ConflictoHub, FiltroConflictos, PaginaConflictos, ResolucionConflicto,
 } from './almacen';
 export { abrirTerminales } from './terminales';
 export type { RegistroTerminales, TerminalHub } from './terminales';
@@ -20,4 +20,4 @@ export type {
   DatosServicio, DefinicionServicio, ServicioPreparado, ArchivoServicio, ComandoServicio, PlataformaServicio,
 } from './servicio';
 export type { OpcionesHub, HubEnMarcha } from './arranque';
-export { hub_cambio, hub_recibido, hub_conflicto, hub_terminal, hub_codigo, hub_coordinadora, hub_bloque } from './schema';
+export { hub_cambio, hub_recibido, hub_conflicto, hub_en_espera, hub_terminal, hub_codigo, hub_coordinadora, hub_bloque } from './schema';

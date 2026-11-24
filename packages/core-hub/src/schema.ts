@@ -42,6 +42,25 @@ export const hub_conflicto = sqliteTable('hub_conflicto', {
   detalle:        text('detalle'),
   fecha:          integer('fecha').notNull(),
   resuelto:       integer('resuelto', { mode: 'boolean' }).notNull().default(false),
+  // F3 PR1 (ADR-159): `revisado` | `recuperado` (los elige quien revisa) | `corregido` (unicidad: la fila
+  // entró al corregirla en la terminal de origen).
+  resolucion:     text('resolucion'),
+  resuelto_por:   text('resuelto_por'),
+  resuelto_en:    integer('resuelto_en'),
+});
+
+/**
+ * Cambios en espera (F3 PR1, ADR-159): su referencia todavía no existe en el hub (el padre quedó
+ * rechazado por unicidad). Se aplican solos cuando llega la fila que les falta.
+ */
+export const hub_en_espera = sqliteTable('hub_en_espera', {
+  id:          integer('id').primaryKey({ autoIncrement: true }),
+  origin_id:   text('origin_id').notNull(),
+  tabla:       text('tabla').notNull(),
+  fila_id:     text('fila_id').notNull(),
+  version:     integer('version').notNull(),
+  cambio:      text('cambio').notNull(),
+  recibido_en: integer('recibido_en').notNull(),
 });
 
 /**

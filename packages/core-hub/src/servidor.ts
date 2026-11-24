@@ -9,7 +9,7 @@ import type { RegistroTerminales } from './terminales';
 import type { CoordinacionHub } from './coordinacion';
 import {
   CABECERA_ESQUEMA, CABECERA_PROTOCOLO, RUTAS, versionesCompatibles,
-  type PedidoBloque, type PedidoEmparejar, type PedidoPush, type PedidoSemilla, type Versiones,
+  type PedidoBloque, type PedidoEmparejar, type PedidoPush, type PedidoResolverConflicto, type PedidoSemilla, type Versiones,
 } from './protocolo';
 import type { CambioEntrante } from './almacen';
 
@@ -37,7 +37,8 @@ class ErrorHttp extends Error {
 }
 
 /** Errores de dominio del almacén y del emparejamiento que son culpa del pedido, no del hub. */
-const ERRORES_DEL_PEDIDO = /^(HUB_NO_VACIO|TABLA_NO_SINCRONIZA|COLUMNA_DESCONOCIDA|CAMBIO_INVALIDO|LOTE_FK_ROTA|BLOQUE_INVALIDO|CODIGO_INVALIDO|CODIGO_USADO|CODIGO_VENCIDO)/;
+const ERRORES_DEL_PEDIDO = /^(HUB_NO_VACIO|TABLA_NO_SINCRONIZA|COLUMNA_DESCONOCIDA|CAMBIO_INVALIDO|LOTE_FK_ROTA|BLOQUE_INVALIDO|CODIGO_INVALIDO|CODIGO_USADO|CODIGO_VENCIDO|CONFLICTO_INEXISTENTE|CONFLICTO_YA_RESUELTO|RESOLUCION_NO_VALIDA|RESOLUCION_SIN_AUTOR)/;
+const TIPOS_CONFLICTO = new Set(['lww', 'unicidad', 'integridad']);
 
 export function crearServidorHub(opts: OpcionesServidor): https.Server {
   const limite = opts.limiteCuerpoBytes ?? LIMITE_CUERPO;
@@ -148,6 +149,36 @@ export function crearServidorHub(opts: OpcionesServidor): https.Server {
       return responder(res, 200, { ...b });
     }
     if (ruta === `GET ${RUTAS.snapshot}`) return responder(res, 200, { ...opts.almacen.snapshot() });
+    // F3 PR1 (ADR-159): el Supervisor revisa los conflictos desde cualquier caja. El permiso lo verifica la
+    // caja (canal con `permiso:sync.conflictos`); el hub solo exige una credencial de terminal válida.
+    if (ruta === `GET ${RUTAS.conflictos}`) {
+      const tipo = url.searchParams.get('tipo');
+      const antes = Number(url.searchParams.get('antes'));
+      const limite = Number(url.searchParams.get('limite'));
+      const id = Number(url.searchParams.get('id'));
+      return responder(res, 200, {
+        ...opts.almacen.listarConflictos({
+          ...(Number.isInteger(id) && id > 0 ? { id } : {}),
+          pendientes: url.searchParams.get('pendientes') === '1',
+          ...(tipo && TIPOS_CONFLICTO.has(tipo) ? { tipo: tipo as 'lww' } : {}),
+          ...(Number.isInteger(antes) && antes > 0 ? { antesDeId: antes } : {}),
+          ...(Number.isInteger(limite) && limite > 0 ? { limite } : {}),
+        }),
+      });
+    }
+    if (ruta === `POST ${RUTAS.resolverConflicto}`) {
+      const p = (await leerCuerpo(req)) as Partial<PedidoResolverConflicto>;
+      const por = String(p.por ?? '').trim().slice(0, 80);
+      const conflicto = opts.almacen.resolverConflicto(Number(p.id), {
+        resolucion: String(p.resolucion ?? '') as PedidoResolverConflicto['resolucion'],
+        por: por ? `${por} (${origen})` : '',
+      });
+      registrar(`conflicto ${conflicto.id} resuelto (${conflicto.resolucion}) desde ${origen}`);
+      return responder(res, 200, { conflicto });
+    }
+    if (ruta === `GET ${RUTAS.terminales}`) {
+      return responder(res, 200, { terminales: opts.terminales.listar() });
+    }
     if (ruta === `GET ${RUTAS.estado}`) {
       return responder(res, 200, { origin_id: origen, cursor: opts.almacen.ultimoCursor(), versiones: opts.versiones });
     }

@@ -7,7 +7,7 @@ import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import { getTableConfig, SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { fileURLToPath } from 'node:url';
-import { createDb, runMigrations, type RegistroSync } from '@core/db';
+import { columnasQueNoViajan, createDb, runMigrations, type RegistroSync } from '@core/db';
 
 /** Un cambio tal como lo encola `sync_outbox` en la terminal: la fila completa, sin proyectadas. */
 export interface CambioEntrante {
@@ -15,7 +15,8 @@ export interface CambioEntrante {
   readonly fila: Readonly<Record<string, unknown>>;
 }
 
-export type EstadoCambio = 'aplicado' | 'perdio' | 'unicidad' | 'integridad';
+/** `en_espera` (F3 PR1): su referencia todavía no existe en el hub; se aplica sola cuando llegue. */
+export type EstadoCambio = 'aplicado' | 'perdio' | 'unicidad' | 'integridad' | 'en_espera';
 
 /**
  * Resultado por cambio, en el orden del lote. `seq` es el número de secuencia que la terminal ve en
@@ -62,6 +63,33 @@ export interface ConflictoHub {
   readonly detalle: string | null;
   readonly fecha: number;
   readonly resuelto: number;
+  readonly resolucion: ResolucionConflicto | 'corregido' | null;
+  readonly resuelto_por: string | null;
+  readonly resuelto_en: number | null;
+}
+
+/**
+ * Cómo se resuelve un conflicto desde una caja (F3 PR1, ADR-159): `revisado` sirve para todos menos la
+ * unicidad, que se resuelve sola al corregir la fila en la terminal de origen; `recuperado`, solo para un
+ * `lww` (la caja ya volvió a escribir la versión perdida como un cambio nuevo).
+ */
+export type ResolucionConflicto = 'revisado' | 'recuperado';
+
+export interface FiltroConflictos {
+  /** Un conflicto puntual (la caja lo lee antes de recuperar su versión perdida). */
+  readonly id?: number;
+  readonly pendientes?: boolean;
+  readonly tipo?: ConflictoHub['tipo'];
+  /** Página siguiente: los conflictos con id menor a este (la lista va del más nuevo al más viejo). */
+  readonly antesDeId?: number;
+  readonly limite?: number;
+}
+
+export interface PaginaConflictos {
+  readonly conflictos: ConflictoHub[];
+  readonly hayMas: boolean;
+  /** Cambios esperando una referencia que todavía no llegó. */
+  readonly enEspera: number;
 }
 
 /** Operaciones del hub (ADR-149 §1). Postgres (F4) implementa la misma interfaz. */
@@ -71,6 +99,8 @@ export interface AlmacenHub {
   cambiosDesde(cursor: number, limite: number): PaginaCambios;
   snapshot(): Snapshot;
   conflictos(): ConflictoHub[];
+  listarConflictos(filtro: FiltroConflictos): PaginaConflictos;
+  resolverConflicto(id: number, r: { resolucion: ResolucionConflicto; por: string }, ahora?: number): ConflictoHub;
   ultimoCursor(): number;
 }
 
@@ -87,7 +117,7 @@ interface TablaHub {
   readonly nombre: string;
   readonly tipo: 'maestro' | 'libro';
   readonly columnas: ReadonlySet<string>;
-  /** Columnas que viajan (todas menos las proyectadas). */
+  /** Columnas que viajan (todas menos las proyectadas y las locales). */
   readonly datos: readonly string[];
   readonly proyectadas: ReadonlySet<string>;
   /** Proyectadas NOT NULL sin default: un alta las completa con 0 (el valor se recalcula en cada nodo). */
@@ -106,7 +136,8 @@ function tablasDelHub(schema: Record<string, unknown>, registro: RegistroSync): 
     const cfg = getTableConfig(v);
     const entrada = registro[cfg.name];
     if (entrada?.tipo !== 'maestro' && entrada?.tipo !== 'libro') continue;
-    const proyectadas = new Set(entrada.proyectadas ?? []);
+    // Las locales (F3 PR1) se tratan igual que las proyectadas: no se guardan como dato ni compiten.
+    const proyectadas = columnasQueNoViajan(entrada);
     out.set(cfg.name, {
       nombre: cfg.name,
       tipo: entrada.tipo,
@@ -147,6 +178,17 @@ export function abrirAlmacenHub(sqlite: BetterSqlite3.Database, opts: OpcionesAl
   const stConflicto = sqlite.prepare(
     'INSERT INTO hub_conflicto (tipo, tabla, fila_id, origin_id, fila_entrante, fila_actual, detalle, fecha) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
   );
+  const stUnicidadCorregida = sqlite.prepare(
+    `UPDATE hub_conflicto SET resuelto = 1, resolucion = 'corregido', resuelto_por = ?, resuelto_en = ?
+     WHERE tipo = 'unicidad' AND tabla = ? AND fila_id = ? AND resuelto = 0`,
+  );
+  const stEsperar = sqlite.prepare(
+    'INSERT OR IGNORE INTO hub_en_espera (origin_id, tabla, fila_id, version, cambio, recibido_en) VALUES (?, ?, ?, ?, ?, ?)',
+  );
+  const stEnEspera = sqlite.prepare('SELECT id, origin_id, tabla, fila_id, version, cambio FROM hub_en_espera ORDER BY id');
+  const stCuantosEnEspera = sqlite.prepare('SELECT COUNT(*) AS n FROM hub_en_espera');
+  const stSacarDeEspera = sqlite.prepare('DELETE FROM hub_en_espera WHERE id = ?');
+  const stOlvidarRecibido = sqlite.prepare('DELETE FROM hub_recibido WHERE tabla = ? AND fila_id = ? AND version = ? AND origin_id = ?');
 
   function tabla(nombre: string): TablaHub {
     const t = tablas.get(nombre);
@@ -253,6 +295,8 @@ export function abrirAlmacenHub(sqlite: BetterSqlite3.Database, opts: OpcionesAl
       }
       const guardada = sinProyectadas(t, leerFila(t, id)!);
       resultado = { estado: 'aplicado', seq: registrarCambio(t, id, version, origen, updated_at, guardada, ahora) };
+      // La fila entró: si la había rechazado un índice único, la corrigieron en su terminal (F3 PR1).
+      stUnicidadCorregida.run(origen, ahora, t.nombre, id);
       // Concurrente que gana (F2 PR7): otra terminal escribió la fila y esta no lo había visto (su versión no
       // es mayor). La que se pierde es la que estaba en el hub, y también va al log para el Supervisor.
       if (actual && ultimo && ultimo.origin_id !== origen && version <= ultimo.version) {
@@ -263,6 +307,104 @@ export function abrirAlmacenHub(sqlite: BetterSqlite3.Database, opts: OpcionesAl
     return resultado;
   }
 
+  /**
+   * Filas que dejan una referencia rota (FK diferidas) en las tablas dadas, como `tabla\0id`: apuntan a
+   * una fila que el hub no tiene porque su padre quedó rechazado por unicidad (F3 PR1).
+   */
+  function referenciasRotas(nombres: Iterable<string>): Set<string> {
+    const out = new Set<string>();
+    for (const n of new Set(nombres)) {
+      const filas = sqlite.prepare(`PRAGMA foreign_key_check(${q(n)})`).all() as { table: string; rowid: number }[];
+      for (const f of filas) {
+        const r = sqlite.prepare(`SELECT "id" FROM ${q(f.table)} WHERE rowid = ?`).get(f.rowid) as { id: string } | undefined;
+        if (r) out.add(`${f.table}\0${r.id}`);
+      }
+    }
+    return out;
+  }
+
+  /** Corre `fn` en un savepoint; si devuelve false, lo deshace y devuelve false. */
+  function intentar(fn: () => boolean): boolean {
+    try {
+      return sqlite.transaction(() => { if (!fn()) throw DESHACER; return true; })();
+    } catch (e) {
+      if (e === DESHACER) return false;
+      throw e;
+    }
+  }
+
+  function esperar(origen: string, c: CambioEntrante, ahora: number): ResultadoCambio {
+    const { t, id, version } = normalizar(c);
+    const previo = stRecibido.get(t.nombre, id, version, origen) as { resultado: EstadoCambio; seq: number | null } | undefined;
+    if (previo) return { estado: previo.resultado, ...(previo.seq != null ? { seq: previo.seq } : {}), duplicado: true };
+    stEsperar.run(origen, t.nombre, id, version, JSON.stringify(c), ahora);
+    stMarcarRecibido.run(t.nombre, id, version, origen, 'en_espera', null);
+    return { estado: 'en_espera' };
+  }
+
+  /** Aplica los cambios en espera cuya referencia ya llegó; repite mientras alguno entre (cadenas). */
+  function reintentarEnEspera(ahora: number): void {
+    if ((stCuantosEnEspera.get() as { n: number }).n === 0) return;
+    for (let avanzo = true; avanzo;) {
+      avanzo = false;
+      for (const p of stEnEspera.all() as { id: number; origin_id: string; tabla: string; fila_id: string; version: number; cambio: string }[]) {
+        const ultimo = stUltimo.get(p.tabla, p.fila_id) as { seq: number; origin_id: string; version: number } | undefined;
+        if (ultimo && ultimo.origin_id === p.origin_id && ultimo.version >= p.version) {
+          // Ya entró una versión igual o posterior de la misma terminal: esta quedó vieja.
+          stSacarDeEspera.run(p.id);
+          stOlvidarRecibido.run(p.tabla, p.fila_id, p.version, p.origin_id);
+          stMarcarRecibido.run(p.tabla, p.fila_id, p.version, p.origin_id, 'aplicado', ultimo.seq);
+          continue;
+        }
+        const entro = intentar(() => {
+          stOlvidarRecibido.run(p.tabla, p.fila_id, p.version, p.origin_id);
+          aplicarUno(p.origin_id, JSON.parse(p.cambio) as CambioEntrante, ahora);
+          if (referenciasRotas([p.tabla]).size > 0) return false;
+          stSacarDeEspera.run(p.id);
+          return true;
+        });
+        if (entro) avanzo = true;
+      }
+    }
+  }
+
+  /**
+   * Aplica un lote en una transacción. Las FK se verifican al final (diferidas): el hijo puede llegar antes
+   * que el padre. Si queda una referencia rota, se deshace y se vuelve a aplicar con esos cambios en espera
+   * (F3 PR1): antes el lote entero se rechazaba y la terminal no podía subir nada más.
+   */
+  function aplicarLoteInterno(origen: string, cambios: readonly CambioEntrante[], ahora: number): ResultadoCambio[] {
+    const claves = cambios.map((c) => { const n = normalizar(c); return `${n.t.nombre}\0${n.id}`; });
+    const enEspera = new Set<number>();
+    for (let verificar = false; ;) {
+      let rotas: Set<string> | null = null;
+      try {
+        return sqlite.transaction(() => {
+          sqlite.pragma('defer_foreign_keys = ON');
+          const res = cambios.map((c, i) => (enEspera.has(i) ? null : aplicarUno(origen, c, ahora)));
+          if (verificar) {
+            const r = referenciasRotas(cambios.map((c) => c.tabla));
+            if (r.size > 0) { rotas = r; throw DESHACER; }
+          }
+          const out = res.map((r, i) => r ?? esperar(origen, cambios[i]!, ahora));
+          reintentarEnEspera(ahora);
+          return out;
+        })();
+      } catch (e) {
+        if (e === DESHACER && rotas) {
+          const antes = enEspera.size;
+          const r: Set<string> = rotas;
+          claves.forEach((k, i) => { if (r.has(k)) enEspera.add(i); });
+          if (enEspera.size === antes) throw new Error('LOTE_FK_ROTA');
+          continue;
+        }
+        if (codigoSqlite(e) !== 'SQLITE_CONSTRAINT_FOREIGNKEY') throw e;
+        if (verificar) throw new Error('LOTE_FK_ROTA');
+        verificar = true; // camino lento: buscar qué cambios dejan la referencia rota
+      }
+    }
+  }
+
   function ultimoCursor(): number {
     return (sqlite.prepare('SELECT COALESCE(MAX(seq), 0) AS s FROM hub_cambio').get() as { s: number }).s;
   }
@@ -271,15 +413,7 @@ export function abrirAlmacenHub(sqlite: BetterSqlite3.Database, opts: OpcionesAl
     aplicarLote(origen, cambios, ahora = Math.floor(Date.now() / 1000)) {
       // Se valida todo antes de tocar nada: un lote con una tabla o columna desconocida no entra.
       for (const c of cambios) normalizar(c);
-      try {
-        return sqlite.transaction(() => {
-          sqlite.pragma('defer_foreign_keys = ON');
-          return cambios.map((c) => aplicarUno(origen, c, ahora));
-        })();
-      } catch (e) {
-        if (codigoSqlite(e) === 'SQLITE_CONSTRAINT_FOREIGNKEY') throw new Error('LOTE_FK_ROTA');
-        throw e;
-      }
+      return aplicarLoteInterno(origen, cambios, ahora);
     },
 
     cambiosDesde(cursor, limite) {
@@ -307,9 +441,47 @@ export function abrirAlmacenHub(sqlite: BetterSqlite3.Database, opts: OpcionesAl
       return sqlite.prepare('SELECT * FROM hub_conflicto ORDER BY id').all() as ConflictoHub[];
     },
 
+    listarConflictos(f) {
+      const limite = Math.min(Math.max(Math.trunc(f.limite ?? 50), 1), 200);
+      const donde: string[] = [];
+      const args: unknown[] = [];
+      if (f.id != null) { donde.push('id = ?'); args.push(f.id); }
+      if (f.pendientes) donde.push('resuelto = 0');
+      if (f.tipo) { donde.push('tipo = ?'); args.push(f.tipo); }
+      if (f.antesDeId != null) { donde.push('id < ?'); args.push(f.antesDeId); }
+      const filas = sqlite.prepare(
+        `SELECT * FROM hub_conflicto ${donde.length ? `WHERE ${donde.join(' AND ')}` : ''} ORDER BY id DESC LIMIT ?`,
+      ).all(...args, limite + 1) as ConflictoHub[];
+      return {
+        conflictos: filas.slice(0, limite),
+        hayMas: filas.length > limite,
+        enEspera: (stCuantosEnEspera.get() as { n: number }).n,
+      };
+    },
+
+    resolverConflicto(id, r, ahora = Math.floor(Date.now() / 1000)) {
+      const c = sqlite.prepare('SELECT * FROM hub_conflicto WHERE id = ?').get(id) as ConflictoHub | undefined;
+      if (!c) throw new Error('CONFLICTO_INEXISTENTE');
+      if (c.resuelto) throw new Error('CONFLICTO_YA_RESUELTO');
+      const validas: Record<ConflictoHub['tipo'], readonly ResolucionConflicto[]> = {
+        lww: ['revisado', 'recuperado'],
+        integridad: ['revisado'],
+        unicidad: [], // se resuelve sola al corregir la fila en la terminal de origen
+      };
+      if (!validas[c.tipo].includes(r.resolucion)) throw new Error('RESOLUCION_NO_VALIDA');
+      const por = String(r.por ?? '').trim().slice(0, 120);
+      if (!por) throw new Error('RESOLUCION_SIN_AUTOR');
+      sqlite.prepare('UPDATE hub_conflicto SET resuelto = 1, resolucion = ?, resuelto_por = ?, resuelto_en = ? WHERE id = ?')
+        .run(r.resolucion, por, ahora, id);
+      return sqlite.prepare('SELECT * FROM hub_conflicto WHERE id = ?').get(id) as ConflictoHub;
+    },
+
     ultimoCursor,
   };
 }
+
+/** Señal para deshacer una transacción o un savepoint sin que sea un error. */
+const DESHACER = Symbol('DESHACER');
 
 /** better-sqlite3 no acepta booleanos: van como 0/1, igual que en la terminal. */
 function aSqlite(v: unknown): unknown {

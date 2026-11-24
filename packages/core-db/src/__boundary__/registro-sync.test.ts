@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 import * as coreSchema from '../schema';
-import { combinarRegistros, registroSyncCore, verificarRegistroSync, type RegistroSync } from './registro-sync';
+import { columnasQueNoViajan, combinarRegistros, registroSyncCore, verificarRegistroSync, type RegistroSync } from './registro-sync';
 
 const sync = {
   version: integer('version').notNull().default(1),
@@ -45,6 +45,18 @@ describe('verificarRegistroSync', () => {
   it('una columna proyectada que no existe es un problema', () => {
     const registro: RegistroSync = { cosa: { tipo: 'maestro', proyectadas: ['saldo', 'no_existe'] } };
     expect(verificarRegistroSync({ cosa }, registro)).toEqual(['proyectada_inexistente:cosa.no_existe']);
+  });
+
+  it('columnas locales: existen, solo en maestro y sin repetir una proyectada (F3 PR1)', () => {
+    expect(verificarRegistroSync({ cosa }, { cosa: { tipo: 'maestro', locales: ['saldo'] } })).toEqual([]);
+    expect(verificarRegistroSync({ cosa }, { cosa: { tipo: 'maestro', locales: ['no_existe'] } })).toEqual(['local_inexistente:cosa.no_existe']);
+    expect(verificarRegistroSync({ movimiento }, { movimiento: { tipo: 'libro', locales: ['id'] } })).toEqual(['local_fuera_de_maestro:movimiento']);
+    expect(verificarRegistroSync({ cosa }, { cosa: { tipo: 'maestro', proyectadas: ['saldo'], locales: ['saldo'] } })).toEqual(['local_y_proyectada:cosa.saldo']);
+  });
+
+  it('columnasQueNoViajan junta proyectadas y locales', () => {
+    expect([...columnasQueNoViajan({ tipo: 'maestro', proyectadas: ['a'], locales: ['b'] })].sort()).toEqual(['a', 'b']);
+    expect(columnasQueNoViajan({ tipo: 'libro' }).size).toBe(0);
   });
 
   it('una tabla local o libro no puede tener columnas proyectadas', () => {
@@ -93,6 +105,10 @@ describe('registroSyncCore', () => {
       .map(([t]) => t)
       .sort();
     expect(libros).toEqual(['movimiento_caja', 'movimiento_cuenta_corriente', 'venta_pago']);
+  });
+
+  it('el último acceso del usuario es local: entrar en dos cajas no es un conflicto (F3 PR1)', () => {
+    expect(registroSyncCore().usuario.locales).toEqual(['ultimo_acceso']);
   });
 
   it('el saldo de cuenta corriente es una columna proyectada (ADR-151)', () => {

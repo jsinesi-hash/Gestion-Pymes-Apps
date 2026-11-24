@@ -148,12 +148,19 @@
       "when": 1792951042973,
       "tag": "0020_adr157_venta_centavos",
       "breakpoints": true
-    }
-    ,{
+    },
+    {
       "idx": 21,
       "version": "7",
       "when": 1793037442973,
       "tag": "0021_adr150_updated_at_segundos",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1796169600000,
+      "tag": "0022_adr159_recibido_en_espera",
       "breakpoints": true
     }
   ]
