@@ -15,7 +15,7 @@ import {
 import {
   cajaAbrirHandler, cajaAbrirCompartidaHandler, cajaAddMovimientoHandler, cajaCalcularCierreHandler, cajaCerrarHandler,
   cajaCerrarCompartidaHandler, cajaGetActivaHandler, crearCajaCompartidaTerminal, crearSyncTerminal, escribirParametro,
-  getModoTerminal, leerParametro, modoCaja, setModoTerminal, setOriginId,
+  getModoTerminal, leerParametro, modoCaja, movimientosTardiosDe, setModoTerminal, setOriginId,
   type SyncTerminal,
 } from '@core/main';
 import * as schema from '../../db/schema';
@@ -407,5 +407,41 @@ describe('convergencia de dos terminales de Retail con el hub', () => {
     // Ahora B puede abrir el turno siguiente.
     const siguiente = await desde('C2', () => cajaAbrirCompartidaHandler(b, { monto_inicial_centavos: 0 }, syncB.cajaCompartida()));
     expect(await syncA.cajaCompartida().actual()).toMatchObject({ caja_id: siguiente.id, origin_id: 'C2' });
+  });
+
+  it('movimiento posterior al cierre (F3 PR5, ADR-155 §5): queda en el turno, avisa una vez y no mueve la diferencia', async () => {
+    const desde = async <T>(origen: string, fn: () => Promise<T>): Promise<T> => {
+      setOriginId(origen);
+      try { return await fn(); } finally { setOriginId('C1'); }
+    };
+    // El turno que abrió B en el test anterior sigue abierto; las dos lo conocen.
+    await syncB.sincronizarAhora();
+    await syncA.sincronizarAhora();
+    const turno = cajaGetActivaHandler(a)!;
+    expect(cajaGetActivaHandler(b)?.id).toBe(turno.id);
+
+    // B aporta y todavía no sube (está sin conexión); A cierra con lo que ve.
+    const mov = como('C2', () => cajaAddMovimientoHandler(b, { caja_id: turno.id, tipo: 'ingreso', motivo: 'aporte', monto_centavos: 700 }));
+    const esperadoEnA = cajaCalcularCierreHandler(a, { caja_id: turno.id }).esperado_efectivo_centavos;
+    await desde('C1', () => cajaCerrarCompartidaHandler(a, { caja_id: turno.id, monto_contado_centavos: esperadoEnA }, {}, syncA.cajaCompartida()));
+    await syncA.sincronizarAhora();
+
+    // B vuelve: sube su aporte y baja el cierre. El aporte queda en el turno cerrado.
+    await syncB.sincronizarAhora();
+    await syncA.sincronizarAhora();
+    const cajaEn = (db: Db) => db.select().from(schema.caja).where(eq(schema.caja.id, turno.id)).get()!;
+    expect(a.select().from(schema.movimiento_caja).where(eq(schema.movimiento_caja.id, mov.id)).get()).toMatchObject({ caja_id: turno.id });
+    expect(cajaEn(a)).toMatchObject({ estado: 'cerrada', monto_esperado_centavos: esperadoEnA, diferencia_centavos: 0 });
+    expect(cajaEn(b)).toMatchObject({ estado: 'cerrada', monto_esperado_centavos: esperadoEnA, diferencia_centavos: 0 });
+    expect(movimientosTardiosDe(a as never, cajaEn(a))).toMatchObject({ esperado_cierre_centavos: esperadoEnA, esperado_actual_centavos: esperadoEnA + 700 });
+
+    // La coordinadora (A) avisa una vez a quien autoriza diferencias; la otra no genera avisos.
+    const tardios = (db: Db) => db.select().from(schema.aviso).where(eq(schema.aviso.origen_tipo, 'caja_movimiento_tardio')).all();
+    expect(tardios(a).length).toBeGreaterThan(0);
+    expect(tardios(a).every((x) => x.origen_id === turno.id)).toBe(true);
+    expect(tardios(b)).toEqual([]);
+    const cuantos = tardios(a).length;
+    await syncA.sincronizarAhora();
+    expect(tardios(a)).toHaveLength(cuantos);
   });
 });

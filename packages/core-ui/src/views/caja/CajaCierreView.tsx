@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCajaActiva } from '../../hooks/useCajaActiva';
 import { useCajaCierre } from '../../hooks/useCajaCierre';
 import { SupervisorAuthModal } from './SupervisorAuthModal';
+import { AvisoCajasSinContacto } from './AvisoCajasSinContacto';
 import { useToast } from '../../components/toast/useToast';
 import { useCallIpc } from '../../hooks/useCallIpc';
 import { rutearCampoError } from '../../lib/rutearCampoError';
@@ -133,6 +134,8 @@ export function CajaCierreView() {
   return (
     <div className="flex-col gap-4">
       <h2 style={{ fontWeight: 800, fontSize: '20px', letterSpacing: '-.02em' }}>Cierre de caja</h2>
+      {/* F3 PR5 (ADR-155 §4): con caja compartida, qué cajas no subieron todavía sus movimientos. */}
+      <AvisoCajasSinContacto />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 420px', gap: '14px', alignItems: 'start' }}>
         {/* Columna izquierda */}
