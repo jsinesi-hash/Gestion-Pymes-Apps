@@ -349,6 +349,13 @@ body {
 }
 .chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
 .chip .dot-warn { background: var(--warn); }
+/* F3 PR3: indicador de sync (estados y versión botón del chip). */
+.chip .dot-danger { background: var(--danger); }
+.chip .dot-off { background: var(--ink-3); }
+.chip-btn { cursor: pointer; border: 0; font-family: inherit; color: inherit; }
+.sess .chip { white-space: nowrap; }
+.chip-btn:hover { filter: brightness(0.97); }
+.chip-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* ---- icon button ---- */
 .icon-btn {

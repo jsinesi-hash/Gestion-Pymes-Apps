@@ -70,6 +70,7 @@ export { ErroresSistemaCard } from './views/config/ErroresSistemaCard';
 export { ConfigSmtp } from './views/config/ConfigSmtp';
 export { ConfigSincronizacion } from './views/config/ConfigSincronizacion';
 export { ConfigConflictos } from './views/config/ConfigConflictos';
+export { IndicadorSync, estadoIndicador } from './shell/IndicadorSync';
 export { RestoreWizard } from './views/config/RestoreWizard';
 // Venta universal (E3c1)
 export { TicketModal } from './views/venta/TicketModal';

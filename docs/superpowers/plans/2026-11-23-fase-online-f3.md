@@ -62,7 +62,10 @@ Cada PR: rama propia desde `main`, TDD (rojo → verde), suite completa en serie
 - Sin conexión con el hub, la pantalla lo dice y no muestra datos viejos.
 - **Tests:** componente con el bridge simulado; resolver de punta a punta contra un hub en memoria (`recuperado` deja la versión perdida en las dos terminales).
 
-### PR3 — Indicador de sync (análisis §4)
+### PR3 — Indicador de sync (análisis §4) — hecho (2026-11-24)
+
+> **Desvío:** el indicador lo dibuja `AppShell` (la sincronización es universal) en vez de recibirlo por prop de cada
+> shell; así no puede quedar sin conectar en una app. Suma el estado «N cambios en espera» (recibidos apartados en la caja).
 
 - **Chip en la barra superior** del `AppShell`, solo en modo distribuido. `AppShell` sigue siendo por props: recibe un `indicadorSync` opcional que arma el núcleo (`@core/ui`), y cada shell de app lo pasa.
 - **Estados, de más grave a menos:** versión incompatible con el hub («Actualizá esta caja»); sin conexión (desde cuándo); reloj desfasado; conflictos sin revisar (solo para quien tiene `sync.conflictos`); N cambios sin subir; al día. Un clic lleva a Configuración → Sincronización.
