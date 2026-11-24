@@ -18,6 +18,7 @@ import {
   ConfigBackupRestore,
   ConfigSmtp,
   ConfigSincronizacion,
+  ConfigConflictos,
   ErrorDeRuta,
 } from '@core/ui';
 import { ElaboradosShell } from '../shell/ElaboradosShell';
@@ -84,6 +85,7 @@ export const routes: RouteObject[] = [
       { path: 'config/datos-demo', element: <ConfigDatosDemo /> },
       { path: 'config/smtp', element: <ConfigSmtp /> },
       { path: 'config/sincronizacion', element: <ConfigSincronizacion /> },
+      { path: 'config/conflictos', element: <ConfigConflictos /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

@@ -73,6 +73,10 @@ export function registerSyncHandlers(ipcMain: IpcMain, db: DbSync, o?: OpcionesS
     // Quién resolvió: el usuario de la sesión (el hub le agrega la caja de la credencial).
     return requerir().conflictos().resolver(p.id, resolucion, getSessionData()?.nombreCompleto ?? 'sin sesión');
   });
+  ipcMain.handle('sync:descartarAlta', async (_e, p: { id: number }) => {
+    if (!Number.isInteger(p?.id)) throw new Error('CONFLICTO_INEXISTENTE');
+    await requerir().conflictos().descartarAlta(p.id);
+  });
   ipcMain.handle('sync:terminales', async () => requerir().conflictos().terminales());
 }
 

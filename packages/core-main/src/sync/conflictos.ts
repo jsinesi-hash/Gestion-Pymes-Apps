@@ -17,6 +17,11 @@ export interface ConflictoVista extends Omit<ConflictoHub, 'fila_entrante' | 'fi
   readonly perdida: 'entrante' | 'actual' | null;
   /** ¿Se puede volver a escribir la versión perdida en esta caja? (`lww` de una tabla que esta versión conoce). */
   readonly recuperable: boolean;
+  /**
+   * Columnas del índice único con el que chocó una alta (`unicidad`), sacadas del error del hub. Vacío si no
+   * se pudieron leer: entonces la alta no se puede descartar desde acá, solo corregir a mano.
+   */
+  readonly columnasUnicas: readonly string[];
 }
 
 export interface FiltroConflictosTerminal {
@@ -35,6 +40,12 @@ export interface PaginaConflictosTerminal {
 export interface ConflictosTerminal {
   listar(f: FiltroConflictosTerminal): Promise<PaginaConflictosTerminal>;
   resolver(id: number, resolucion: ResolucionConflicto, por: string): Promise<ConflictoVista>;
+  /**
+   * F3 PR2: descarta en esta caja una alta que el hub rechazó por unicidad: la da de baja lógica y libera su
+   * valor único (texto con «(descartado …)» o null si la columna lo admite). El cambio sube en el próximo push,
+   * entra en el hub y el conflicto queda resuelto solo (`corregido`).
+   */
+  descartarAlta(id: number): Promise<void>;
   terminales(): Promise<TerminalHub[]>;
 }
 
@@ -42,6 +53,13 @@ export interface ConflictosTerminal {
 const NO_SE_RECUPERAN = new Set(['id', 'version', 'origin_id', 'sync_state', 'updated_at']);
 const segundos = () => Math.floor(Date.now() / 1000);
 const q = (n: string) => `"${n}"`;
+
+/** `UNIQUE constraint failed: marca.nombre, marca.x` → ['nombre', 'x'] (solo las de esa tabla). */
+export function columnasDelChoque(tabla: string, detalle: string | null): string[] {
+  const m = /UNIQUE constraint failed: (.+)$/.exec(detalle ?? '');
+  if (!m) return [];
+  return m[1]!.split(',').map((x) => x.trim()).filter((x) => x.startsWith(`${tabla}.`)).map((x) => x.slice(tabla.length + 1));
+}
 
 function parsear(texto: string | null): Record<string, unknown> | null {
   if (texto == null) return null;
@@ -65,7 +83,8 @@ export function crearConflictosTerminal(
     const filaPerdida = perdida === 'actual' ? fila_actual : perdida === 'entrante' ? fila_entrante : null;
     const recuperable = c.tipo === 'lww' && t?.tipo === 'maestro' && filaPerdida != null
       && Object.keys(filaPerdida).every((k) => t.datos.has(k));
-    return { ...c, fila_entrante, fila_actual, perdida, recuperable };
+    const columnasUnicas = c.tipo === 'unicidad' ? columnasDelChoque(c.tabla, c.detalle).filter((k) => t?.datos.has(k)) : [];
+    return { ...c, fila_entrante, fila_actual, perdida, recuperable, columnasUnicas };
   }
 
   async function listar(f: FiltroConflictosTerminal, id?: number): Promise<PaginaConflictosTerminal> {
@@ -98,15 +117,40 @@ export function crearConflictosTerminal(
       .run(...cols.map((k) => aSqlite(perdida[k])), hora, getOriginId(), c.fila_id);
   }
 
+  async function uno(id: number): Promise<ConflictoVista> {
+    const [c] = (await listar({}, id)).conflictos;
+    if (!c) throw new Error('CONFLICTO_INEXISTENTE');
+    if (c.resuelto) throw new Error('CONFLICTO_YA_RESUELTO');
+    return c;
+  }
+
+  function descartar(c: ConflictoVista): void {
+    if (c.tipo !== 'unicidad' || c.columnasUnicas.length === 0) throw new Error('CONFLICTO_NO_DESCARTABLE');
+    // La fila rechazada está solo en la caja que la dio de alta: se descarta ahí.
+    if (c.origin_id !== getOriginId()) throw new Error('CONFLICTO_DE_OTRA_CAJA');
+    const t = tablas.get(c.tabla)!;
+    const local = sqlite.prepare(`SELECT * FROM ${q(t.nombre)} WHERE "id" = ?`).get(c.fila_id) as Record<string, unknown> | undefined;
+    if (!local) throw new Error('CONFLICTO_FILA_INEXISTENTE');
+    const info = new Map((sqlite.prepare(`PRAGMA table_info(${q(t.nombre)})`).all() as { name: string; notnull: number }[]).map((x) => [x.name, x.notnull === 1]));
+    const set: string[] = [];
+    const valores: unknown[] = [];
+    for (const col of c.columnasUnicas) {
+      set.push(`${q(col)} = ?`);
+      // Una columna que admite null (un GTIN) queda vacía; una obligatoria (un nombre) lleva la marca.
+      valores.push(info.get(col) ? `${String(local[col] ?? '')} (descartado ${c.fila_id.slice(0, 8)})` : null);
+    }
+    if (info.has('activo')) set.push('"activo" = 0');
+    if (info.has('updated_at')) { set.push('"updated_at" = ?'); valores.push(Math.max(segundos(), Number(local['updated_at'] ?? 0) + 1)); }
+    sqlite.prepare(`UPDATE ${q(t.nombre)} SET ${set.join(', ')} WHERE "id" = ?`).run(...valores, c.fila_id);
+  }
+
   return {
     listar: (f) => listar(f),
+    async descartarAlta(id) {
+      descartar(await uno(id));
+    },
     async resolver(id, resolucion, por) {
-      if (resolucion === 'recuperado') {
-        const [c] = (await listar({}, id)).conflictos;
-        if (!c) throw new Error('CONFLICTO_INEXISTENTE');
-        if (c.resuelto) throw new Error('CONFLICTO_YA_RESUELTO');
-        recuperar(c);
-      }
+      if (resolucion === 'recuperado') recuperar(await uno(id));
       const r = await pedir('POST', RUTAS.resolverConflicto, { id, resolucion, por });
       return vista(r['conflicto'] as ConflictoHub);
     },

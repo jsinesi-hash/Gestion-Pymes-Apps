@@ -99,6 +99,7 @@ export const NAV_ELABORADOS: NavGroup[] = [
       { label: 'Datos demo', to: '/config/datos-demo', icon: SVG_SISTEMA, permiso: 'usuario.administrar' },
       { label: 'Email / SMTP', to: '/config/smtp', icon: SVG_SISTEMA, permiso: 'config.fiscal' },
       { label: 'Sincronización', to: '/config/sincronizacion', icon: SVG_SISTEMA, permiso: 'usuario.administrar' },
+      { label: 'Conflictos', to: '/config/conflictos', icon: SVG_SISTEMA, permiso: 'sync.conflictos' },
     ],
   },
 ];

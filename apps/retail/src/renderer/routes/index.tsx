@@ -19,7 +19,7 @@ import { RetailShell } from '../views/shell/RetailShell';
 import { PosSessionProvider } from '../context/PosSessionContext';
 import { PosView } from '../views/pos/PosView';
 import { ListasPreciosView } from '../views/config/ListasPreciosView';
-import { ConfigSmtp, ConfigSincronizacion } from '@core/ui';
+import { ConfigSmtp, ConfigSincronizacion, ConfigConflictos } from '@core/ui';
 import { ConfigDatosDemo } from '../views/config/ConfigDatosDemo';
 import { ConfigSinonimos } from '../views/config/ConfigSinonimos';
 import { FuncionalidadesView } from '../views/config/FuncionalidadesView';
@@ -154,6 +154,7 @@ export const routes: RouteObject[] = [
       { path: 'config/funcionalidades', element: <FuncionalidadesView /> },
       { path: 'config/smtp', element: <ConfigSmtp /> },
       { path: 'config/sincronizacion', element: <ConfigSincronizacion /> },
+      { path: 'config/conflictos', element: <ConfigConflictos /> },
       { path: 'config/backup-restore', element: <ConfigBackupRestore /> },
       { path: 'config/datos-demo', element: <ConfigDatosDemo /> },
       { path: 'config/sinonimos', element: <ConfigSinonimos /> },
