@@ -97,6 +97,7 @@ export const POLITICAS_CANALES_CORE: PoliticasCanales = {
   // F3 PR1 (ADR-159): los conflictos los revisa quien tenga `sync.conflictos` (de fábrica, el Supervisor).
   'sync:conflictos': 'permiso:sync.conflictos',
   'sync:resolverConflicto': 'permiso:sync.conflictos',
+  'sync:descartarAlta': 'permiso:sync.conflictos',
   'sync:terminales': 'sesion',
   // «Usar esta PC como servidor» (F2 PR6): instala un servicio del sistema operativo y genera códigos.
   'hubLocal:estado': 'permiso:usuario.administrar',

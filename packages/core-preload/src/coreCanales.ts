@@ -43,6 +43,8 @@ export interface ConflictoSync {
   resuelto_en: number | null;
   perdida: 'entrante' | 'actual' | null;
   recuperable: boolean;
+  /** Columnas del índice único con el que chocó una alta repetida (vacío si no se pudieron leer). */
+  columnasUnicas: string[];
 }
 
 /** F3 PR1: una caja emparejada con el hub. */
@@ -197,6 +199,8 @@ export function coreCanales(invoke: Invoke) {
         Promise<{ conflictos: ConflictoSync[]; hayMas: boolean; enEspera: number }> => invoke('sync:conflictos', p),
       resolverConflicto: (p: { id: number; resolucion: 'revisado' | 'recuperado' }): Promise<ConflictoSync> =>
         invoke('sync:resolverConflicto', p),
+      // F3 PR2: descartar en esta caja una alta repetida (baja lógica y libera su valor único).
+      descartarAlta: (p: { id: number }): Promise<void> => invoke('sync:descartarAlta', p),
       terminales: (): Promise<CajaDelHub[]> => invoke('sync:terminales'),
     },
     // «Usar esta PC como servidor» (F2 PR6).

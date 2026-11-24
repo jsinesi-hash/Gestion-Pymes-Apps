@@ -329,4 +329,32 @@ describe('convergencia de dos terminales de Retail con el hub', () => {
     expect(u).toMatchObject({ fila_id: enB.id, resuelto: 1, resolucion: 'corregido', resuelto_por: 'C2' });
     expect(enA.id).not.toBe(enB.id);
   });
+
+  it('descartar una alta repetida en su caja (F3 PR2): queda de baja, libera el nombre y el conflicto se resuelve solo', async () => {
+    // Lo que corre después de un await ve el origin_id global: se fija a mano mientras dura la llamada.
+    const desde = async <T>(origen: string, fn: () => Promise<T>): Promise<T> => {
+      setOriginId(origen);
+      try { return await fn(); } finally { setOriginId('C1'); }
+    };
+    const enA = como('C1', () => marcaCreateHandler(a, { nombre: 'Truper F3' }));
+    const enB = como('C2', () => marcaCreateHandler(b, { nombre: 'Truper F3' }));
+    await syncA.sincronizarAhora();
+    await syncB.sincronizarAhora();
+    const c = (await syncB.conflictos().listar({ pendientes: true, tipo: 'unicidad' })).conflictos.find((x) => x.fila_id === enB.id)!;
+    expect(c.columnasUnicas).toEqual(['nombre']);
+    // La fila rechazada está solo en B: desde A no se puede descartar.
+    await expect(desde('C1', () => syncA.conflictos().descartarAlta(c.id))).rejects.toThrow('CONFLICTO_DE_OTRA_CAJA');
+
+    await desde('C2', () => syncB.conflictos().descartarAlta(c.id));
+    for (let vuelta = 0; vuelta < 2; vuelta++) {
+      await syncB.sincronizarAhora();
+      await syncA.sincronizarAhora();
+    }
+    const marca = (db: Db, id: string) => db.select().from(schema.marca).where(eq(schema.marca.id, id)).get()!;
+    expect(marca(b, enB.id)).toMatchObject({ activo: false, nombre: `Truper F3 (descartado ${enB.id.slice(0, 8)})` });
+    expect(marca(a, enB.id)).toMatchObject({ activo: false });
+    expect(marca(a, enA.id)).toMatchObject({ activo: true, nombre: 'Truper F3' });
+    const [r] = (await syncA.conflictos().listar({ tipo: 'unicidad' })).conflictos.filter((x) => x.fila_id === enB.id);
+    expect(r).toMatchObject({ resuelto: 1, resolucion: 'corregido', resuelto_por: 'C2' });
+  });
 });

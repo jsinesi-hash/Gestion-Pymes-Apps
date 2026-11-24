@@ -48,7 +48,10 @@ Cada PR: rama propia desde `main`, TDD (rojo → verde), suite completa en serie
 - **ADR-159** con las decisiones de arriba.
 - **Tests:** dos terminales con el mismo usuario entran y no hay conflicto; listar y resolver en el hub; la unicidad se resuelve sola al aplicarse la corrección; política del canal.
 
-### PR2 — Pantalla de conflictos (ADR-012, ADR-150 §5)
+### PR2 — Pantalla de conflictos (ADR-012, ADR-150 §5) — hecho (2026-11-24)
+
+> **Desvío:** «Editar» no navega a la pantalla de la entidad (el núcleo no conoce las rutas de cada app); el detalle dice
+> qué columna chocó y en qué caja corregirla. «Descartar» le da baja lógica y libera el valor único (`descartarAlta`).
 
 - **Configuración → Sincronización → Conflictos** (ruta, NAV y crumb en las dos apps; el test `nav.test.tsx` de Elaborados lo cubre y Retail suma el suyo, como pide CLAUDE.md). Visible con `sync.conflictos`.
 - Lista: tipo, tabla en lenguaje del negocio («Producto», «Cliente»…), qué fila, de qué caja vino y cuándo. Detalle: las dos versiones lado a lado, con las columnas que difieren resaltadas.
