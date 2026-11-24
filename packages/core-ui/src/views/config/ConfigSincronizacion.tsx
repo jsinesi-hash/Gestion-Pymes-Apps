@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { EstadoHubLocal, EstadoSyncTerminal } from '@core/preload';
+import type { CajaDelHub, EstadoHubLocal, EstadoSyncTerminal } from '@core/preload';
 import { useAuth } from '../../auth/AuthContext';
 import { bridge } from '../../bridge';
 import { traducirError } from '../../lib/errores';
@@ -142,7 +142,9 @@ export function ConfigSincronizacion() {
           </div>
           <div style={ayuda}>«Volver a bajar la base del hub» es la forma de restaurar esta terminal mientras sincroniza.</div>
         </section>
-      ) : (
+      ) : null}
+      {estado.modo === 'distribuido' && <CajasDelHub esta={estado.origin_id} />}
+      {estado.modo !== 'distribuido' ? (
         <section className="panel" style={{ padding: '1rem', maxWidth: 640 }} aria-label="Emparejar con el hub">
           <p style={{ margin: '0 0 8px', fontSize: 13 }}>
             Esta terminal trabaja sola (terminal <strong>{estado.origin_id}</strong>). Para que comparta los datos con otras
@@ -179,9 +181,53 @@ export function ConfigSincronizacion() {
             </form>
           )}
         </section>
-      )}
+      ) : null}
       <ServidorEnEstaPC />
     </div>
+  );
+}
+
+/**
+ * F3 PR3: las cajas emparejadas con el hub, con su último contacto y su versión. Sirve para ver qué caja
+ * está desconectada o desactualizada antes de actualizar el hub (ADR-150 §8) o de cerrar una caja compartida.
+ */
+function CajasDelHub({ esta }: { esta: string }) {
+  const [cajas, setCajas] = useState<CajaDelHub[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    let vivo = true;
+    const leer = () => Promise.resolve().then(() => bridge().sync.terminales())
+      .then((c) => { if (vivo) { setCajas(c); setErr(null); } })
+      .catch((e) => { if (vivo) { setCajas(null); setErr(traducirError(e).mensaje); } });
+    void leer();
+    const t = setInterval(() => { void leer(); }, 30_000);
+    return () => { vivo = false; clearInterval(t); };
+  }, []);
+
+  return (
+    <section className="panel" style={{ padding: '1rem', maxWidth: 640 }} aria-label="Cajas del hub">
+      <h3 style={{ margin: '0 0 8px', fontSize: '1rem', fontWeight: 700 }}>Cajas del hub</h3>
+      {err && <div style={{ fontSize: 13, color: 'var(--ink-3)' }}>{err}</div>}
+      {!err && !cajas && <div style={{ fontSize: 13, opacity: 0.5 }}>Cargando...</div>}
+      {cajas && (
+        <div className="table-wrap">
+          <table aria-label="Cajas del hub">
+            <thead><tr><th>Caja</th><th>Nombre</th><th>Último contacto</th><th>Versión de datos</th></tr></thead>
+            <tbody>
+              {cajas.map((c) => (
+                <tr key={c.origin_id} style={{ opacity: c.revocada_en ? 0.5 : 1 }}>
+                  <td className="num">{c.origin_id}{c.origin_id === esta ? ' (esta caja)' : ''}</td>
+                  <td>{c.nombre}</td>
+                  <td className="text-sm">{c.revocada_en ? 'Revocada' : hora(c.ultimo_contacto ? c.ultimo_contacto * 1000 : null)}</td>
+                  <td className="num">{c.version_esquema ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
 

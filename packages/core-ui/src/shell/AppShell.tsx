@@ -15,6 +15,7 @@ import { PantallaBloqueo } from './PantallaBloqueo';
 import { useIdleLock } from '../hooks/useIdleLock';
 import { useBloqueoInactividad } from '../hooks/useBloqueoInactividad';
 import { bridge } from '../bridge';
+import { IndicadorSync } from './IndicadorSync';
 
 // ADR-076 Tarea 11: "Ahora no" pospone la consulta de depuración por el resto de la
 // sesión (hasta reiniciar la app) — flag a nivel de módulo, no de componente, para que
@@ -312,6 +313,8 @@ export function AppShell(props: Readonly<AppShellProps>) {
           <div className="ml-auto" />
           <div className="sess">
             <span className="chip"><span className="dot" />Caja activa</span>
+            {/* F3 PR3: estado de la sincronización; solo en una caja emparejada (en standalone no dibuja nada). */}
+            <IndicadorSync />
             {session && (
               <span className="chip">{session.nombreCompleto} · {session.rolNombre}</span>
             )}

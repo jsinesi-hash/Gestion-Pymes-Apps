@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { AuthContext } from '../../auth/AuthContext';
 import { configurarBridge } from '../../bridge';
 import { ConfigSincronizacion } from './ConfigSincronizacion';
@@ -62,6 +62,31 @@ describe('ConfigSincronizacion — servidor en esta PC', () => {
     expect(seccion).toHaveTextContent('AA:BB:CC');
     fireEvent.click(screen.getByRole('button', { name: 'Generar código de emparejamiento' }));
     expect(await screen.findByTestId('codigo-hub')).toHaveTextContent('WXYZ-2345');
+  });
+});
+
+describe('ConfigSincronizacion — cajas del hub (F3 PR3)', () => {
+  it('emparejada: lista las cajas con su último contacto y versión, y marca cuál es esta', async () => {
+    const terminales = vi.fn().mockResolvedValue([
+      { origin_id: 'C1', nombre: 'Caja del frente', emparejada_en: 1, revocada_en: null, ultimo_contacto: 1_795_000_000, version_protocolo: 2, version_esquema: 64 },
+      { origin_id: 'C2', nombre: 'Caja 2', emparejada_en: 1, revocada_en: null, ultimo_contacto: 1_795_000_100, version_protocolo: 2, version_esquema: 63 },
+      { origin_id: 'C3', nombre: 'Vieja', emparejada_en: 1, revocada_en: 5, ultimo_contacto: null, version_protocolo: null, version_esquema: null },
+    ]);
+    (globalThis as any).appDePrueba = { sync: { estado: vi.fn().mockResolvedValue(distribuido), terminales } };
+    montar();
+    const tabla = await screen.findByRole('table', { name: 'Cajas del hub' });
+    expect(within(tabla).getByRole('row', { name: /C2/ })).toHaveTextContent('(esta caja)');
+    expect(within(tabla).getByRole('row', { name: /C1/ })).toHaveTextContent('Caja del frente');
+    expect(within(tabla).getByRole('row', { name: /C1/ })).toHaveTextContent('64');
+    expect(within(tabla).getByRole('row', { name: /C3/ })).toHaveTextContent('Revocada');
+  });
+
+  it('sin conexión con el hub lo dice en vez de mostrar una lista vieja', async () => {
+    (globalThis as any).appDePrueba = { sync: { estado: vi.fn().mockResolvedValue(distribuido), terminales: vi.fn().mockRejectedValue(new Error('HUB_INALCANZABLE')) } };
+    montar();
+    const seccion = await screen.findByRole('region', { name: 'Cajas del hub' });
+    expect(await within(seccion).findByText(/No se pudo conectar con el hub/)).toBeInTheDocument();
+    expect(within(seccion).queryByRole('table')).toBeNull();
   });
 });
 
