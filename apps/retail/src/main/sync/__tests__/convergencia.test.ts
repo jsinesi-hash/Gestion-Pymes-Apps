@@ -13,7 +13,9 @@ import {
   type AlmacenHub,
 } from '@core/hub';
 import {
-  cajaAbrirHandler, crearSyncTerminal, getModoTerminal, setModoTerminal, setOriginId,
+  cajaAbrirHandler, cajaAbrirCompartidaHandler, cajaAddMovimientoHandler, cajaCalcularCierreHandler, cajaCerrarHandler,
+  cajaCerrarCompartidaHandler, cajaGetActivaHandler, crearCajaCompartidaTerminal, crearSyncTerminal, escribirParametro,
+  getModoTerminal, leerParametro, modoCaja, setModoTerminal, setOriginId,
   type SyncTerminal,
 } from '@core/main';
 import * as schema from '../../db/schema';
@@ -356,5 +358,54 @@ describe('convergencia de dos terminales de Retail con el hub', () => {
     expect(marca(a, enA.id)).toMatchObject({ activo: true, nombre: 'Truper F3' });
     const [r] = (await syncA.conflictos().listar({ tipo: 'unicidad' })).conflictos.filter((x) => x.fila_id === enB.id);
     expect(r).toMatchObject({ resuelto: 1, resolucion: 'corregido', resuelto_por: 'C2' });
+  });
+
+  it('caja compartida (F3 PR4, ADR-155): un solo turno en el negocio, las dos cajas operan contra él y el cierre suma todo', async () => {
+    const desde = async <T>(origen: string, fn: () => Promise<T>): Promise<T> => {
+      setOriginId(origen);
+      try { return await fn(); } finally { setOriginId('C1'); }
+    };
+    const sincronizar = async () => { for (let v = 0; v < 2; v++) { await syncA.sincronizarAhora(); await syncB.sincronizarAhora(); } };
+    // Para cambiar de modo no puede haber cajas abiertas: se cierran las de los tests anteriores (por terminal).
+    for (const db of [a, b]) {
+      for (const c of db.select().from(schema.caja).where(eq(schema.caja.estado, 'abierta')).all()) {
+        const r = cajaCalcularCierreHandler(db, { caja_id: c.id });
+        cajaCerrarHandler(db, { caja_id: c.id, monto_contado_centavos: r.esperado_efectivo_centavos });
+      }
+    }
+    await sincronizar();
+    escribirParametro(a, 'caja_modo', 'compartida');
+    await sincronizar();
+    expect([modoCaja(a), modoCaja(b), leerParametro(b, 'caja_modo')]).toEqual(['compartida', 'compartida', 'compartida']);
+
+    // A abre el turno; B lo ve como su caja activa y no puede abrir otro (ni acá ni en el hub).
+    const turno = await desde('C1', () => cajaAbrirCompartidaHandler(a, { monto_inicial_centavos: 10_000 }, syncA.cajaCompartida()));
+    await sincronizar();
+    expect(cajaGetActivaHandler(b)?.id).toBe(turno.id);
+    await expect(desde('C2', () => cajaAbrirCompartidaHandler(b, { monto_inicial_centavos: 0 }, syncB.cajaCompartida()))).rejects.toThrow('CAJA_COMPARTIDA_YA_ABIERTA');
+    await expect(syncB.cajaCompartida().reservar('00000000-0000-0000-0000-00000000000b')).rejects.toThrow('CAJA_COMPARTIDA_YA_ABIERTA');
+    expect(await syncB.cajaCompartida().actual()).toMatchObject({ caja_id: turno.id, origin_id: 'C1' });
+
+    // Las dos operan contra el mismo turno; B, además, sin conexión: aporta igual, pero no abre ni cierra.
+    como('C1', () => cajaAddMovimientoHandler(a, { caja_id: turno.id, tipo: 'ingreso', motivo: 'aporte', monto_centavos: 1_000 }));
+    const sinHub = crearCajaCompartidaTerminal(sqliteDe(b), { pedir: async () => { throw new Error('HUB_INALCANZABLE: prueba'); }, cerrar() {} } as never);
+    como('C2', () => cajaAddMovimientoHandler(b, { caja_id: turno.id, tipo: 'ingreso', motivo: 'aporte', monto_centavos: 2_000 }));
+    await expect(desde('C2', () => cajaCerrarCompartidaHandler(b, { caja_id: turno.id, monto_contado_centavos: 0 }, {}, sinHub))).rejects.toThrow('CAJA_COMPARTIDA_SIN_CONEXION');
+    expect(b.select().from(schema.caja).where(eq(schema.caja.id, turno.id)).get()!.estado).toBe('abierta');
+    await sincronizar();
+
+    // El cierre en A suma los movimientos de las dos cajas y libera el turno en el hub.
+    const resumen = cajaCalcularCierreHandler(a, { caja_id: turno.id });
+    expect(resumen.esperado_efectivo_centavos).toBe(13_000);
+    const cerrada = await desde('C1', () => cajaCerrarCompartidaHandler(a, { caja_id: turno.id, monto_contado_centavos: 13_000 }, {}, syncA.cajaCompartida()));
+    expect(cerrada).toMatchObject({ estado: 'cerrada', monto_esperado_centavos: 13_000, diferencia_centavos: 0 });
+    expect(await syncA.cajaCompartida().actual()).toBeNull();
+    await sincronizar();
+    expect(b.select().from(schema.caja).where(eq(schema.caja.id, turno.id)).get()).toMatchObject({ estado: 'cerrada', monto_esperado_centavos: 13_000 });
+    expect(cajaGetActivaHandler(b)).toBeNull();
+
+    // Ahora B puede abrir el turno siguiente.
+    const siguiente = await desde('C2', () => cajaAbrirCompartidaHandler(b, { monto_inicial_centavos: 0 }, syncB.cajaCompartida()));
+    expect(await syncA.cajaCompartida().actual()).toMatchObject({ caja_id: siguiente.id, origin_id: 'C2' });
   });
 });

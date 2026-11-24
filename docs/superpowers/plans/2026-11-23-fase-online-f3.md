@@ -73,7 +73,11 @@ Cada PR: rama propia desde `main`, TDD (rojo → verde), suite completa en serie
 - Se actualiza con el estado que ya expone el cliente de sync (sin consultar al hub más seguido).
 - **Tests:** un caso por estado y la prioridad entre ellos; en standalone el chip no aparece.
 
-### PR4 — Caja compartida: configuración y turno único (ADR-155 §1, §3, §4 y §6)
+### PR4 — Caja compartida: configuración y turno único (ADR-155 §1, §3, §4 y §6) — hecho (2026-11-24)
+
+> **Desvíos:** (1) el esperado **no** pasa a proyectado: §5 dice que la diferencia no se recalcula sola, y un esperado
+> proyectado cambiaría con cada movimiento tardío; queda como foto del cierre, que ya suma todas las cajas. (2) El modo se
+> elige en Configuración → Sincronización («Caja del negocio»), no en una pantalla aparte.
 
 - **Configuración del modo de caja** (Configuración → Caja), con `usuario.administrar`: `por_terminal` / `compartida`. Solo en modo distribuido (§6), solo sin cajas abiertas en todo el negocio, y el cambio exige conexión con el hub. `caja_modo` ya vive en `configuracion_negocio` (F1 PR7).
 - **Hub:** `POST /v1/caja/abrir` y `POST /v1/caja/cerrar`. Una fila en el hub guarda el turno compartido abierto (como `hub_coordinadora`): abrir falla con `CAJA_COMPARTIDA_YA_ABIERTA` si hay otra; cerrar libera solo el turno que corresponde.

@@ -44,6 +44,9 @@ export const RUTAS = {
   conflictos: '/v1/conflictos',
   resolverConflicto: '/v1/conflictos/resolver',
   terminales: '/v1/terminales',
+  cajaAbrir: '/v1/caja/abrir',
+  cajaCerrar: '/v1/caja/cerrar',
+  caja: '/v1/caja',
 } as const;
 
 /** Cabeceras que lleva todo pedido de la terminal. */
@@ -79,4 +82,7 @@ export interface PedidoResolverConflicto { readonly id: number; readonly resoluc
 export interface RespuestaResolverConflicto extends ConHora { readonly conflicto: ConflictoHub }
 /** Las cajas emparejadas, sin credenciales: último contacto y versiones de cada una. */
 export interface RespuestaTerminales extends ConHora { readonly terminales: TerminalHub[] }
+/** F3 PR4 (ADR-155 §4): abrir o cerrar el turno compartido; `GET /v1/caja` devuelve el abierto (o null). */
+export interface PedidoCajaCompartida { readonly caja_id: string }
+export interface RespuestaCaja extends ConHora { readonly caja: { caja_id: string; origin_id: string; abierta_en_ms: number } | null }
 export interface RespuestaError extends Partial<ConHora> { readonly error: string; readonly versiones?: Versiones }

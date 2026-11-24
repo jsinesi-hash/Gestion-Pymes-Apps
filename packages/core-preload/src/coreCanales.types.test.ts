@@ -64,13 +64,15 @@ describe('coreCanales — sync (F2 PR4)', () => {
     await api.sync.conflictos({ pendientes: true });
     await api.sync.resolverConflicto({ id: 3, resolucion: 'recuperado' });
     await api.sync.descartarAlta({ id: 4 });
+    await api.sync.cajaModo();
+    await api.sync.setCajaModo({ modo: 'compartida' });
     await api.sync.terminales();
     expect(invocados).toEqual([
       ['sync:estado'], ['sync:sondear', { url: 'hub.local' }],
       ['sync:emparejar', { url: 'hub.local', codigo: 'ABCD-EFGH', huella: 'AA' }], ['sync:sincronizar'],
       ['sync:desemparejar', { forzar: true }], ['sync:rebajarSnapshot', undefined],
       ['sync:conflictos', { pendientes: true }], ['sync:resolverConflicto', { id: 3, resolucion: 'recuperado' }],
-      ['sync:descartarAlta', { id: 4 }], ['sync:terminales'],
+      ['sync:descartarAlta', { id: 4 }], ['sync:cajaModo'], ['sync:setCajaModo', { modo: 'compartida' }], ['sync:terminales'],
     ]);
   });
 

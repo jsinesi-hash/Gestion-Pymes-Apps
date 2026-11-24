@@ -90,6 +90,13 @@ const CODIGOS: Record<string, Formateador> = {
   CONFLICTO_FILA_INEXISTENTE: msg('La fila del conflicto no está en esta caja. Sincronizá y volvé a intentar.'),
   CONFLICTO_NO_DESCARTABLE: msg('Esta alta no se puede descartar desde acá: corregila a mano en su pantalla (otro nombre o código).'),
   CONFLICTO_DE_OTRA_CAJA: msg('Esa alta está solo en la caja que la dio de alta: descartala o corregila desde esa caja.'),
+  // Caja compartida (F3, ADR-155)
+  CAJA_COMPARTIDA_SIN_CONEXION: msg('Para abrir o cerrar la caja compartida hace falta conexión con el hub. Vender sí se puede sin conexión.'),
+  CAJA_COMPARTIDA_YA_ABIERTA: msg('Ya hay una caja compartida abierta en el negocio: usá esa.'),
+  CAJA_COMPARTIDA_OTRO_TURNO: msg('El hub tiene abierto otro turno de caja compartida. Sincronizá y volvé a intentar.'),
+  CAJA_COMPARTIDA_SOLO_DISTRIBUIDO: msg('La caja compartida solo se puede usar con varias cajas emparejadas con un hub.'),
+  CAJA_MODO_CON_CAJAS_ABIERTAS: msg('Para cambiar el modo de caja no puede haber cajas abiertas en el negocio. Cerralas y volvé a intentar.'),
+  CAJA_MODO_INVALIDO: msg('Ese modo de caja no existe.'),
   SYNC_NO_CONFIGURADO: msg('Esta versión no tiene la sincronización configurada. Avisá a soporte.'),
   HUB_LOCAL_NO_CONFIGURADO: msg('Esta versión no puede instalar el servidor. Avisá a soporte.'),
   HUB_SERVICIO_NO_INSTALADO: msg('El servidor no quedó instalado. Si el sistema pidió permiso de administrador, hay que aceptarlo; si se repite, avisá a soporte.'),

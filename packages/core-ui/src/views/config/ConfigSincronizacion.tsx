@@ -143,6 +143,7 @@ export function ConfigSincronizacion() {
           <div style={ayuda}>«Volver a bajar la base del hub» es la forma de restaurar esta terminal mientras sincroniza.</div>
         </section>
       ) : null}
+      {estado.modo === 'distribuido' && <ModoDeCaja />}
       {estado.modo === 'distribuido' && <CajasDelHub esta={estado.origin_id} />}
       {estado.modo !== 'distribuido' ? (
         <section className="panel" style={{ padding: '1rem', maxWidth: 640 }} aria-label="Emparejar con el hub">
@@ -184,6 +185,70 @@ export function ConfigSincronizacion() {
       ) : null}
       <ServidorEnEstaPC />
     </div>
+  );
+}
+
+/**
+ * F3 PR4 (ADR-155 §1 y §6): el modo de caja del negocio. Por terminal (cada caja su turno) o compartida (un
+ * solo turno abierto en el negocio, al que cobran todas las cajas). Solo con la caja emparejada; el cambio
+ * exige conexión con el hub y que no haya cajas abiertas en el negocio.
+ */
+function ModoDeCaja() {
+  const [modo, setModo] = useState<'por_terminal' | 'compartida' | null>(null);
+  const [elegido, setElegido] = useState<'por_terminal' | 'compartida'>('por_terminal');
+  const [err, setErr] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [ocupado, setOcupado] = useState(false);
+  const [sinDatos, setSinDatos] = useState(false);
+
+  useEffect(() => {
+    let vivo = true;
+    Promise.resolve().then(() => bridge().sync.cajaModo())
+      .then((r) => { if (vivo) { setModo(r.modo); setElegido(r.modo); } })
+      .catch(() => { if (vivo) setSinDatos(true); }); // sin el modo (versión vieja del main): la sección no se ofrece
+    return () => { vivo = false; };
+  }, []);
+
+  if (sinDatos) return null;
+
+  async function guardar() {
+    setErr(null); setMsg(null); setOcupado(true);
+    try {
+      const r = await bridge().sync.setCajaModo({ modo: elegido });
+      setModo(r.modo);
+      setMsg(r.modo === 'compartida'
+        ? 'Listo: el negocio trabaja con una caja compartida. La próxima apertura de caja vale para todas las terminales.'
+        : 'Listo: cada terminal abre y cierra su propia caja.');
+    } catch (e) {
+      setErr(traducirError(e).mensaje);
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  return (
+    <section className="panel" style={{ padding: '1rem', maxWidth: 640 }} aria-label="Caja del negocio">
+      <h3 style={{ margin: '0 0 8px', fontSize: '1rem', fontWeight: 700 }}>Caja del negocio</h3>
+      {msg && <div className="alert-ok" role="status">{msg}</div>}
+      {err && <div className="alert-danger" role="alert">{err}</div>}
+      <div className="field"><label>
+        <input type="radio" name="caja-modo" checked={elegido === 'por_terminal'} onChange={() => setElegido('por_terminal')} />
+        {' '}Una caja por terminal
+      </label>
+        <div style={ayuda}>Cada puesto tiene su cajón: abre, cobra y cierra su propio turno.</div></div>
+      <div className="field"><label>
+        <input type="radio" name="caja-modo" checked={elegido === 'compartida'} onChange={() => setElegido('compartida')} />
+        {' '}Una caja compartida
+      </label>
+        <div style={ayuda}>
+          Un solo cajón para todo el negocio: todas las terminales cobran contra el mismo turno, también sin conexión.
+          Abrirlo y cerrarlo necesita conexión con el hub.
+        </div></div>
+      <button type="button" className="btn-secondary" disabled={ocupado || modo === null || elegido === modo} onClick={() => { void guardar(); }}>
+        Guardar el modo de caja
+      </button>
+      <div style={ayuda}>Para cambiarlo no puede haber cajas abiertas en ninguna terminal.</div>
+    </section>
   );
 }
 

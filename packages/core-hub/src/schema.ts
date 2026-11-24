@@ -95,6 +95,14 @@ export const hub_coordinadora = sqliteTable('hub_coordinadora', {
 });
 
 /** Bloques de correlativos repartidos por serie (ADR-154 §2), p. ej. el SKU de Retail. */
+/** F3 PR4 (ADR-155 §4): el único turno de caja compartida abierto del negocio (una sola fila). */
+export const hub_caja_compartida = sqliteTable('hub_caja_compartida', {
+  id:            integer('id').primaryKey(),
+  caja_id:       text('caja_id').notNull(),
+  origin_id:     text('origin_id').notNull(),
+  abierta_en_ms: integer('abierta_en_ms').notNull(),
+});
+
 export const hub_bloque = sqliteTable('hub_bloque', {
   serie:       text('serie').notNull(),
   desde:       integer('desde').notNull(),

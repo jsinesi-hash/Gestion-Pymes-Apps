@@ -37,7 +37,7 @@ class ErrorHttp extends Error {
 }
 
 /** Errores de dominio del almacén y del emparejamiento que son culpa del pedido, no del hub. */
-const ERRORES_DEL_PEDIDO = /^(HUB_NO_VACIO|TABLA_NO_SINCRONIZA|COLUMNA_DESCONOCIDA|CAMBIO_INVALIDO|LOTE_FK_ROTA|BLOQUE_INVALIDO|CODIGO_INVALIDO|CODIGO_USADO|CODIGO_VENCIDO|CONFLICTO_INEXISTENTE|CONFLICTO_YA_RESUELTO|RESOLUCION_NO_VALIDA|RESOLUCION_SIN_AUTOR)/;
+const ERRORES_DEL_PEDIDO = /^(HUB_NO_VACIO|TABLA_NO_SINCRONIZA|COLUMNA_DESCONOCIDA|CAMBIO_INVALIDO|LOTE_FK_ROTA|BLOQUE_INVALIDO|CODIGO_INVALIDO|CODIGO_USADO|CODIGO_VENCIDO|CONFLICTO_INEXISTENTE|CONFLICTO_YA_RESUELTO|RESOLUCION_NO_VALIDA|RESOLUCION_SIN_AUTOR|CAJA_INVALIDA)/;
 const TIPOS_CONFLICTO = new Set(['lww', 'unicidad', 'integridad']);
 
 export function crearServidorHub(opts: OpcionesServidor): https.Server {
@@ -176,6 +176,20 @@ export function crearServidorHub(opts: OpcionesServidor): https.Server {
       registrar(`conflicto ${conflicto.id} resuelto (${conflicto.resolucion}) desde ${origen}`);
       return responder(res, 200, { conflicto });
     }
+    // F3 PR4 (ADR-155 §4): el único turno de caja compartida del negocio.
+    if (ruta === `POST ${RUTAS.cajaAbrir}`) {
+      const p = (await leerCuerpo(req)) as { caja_id?: unknown };
+      const r = opts.coordinacion.abrirCajaCompartida(String(p.caja_id ?? ''), origen);
+      if (r.abierta) registrar(`caja compartida ${r.caja_id} abierta por ${origen}`);
+      return responder(res, 200, { ...r });
+    }
+    if (ruta === `POST ${RUTAS.cajaCerrar}`) {
+      const p = (await leerCuerpo(req)) as { caja_id?: unknown };
+      const r = opts.coordinacion.cerrarCajaCompartida(String(p.caja_id ?? ''));
+      if (r.cerrada) registrar(`caja compartida ${String(p.caja_id)} cerrada por ${origen}`);
+      return responder(res, 200, { ...r });
+    }
+    if (ruta === `GET ${RUTAS.caja}`) return responder(res, 200, { caja: opts.coordinacion.cajaCompartida() });
     if (ruta === `GET ${RUTAS.terminales}`) {
       return responder(res, 200, { terminales: opts.terminales.listar() });
     }

@@ -12,6 +12,7 @@ import { guardarConfigTerminal } from '../terminal';
 import { bajarSnapshot, cargarSnapshot, escribirCursor, filasDeSemilla, sondearHub, subirSemilla } from './arranque';
 import { crearClienteSync, cuerpo, tablasDelCliente, type CambioAplicado, type ClienteSync, type DbSync, type EstadoSync } from './cliente';
 import { crearConflictosTerminal, type ConflictosTerminal } from './conflictos';
+import { crearCajaCompartidaTerminal, type CajaCompartidaTerminal } from './caja-compartida';
 import {
   crearCoordinacionTerminal, disponiblesDeSerie, liberarSeries, prepararSeriesDistribuido,
   type CoordinacionTerminal, type SerieBloques,
@@ -79,6 +80,8 @@ export interface SyncTerminal {
   estado(): EstadoTerminalSync;
   /** F3 PR1 (ADR-159): conflictos del hub y cajas emparejadas. Exigen la terminal emparejada y en marcha. */
   conflictos(): ConflictosTerminal;
+  /** F3 PR4 (ADR-155 §4): el turno de caja compartida del hub. Exige la terminal emparejada y en marcha. */
+  cajaCompartida(): CajaCompartidaTerminal;
 }
 
 export function crearSyncTerminal(db: DbSync, o: OpcionesSyncTerminal, deps: DepsSyncTerminal): SyncTerminal {
@@ -92,7 +95,8 @@ export function crearSyncTerminal(db: DbSync, o: OpcionesSyncTerminal, deps: Dep
   const versionesApp = () => (versiones ??= { protocolo: PROTOCOLO_VERSION, esquema: versionEsquema(o.migrationsFolder) });
 
   let activo: {
-    cliente: ClienteSync; coordinacion: CoordinacionTerminal; conflictos: ConflictosTerminal; transporte: TransporteHub; tareas: { detener(): void };
+    cliente: ClienteSync; coordinacion: CoordinacionTerminal; conflictos: ConflictosTerminal; caja: CajaCompartidaTerminal;
+    transporte: TransporteHub; tareas: { detener(): void };
   } | null = null;
 
   const pendientes = () => (sqlite.prepare('SELECT count(*) AS n FROM "sync_outbox" WHERE "enviado_en" IS NULL').get() as { n: number }).n;
@@ -134,7 +138,7 @@ export function crearSyncTerminal(db: DbSync, o: OpcionesSyncTerminal, deps: Dep
     const coordinacion = crearCoordinacionTerminal(sqlite, transporte, series);
     const conflictos = crearConflictosTerminal(sqlite, transporte, tablasDelCliente(o.schema, o.registro));
     activo = {
-      cliente, coordinacion, conflictos, transporte,
+      cliente, coordinacion, conflictos, caja: crearCajaCompartidaTerminal(sqlite, transporte), transporte,
       tareas: programar(cliente, { coordinacion, ...(o.despuesDelPull ? { despuesDelPull: o.despuesDelPull } : {}) }),
     };
     return true;
@@ -289,6 +293,10 @@ export function crearSyncTerminal(db: DbSync, o: OpcionesSyncTerminal, deps: Dep
     conflictos() {
       if (!activo) throw new Error('TERMINAL_NO_EMPAREJADA');
       return activo.conflictos;
+    },
+    cajaCompartida() {
+      if (!activo) throw new Error('TERMINAL_NO_EMPAREJADA');
+      return activo.caja;
     },
   };
 }

@@ -202,6 +202,10 @@ export function coreCanales(invoke: Invoke) {
       // F3 PR2: descartar en esta caja una alta repetida (baja lógica y libera su valor único).
       descartarAlta: (p: { id: number }): Promise<void> => invoke('sync:descartarAlta', p),
       terminales: (): Promise<CajaDelHub[]> => invoke('sync:terminales'),
+      // F3 PR4 (ADR-155 §1): modo de caja del negocio (`disponible` = la caja está emparejada).
+      cajaModo: (): Promise<{ modo: 'por_terminal' | 'compartida'; disponible: boolean }> => invoke('sync:cajaModo'),
+      setCajaModo: (p: { modo: 'por_terminal' | 'compartida' }): Promise<{ modo: 'por_terminal' | 'compartida'; disponible: boolean }> =>
+        invoke('sync:setCajaModo', p),
     },
     // «Usar esta PC como servidor» (F2 PR6).
     hubLocal: {

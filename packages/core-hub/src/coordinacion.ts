@@ -13,6 +13,12 @@ export interface PermisoCoordinadora {
 }
 
 export interface BloqueAsignado { readonly serie: string; readonly desde: number; readonly hasta: number }
+
+/** F3 PR4 (ADR-155 §3 y §4): resultado de abrir el turno compartido (si no abrió, el que ya está abierto). */
+export interface AperturaCajaCompartida { readonly abierta: boolean; readonly caja_id: string; readonly origin_id: string }
+/** `cerrada: false` = hay otro turno abierto (`caja_id`); sin turno abierto no hay nada que cerrar. */
+export interface CierreCajaCompartida { readonly cerrada: boolean; readonly caja_id: string | null }
+export interface TurnoCompartido { readonly caja_id: string; readonly origin_id: string; readonly abierta_en_ms: number }
 export interface BloqueHub extends BloqueAsignado { readonly origin_id: string; readonly asignado_en: number }
 
 export interface CoordinacionHub {
@@ -26,10 +32,18 @@ export interface CoordinacionHub {
    */
   asignarBloque(serie: string, origen: string, p: { minimo: number; tamano: number }, ahoraMs?: number): BloqueAsignado;
   bloques(): BloqueHub[];
+  /**
+   * F3 PR4 (ADR-155 §4): abrir y cerrar un turno compartido pasa por el hub, para que no haya dos abiertos.
+   * Abrir el mismo turno otra vez (un reintento tras un corte) es idempotente.
+   */
+  abrirCajaCompartida(cajaId: string, origen: string, ahoraMs?: number): AperturaCajaCompartida;
+  cerrarCajaCompartida(cajaId: string): CierreCajaCompartida;
+  cajaCompartida(): TurnoCompartido | null;
 }
 
 export const VIGENCIA_COORDINADORA_MS = 120_000;
 const SERIE_VALIDA = /^[a-z][a-z0-9_]{0,31}$/;
+const CAJA_VALIDA = /^[A-Za-z0-9-]{1,64}$/;
 const TAMANO_MAXIMO = 100_000;
 
 export function abrirCoordinacion(sqlite: BetterSqlite3.Database, o: { vigenciaMs?: number } = {}): CoordinacionHub {
@@ -59,7 +73,30 @@ export function abrirCoordinacion(sqlite: BetterSqlite3.Database, o: { vigenciaM
     return { serie, desde, hasta };
   });
 
+  const stTurno = sqlite.prepare('SELECT caja_id, origin_id, abierta_en_ms FROM hub_caja_compartida WHERE id = 1');
+  const abrirTurno = sqlite.transaction((cajaId: string, origen: string, ahora: number): AperturaCajaCompartida => {
+    const t = stTurno.get() as TurnoCompartido | undefined;
+    if (t) return { abierta: t.caja_id === cajaId, caja_id: t.caja_id, origin_id: t.origin_id };
+    sqlite.prepare('INSERT INTO hub_caja_compartida (id, caja_id, origin_id, abierta_en_ms) VALUES (1, ?, ?, ?)').run(cajaId, origen, ahora);
+    return { abierta: true, caja_id: cajaId, origin_id: origen };
+  });
+  const cerrarTurno = sqlite.transaction((cajaId: string): CierreCajaCompartida => {
+    const t = stTurno.get() as TurnoCompartido | undefined;
+    if (t && t.caja_id !== cajaId) return { cerrada: false, caja_id: t.caja_id };
+    sqlite.prepare('DELETE FROM hub_caja_compartida WHERE id = 1').run();
+    return { cerrada: true, caja_id: null };
+  });
+
   return {
+    abrirCajaCompartida(cajaId, origen, ahoraMs = Date.now()) {
+      if (!CAJA_VALIDA.test(cajaId)) throw new Error('CAJA_INVALIDA');
+      return abrirTurno(cajaId, origen, ahoraMs);
+    },
+    cerrarCajaCompartida(cajaId) {
+      if (!CAJA_VALIDA.test(cajaId)) throw new Error('CAJA_INVALIDA');
+      return cerrarTurno(cajaId);
+    },
+    cajaCompartida: () => (stTurno.get() as TurnoCompartido | undefined) ?? null,
     pedirCoordinadora: (origen, ahoraMs = Date.now()) => pedir(origen, ahoraMs),
     soltarCoordinadora(origen) {
       sqlite.prepare('DELETE FROM hub_coordinadora WHERE id = 1 AND origin_id = ?').run(origen);
