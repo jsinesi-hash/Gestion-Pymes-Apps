@@ -13,6 +13,7 @@ import { abrirCoordinacion } from './coordinacion';
 import { generarCertificado, huellaDe } from './certificado';
 import { crearServidorHub } from './servidor';
 import { PROTOCOLO_VERSION, versionEsquema } from './protocolo';
+import { listarRespaldos, respaldarHub, respaldoVencido, restaurarRespaldo } from './respaldo';
 import { spawnSync } from 'node:child_process';
 import {
   definicionServicio, escribirArchivoServicio, prepararServicio,
@@ -138,6 +139,11 @@ function fecha(s: number | null): string {
  * - `huella`: muestra la huella del certificado, para confirmarla al emparejar.
  * - `instalar-servicio [--puerto N]` / `desinstalar-servicio`: registra o quita el hub como servicio del
  *   sistema operativo (F2 PR6). Se corre desde una consola de administrador; la app lo hace con elevación.
+ * - `backup`: copia la base del hub en `<carpeta>/backups` (F3 PR6). `iniciar` también lo hace solo, una vez
+ *   por día, y guarda las últimas copias.
+ * - `backups`: lista las copias.
+ * - `restaurar-backup <archivo> [--puerto N]`: restaura una copia con el hub detenido; antes guarda la base
+ *   que pisa. Después hay que volver a iniciar el hub.
  */
 export async function ejecutarComandoHub(argv: readonly string[], o: OpcionesHub): Promise<HubEnMarcha | undefined> {
   const escribir = o.escribir ?? ((l: string) => console.log(l));
@@ -155,11 +161,51 @@ export async function ejecutarComandoHub(argv: readonly string[], o: OpcionesHub
     escribir(`[hub] ${o.nombre} escuchando en https://${host}:${real} (protocolo ${versiones.protocolo}, esquema ${versiones.esquema})`);
     escribir(`[hub] carpeta de datos: ${o.carpeta}`);
     escribir(`[hub] huella del certificado: ${tls.huella}`);
+    // F3 PR6: una copia por día de la base del hub (al arrancar si toca, y se revisa cada hora).
+    let respaldando = false;
+    const respaldarSiToca = async () => {
+      if (respaldando || !respaldoVencido(o.carpeta)) return;
+      respaldando = true;
+      try {
+        escribir(`[hub] backup: ${await respaldarHub(sqlite, o.carpeta)}`);
+      } catch (e) {
+        escribir(`[hub] no se pudo hacer el backup: ${e instanceof Error ? e.message : String(e)}`);
+      } finally {
+        respaldando = false;
+      }
+    };
+    void respaldarSiToca();
+    const reloj = setInterval(() => { void respaldarSiToca(); }, 3_600_000);
+    reloj.unref();
     return {
       puerto: real,
       huella: tls.huella,
-      cerrar: () => new Promise<void>((r) => server.close(() => { sqlite.close(); r(); })),
+      cerrar: () => new Promise<void>((r) => {
+        clearInterval(reloj);
+        server.close(async () => {
+          // Si justo estaba copiando, se espera a que termine antes de cerrar la base.
+          while (respaldando) await new Promise((x) => setTimeout(x, 20));
+          sqlite.close();
+          r();
+        });
+      }),
     };
+  }
+
+  if (comando === 'restaurar-backup') {
+    const archivo = resto[0];
+    if (!archivo || archivo.startsWith('--')) throw new Error('FALTA_ARCHIVO');
+    const previa = await restaurarRespaldo(o.carpeta, archivo, { puerto: Number(opcion(resto, 'puerto') ?? PUERTO_POR_DEFECTO) });
+    escribir(`Backup restaurado: ${archivo}.`);
+    if (previa) escribir(`La base anterior quedó en ${previa}.`);
+    escribir('Volvé a iniciar el hub. Las cajas siguen desde donde quedó la copia: lo que hayan subido después, lo vuelven a subir si todavía lo tienen.');
+    return undefined;
+  }
+  if (comando === 'backups') {
+    const lista = listarRespaldos(o.carpeta);
+    if (lista.length === 0) escribir('Sin copias del hub.');
+    for (const r of lista) escribir(`${path.basename(r.archivo)}	${(r.bytes / 1024).toFixed(0)} KB	${r.archivo}`);
+    return undefined;
   }
 
   const { sqlite, terminales, coordinacion } = abrirBase(o);
@@ -181,6 +227,8 @@ export async function ejecutarComandoHub(argv: readonly string[], o: OpcionesHub
       escribir(`Terminal ${origin} revocada.`);
     } else if (comando === 'huella') {
       escribir(certificado(o).huella);
+    } else if (comando === 'backup') {
+      escribir(`Copia del hub: ${await respaldarHub(sqlite, o.carpeta)}`);
     } else if (comando === 'instalar-servicio' || comando === 'desinstalar-servicio') {
       const accion = comando === 'instalar-servicio' ? 'instalar' : 'desinstalar';
       servicio(o, accion, Number(opcion(resto, 'puerto') ?? PUERTO_POR_DEFECTO));

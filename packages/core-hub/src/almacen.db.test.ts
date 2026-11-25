@@ -204,6 +204,13 @@ describe('almacén del hub', () => {
     expect(hub.listarConflictos({ pendientes: true }).conflictos.map((c) => c.id)).toEqual([unicidad!.id]);
   });
 
+  it('convivencia (F3 PR6): una caja de la versión anterior sube filas sin las columnas nuevas y el hub usa su valor por defecto', () => {
+    // `activo` hace de columna nueva con DEFAULT (ADR-042: solo migraciones aditivas desde que hay hub).
+    const vieja = { tabla: 'marca', fila: { id: 'm9', nombre: 'Vieja', version: 1, origin_id: 'C1', sync_state: 'pending', updated_at: 100 } };
+    expect(hub.aplicarLote('C1', [vieja])[0]).toMatchObject({ estado: 'aplicado' });
+    expect(fila('marca', 'm9')).toMatchObject({ nombre: 'Vieja', activo: 1 });
+  });
+
   it('rechaza el lote entero si trae una tabla que no sincroniza o una columna que el hub no conoce', () => {
     expect(() => hub.aplicarLote('C1', [{ tabla: 'nota_local', fila: { id: 'n1', texto: 'x', version: 1, updated_at: 1 } }])).toThrow('TABLA_NO_SINCRONIZA: nota_local');
     expect(() => hub.aplicarLote('C1', [marca('m1', 'X', 1, 1, { color: 'rojo' })])).toThrow('COLUMNA_DESCONOCIDA: marca.color');

@@ -54,6 +54,23 @@ beforeEach(() => {
   setupFerreteria();
 });
 
+describe('ConfigBackupRestore — modo distribuido (F3 PR6)', () => {
+  it('explica que el backup completo del negocio es el del hub', async () => {
+    (window as any).ferreteria.sync = { estado: vi.fn().mockResolvedValue({ modo: 'distribuido', origin_id: 'C2' }) };
+    renderView();
+    const nota = await screen.findByRole('note', { name: 'Backup del negocio' });
+    expect(nota).toHaveTextContent(/backup completo del negocio lo hace el hub/);
+    expect(screen.queryByRole('button', { name: 'Restaurar desde archivo…' })).toBeNull();
+  });
+
+  it('en standalone no aparece', async () => {
+    (window as any).ferreteria.sync = { estado: vi.fn().mockResolvedValue({ modo: 'standalone', origin_id: 'C1' }) };
+    renderView();
+    await waitFor(() => expect(mockGetParam).toHaveBeenCalledTimes(7));
+    expect(screen.queryByRole('note', { name: 'Backup del negocio' })).toBeNull();
+  });
+});
+
 describe('ConfigBackupRestore — estado inicial', () => {
   it('renderiza encabezado y botones de acción', async () => {
     renderView();
