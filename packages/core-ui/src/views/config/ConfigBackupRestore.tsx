@@ -150,6 +150,15 @@ export function ConfigBackupRestore() {
     <div style={{ maxWidth: 860 }}>
       <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Backups</h2>
 
+      {/* F3 PR6 (análisis §3.8): con hub, la copia completa de los datos del negocio es la del hub. */}
+      {distribuido && (
+        <div className="alert-warn" role="note" aria-label="Backup del negocio" style={{ marginBottom: 20 }}>
+          Esta caja sincroniza con un hub: el backup completo del negocio lo hace el hub, solo, una vez por día, en la
+          PC donde está instalado (carpeta de datos del hub, subcarpeta <code>backups</code>). Los backups de esta pantalla
+          guardan solo esta caja. Para restaurarla, volvé a bajar la base desde Sincronización.
+        </div>
+      )}
+
       {/* Parámetros */}
       <section style={{ marginBottom: 32, padding: '16px 20px', border: '1px solid var(--line)', borderRadius: 10, background: 'var(--surface)' }}>
         <h3 style={{ fontSize: 11, fontWeight: 700, marginBottom: 14, textTransform: 'uppercase', letterSpacing: '.1em', color: 'var(--ink-3)' }}>Configuración</h3>

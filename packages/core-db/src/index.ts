@@ -8,6 +8,7 @@ export { createDb, runMigrations } from './factory';
 export { CAMPOS_SYNC } from './__boundary__/sync-fields';
 export { columnasQueNoViajan, combinarRegistros, registroSyncCore, verificarRegistroSync } from './__boundary__/registro-sync';
 export { columnasRealesNoDeclaradas } from './__boundary__/columnas-reales';
+export { problemasDeConvivencia } from './__boundary__/migraciones-aditivas';
 export type { EntradaSync, RegistroSync, TipoSync } from './__boundary__/registro-sync';
 export { columnasBooleanas, ddlPostgres, traducirIndicePostgres } from './__boundary__/ddl-postgres';
 export {

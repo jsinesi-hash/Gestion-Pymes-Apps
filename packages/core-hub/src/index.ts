@@ -15,6 +15,8 @@ export { crearServidorHub } from './servidor';
 export type { OpcionesServidor } from './servidor';
 export * from './protocolo';
 export { ejecutarComandoHub, carpetaDatosPorDefecto, generarCodigoHub, huellaGuardada, PUERTO_POR_DEFECTO } from './arranque';
+export { listarRespaldos, respaldarHub, respaldoVencido, restaurarRespaldo, RETENER_POR_DEFECTO } from './respaldo';
+export type { RespaldoHub } from './respaldo';
 export { definicionServicio, prepararServicio, escribirArchivoServicio } from './servicio';
 export type {
   DatosServicio, DefinicionServicio, ServicioPreparado, ArchivoServicio, ComandoServicio, PlataformaServicio,

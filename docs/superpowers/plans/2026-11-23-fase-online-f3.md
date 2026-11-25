@@ -98,7 +98,11 @@ Cada PR: rama propia desde `main`, TDD (rojo → verde), suite completa en serie
 - **Arqueos:** el turno muestra «con movimientos posteriores al cierre» y su detalle los marca.
 - **Tests:** un movimiento sin conexión que llega después del cierre queda en el turno, genera un solo aviso y no cambia la diferencia; el aviso de cajas sin contacto.
 
-### PR6 — Backup del hub y convivencia de versiones (análisis §3.8 y §3.9)
+### PR6 — Backup del hub y convivencia de versiones (análisis §3.8 y §3.9) — hecho (2026-11-25)
+
+> **Desvío:** en vez de un test con una terminal N-1 armada a mano (su código sería el de hoy), la convivencia queda
+> garantizada por una baranda: toda migración desde la fase con hub es aditiva (`problemasDeConvivencia`), más el test
+> del hub con una fila sin la columna nueva y el de la caja que ya ignoraba lo que no conoce.
 
 - **Backup del hub:** copia periódica de su base con la API de backup de SQLite, en su carpeta de datos (`backups/`), con retención de N copias (parámetro con valor por defecto). Comandos del hub `backup` y `restaurar-backup <archivo>` (este último con el servicio detenido; deja una copia de la base actual antes de pisarla). En modo distribuido la pantalla de Backup de la caja lo explica: el backup completo está en el hub.
 - **Convivencia de versiones:** test de contrato con un hub de la versión N y una terminal N-1 (migraciones reales de esta versión menos la última): sincronizan, y una terminal N+1 queda rechazada con el aviso y sigue vendiendo. Si aparece una migración no aditiva, se documenta como regla en ADR-042.
