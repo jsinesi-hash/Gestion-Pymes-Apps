@@ -88,7 +88,10 @@ Cada PR: rama propia desde `main`, TDD (rojo → verde), suite completa en serie
 - **El esperado pasa a proyectado** (§3): `caja.monto_esperado_centavos` se declara proyectada y el pull la recalcula desde `movimiento_caja` de todas las terminales. En `por_terminal` el resultado es el mismo de hoy, porque cada turno tiene un solo escritor.
 - **Tests:** dos terminales, una abre y la otra ve el turno; la segunda no puede abrir otro; las dos venden contra el mismo turno y el esperado suma las dos; sin conexión se vende pero no se abre ni se cierra; `por_terminal` sin cambios.
 
-### PR5 — Caja compartida: cierre y movimientos tardíos (ADR-155 §4 y §5)
+### PR5 — Caja compartida: cierre y movimientos tardíos (ADR-155 §4 y §5) — hecho (2026-11-24)
+
+> **Precisión:** un movimiento tardío se detecta comparando el esperado de hoy con la foto del cierre (además de la
+> fecha): así se ve también el hecho sin conexión antes del cierre que llegó después. Elaborados no tiene avisos.
 
 - **Al cerrar**, la pantalla avisa qué cajas no se comunican con el hub desde hace más de unos segundos (`/v1/terminales`): sus movimientos todavía no llegaron. Cerrar igual es decisión de quien cierra.
 - **Movimientos que llegan después del cierre:** se aceptan y quedan en ese turno. Se detectan por comparación (movimiento con `fecha` posterior a `fecha_cierre`, o recibido después del cierre), sin columna nueva. La coordinadora avisa una sola vez por movimiento al Supervisor (`dedupe_clave`, como las alertas de stock). La diferencia del arqueo **no** se recalcula.

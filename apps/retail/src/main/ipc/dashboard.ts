@@ -4,7 +4,7 @@ import { eq, and, desc, gte, lte, sql, isNull } from 'drizzle-orm';
 import * as schema from '../db/schema';
 import { requirePermission } from '@core/main';
 import { productosBajoMinimo } from '../agenda/bajo-minimo';
-import { leerParametroNumero } from '@core/main';
+import { leerParametroNumero, movimientosTardiosDe } from '@core/main';
 
 /** ADR-150 §7: las líneas que reemplazó una retoma quedan con lápida y no cuentan. */
 const vdViva = () => isNull(schema.venta_detalle.deleted_at);
@@ -42,6 +42,8 @@ export type DashboardStock = {
 // ADR-157: montos en centavos.
 export type ArqueoResumen = {
   caja_id: string; usuario_nombre: string; fecha_cierre: Date; diferencia_centavos: number;
+  /** F3 PR5 (ADR-155 §5): llegaron movimientos después del cierre (la diferencia no se recalculó). */
+  posterior_al_cierre: boolean;
 };
 
 export type DashboardCaja = {
@@ -257,6 +259,7 @@ export function dashboardCajaHandler(db: Db): DashboardCaja {
       usuario_nombre: r.usuario_nombre,
       fecha_cierre:   r.fecha_cierre as Date,
       diferencia_centavos: r.diferencia_centavos ?? 0,
+      posterior_al_cierre: movimientosTardiosDe(db as never, db.select().from(schema.caja).where(eq(schema.caja.id, r.caja_id)).get()!) !== null,
     }));
 
   return {

@@ -14,6 +14,13 @@ function ArqueoRow({ arqueo, umbral }: { arqueo: ArqueoResumen; umbral: number }
         <span className="text-muted text-xs" style={{ marginLeft: '0.4rem' }}>
           {new Date(arqueo.fecha_cierre).toLocaleDateString('es-AR')}
         </span>
+        {/* F3 PR5 (ADR-155 §5): llegaron movimientos después del cierre; la diferencia no se recalculó. */}
+        {arqueo.posterior_al_cierre && (
+          <span data-testid={`arqueo-tardio-${arqueo.caja_id}`} className="badge-warn" style={{ marginLeft: '0.4rem', padding: '1px 8px' }}
+            title="Llegaron movimientos de otra caja después del cierre. La diferencia del arqueo no se recalculó.">
+            con movimientos posteriores
+          </span>
+        )}
       </span>
       <span data-testid={`arqueo-diferencia-${arqueo.caja_id}`}
         className="sv num" style={{ color }}>

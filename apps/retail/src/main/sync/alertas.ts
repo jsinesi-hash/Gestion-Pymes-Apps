@@ -3,9 +3,12 @@
 // (ADR-152): corre solo en la terminal coordinadora, después de cada pull, y avisa una vez por producto o
 // cliente y por día (dedupe), a quien tiene el permiso para corregirlo (ADR-146): `stock.ajustar` para el
 // stock (se corrige con una entrada o un conteo) y `ctacte.autorizar_exceso` para el crédito.
+// F3 PR5 (ADR-155 §5): también los movimientos que llegan a un turno de caja ya cerrado (caja compartida con
+// una terminal que estaba sin conexión), a quien autoriza diferencias de caja; uno por novedad.
 import { and, eq, gt, lt, sql } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { nombreCompletoCliente } from '@ferreteria/shared';
+import { cajasConMovimientosTardios } from '@core/main';
 import * as schema from '../db/schema';
 import { despacharAviso, insertarAvisos, type ComandoAviso } from '../agenda/aviso-servicio';
 
@@ -38,7 +41,24 @@ function comandos(db: Db, ahora: Date): ComandoAviso[] {
     ))
     .all();
 
+  const tardios = cajasConMovimientosTardios(db as never, ahora);
+  const hora = (d: Date) => d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+
   return [
+    ...tardios.map((t): ComandoAviso => ({
+      origen_tipo: 'caja_movimiento_tardio',
+      origen_id: t.caja_id,
+      titulo: 'Movimientos después del cierre de caja',
+      cuerpo: `El turno de caja cerrado el ${hora(t.fecha_cierre)} recibió movimientos después del cierre (de una caja que estaba sin conexión). `
+        + `Efectivo esperado al cierre: $${t.esperado_cierre_centavos / 100}; con lo que llegó después: $${t.esperado_actual_centavos / 100}. `
+        + 'La diferencia del arqueo no se recalculó.',
+      // El payload es una foto para mostrar: en pesos, como el resto de los avisos.
+      datos: { caja_id: t.caja_id, esperado_cierre: t.esperado_cierre_centavos / 100, esperado_actual: t.esperado_actual_centavos / 100, posteriores: t.posteriores },
+      destinatario: { tipo: 'permiso', permiso: 'caja.autorizar_diferencia' },
+      severidad: 'alerta',
+      // Una por novedad: otro movimiento tardío cambia el esperado o la cuenta y vuelve a avisar.
+      dedupe_clave: `caja_movimiento_tardio:${t.caja_id}:${t.esperado_actual_centavos}:${t.posteriores}`,
+    })),
     ...stock.map((p): ComandoAviso => ({
       origen_tipo: 'stock_negativo',
       origen_id: p.id,

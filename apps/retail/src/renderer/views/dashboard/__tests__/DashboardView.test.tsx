@@ -109,7 +109,10 @@ const CAJA_SIN_ACTIVA = {
 const CAJA_CON_ARQUEO = {
   caja_activa: { id: 'c1', fecha_apertura: new Date(), monto_inicial_centavos: 100000 },
   ingresos_dia_centavos: 500000, egresos_dia_centavos: 20000, efectivo_esperado_centavos: 580000,
-  arqueos_recientes: [{ caja_id: 'c0', usuario_nombre: 'Ana García', fecha_cierre: new Date(), diferencia_centavos: 50000 }],
+  arqueos_recientes: [
+    { caja_id: 'c0', usuario_nombre: 'Ana García', fecha_cierre: new Date(), diferencia_centavos: 50000, posterior_al_cierre: false },
+    { caja_id: 'c9', usuario_nombre: 'Caja compartida', fecha_cierre: new Date(), diferencia_centavos: 0, posterior_al_cierre: true },
+  ],
   umbral_diferencia_caja_centavos: 5000000,
 };
 
@@ -135,5 +138,8 @@ describe('CajaPanel', () => {
     const badge = screen.getByTestId('arqueo-diferencia-c0');
     expect(badge).toBeInTheDocument();
     expect(badge.textContent).toContain('500');
+    // F3 PR5: solo el turno con movimientos posteriores al cierre lleva la marca.
+    expect(screen.queryByTestId('arqueo-tardio-c0')).toBeNull();
+    expect(screen.getByTestId('arqueo-tardio-c9')).toHaveAttribute('title', expect.stringMatching(/después del cierre/));
   });
 });

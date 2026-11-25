@@ -7,7 +7,8 @@ import { categoriaCreateHandler } from '../../ipc/categoria';
 import { productoCreateHandler } from '../../ipc/producto';
 import { stockEntradaHandler } from '../../ipc/stock';
 import { ventaConfirmarHandler } from '../../ipc/venta';
-import { cajaAbrirHandler, clienteUpsertHandler } from '@core/main';
+import { cajaAbrirHandler, cajaAddMovimientoHandler, cajaCerrarHandler, clienteUpsertHandler } from '@core/main';
+import { dashboardCajaHandler } from '../../ipc/dashboard';
 import { alertasDistribuido } from '../alertas';
 
 // ADR-153 §4 y §5 (F2 PR5): en modo distribuido el stock consolidado puede quedar negativo y un cliente
@@ -98,5 +99,41 @@ describe('alertas del modo distribuido', () => {
       descuento_global: 0, subtotal_centavos: 100_000, importe_iva_centavos: 17_355, total_centavos: 100_000, ajuste_redondeo_centavos: 0,
       pagos: [{ medio_pago: 'efectivo', monto_centavos: 100_000 }],
     })).toThrow('STOCK_INSUFICIENTE');
+  });
+
+  // F3 PR5 (ADR-155 §5): un movimiento de otra caja que llega después del cierre del turno compartido queda en
+  // ese turno, avisa una sola vez a quien autoriza diferencias de caja y no recalcula la diferencia del arqueo.
+  it('movimiento posterior al cierre: un aviso por novedad, sin tocar la diferencia, y el arqueo marcado', async () => {
+    const caja = cajaAbrirHandler(db, { monto_inicial_centavos: 10_000 });
+    cajaAddMovimientoHandler(db, { caja_id: caja.id, tipo: 'ingreso', motivo: 'aporte', monto_centavos: 1_000 });
+    cajaCerrarHandler(db, { caja_id: caja.id, monto_contado_centavos: 11_000 });
+    await alertasDistribuido(db);
+    expect(avisos(db, 'caja_movimiento_tardio')).toEqual([]); // un cierre normal no avisa
+    expect(dashboardCajaHandler(db).arqueos_recientes[0]).toMatchObject({ caja_id: caja.id, posterior_al_cierre: false });
+
+    // Llega por sync un aporte de otra caja hecho sin conexión ANTES del cierre (fecha anterior): igual es tardío.
+    const cerrada = db.select().from(schema.caja).where(eq(schema.caja.id, caja.id)).get()!;
+    const tardio = (id: string, fecha: Date, monto: number) => db.insert(schema.movimiento_caja).values({
+      id, caja_id: caja.id, tipo: 'ingreso', motivo: 'aporte', monto_centavos: monto, forma_pago: 'efectivo',
+      referencia_tipo: 'manual', referencia_id: id, usuario_id: cerrada.usuario_id, fecha, observaciones: null,
+      version: 1, origin_id: 'C2', sync_state: 'synced', updated_at: fecha,
+    }).run();
+    tardio('mov-tardio-1', new Date(cerrada.fecha_cierre!.getTime() - 60_000), 2_500);
+    await alertasDistribuido(db);
+    const filas = avisos(db, 'caja_movimiento_tardio');
+    expect(filas.length).toBeGreaterThan(0);
+    expect(filas.every((a) => a.origen_id === caja.id)).toBe(true);
+    expect(filas.map((a) => usuarioDe(db, a.destinatario_usuario_id!))).toEqual(['admin']); // el operador no autoriza diferencias
+    expect(JSON.parse(filas[0]!.payload)).toMatchObject({ datos: { caja_id: caja.id, esperado_cierre: 110, esperado_actual: 135 } });
+    // La diferencia del arqueo no cambió sola.
+    expect(db.select().from(schema.caja).where(eq(schema.caja.id, caja.id)).get()).toMatchObject({ monto_esperado_centavos: 11_000, diferencia_centavos: 0 });
+    expect(dashboardCajaHandler(db).arqueos_recientes[0]).toMatchObject({ caja_id: caja.id, posterior_al_cierre: true });
+
+    // Sin novedades, no repite; otro movimiento tardío vuelve a avisar.
+    await alertasDistribuido(db);
+    expect(avisos(db, 'caja_movimiento_tardio')).toHaveLength(filas.length);
+    tardio('mov-tardio-2', new Date(Date.now() + 1000), 500);
+    await alertasDistribuido(db);
+    expect(avisos(db, 'caja_movimiento_tardio')).toHaveLength(filas.length * 2);
   });
 });
